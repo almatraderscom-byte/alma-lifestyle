@@ -6,11 +6,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format currency
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+// Format currency (defaults to BDT for storefront)
+export function formatCurrency(
+  amount: number,
+  currency: string = 'BDT'
+): string {
+  const locale = currency === 'BDT' ? 'en-BD' : 'en-US';
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 

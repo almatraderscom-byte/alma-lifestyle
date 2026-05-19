@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --alma-cream: #f7f4ef;
+  --alma-ink: #1a1814;
+  --alma-gold: #b8956a;
+  --alma-muted: #6b6560;
+  --alma-border: #e8e4dc;
+  --background: var(--alma-cream);
+  --foreground: var(--alma-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-alma-cream: var(--alma-cream);
+  --color-alma-ink: var(--alma-ink);
+  --color-alma-gold: var(--alma-gold);
+  --color-alma-muted: var(--alma-muted);
+  --color-alma-border: var(--alma-border);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-playfair);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+/* Dense product grids — familiar ecommerce scan pattern */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
