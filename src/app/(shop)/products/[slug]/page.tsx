@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ProductImageGallery } from '@/components/shop/ProductImageGallery';
 import { ProductPurchasePanel } from '@/components/shop/ProductPurchasePanel';
 import { RelatedProducts } from '@/components/shop/RelatedProducts';
+import { FadeIn } from '@/components/shared/Motion';
 import {
   getProductBySlug,
   getFamilyProducts,
@@ -29,25 +30,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ).slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12">
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
-          { label: 'Products', href: '/products' },
+          { label: 'Shop', href: '/products' },
           { label: product.categoryLabel, href: `/products?category=${product.category}` },
           { label: product.title },
         ]}
+        className="mb-8"
       />
 
-      <div className="mt-6 grid lg:grid-cols-2 gap-8 lg:gap-12">
-        <ProductImageGallery images={images} title={product.title} />
+      <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+        <FadeIn>
+          <ProductImageGallery images={images} title={product.title} />
+        </FadeIn>
         <ProductPurchasePanel product={product} />
       </div>
 
-      <RelatedProducts
-        title={product.familySlug ? 'Complete the look' : 'You may also like'}
-        products={familyProducts}
-      />
+      <FadeIn>
+        <RelatedProducts
+          title={product.familySlug ? 'Complete the look' : 'You may also love'}
+          products={familyProducts}
+        />
+      </FadeIn>
     </div>
   );
 }

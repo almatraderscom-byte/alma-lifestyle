@@ -2,34 +2,37 @@
 
 ## Product vision
 
-Premium Bangladeshi fashion ecommerce: elegant branding with **familiar, product-first** browsing UX inspired by supplier-style catalog usability (dense grids, obvious categories, scannable cards)—not cinematic editorial sites.
+**Premium modern fashion ecommerce** for Bangladesh: world-class visual presentation (cinematic, polished, emotional) combined with **supplier-inspired browsing usability** (product-first, dense grids, obvious categories, clear BDT pricing).
 
-## UX principles (current rebuild)
+## Design balance (current)
 
-1. Products visible immediately on homepage
-2. Obvious category and collection navigation
-3. Dense, comparable product grids
-4. Clear pricing (BDT), sizes, and add-to-cart
-5. Premium aesthetic without excessive whitespace or hidden nav
+| Keep | Avoid |
+|------|--------|
+| Product-first homepage & catalog flow | Ultra-editorial layouts that hide products |
+| Dense scannable grids | Generic flat marketplace UI |
+| Obvious nav, filters, CTAs | Apple-style abstraction |
+| Framer Motion (luxury easing) | Motion that blocks shopping |
+
+## Visual system
+
+- **Surfaces**: cream `#f8f5f0`, champagne, obsidian/ink for contrast sections
+- **Accent**: gold `#c4a574`, rose `#a67c6d`
+- **Type**: Playfair Display (headlines), Cormorant (accent italic), Geist (UI)
+- **Motion**: `src/lib/motion.ts` — luxury cubic-bezier, stagger reveals, card hover lift
 
 ## Tech stack
 
-- Next.js 16 App Router, TypeScript, Tailwind CSS 4
-- Customer routes: `src/app/(shop)/`
+- Next.js 16 App Router, TypeScript, Tailwind CSS 4, Framer Motion
+- Routes: `src/app/(shop)/`
 - Components: `src/components/shop/`, `src/components/shared/`
-- Catalog data: `src/lib/shop/mock-data.ts` (until API/DB wired)
+- Data: `src/lib/shop/mock-data.ts` (until API)
 
 ## Key routes
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Product-first homepage |
-| `/products` | Full catalog with filters/sort |
-| `/products/[slug]` | Commerce-focused PDP |
-| `/collections` | Collection index |
-| `/collections/[slug]` | Collection product grid |
-
-## Brand tokens
-
-- Cream background `#f7f4ef`, ink `#1a1814`, accent gold `#b8956a`
-- Display: Playfair Display; UI: Geist Sans
+| `/` | Premium hero + immediate product spotlight grid |
+| `/products` | Catalog with sidebar filters |
+| `/products/[slug]` | Commerce PDP with gallery + sticky buy panel |
+| `/collections` | Editorial collection index |
+| `/collections/[slug]` | Collection banner + product grid |

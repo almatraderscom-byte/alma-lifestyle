@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --alma-cream: #f7f4ef;
-  --alma-ink: #1a1814;
-  --alma-gold: #b8956a;
-  --alma-muted: #6b6560;
-  --alma-border: #e8e4dc;
+  --alma-obsidian: #0c0b0a;
+  --alma-ink: #141210;
+  --alma-charcoal: #2a2622;
+  --alma-cream: #f8f5f0;
+  --alma-champagne: #f0ebe3;
+  --alma-gold: #c4a574;
+  --alma-gold-light: #dbc9a8;
+  --alma-rose: #a67c6d;
+  --alma-muted: #7a736c;
+  --alma-border: #e5dfd6;
+  --alma-glass: rgba(248, 245, 240, 0.82);
+  --shadow-soft: 0 4px 24px rgba(20, 18, 16, 0.06);
+  --shadow-premium: 0 20px 50px rgba(20, 18, 16, 0.12);
+  --shadow-glow: 0 0 40px rgba(196, 165, 116, 0.15);
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
   --background: var(--alma-cream);
   --foreground: var(--alma-ink);
 }
@@ -13,27 +23,66 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-alma-cream: var(--alma-cream);
+  --color-alma-obsidian: var(--alma-obsidian);
   --color-alma-ink: var(--alma-ink);
+  --color-alma-charcoal: var(--alma-charcoal);
+  --color-alma-cream: var(--alma-cream);
+  --color-alma-champagne: var(--alma-champagne);
   --color-alma-gold: var(--alma-gold);
+  --color-alma-gold-light: var(--alma-gold-light);
+  --color-alma-rose: var(--alma-rose);
   --color-alma-muted: var(--alma-muted);
   --color-alma-border: var(--alma-border);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-playfair);
-  --font-mono: var(--font-geist-mono);
+  --font-accent: var(--font-cormorant);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .font-display {
   font-family: var(--font-playfair), Georgia, serif;
 }
 
-/* Dense product grids — familiar ecommerce scan pattern */
+.font-accent {
+  font-family: var(--font-cormorant), Georgia, serif;
+}
+
+/* Premium surfaces */
+.surface-glass {
+  background: var(--alma-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.surface-elevated {
+  background: linear-gradient(180deg, #ffffff 0%, var(--alma-champagne) 100%);
+  box-shadow: var(--shadow-soft);
+}
+
+.gradient-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(196, 165, 116, 0.12), transparent),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(166, 124, 109, 0.08), transparent),
+    linear-gradient(165deg, var(--alma-champagne) 0%, var(--alma-cream) 45%, #fff 100%);
+}
+
+.gradient-dark {
+  background: linear-gradient(145deg, var(--alma-obsidian) 0%, var(--alma-charcoal) 100%);
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--alma-gold-light), var(--alma-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -46,4 +95,19 @@ body {
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+::selection {
+  background: rgba(196, 165, 116, 0.35);
+  color: var(--alma-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

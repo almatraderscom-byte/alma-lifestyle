@@ -3,6 +3,8 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import { ProductFilters, ProductFiltersMobile } from '@/components/shop/ProductFilters';
 import { CategoryBar } from '@/components/shop/CategoryBar';
+import { CatalogBanner } from '@/components/shop/CatalogBanner';
+import { FadeIn } from '@/components/shared/Motion';
 import { filterProducts, getCategoryBySlug, getCollectionBySlug } from '@/lib/shop/mock-data';
 import type { ProductCategorySlug, SortOption } from '@/types/shop';
 
@@ -30,39 +32,40 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       ? categoryInfo.name
       : 'All Products';
 
+  const description = collectionInfo
+    ? collectionInfo.description
+    : categoryInfo
+      ? `Explore our ${categoryInfo.name} edit — ${categoryInfo.nameBn}`
+      : 'The complete Alma Lifestyle catalogue — browse, compare, and shop with ease.';
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
-      <Breadcrumbs
-        items={[
-          { label: 'Home', href: '/' },
-          { label: pageTitle },
-        ]}
-      />
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl sm:text-3xl text-alma-ink">{pageTitle}</h1>
-          <p className="text-sm text-alma-muted mt-1">{products.length} products</p>
+    <div>
+      <CatalogBanner title={pageTitle} description={description} count={products.length} />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: pageTitle },
+          ]}
+          className="mb-6"
+        />
+        <div className="hidden sm:block mb-6">
+          <CategoryBar activeCategory={category} />
         </div>
-      </div>
-
-      <div className="mt-4 hidden sm:block">
-        <CategoryBar activeCategory={category} />
-      </div>
-
-      <Suspense fallback={null}>
-        <div className="mt-4">
+        <Suspense fallback={null}>
           <ProductFiltersMobile />
-        </div>
-      </Suspense>
-
-      <div className="mt-6 flex gap-8">
-        <aside className="hidden lg:block w-56 shrink-0">
-          <Suspense fallback={<p className="text-sm text-alma-muted">Loading filters…</p>}>
-            <ProductFilters />
-          </Suspense>
-        </aside>
-        <div className="flex-1 min-w-0">
-          <ProductGrid products={products} />
+        </Suspense>
+        <div className="mt-8 flex gap-10 lg:gap-14">
+          <aside className="hidden lg:block w-60 shrink-0">
+            <div className="sticky top-28 p-5 bg-white/80 border border-alma-border/80 backdrop-blur-sm">
+              <Suspense fallback={<p className="text-sm text-alma-muted">Loading…</p>}>
+                <ProductFilters />
+              </Suspense>
+            </div>
+          </aside>
+          <FadeIn className="flex-1 min-w-0">
+            <ProductGrid products={products} />
+          </FadeIn>
         </div>
       </div>
     </div>

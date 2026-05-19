@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import { CategoryBar } from '@/components/shop/CategoryBar';
+import { CatalogBanner } from '@/components/shop/CatalogBanner';
+import { FadeIn } from '@/components/shared/Motion';
 import {
   COLLECTIONS,
   filterProducts,
@@ -23,21 +25,26 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const products = filterProducts({ collection: slug });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
-      <Breadcrumbs
-        items={[
-          { label: 'Home', href: '/' },
-          { label: 'Collections', href: '/collections' },
-          { label: collection.name },
-        ]}
+    <div>
+      <CatalogBanner
+        title={collection.name}
+        description={collection.description}
+        count={products.length}
+        imageUrl={collection.imageUrl}
       />
-      <h1 className="font-display text-2xl sm:text-3xl text-alma-ink mt-4">{collection.name}</h1>
-      <p className="text-sm text-alma-muted mt-1">{collection.description} · {products.length} products</p>
-      <div className="mt-4">
-        <CategoryBar />
-      </div>
-      <div className="mt-6">
-        <ProductGrid products={products} />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Collections', href: '/collections' },
+            { label: collection.name },
+          ]}
+          className="mb-6"
+        />
+        <CategoryBar className="mb-8" />
+        <FadeIn>
+          <ProductGrid products={products} />
+        </FadeIn>
       </div>
     </div>
   );

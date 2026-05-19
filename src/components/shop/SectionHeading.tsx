@@ -7,37 +7,68 @@ interface SectionHeadingProps {
   href?: string;
   linkLabel?: string;
   className?: string;
+  dark?: boolean;
 }
 
 export function SectionHeading({
   title,
   subtitle,
   href,
-  linkLabel = 'View all',
+  linkLabel = 'Explore all',
   className,
+  dark = false,
 }: SectionHeadingProps) {
   return (
-    
-    <div
-      className={cn(
-        'flex items-end justify-between gap-4 mb-4 sm:mb-5',
-        className
-      )}
-    >
-      <div>
-        <h2 className="font-display text-xl sm:text-2xl text-alma-ink tracking-tight">
+    <div className={cn('flex items-end justify-between gap-6 mb-8 sm:mb-10', className)}>
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'h-px w-8 sm:w-12',
+              dark ? 'bg-alma-gold-light' : 'bg-alma-gold'
+            )}
+            aria-hidden
+          />
+          <span
+            className={cn(
+              'text-[10px] uppercase tracking-[0.2em] font-medium',
+              dark ? 'text-alma-gold-light' : 'text-alma-gold'
+            )}
+          >
+            Alma Lifestyle
+          </span>
+        </div>
+        <h2
+          className={cn(
+            'font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-[1.15]',
+            dark ? 'text-alma-cream' : 'text-alma-ink'
+          )}
+        >
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-1 text-sm text-alma-muted">{subtitle}</p>
+          <p
+            className={cn(
+              'text-sm sm:text-base max-w-lg leading-relaxed',
+              dark ? 'text-alma-cream/70' : 'text-alma-muted'
+            )}
+          >
+            {subtitle}
+          </p>
         )}
       </div>
       {href && (
         <Link
           href={href}
-          className="shrink-0 text-sm font-medium text-alma-ink underline underline-offset-4 hover:text-alma-gold transition-colors"
+          className={cn(
+            'shrink-0 group flex items-center gap-2 text-xs uppercase tracking-[0.14em] font-medium transition-colors',
+            dark
+              ? 'text-alma-gold-light hover:text-alma-cream'
+              : 'text-alma-ink hover:text-alma-gold'
+          )}
         >
-          {linkLabel} →
+          {linkLabel}
+          <span className="transition-transform group-hover:translate-x-1">→</span>
         </Link>
       )}
     </div>
