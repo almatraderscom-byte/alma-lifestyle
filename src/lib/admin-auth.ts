@@ -1,177 +1,58 @@
-import { getSupabaseBrowser } from '@/lib/supabase/browser';
-import { isSupabaseConfigured } from '@/lib/supabase/config';
+const ADMIN_EMAIL = 'admin@alma.com';
+const ADMIN_PASSWORD = 'admin123';
+const COOKIE_NAME = 'alma_admin_session';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+
+/** @deprecated Use COOKIE_NAME — kept for middleware / API imports */
+export const ADMIN_SESSION_COOKIE = COOKIE_NAME;
 
 export const ADMIN_CREDENTIALS = {
-  email: 'admin@alma.com',
-  password: 'admin123',
+  email: ADMIN_EMAIL,
+  password: ADMIN_PASSWORD,
 } as const;
 
-export const ADMIN_SESSION_COOKIE = 'alma_admin_session';
-export const ADMIN_SESSION_STORAGE_KEY = 'alma_admin_session';
-export const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-export const SUPABASE_AUTH_TIMEOUT_MS = 5000;
-
-export interface AdminUser {
+export type AdminUser = {
   email: string;
   name: string;
-}
+};
 
-interface AdminSession {
-  user: AdminUser;
-  expiresAt: number;
-}
-
-function encodeSession(session: AdminSession): string {
-  const json = JSON.stringify(session);
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(json, 'utf8').toString('base64url');
-  }
-  const binary = Array.from(new TextEncoder().encode(json), (b) =>
-    String.fromCharCode(b)
-  ).join('');
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function decodeSessionPayload(value: string): string {
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(value, 'base64url').toString('utf8');
-  }
-  const padded = value.replace(/-/g, '+').replace(/\//g, '/');
-  return atob(padded);
-}
-
-export function parseSessionCookie(value: string | undefined): AdminSession | null {
-  if (!value) return null;
-  try {
-    const json = decodeSessionPayload(value);
-    const session = JSON.parse(json) as AdminSession;
-    if (!session?.user?.email || !session.expiresAt) return null;
-    if (Date.now() > session.expiresAt) return null;
-    return session;
-  } catch {
-    return null;
-  }
-}
-
-export function isSessionValid(session: AdminSession | null): boolean {
-  return !!session && Date.now() <= session.expiresAt;
-}
-
-function createSession(user: AdminUser): AdminSession {
-  return {
-    user,
-    expiresAt: Date.now() + SESSION_MAX_AGE_MS,
-  };
-}
-
-function persistSessionClient(session: AdminSession): void {
-  if (typeof window === 'undefined') return;
-  const encoded = encodeSession(session);
-  localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, encoded);
-  const maxAge = Math.floor(SESSION_MAX_AGE_MS / 1000);
-  document.cookie = `${ADMIN_SESSION_COOKIE}=${encoded}; path=/; max-age=${maxAge}; SameSite=Lax`;
-}
-
-function matchesLegacyCredentials(email: string, password: string): boolean {
-  const normalized = email.trim().toLowerCase();
-  return (
-    normalized === ADMIN_CREDENTIALS.email &&
-    password === ADMIN_CREDENTIALS.password
-  );
-}
-
-async function trySupabaseAuth(email: string, password: string): Promise<boolean> {
-  if (!isSupabaseConfigured()) return false;
-
-  const supabase = getSupabaseBrowser();
-  if (!supabase) return false;
-
-  try {
-    const { data, error } = await Promise.race([
-      supabase.auth.signInWithPassword({
-        email,
-        password,
-      }),
-      new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('SUPABASE_AUTH_TIMEOUT')), SUPABASE_AUTH_TIMEOUT_MS);
-      }),
-    ]);
-
-    if (error || !data.user?.email) return false;
-
-    const user: AdminUser = {
-      email: data.user.email,
-      name: (data.user.user_metadata?.name as string | undefined) ?? 'Admin',
-    };
-    persistSessionClient(createSession(user));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Admin login: legacy credentials first (instant), then Supabase Auth (5s max).
- */
-export async function login(email: string, password: string): Promise<boolean> {
-  const normalized = email.trim().toLowerCase();
-
-  if (matchesLegacyCredentials(normalized, password)) {
-    const user: AdminUser = { email: ADMIN_CREDENTIALS.email, name: 'Admin' };
-    persistSessionClient(createSession(user));
-    return true;
-  }
-
-  return trySupabaseAuth(normalized, password);
-}
-
-export async function logout(): Promise<void> {
-  const supabase = getSupabaseBrowser();
-  if (supabase) {
-    try {
-      await Promise.race([
-        supabase.auth.signOut(),
-        new Promise<void>((resolve) => setTimeout(resolve, SUPABASE_AUTH_TIMEOUT_MS)),
-      ]);
-    } catch {
-      /* ignore */
+export function login(email: string, password: string): boolean {
+  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    if (typeof document !== 'undefined') {
+      document.cookie = `${COOKIE_NAME}=authenticated; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
     }
+    return true;
   }
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
-  document.cookie = `${ADMIN_SESSION_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  return false;
+}
+
+export function logout(): void {
+  if (typeof document !== 'undefined') {
+    document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`;
+  }
 }
 
 export function isLoggedIn(): boolean {
-  if (typeof window === 'undefined') return false;
-  const fromStorage = localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
-  const fromCookie = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${ADMIN_SESSION_COOKIE}=`))
-    ?.split('=')[1];
-  const session = parseSessionCookie(fromStorage ?? fromCookie);
-  if (!isSessionValid(session)) {
-    void logout();
-    return false;
-  }
-  return true;
+  if (typeof document === 'undefined') return false;
+  return document.cookie.includes(`${COOKIE_NAME}=authenticated`);
 }
 
 export function getAdminUser(): AdminUser | null {
-  if (typeof window === 'undefined') return null;
-  const fromStorage = localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
-  const fromCookie = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${ADMIN_SESSION_COOKIE}=`))
-    ?.split('=')[1];
-  const session = parseSessionCookie(fromStorage ?? fromCookie);
-  return isSessionValid(session) ? session!.user : null;
+  return isLoggedIn() ? { email: ADMIN_EMAIL, name: 'Admin' } : null;
 }
 
-export function setSessionCookieForMiddleware(session: AdminSession): string {
-  return encodeSession(session);
+/** Server/middleware helper — cookie value must be exactly "authenticated" */
+export function isAdminSessionCookie(value: string | undefined): boolean {
+  return value === 'authenticated';
 }
 
-export function hasSupabaseAuth(): boolean {
-  return isSupabaseConfigured();
+/** Used by API routes — maps simple cookie to session shape */
+export function parseSessionCookie(
+  value: string | undefined
+): { user: AdminUser; expiresAt: number } | null {
+  if (!isAdminSessionCookie(value)) return null;
+  return {
+    user: { email: ADMIN_EMAIL, name: 'Admin' },
+    expiresAt: Date.now() + COOKIE_MAX_AGE * 1000,
+  };
 }

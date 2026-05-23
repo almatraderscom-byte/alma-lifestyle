@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ADMIN_SESSION_COOKIE, parseSessionCookie } from '@/lib/admin-auth';
 import { rateLimit } from '@/lib/rate-limit';
+
+const ADMIN_SESSION_COOKIE = 'alma_admin_session';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -38,6 +39,11 @@ function applyApiRateLimit(request: NextRequest): NextResponse | null {
   return null;
 }
 
+function isAdminAuthenticated(request: NextRequest): boolean {
+  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE);
+  return adminSession?.value === 'authenticated';
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -51,18 +57,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = parseSessionCookie(
-    request.cookies.get(ADMIN_SESSION_COOKIE)?.value
-  );
-
   if (pathname.startsWith('/admin/login')) {
-    if (session) {
+    if (isAdminAuthenticated(request)) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.next();
   }
 
-  if (!session) {
+  if (!isAdminAuthenticated(request)) {
     const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
