@@ -32,6 +32,10 @@ function NewProductForm() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-neutral-900">Add New Product</h1>
+      <p className="text-sm text-neutral-600">
+        Use <strong>Family Matching Set</strong> to create men, boy, women, and girl products in one
+        step, or choose a single product type.
+      </p>
       <ProductForm prefill={prefill} />
     </div>
   );

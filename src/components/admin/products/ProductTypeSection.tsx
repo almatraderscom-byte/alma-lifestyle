@@ -16,6 +16,14 @@ import { Input } from '@/components/admin/ui/Input';
 import { Select } from '@/components/admin/ui/Select';
 import { uid } from '@/lib/admin-store';
 
+const TYPE_EMOJI: Record<ProductType, string> = {
+  simple: '🔹',
+  men_panjabi: '👨',
+  boy_panjabi: '👦',
+  women_three_piece: '👩',
+  girl_two_piece: '👧',
+};
+
 export interface GirlAgeRow {
   ageGroup: string;
   priceBdt: number;
@@ -83,7 +91,10 @@ export function ProductTypeSection({
               onChange={() => setType(type)}
               className="mt-1"
             />
-            <span className="text-sm text-neutral-800">{PRODUCT_TYPE_LABELS_ADMIN[type]}</span>
+            <span className="text-sm text-neutral-800">
+              {TYPE_EMOJI[type]} {PRODUCT_TYPE_LABELS_ADMIN[type]}
+              {type !== 'simple' ? ' (single)' : ''}
+            </span>
           </label>
         ))}
       </div>

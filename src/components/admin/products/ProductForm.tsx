@@ -35,6 +35,7 @@ import {
 } from '@/lib/product-design-types';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { QuickAddMatchingModal } from '@/components/admin/products/QuickAddMatchingModal';
+import { FamilySetForm } from '@/components/admin/products/FamilySetForm';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Custom'];
 const COUNTRIES = [
@@ -64,9 +65,24 @@ function designBaseSlugFromMenSlug(menSlug: string): string {
     .replace(/-panjabi$/, '');
 }
 
+type CreationMode = 'family_set' | 'single';
+
+const CREATION_MODE_OPTIONS: { value: CreationMode; label: string; hint: string }[] = [
+  {
+    value: 'family_set',
+    label: '👨‍👩‍👧‍👦 Family Matching Set',
+    hint: 'Create all selected types in one save',
+  },
+  { value: 'single', label: '🔹 Single product', hint: 'One product at a time' },
+];
+
 export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   const router = useRouter();
   const { toast } = useAdminToast();
+  const showCreationMode = !isEdit && !prefill;
+  const [creationMode, setCreationMode] = useState<CreationMode>(
+    prefill ? 'single' : 'family_set'
+  );
   const [form, setForm] = useState<AdminProduct>(initial ?? createEmptyProduct());
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [savedMenProduct, setSavedMenProduct] = useState<{
@@ -297,9 +313,82 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
     update('tags', (form.tags ?? []).filter((t) => t !== tag));
   }
 
+  if (showCreationMode && creationMode === 'family_set') {
+    return (
+      <div className="space-y-6">
+        <section className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-neutral-800 uppercase tracking-wide">
+            What are you creating?
+          </h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {CREATION_MODE_OPTIONS.map((opt) => (
+              <label
+                key={opt.value}
+                className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-4 cursor-pointer has-[:checked]:border-[#C97D5D] has-[:checked]:ring-1 has-[:checked]:ring-[#C97D5D]"
+              >
+                <span className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="creationMode"
+                    checked={creationMode === opt.value}
+                    onChange={() => setCreationMode(opt.value)}
+                  />
+                  <span className="text-sm font-medium text-neutral-900">{opt.label}</span>
+                </span>
+                <span className="text-xs text-neutral-500 pl-6">{opt.hint}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-neutral-500">
+            Or add a single type: Men&apos;s, Boy&apos;s, Women&apos;s, or Girl&apos;s below.
+          </p>
+          <button
+            type="button"
+            className="text-sm text-[#C97D5D] hover:underline"
+            onClick={() => setCreationMode('single')}
+          >
+            Switch to single product form →
+          </button>
+        </section>
+        <FamilySetForm />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div className="xl:col-span-8 space-y-6">
+        {showCreationMode && (
+          <section className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-neutral-800 uppercase tracking-wide">
+              What are you creating?
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-3 cursor-pointer has-[:checked]:border-neutral-900 has-[:checked]:ring-1">
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="radio"
+                    name="creationMode"
+                    checked={creationMode === 'family_set'}
+                    onChange={() => setCreationMode('family_set')}
+                  />
+                  👨‍👩‍👧‍👦 Family Matching Set
+                </span>
+              </label>
+              <label className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-3 cursor-pointer has-[:checked]:border-neutral-900 has-[:checked]:ring-1 sm:col-span-2">
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="radio"
+                    name="creationMode"
+                    checked={creationMode === 'single'}
+                    onChange={() => setCreationMode('single')}
+                  />
+                  🔹 Single product (choose type below)
+                </span>
+              </label>
+            </div>
+          </section>
+        )}
         <ProductTypeSection
           form={form}
           designGroupOptions={designGroups}

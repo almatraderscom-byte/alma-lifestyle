@@ -13,9 +13,10 @@ import {
   getTotalStock,
   type AdminProduct,
 } from '@/lib/admin-store';
+import { groupAdminProductsForList } from '@/lib/family-set-admin';
+import { AdminProductsTable } from '@/components/admin/products/AdminProductsTable';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
-import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { useAdminToast } from '@/context/AdminToastContext';
 
 type StatusFilter = 'all' | 'published' | 'draft';
@@ -54,34 +55,23 @@ export default function AdminProductsPage() {
       }
       return true;
     });
-    list.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === 'date') cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-      if (sortKey === 'title') cmp = a.title.localeCompare(b.title);
-      if (sortKey === 'price') cmp = a.priceBdt - b.priceBdt;
-      if (sortKey === 'stock') cmp = getTotalStock(a) - getTotalStock(b);
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    return list;
-  }, [products, search, statusFilter, categoryFilter, sortKey, sortDir]);
-
-  function stockIndicator(stock: number) {
-    if (stock > 10) return 'bg-green-500';
-    if (stock > 0) return 'bg-amber-400';
-    return 'bg-red-500';
-  }
-
-  function SortHeader({ label, col }: { label: string; col: SortKey }) {
-    return (
-      <button type="button" className="font-medium hover:text-[#C97D5D] flex items-center gap-1" onClick={() => toggleSort(col)}>
-        {label}
-        {sortKey === col && <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>}
-      </button>
+    list.sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  }
+    return list;
+  }, [products, search, statusFilter, categoryFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+  const listRows = useMemo(() => groupAdminProductsForList(filtered), [filtered]);
+  const totalPages = Math.max(1, Math.ceil(listRows.length / perPage));
+  const paginatedRows = listRows.slice((page - 1) * perPage, page * perPage);
+  const paginatedProducts = useMemo(() => {
+    const list: AdminProduct[] = [];
+    for (const row of paginatedRows) {
+      if (row.kind === 'group') list.push(...row.products);
+      else list.push(row.product);
+    }
+    return list;
+  }, [paginatedRows]);
 
   useEffect(() => {
     console.log('[AdminProducts] Loading, useApi:', shouldUseApi());
@@ -132,8 +122,8 @@ export default function AdminProductsPage() {
   }
 
   function toggleAll() {
-    if (selected.size === paginated.length) setSelected(new Set());
-    else setSelected(new Set(paginated.map((p) => p.id)));
+    if (selected.size === paginatedProducts.length) setSelected(new Set());
+    else setSelected(new Set(paginatedProducts.map((p) => p.id)));
   }
 
   async function bulkUpdateStatus(status: 'published' | 'draft') {
@@ -152,131 +142,6 @@ export default function AdminProductsPage() {
     setSelected(new Set());
     toast('Products deleted', 'info');
   }
-
-  const columns: TableColumn<AdminProduct>[] = [
-    {
-      key: 'thumb',
-      header: '',
-      className: 'w-14',
-      render: (p) =>
-        p.images[0]?.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.images[0].url} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
-        ) : (
-          <div className="h-10 w-10 rounded bg-neutral-200 shrink-0" />
-        ),
-    },
-    {
-      key: 'title',
-      header: <SortHeader label="Title" col="title" />,
-      render: (p) => (
-        <Link href={`/admin/products/${p.id}/edit`} className="font-medium text-[#C97D5D] hover:underline">
-          {p.title}
-        </Link>
-      ),
-    },
-    { key: 'sku', header: 'SKU', render: (p) => <span className="text-neutral-500">{p.sku}</span> },
-    {
-      key: 'category',
-      header: 'Category',
-      render: (p) => categories.find((c) => c.id === p.categoryId)?.name ?? '—',
-    },
-    {
-      key: 'price',
-      header: <SortHeader label="Price" col="price" />,
-      render: (p) => <span>৳ {p.priceBdt.toLocaleString('en-US')}</span>,
-    },
-    {
-      key: 'stock',
-      header: <SortHeader label="Stock" col="stock" />,
-      render: (p) => {
-        const stock = getTotalStock(p);
-        return (
-          <span className="inline-flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${stockIndicator(stock)}`} />
-            {stock}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (p) => (
-        <span
-          className={
-            p.status === 'published'
-              ? 'inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800'
-              : 'inline-flex rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-600'
-          }
-        >
-          {p.status === 'published' ? 'Published' : 'Draft'}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (p) => (
-        <div className="flex items-center gap-1">
-          <Link href={`/admin/products/${p.id}/edit`} className="p-2 hover:bg-neutral-100 rounded" title="Edit">
-            ✎
-          </Link>
-          {p.status === 'published' && (
-            <a
-              href={`/products/${p.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 hover:bg-neutral-100 rounded text-xs"
-              title="View on site"
-            >
-              ↗
-            </a>
-          )}
-          <button
-            type="button"
-            className="p-2 hover:bg-neutral-100 rounded"
-            title="Duplicate"
-            onClick={() => {
-              void duplicateProduct(p.id).then(() => {
-                refresh();
-                toast('Product duplicated as draft', 'success');
-              });
-            }}
-          >
-            ⧉
-          </button>
-          <button
-            type="button"
-            className="p-2 hover:bg-neutral-100 rounded"
-            title="Toggle publish"
-            onClick={() => {
-              void updateProduct(p.id, {
-                status: p.status === 'published' ? 'draft' : 'published',
-              }).then(refresh);
-            }}
-          >
-            👁
-          </button>
-          <button
-            type="button"
-            className="p-2 hover:bg-red-50 text-red-600 rounded"
-            title="Delete"
-            onClick={() => {
-              if (confirm('Delete product?')) {
-                void deleteProduct(p.id).then(() => {
-                  refresh();
-                  toast('Product deleted', 'info');
-                });
-              }
-            }}
-          >
-            🗑
-          </button>
-        </div>
-      ),
-    },
-  ];
 
   if (loading && products.length === 0) {
     return <p className="text-neutral-500">Loading products…</p>;
@@ -362,16 +227,28 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      <Table
-        columns={columns}
-        data={paginated}
-        rowKey={(p) => p.id}
-        emptyMessage="No products yet. Add your first product."
-        selectable
-        selectedIds={selected}
+      <AdminProductsTable
+        rows={paginatedRows}
+        categories={categories}
+        selected={selected}
         onToggleRow={toggleRow}
-        onToggleAll={toggleAll}
-        allSelected={paginated.length > 0 && selected.size === paginated.length}
+        onDelete={(id) => {
+          if (confirm('Delete product?')) {
+            void deleteProduct(id).then(() => {
+              refresh();
+              toast('Product deleted', 'info');
+            });
+          }
+        }}
+        onDuplicate={(id) => {
+          void duplicateProduct(id).then(() => {
+            refresh();
+            toast('Product duplicated as draft', 'success');
+          });
+        }}
+        onTogglePublish={(id, status) => {
+          void updateProduct(id, { status }).then(refresh);
+        }}
       />
 
       {totalPages > 1 && (
