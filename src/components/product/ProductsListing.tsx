@@ -15,6 +15,7 @@ import {
   sortCatalogProducts,
   paginateProducts,
   toCardProduct,
+  type CatalogProduct,
   type CategorySlug,
   type ProductFilters,
   type SortKey,
@@ -26,7 +27,12 @@ import {
 } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 
-export function ProductsListing() {
+interface ProductsListingProps {
+  initialProducts?: CatalogProduct[];
+}
+
+export function ProductsListing({ initialProducts }: ProductsListingProps) {
+  const catalogSource = initialProducts ?? CATALOG_PRODUCTS;
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -61,7 +67,7 @@ export function ProductsListing() {
   }, [appliedFilters.categories]);
 
   const filtered = useMemo(() => {
-    const list = filterCatalogProducts(CATALOG_PRODUCTS, appliedFilters);
+    const list = filterCatalogProducts(catalogSource, appliedFilters);
     return sortCatalogProducts(list, sort);
   }, [appliedFilters, sort]);
 

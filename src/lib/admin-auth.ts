@@ -1,3 +1,6 @@
+import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
+
 export const ADMIN_CREDENTIALS = {
   email: 'admin@alma.com',
   password: 'admin123',
@@ -68,8 +71,25 @@ function persistSessionClient(session: AdminSession) {
   document.cookie = `${ADMIN_SESSION_COOKIE}=${encoded}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
-export function login(email: string, password: string): boolean {
+export async function login(email: string, password: string): Promise<boolean> {
   const normalized = email.trim().toLowerCase();
+
+  const supabase = getSupabaseBrowser();
+  if (supabase) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalized,
+      password,
+    });
+    if (!error && data.user?.email) {
+      const user: AdminUser = {
+        email: data.user.email,
+        name: data.user.user_metadata?.name ?? 'Admin',
+      };
+      persistSessionClient(createSession(user));
+      return true;
+    }
+  }
+
   if (
     normalized !== ADMIN_CREDENTIALS.email ||
     password !== ADMIN_CREDENTIALS.password
@@ -81,7 +101,11 @@ export function login(email: string, password: string): boolean {
   return true;
 }
 
-export function logout(): void {
+export async function logout(): Promise<void> {
+  const supabase = getSupabaseBrowser();
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
   if (typeof window === 'undefined') return;
   localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
   document.cookie = `${ADMIN_SESSION_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
@@ -96,7 +120,7 @@ export function isLoggedIn(): boolean {
     ?.split('=')[1];
   const session = parseSessionCookie(fromStorage ?? fromCookie);
   if (!isSessionValid(session)) {
-    logout();
+    void logout();
     return false;
   }
   return true;
@@ -115,4 +139,8 @@ export function getAdminUser(): AdminUser | null {
 
 export function setSessionCookieForMiddleware(session: AdminSession): string {
   return encodeSession(session);
+}
+
+export function hasSupabaseAuth(): boolean {
+  return isSupabaseConfigured();
 }

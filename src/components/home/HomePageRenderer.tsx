@@ -17,11 +17,17 @@ import { CollectionBannerEditorial } from '@/components/home/CollectionBannerEdi
 import { CommunityGrid } from '@/components/home/CommunityGrid';
 import { TrustStrip } from '@/components/home/TrustStrip';
 
-export function HomePageRenderer() {
-  const [config, setConfig] = useState<HomepageConfig | null>(null);
+interface HomePageRendererProps {
+  initialConfig?: HomepageConfig;
+}
+
+export function HomePageRenderer({ initialConfig }: HomePageRendererProps) {
+  const [config, setConfig] = useState<HomepageConfig | null>(initialConfig ?? null);
 
   useEffect(() => {
-    setConfig(getActiveHomepageConfig());
+    if (!initialConfig) {
+      setConfig(getActiveHomepageConfig());
+    }
 
     function refresh() {
       setConfig(getActiveHomepageConfig());

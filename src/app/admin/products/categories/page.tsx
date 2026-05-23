@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getCategories, saveCategory, deleteCategory, uid } from '@/lib/admin-store';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
@@ -8,25 +8,40 @@ import { useAdminToast } from '@/context/AdminToastContext';
 
 export default function AdminCategoriesPage() {
   const { toast } = useAdminToast();
-  const [items, setItems] = useState(() => getCategories());
+  const [items, setItems] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  function handleAdd(e: React.FormEvent) {
+  async function refresh() {
+    setItems(await getCategories());
+  }
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, []);
+
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
     const now = new Date().toISOString();
     const slug = name.toLowerCase().replace(/\s+/g, '-');
-    saveCategory({
-      id: uid('cat'),
-      name: name.trim(),
-      slug,
-      createdAt: now,
-      updatedAt: now,
-    });
-    setItems(getCategories());
-    setName('');
-    toast('Category added', 'success');
+    try {
+      await saveCategory({
+        id: uid('cat'),
+        name: name.trim(),
+        slug,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await refresh();
+      setName('');
+      toast('Category added', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed', 'error');
+    }
   }
+
+  if (loading) return <p className="text-neutral-500">Loading categories…</p>;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -50,10 +65,11 @@ export default function AdminCategoriesPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('Delete category?')) {
-                  deleteCategory(cat.id);
-                  setItems(getCategories());
+                  await deleteCategory(cat.id);
+                  await refresh();
+                  toast('Category removed', 'info');
                 }
               }}
             >

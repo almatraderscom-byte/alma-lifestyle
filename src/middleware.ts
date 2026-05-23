@@ -9,15 +9,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const session = parseSessionCookie(
+    request.cookies.get(ADMIN_SESSION_COOKIE)?.value
+  );
+
   if (pathname.startsWith('/admin/login')) {
-    const session = parseSessionCookie(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
     if (session) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.next();
   }
 
-  const session = parseSessionCookie(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
   if (!session) {
     const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('from', pathname);

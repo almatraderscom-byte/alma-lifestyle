@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   getProducts,
   getOrders,
@@ -15,9 +15,20 @@ import { Input } from '@/components/admin/ui/Input';
 import type { AdminOrder } from '@/lib/admin-store';
 
 export default function AdminDashboardPage() {
-  const products = useMemo(() => getProducts(), []);
-  const orders = useMemo(() => getOrders(), []);
-  const settings = useMemo(() => getSettings(), []);
+  const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
+  const [orders, setOrders] = useState<Awaited<ReturnType<typeof getOrders>>>([]);
+  const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getProducts(), getOrders(), getSettings()])
+      .then(([p, o, s]) => {
+        setProducts(p);
+        setOrders(o);
+        setSettings(s);
+      })
+      .finally(() => setLoading(false));
+  }, []);
   const [search, setSearch] = useState('');
 
   const revenue = orders.reduce((sum, o) => sum + o.totalBdt, 0);
@@ -95,6 +106,10 @@ export default function AdminDashboardPage() {
   const todayRevenue = orders
     .filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString())
     .reduce((s, o) => s + o.totalBdt, 0);
+
+  if (loading) {
+    return <p className="text-neutral-500">Loading dashboard…</p>;
+  }
 
   return (
     <div className="space-y-8">

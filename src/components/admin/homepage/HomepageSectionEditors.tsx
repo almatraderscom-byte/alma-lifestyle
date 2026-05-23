@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getCategories, getProducts, uid } from '@/lib/admin-store';
 import type {
   BrandStorySectionData,
@@ -87,13 +87,14 @@ function CategoryCardEditor({
   card,
   onChange,
   showSubtitle,
+  categories,
 }: {
   label: string;
   card: CategoryCardConfig;
   onChange: (card: CategoryCardConfig) => void;
   showSubtitle?: boolean;
+  categories: Awaited<ReturnType<typeof getCategories>>;
 }) {
-  const categories = getCategories();
   return (
     <div className="rounded-lg border border-neutral-200 p-4 space-y-3">
       <p className="text-sm font-semibold text-neutral-800">{label}</p>
@@ -126,16 +127,23 @@ function CategoryCardEditor({
 }
 
 export function CategoriesEditor({ data, onChange }: EditorProps<CategoriesSectionData>) {
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
+
+  useEffect(() => {
+    void getCategories().then(setCategories);
+  }, []);
+
   return (
     <div className="space-y-4">
       <Input label="Section label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
       <Input label="Section title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
-      <CategoryCardEditor label="Featured (large) category" card={data.featured} onChange={(featured) => onChange({ ...data, featured })} showSubtitle />
+      <CategoryCardEditor label="Featured (large) category" card={data.featured} categories={categories} onChange={(featured) => onChange({ ...data, featured })} showSubtitle />
       {data.stacked.map((card, i) => (
         <CategoryCardEditor
           key={i}
           label={`Stacked category ${i + 1}`}
           card={card}
+          categories={categories}
           onChange={(next) => {
             const stacked = [...data.stacked] as CategoriesSectionData['stacked'];
             stacked[i] = next;
@@ -148,8 +156,16 @@ export function CategoriesEditor({ data, onChange }: EditorProps<CategoriesSecti
 }
 
 export function FeaturedEditor({ data, onChange }: EditorProps<FeaturedSectionData>) {
-  const products = getProducts().filter((p) => p.status === 'published');
+  const [catalog, setCatalog] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    void getProducts().then((list) =>
+      setCatalog(list.filter((p) => p.status === 'published'))
+    );
+  }, []);
+
+  const products = catalog;
 
   return (
     <div className="space-y-4">

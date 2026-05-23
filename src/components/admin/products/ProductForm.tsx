@@ -48,9 +48,19 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
 
-  const categories = useMemo(() => getCategories(), []);
-  const collections = useMemo(() => getCollections(), []);
-  const settings = useMemo(() => getSettings(), []);
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
+  const [collections, setCollections] = useState<Awaited<ReturnType<typeof getCollections>>>([]);
+  const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null);
+
+  useEffect(() => {
+    void Promise.all([getCategories(), getCollections(), getSettings()]).then(
+      ([c, col, s]) => {
+        setCategories(c);
+        setCollections(col);
+        setSettings(s);
+      }
+    );
+  }, []);
 
   useEffect(() => {
     if (initial) setForm(initial);
@@ -72,7 +82,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
     if (!dirty || !isEdit || !initial) return;
     const timer = window.setInterval(() => {
       if (!form.title.trim()) return;
-      updateProduct(initial.id, { ...form, status: 'draft', updatedAt: new Date().toISOString() });
+      void updateProduct(initial.id, { ...form, status: 'draft', updatedAt: new Date().toISOString() });
       setDraftSavedAt(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
     }, 30000);
     return () => window.clearInterval(timer);
@@ -98,24 +108,29 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
     return Object.keys(next).length === 0;
   }
 
-  function persist(status: 'draft' | 'published', skipValidation = false) {
+  async function persist(status: 'draft' | 'published', skipValidation = false) {
     if (!skipValidation && status === 'published' && !validate()) return;
     setSaving(true);
-    const payload: AdminProduct = {
-      ...form,
-      status,
-      updatedAt: new Date().toISOString(),
-    };
-    if (isEdit && initial) {
-      updateProduct(initial.id, payload);
-      toast('Product updated successfully', 'success');
-    } else {
-      saveProduct(payload);
-      toast('Product created successfully', 'success');
+    try {
+      const payload: AdminProduct = {
+        ...form,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      if (isEdit && initial) {
+        await updateProduct(initial.id, payload);
+        toast('Product updated successfully', 'success');
+      } else {
+        await saveProduct(payload);
+        toast('Product created successfully', 'success');
+      }
+      setDirty(false);
+      router.push('/admin/products');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDirty(false);
-    router.push('/admin/products');
   }
 
   function addVariant() {

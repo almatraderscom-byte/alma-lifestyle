@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from 'react';
 import type { ProductImage } from '@/lib/admin-store';
 import { uid } from '@/lib/admin-store';
+import { uploadImageApi } from '@/lib/admin-api';
+import { shouldUseApi } from '@/lib/data-source';
 import { cn } from '@/lib/utils';
 
 interface ImageUploaderProps {
@@ -13,36 +15,51 @@ interface ImageUploaderProps {
 export function ImageUploader({ images, onChange }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const processFiles = useCallback(
-    (files: FileList | null) => {
+    async (files: FileList | null) => {
       if (!files?.length) return;
-      const readers = Array.from(files).map(
-        (file) =>
-          new Promise<ProductImage>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              resolve({
-                id: uid('img'),
-                url: reader.result as string,
-                isFeatured: images.length === 0,
-                sortOrder: images.length,
-              });
-            };
-            reader.readAsDataURL(file);
-          })
-      );
-      Promise.all(readers).then((newImages) => {
-        const merged = [...images, ...newImages].map((img, i) => ({
+      setUploading(true);
+
+      try {
+        const newImages: ProductImage[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          let url: string;
+
+          if (shouldUseApi()) {
+            url = await uploadImageApi(file, 'products');
+          } else {
+            url = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+          }
+
+          newImages.push({
+            id: uid('img'),
+            url,
+            isFeatured: images.length === 0 && i === 0,
+            sortOrder: images.length + i,
+          });
+        }
+
+        const merged = [...images, ...newImages].map((img, idx) => ({
           ...img,
-          sortOrder: i,
-          isFeatured: i === 0 ? true : img.isFeatured && !newImages.some((n) => n.isFeatured),
+          sortOrder: idx,
+          isFeatured:
+            idx === 0 ? true : img.isFeatured && !newImages.some((n) => n.isFeatured),
         }));
         if (!merged.some((m) => m.isFeatured) && merged[0]) {
           merged[0].isFeatured = true;
         }
         onChange(merged);
-      });
+      } finally {
+        setUploading(false);
+      }
     },
     [images, onChange]
   );
@@ -69,8 +86,8 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
       <div
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => e.key === 'Enter' && !uploading && inputRef.current?.click()}
+        onClick={() => !uploading && inputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOver(true);
@@ -79,22 +96,33 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         onDrop={(e) => {
           e.preventDefault();
           setDragOver(false);
-          processFiles(e.dataTransfer.files);
+          void processFiles(e.dataTransfer.files);
         }}
         className={cn(
           'flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-10 text-center cursor-pointer transition-colors',
-          dragOver ? 'border-[#C97D5D] bg-[#C97D5D]/5' : 'border-neutral-300 hover:border-neutral-400 bg-neutral-50'
+          dragOver ? 'border-[#C97D5D] bg-[#C97D5D]/5' : 'border-neutral-300 hover:border-neutral-400 bg-neutral-50',
+          uploading && 'opacity-60 pointer-events-none'
         )}
       >
-        <p className="text-sm font-medium text-neutral-700">Drop images here or click to upload</p>
-        <p className="text-xs text-neutral-500 mt-1">PNG, JPG up to 5MB each</p>
+        {uploading ? (
+          <p className="text-sm text-neutral-600 flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C97D5D] border-t-transparent" />
+            Uploading…
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-neutral-700">Drop images here or click to upload</p>
+            <p className="text-xs text-neutral-500 mt-1">PNG, JPG, WebP up to 5MB each</p>
+          </>
+        )}
         <input
           ref={inputRef}
           type="file"
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => processFiles(e.target.files)}
+          disabled={uploading}
+          onChange={(e) => void processFiles(e.target.files)}
         />
       </div>
 

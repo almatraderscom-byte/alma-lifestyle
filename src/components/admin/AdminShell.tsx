@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminHelp } from '@/components/admin/AdminHelp';
+import { AdminStorageBanner } from '@/components/admin/AdminStorageBanner';
 
 const SIDEBAR_COLLAPSED_KEY = 'alma-admin-sidebar-collapsed';
 import { usePathname } from 'next/navigation';
@@ -96,7 +97,14 @@ function AdminLayoutInner({
       />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
         <AdminHeader breadcrumbs={breadcrumbs} onMenuClick={() => setMobileOpen(true)} />
-        <main className={isHomepageBuilder ? 'flex-1 p-0' : 'flex-1 p-4 lg:p-6'}>{children}</main>
+        <main className={isHomepageBuilder ? 'flex-1 p-0' : 'flex-1 p-4 lg:p-6'}>
+          {!isHomepageBuilder && (
+            <div className="max-w-7xl mx-auto">
+              <AdminStorageBanner />
+            </div>
+          )}
+          {children}
+        </main>
       </div>
       <AdminHelp />
     </div>

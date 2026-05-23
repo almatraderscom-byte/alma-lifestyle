@@ -13,12 +13,17 @@ const PRODUCT_RELATIONS_SELECT = `
   product_variants (*)
 ` as const;
 
+export type ProductSortField = 'date' | 'title' | 'price' | 'stock';
+
 export interface GetProductsOptions {
   page: number;
   limit: number;
   categoryId?: string;
   published?: boolean;
   search?: string;
+  sort?: ProductSortField;
+  sortDir?: 'asc' | 'desc';
+  includeDeleted?: boolean;
 }
 
 function sortProductRelations(product: ProductWithRelations): ProductWithRelations {
@@ -41,7 +46,16 @@ function mapProducts(rows: ProductWithRelations[]): ProductWithRelations[] {
 export async function getProducts(
   options: GetProductsOptions
 ): Promise<PaginatedResult<ProductWithRelations>> {
-  const { page, limit, categoryId, published, search } = options;
+  const {
+    page,
+    limit,
+    categoryId,
+    published,
+    search,
+    sort = 'date',
+    sortDir = 'desc',
+    includeDeleted = false,
+  } = options;
 
   if (page < 1) {
     throw new Error('getProducts: page must be >= 1');
@@ -53,11 +67,23 @@ export async function getProducts(
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  const ascending = sortDir === 'asc';
+  const sortColumn =
+    sort === 'title'
+      ? 'title'
+      : sort === 'price'
+        ? 'price_bdt'
+        : 'created_at';
+
   let query = supabaseAdmin
     .from('products')
     .select(PRODUCT_RELATIONS_SELECT, { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .order(sortColumn, { ascending })
     .range(from, to);
+
+  if (!includeDeleted) {
+    query = query.is('deleted_at', null);
+  }
 
   if (categoryId) {
     query = query.eq('category_id', categoryId);
@@ -79,7 +105,15 @@ export async function getProducts(
   assertNoError(error, 'getProducts');
 
   const total = count ?? 0;
-  const rows = (data ?? []) as ProductWithRelations[];
+  let rows = (data ?? []) as ProductWithRelations[];
+
+  if (sort === 'stock') {
+    rows = [...rows].sort((a, b) => {
+      const stockA = (a.product_variants ?? []).reduce((s, v) => s + v.stock_quantity, 0);
+      const stockB = (b.product_variants ?? []).reduce((s, v) => s + v.stock_quantity, 0);
+      return ascending ? stockA - stockB : stockB - stockA;
+    });
+  }
 
   return {
     data: mapProducts(rows),

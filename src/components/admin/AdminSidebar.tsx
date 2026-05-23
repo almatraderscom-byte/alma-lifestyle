@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { exportAllData, getOrders, importData } from '@/lib/admin-store';
@@ -44,19 +44,26 @@ export function AdminSidebar({
   const { user, logout } = useAdminAuth();
   const { toast } = useAdminToast();
   const importRef = useRef<HTMLInputElement>(null);
-  const pendingOrders = getOrders().filter((o) => o.status === 'pending').length;
+  const [pendingOrders, setPendingOrders] = useState(0);
+
+  useEffect(() => {
+    getOrders().then((orders) =>
+      setPendingOrders(orders.filter((o) => o.status === 'pending').length)
+    );
+  }, []);
   const [productsOpen, setProductsOpen] = useState(pathname.startsWith('/admin/products'));
 
   function handleImport(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
-      const result = importData(String(reader.result));
-      if (result.ok) {
-        toast('Data imported successfully', 'success');
-        window.location.reload();
-      } else {
-        toast(result.error ?? 'Import failed', 'error');
-      }
+      void importData(String(reader.result)).then((result) => {
+        if (result.ok) {
+          toast('Data imported successfully', 'success');
+          window.location.reload();
+        } else {
+          toast(result.error ?? 'Import failed', 'error');
+        }
+      });
     };
     reader.readAsText(file);
   }
@@ -180,7 +187,7 @@ export function AdminSidebar({
             <>
               <button
                 type="button"
-                onClick={() => exportAllData()}
+                onClick={() => void exportAllData()}
                 className="w-full text-left rounded-lg px-3 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white"
               >
                 Backup Data

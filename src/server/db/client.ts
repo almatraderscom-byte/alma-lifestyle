@@ -1,4 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  isSupabaseAdminConfigured,
+  isSupabaseConfigured,
+} from '@/lib/supabase/config';
 import type { Database } from './schema';
 
 function getPublicEnv(): { url: string; anonKey: string } {
@@ -29,13 +33,21 @@ function getServiceRoleKey(): string {
 let supabaseClient: SupabaseClient<Database> | null = null;
 let supabaseAdminClient: SupabaseClient<Database> | null = null;
 
-/** Browser-safe client (anon key). Lazily created so storefront dev works without Supabase. */
+/** Browser-safe client (anon key). */
 export function getSupabase(): SupabaseClient<Database> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured');
+  }
   if (!supabaseClient) {
     const { url, anonKey } = getPublicEnv();
     supabaseClient = createClient<Database>(url, anonKey);
   }
   return supabaseClient;
+}
+
+export function tryGetSupabase(): SupabaseClient<Database> | null {
+  if (!isSupabaseConfigured()) return null;
+  return getSupabase();
 }
 
 /** @deprecated Prefer getSupabase() — kept for existing query imports */
@@ -47,8 +59,11 @@ export const supabase: SupabaseClient<Database> = new Proxy({} as SupabaseClient
   },
 });
 
-/** Server-only client (service role). Lazily created. */
+/** Server-only client (service role). */
 export function getSupabaseAdmin(): SupabaseClient<Database> {
+  if (!isSupabaseAdminConfigured()) {
+    throw new Error('Supabase service role is not configured');
+  }
   if (!supabaseAdminClient) {
     const { url, anonKey } = getPublicEnv();
     supabaseAdminClient = createClient<Database>(url, getServiceRoleKey(), {
@@ -59,6 +74,11 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
     });
   }
   return supabaseAdminClient;
+}
+
+export function tryGetSupabaseAdmin(): SupabaseClient<Database> | null {
+  if (!isSupabaseAdminConfigured()) return null;
+  return getSupabaseAdmin();
 }
 
 /** @deprecated Prefer getSupabaseAdmin() */

@@ -1,0 +1,34 @@
+import type { NextRequest } from 'next/server';
+import type { HomepageConfig } from '@/lib/homepage-config-types';
+import {
+  getHomepageConfig,
+  getHomepageConfigOrDefault,
+  saveHomepageConfig,
+} from '@/server/db/queries/homepage';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { apiError, apiSuccess } from '@/server/api/response';
+import { withAdmin, withPublicDb } from '@/server/api/handler';
+import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+
+export async function GET() {
+  if (!isSupabaseAdminConfigured()) {
+    return apiSuccess(getDefaultHomepageConfig());
+  }
+
+  return withPublicDb(async () => {
+    const config = await getHomepageConfigOrDefault();
+    return apiSuccess(config);
+  });
+}
+
+export async function PUT(request: NextRequest) {
+  return withAdmin(request, async () => {
+    const body = (await request.json()) as HomepageConfig;
+    if (!body?.sections || !Array.isArray(body.sections)) {
+      return apiError('Invalid homepage config', 400, 'VALIDATION_ERROR');
+    }
+
+    const saved = await saveHomepageConfig(body);
+    return apiSuccess(saved);
+  });
+}

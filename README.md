@@ -1,132 +1,113 @@
-# Alma Lifestyle Ecommerce
+# ALMA Lifestyle
 
-**Status**: Foundation Complete ✓ | **Next Phase**: Phase 1 Implementation
+Next.js storefront and admin panel for ALMA Lifestyle (Bangladesh). The customer site uses Bangla editorial UI; the admin dashboard is in English.
 
-Luxury Punjabi/Panjabi fashion ecommerce platform targeting UAE and Bangladesh audiences.
+## Prerequisites
 
-## Tech Stack
+- Node.js 20+
+- npm
+- A [Supabase](https://supabase.com) project (optional for local-only dev)
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS 4
-- **Database**: Supabase PostgreSQL
-- **Validation**: Zod
-- **Animation**: Framer Motion
-- **Testing**: Vitest
-- **Deployment**: Vercel
+## Setup
 
-## Development Approach
+### 1. Create a Supabase project
 
-- **Admin-First**: Complete backend & admin UI before customer pages
-- **API-First**: All business logic in APIs, admin uses same endpoints
-- **Database-First**: Schema designed for scalability and audit compliance
-- **Type-Safe**: Strict TypeScript with branded types
+Create a project at [supabase.com](https://supabase.com) and note the project URL and API keys.
 
-## Project Structure
+### 2. Run database migrations
 
-```
-src/
-├── app/                 # Next.js App Router
-│   ├── (admin)/        # Admin routes
-│   ├── (shop)/         # Customer routes
-│   ├── auth/           # Authentication
-│   └── api/v1/         # API endpoints
-├── components/         # React components
-│   ├── admin/          # Admin-only components
-│   ├── shop/           # Customer components
-│   └── shared/         # Shared components
-├── lib/                # Utilities & configurations
-├── types/              # TypeScript definitions
-├── hooks/              # Custom React hooks
-├── server/             # Server-side code
-└── styles/             # Global styles
+Install the [Supabase CLI](https://supabase.com/docs/guides/cli) and link your project, or run SQL manually in the SQL editor in this order:
+
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_rls_policies.sql`
+3. `supabase/migrations/003_storage_buckets.sql`
+4. `supabase/migrations/004_site_config.sql`
+5. `supabase/migrations/005_admin_users.sql`
+
+Then seed development data (optional):
+
+```bash
+psql "$DATABASE_URL" -f supabase/seed.sql
 ```
 
-## Getting Started
+Or with the CLI:
 
-1. **Use the latest `main` branch** (Bangla storefront, cart, and checkout live here):
-   ```bash
-   git pull origin main
-   ```
+```bash
+supabase db push
+supabase db execute -f supabase/seed.sql
+```
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+### 3. Storage buckets
 
-3. **Environment** (optional for cart/checkout UI; required before Supabase queries):
-   ```bash
-   npm run dev
-   ```
-   The `predev` script copies `.env.example` → `.env.local` automatically if missing.
+Migration `003_storage_buckets.sql` creates public buckets `product-images` and `homepage-images`. Confirm they appear under **Storage** in the Supabase dashboard.
 
-4. **Open** [http://localhost:3000](http://localhost:3000)
+### 4. Create an admin user (Supabase Auth)
 
-### Customer routes (Bangla UI)
+1. In Supabase → **Authentication** → **Users**, create a user (email + password).
+2. Copy the user UUID.
+3. In the SQL editor:
 
-| URL | Page |
-|-----|------|
-| `/` | Homepage |
-| `/products` | Product listing |
-| `/products/[slug]` | Product detail |
-| `/cart` | Shopping bag |
-| `/checkout` | Checkout (add items to cart first) |
+```sql
+INSERT INTO admin_users (id, email, role)
+VALUES ('YOUR-USER-UUID', 'you@example.com', 'admin');
+```
 
-Bag icon in the header also links to `/cart`.
+### 5. Environment variables
 
-## Available Scripts
+```bash
+cp .env.example .env.local
+```
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
-- `npm run type-check` - Run TypeScript type checking
-- `npm run test` - Run tests
-- `npm run test:ui` - Run tests with UI
+Fill in:
 
-## Development Phases
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server only — never expose to the browser)
+- `NEXT_PUBLIC_APP_URL`
 
-See `docs/DEVELOPMENT_PHASES.md` for the 16-week roadmap.
+### 6. Install and run
 
-**Current Phase**: Foundation Setup (Complete)
-**Next Phase**: Phase 1 - Database & Authentication
+```bash
+npm install
+npm run dev
+```
 
-## Documentation
+Open [http://localhost:3000](http://localhost:3000). Admin: [http://localhost:3000/admin](http://localhost:3000/admin).
 
-All documentation is in the `docs/` folder:
+**Without Supabase:** the app uses localStorage for admin data and static catalog content on the storefront. A banner appears in the admin panel.
 
-- `ARCHITECTURE.md` - System design & principles
-- `DATABASE_SCHEMA.md` - Complete database design
-- `CODING_STANDARDS.md` - Code quality guidelines
-- `DEVELOPMENT_PHASES.md` - Development roadmap
-- `ADMIN_WORKFLOW.md` - Admin operations guide
-- `FOLDER_STRUCTURE.md` - Project organization
+**Default legacy admin login** (when not using Supabase Auth): `admin@alma.com` / `admin123`
 
-## Contributing
+## API
 
-1. Follow the coding standards in `docs/CODING_STANDARDS.md`
-2. Write tests for new features
-3. Ensure TypeScript strict mode compliance
-4. Run `npm run lint` and `npm run type-check` before committing
+REST routes live under `/api/v1/`:
 
-## License
+| Route | Methods | Notes |
+|-------|---------|--------|
+| `/api/v1/products` | GET, POST | Paginated catalog; POST requires admin |
+| `/api/v1/products/[id]` | GET, PATCH, DELETE | |
+| `/api/v1/categories` | GET, POST | `?admin=true` for all categories |
+| `/api/v1/collections` | GET, POST | `?admin=true` for admin list |
+| `/api/v1/orders` | GET, POST | POST is public (checkout) |
+| `/api/v1/homepage-config` | GET, PUT | |
+| `/api/v1/settings` | GET, PUT | GET returns public fields only |
+| `/api/v1/upload` | POST | Multipart `file`, optional `folder`, `bucket` |
 
-Private - Alma Lifestyle Internal Use Only
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Responses: `{ status: 'success', data }` or `{ status: 'error', error }`.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push the repo and import the project in Vercel.
+2. Add the same environment variables as `.env.local`.
+3. Run migrations against the production Supabase project.
+4. Deploy. Storefront pages use ISR (`revalidate = 60`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run type-check` | TypeScript |

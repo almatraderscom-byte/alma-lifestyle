@@ -11,7 +11,8 @@ import {
   TRUST_STRIP,
 } from '@/lib/content';
 import type { FeaturedProduct } from '@/lib/content';
-import { getProducts, getTotalStock, type AdminProduct } from '@/lib/admin-store';
+import { getTotalStock, type AdminProduct } from '@/lib/admin-store';
+import { shouldUseApi } from '@/lib/data-source';
 import type {
   CategoriesSectionData,
   CategoryCardConfig,
@@ -327,8 +328,22 @@ export function adminProductToFeatured(p: AdminProduct, index: number): Featured
   };
 }
 
+function getPublishedCatalogLocal(): AdminProduct[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('alma-admin-products');
+    if (!raw) return [];
+    return (JSON.parse(raw) as AdminProduct[]).filter((p) => p.status === 'published');
+  } catch {
+    return [];
+  }
+}
+
 export function resolveFeaturedProducts(data: FeaturedSectionData): FeaturedProduct[] {
-  const catalog = getProducts().filter((p) => p.status === 'published');
+  if (shouldUseApi()) {
+    return HOME_FEATURED_PRODUCTS.slice(0, data.productCount);
+  }
+  const catalog = getPublishedCatalogLocal();
   let list: AdminProduct[] = [];
 
   if (data.source === 'latest') {

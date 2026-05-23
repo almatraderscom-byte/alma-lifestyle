@@ -10,6 +10,8 @@ import { useCart } from '@/context/CartContext';
 import { BREADCRUMB, CART, CHECKOUT } from '@/lib/content';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
+import { shouldUseApi } from '@/lib/data-source';
+import { createOrderApi } from '@/lib/admin-api';
 
 export function CheckoutPageContent() {
   const router = useRouter();
@@ -43,17 +45,54 @@ export function CheckoutPageContent() {
   async function handleSubmit(data: CheckoutFormData) {
     setIsSubmitting(true);
     const deliveryCharge = getDeliveryCharge(data.city);
+    const total = subtotal + deliveryCharge;
+    const paymentMethod = getPaymentLabel(data.paymentMethod);
+    const customerName = data.name.trim();
+    const customerPhone = data.phone.trim();
+    const cityLabel = getCityLabel(data.city);
+
+    let orderNumber: string | undefined;
+
+    if (shouldUseApi()) {
+      try {
+        const created = await createOrderApi({
+          customerName,
+          customerPhone,
+          shippingAddress: `${cityLabel}, Bangladesh`,
+          shippingCity: cityLabel,
+          paymentMethod,
+          items: items.map((item) => ({
+            productSlug: item.slug,
+            quantity: item.quantity,
+            unitPriceBdt: item.price,
+            productTitle: item.title,
+            productSku: item.slug,
+          })),
+          subtotalBdt: subtotal,
+          shippingCostBdt: deliveryCharge,
+          totalBdt: total,
+        });
+        orderNumber = created.orderNumber;
+      } catch {
+        /* fall back to local order record */
+      }
+    }
 
     const order = createPlacedOrder({
       items: [...items],
       subtotal,
       deliveryCharge,
-      total: subtotal + deliveryCharge,
-      paymentMethod: getPaymentLabel(data.paymentMethod),
-      customerName: data.name.trim(),
-      customerPhone: data.phone.trim(),
-      cityLabel: getCityLabel(data.city),
+      total,
+      paymentMethod,
+      customerName,
+      customerPhone,
+      cityLabel,
     });
+
+    if (orderNumber) {
+      order.orderNumber = orderNumber;
+      order.orderNumberDisplay = orderNumber;
+    }
 
     saveLastOrder(order);
     clearCart();

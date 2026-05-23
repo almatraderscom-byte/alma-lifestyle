@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  getSavedHomepageConfig,
+  getDefaultHomepageConfig,
   saveDraftHomepageConfig,
-  saveHomepageConfig,
 } from '@/lib/homepage-config';
+import { getHomepageConfig, saveHomepageConfig } from '@/lib/admin-store';
 import type { HomepageConfig, HomepageSectionConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import { HOMEPAGE_SECTION_LABELS } from '@/lib/homepage-config-types';
 import { Button } from '@/components/admin/ui/Button';
@@ -36,13 +36,17 @@ type MobileTab = 'editor' | 'preview';
 
 export function HomepageBuilder() {
   const { toast } = useAdminToast();
-  const [config, setConfig] = useState<HomepageConfig>(() => getSavedHomepageConfig());
+  const [config, setConfig] = useState<HomepageConfig>(() => getDefaultHomepageConfig());
   const [openSection, setOpenSection] = useState<HomepageSectionId | null>('hero');
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
   const [previewKey, setPreviewKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    getHomepageConfig().then(setConfig);
+  }, []);
 
   const sortedSections = useMemo(
     () => [...config.sections].sort((a, b) => a.order - b.order),
@@ -75,13 +79,18 @@ export function HomepageBuilder() {
     };
   }, []);
 
-  function handleSave() {
+  async function handleSave() {
     setSaving(true);
-    const saved = saveHomepageConfig(config);
-    setConfig(saved);
-    setSaving(false);
-    toast('Homepage saved successfully', 'success');
-    setPreviewKey((k) => k + 1);
+    try {
+      const saved = await saveHomepageConfig(config);
+      setConfig(saved);
+      toast('Homepage saved successfully', 'success');
+      setPreviewKey((k) => k + 1);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function renderSectionEditor(section: HomepageSectionConfig) {

@@ -22,7 +22,7 @@ import { ensureAdminSeed } from '@/lib/admin-store';
 interface AdminAuthContextValue {
   user: AdminUser | null;
   ready: boolean;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -39,8 +39,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const login = useCallback((email: string, password: string) => {
-    const ok = authLogin(email, password);
+  const login = useCallback(async (email: string, password: string) => {
+    const ok = await authLogin(email, password);
     if (ok) {
       setUser(getAdminUser());
     }
@@ -48,7 +48,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    authLogout();
+    void authLogout();
     setUser(null);
     router.push('/admin/login');
   }, [router]);

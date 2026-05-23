@@ -1,10 +1,8 @@
 'use client';
 
-'use client';
-
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getProductById } from '@/lib/admin-store';
+import { getProductById, type AdminProduct } from '@/lib/admin-store';
 import { ProductForm } from '@/components/admin/products/ProductForm';
 
 export default function EditProductPage({
@@ -13,7 +11,18 @@ export default function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const product = getProductById(id);
+  const [product, setProduct] = useState<AdminProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProductById(id)
+      .then(setProduct)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return <p className="text-neutral-500">Loading product…</p>;
+  }
 
   if (!product) {
     return (

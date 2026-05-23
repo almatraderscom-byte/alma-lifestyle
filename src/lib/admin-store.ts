@@ -5,6 +5,8 @@ import {
   getSavedHomepageConfig,
   saveHomepageConfig as saveFullHomepageConfig,
 } from '@/lib/homepage-config';
+import { shouldUseApi } from '@/lib/data-source';
+import * as adminApi from '@/lib/admin-api';
 
 const KEYS = {
   products: 'alma-admin-products',
@@ -272,25 +274,51 @@ function mkOrder(
 }
 
 // ——— Products ———
-export function getProducts(): AdminProduct[] {
+function getProductsLocal(): AdminProduct[] {
   ensureAdminSeed();
   return readJson<AdminProduct[]>(KEYS.products, []);
 }
 
-export function getProductById(id: string): AdminProduct | null {
-  return getProducts().find((p) => p.id === id) ?? null;
+export async function getProducts(): Promise<AdminProduct[]> {
+  if (shouldUseApi()) return adminApi.fetchProducts({ limit: 500 });
+  return getProductsLocal();
 }
 
-export function saveProduct(product: AdminProduct): AdminProduct {
-  const products = getProducts();
+export async function getProductById(id: string): Promise<AdminProduct | null> {
+  if (shouldUseApi()) {
+    try {
+      return await adminApi.fetchProduct(id);
+    } catch {
+      return null;
+    }
+  }
+  return getProductsLocal().find((p) => p.id === id) ?? null;
+}
+
+export async function saveProduct(product: AdminProduct): Promise<AdminProduct> {
+  if (shouldUseApi()) return adminApi.createProductApi(product);
+  const products = getProductsLocal();
   const next = { ...product, updatedAt: new Date().toISOString() };
   products.push(next);
   writeJson(KEYS.products, products);
   return next;
 }
 
-export function updateProduct(id: string, updates: Partial<AdminProduct>): AdminProduct | null {
-  const products = getProducts();
+export async function updateProduct(
+  id: string,
+  updates: Partial<AdminProduct>
+): Promise<AdminProduct | null> {
+  if (shouldUseApi()) {
+    const existing = await getProductById(id);
+    if (!existing) return null;
+    return adminApi.updateProductApi(id, {
+      ...existing,
+      ...updates,
+      id,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+  const products = getProductsLocal();
   const index = products.findIndex((p) => p.id === id);
   if (index < 0) return null;
   const updated = {
@@ -304,14 +332,20 @@ export function updateProduct(id: string, updates: Partial<AdminProduct>): Admin
   return updated;
 }
 
-export function deleteProduct(id: string): boolean {
-  const products = getProducts().filter((p) => p.id !== id);
-  writeJson(KEYS.products, products);
+export async function deleteProduct(id: string): Promise<boolean> {
+  if (shouldUseApi()) {
+    await adminApi.deleteProductApi(id);
+    return true;
+  }
+  writeJson(
+    KEYS.products,
+    getProductsLocal().filter((p) => p.id !== id)
+  );
   return true;
 }
 
-export function duplicateProduct(id: string): AdminProduct | null {
-  const source = getProductById(id);
+export async function duplicateProduct(id: string): Promise<AdminProduct | null> {
+  const source = await getProductById(id);
   if (!source) return null;
   const now = new Date().toISOString();
   const copy: AdminProduct = {
@@ -339,20 +373,37 @@ export function getTotalStock(product: AdminProduct): number {
 }
 
 // ——— Categories ———
-export function getCategories(): AdminCategory[] {
+function getCategoriesLocal(): AdminCategory[] {
   ensureAdminSeed();
   return readJson<AdminCategory[]>(KEYS.categories, []);
 }
 
-export function saveCategory(cat: AdminCategory): AdminCategory {
-  const items = getCategories();
+export async function getCategories(): Promise<AdminCategory[]> {
+  if (shouldUseApi()) return adminApi.fetchCategories(true);
+  return getCategoriesLocal();
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export async function saveCategory(cat: AdminCategory): Promise<AdminCategory> {
+  if (shouldUseApi()) return adminApi.saveCategoryApi(cat, !UUID_RE.test(cat.id));
+  const items = getCategoriesLocal();
   items.push(cat);
   writeJson(KEYS.categories, items);
   return cat;
 }
 
-export function updateCategory(id: string, updates: Partial<AdminCategory>): AdminCategory | null {
-  const items = getCategories();
+export async function updateCategory(
+  id: string,
+  updates: Partial<AdminCategory>
+): Promise<AdminCategory | null> {
+  if (shouldUseApi()) {
+    const existing = (await getCategories()).find((c) => c.id === id);
+    if (!existing) return null;
+    return adminApi.saveCategoryApi({ ...existing, ...updates, id }, false);
+  }
+  const items = getCategoriesLocal();
   const index = items.findIndex((c) => c.id === id);
   if (index < 0) return null;
   items[index] = { ...items[index], ...updates, updatedAt: new Date().toISOString() };
@@ -360,29 +411,47 @@ export function updateCategory(id: string, updates: Partial<AdminCategory>): Adm
   return items[index];
 }
 
-export function deleteCategory(id: string): boolean {
+export async function deleteCategory(id: string): Promise<boolean> {
+  if (shouldUseApi()) {
+    await adminApi.deleteCategoryApi(id);
+    return true;
+  }
   writeJson(
     KEYS.categories,
-    getCategories().filter((c) => c.id !== id)
+    getCategoriesLocal().filter((c) => c.id !== id)
   );
   return true;
 }
 
 // ——— Collections ———
-export function getCollections(): AdminCollection[] {
+function getCollectionsLocal(): AdminCollection[] {
   ensureAdminSeed();
   return readJson<AdminCollection[]>(KEYS.collections, []);
 }
 
-export function saveCollection(col: AdminCollection): AdminCollection {
-  const items = getCollections();
+export async function getCollections(): Promise<AdminCollection[]> {
+  if (shouldUseApi()) return adminApi.fetchCollections();
+  return getCollectionsLocal();
+}
+
+export async function saveCollection(col: AdminCollection): Promise<AdminCollection> {
+  if (shouldUseApi()) return adminApi.saveCollectionApi(col, true);
+  const items = getCollectionsLocal();
   items.push(col);
   writeJson(KEYS.collections, items);
   return col;
 }
 
-export function updateCollection(id: string, updates: Partial<AdminCollection>): AdminCollection | null {
-  const items = getCollections();
+export async function updateCollection(
+  id: string,
+  updates: Partial<AdminCollection>
+): Promise<AdminCollection | null> {
+  if (shouldUseApi()) {
+    const existing = (await getCollections()).find((c) => c.id === id);
+    if (!existing) return null;
+    return adminApi.saveCollectionApi({ ...existing, ...updates, id }, false);
+  }
+  const items = getCollectionsLocal();
   const index = items.findIndex((c) => c.id === id);
   if (index < 0) return null;
   items[index] = { ...items[index], ...updates, updatedAt: new Date().toISOString() };
@@ -390,22 +459,35 @@ export function updateCollection(id: string, updates: Partial<AdminCollection>):
   return items[index];
 }
 
-export function deleteCollection(id: string): boolean {
+export async function deleteCollection(id: string): Promise<boolean> {
+  if (shouldUseApi()) {
+    await adminApi.deleteCollectionApi(id);
+    return true;
+  }
   writeJson(
     KEYS.collections,
-    getCollections().filter((c) => c.id !== id)
+    getCollectionsLocal().filter((c) => c.id !== id)
   );
   return true;
 }
 
 // ——— Orders ———
-export function getOrders(): AdminOrder[] {
+function getOrdersLocal(): AdminOrder[] {
   ensureAdminSeed();
   return readJson<AdminOrder[]>(KEYS.orders, []);
 }
 
-export function updateOrderStatus(id: string, status: OrderStatus): AdminOrder | null {
-  const orders = getOrders();
+export async function getOrders(): Promise<AdminOrder[]> {
+  if (shouldUseApi()) return adminApi.fetchOrders();
+  return getOrdersLocal();
+}
+
+export async function updateOrderStatus(
+  id: string,
+  status: OrderStatus
+): Promise<AdminOrder | null> {
+  if (shouldUseApi()) return adminApi.updateOrderStatusApi(id, status);
+  const orders = getOrdersLocal();
   const index = orders.findIndex((o) => o.id === id);
   if (index < 0) return null;
   orders[index] = {
@@ -417,17 +499,19 @@ export function updateOrderStatus(id: string, status: OrderStatus): AdminOrder |
   return orders[index];
 }
 
-// ——— Homepage (delegates to homepage-config) ———
-export function getHomepageConfig() {
+// ——— Homepage ———
+export async function getHomepageConfig(): Promise<HomepageConfig> {
+  if (shouldUseApi()) return adminApi.fetchHomepageConfigApi();
   return getSavedHomepageConfig();
 }
 
-export function saveHomepageConfig(config: HomepageConfig) {
+export async function saveHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
+  if (shouldUseApi()) return adminApi.saveHomepageConfigApi(config);
   return saveFullHomepageConfig(config);
 }
 
 // ——— Settings ———
-export function getSettings(): AppSettings {
+function getSettingsLocal(): AppSettings {
   ensureAdminSeed();
   const raw = readJson<Record<string, unknown> | null>(KEYS.settings, null);
   if (!raw) return getDefaultAppSettings();
@@ -437,7 +521,16 @@ export function getSettings(): AppSettings {
   return { ...getDefaultAppSettings(), ...(raw as unknown as AppSettings) };
 }
 
-export function saveSettings(settings: AppSettings): AppSettings {
+export async function getSettings(): Promise<AppSettings> {
+  if (shouldUseApi()) {
+    const partial = await adminApi.fetchSettingsApi();
+    return { ...getDefaultAppSettings(), ...partial };
+  }
+  return getSettingsLocal();
+}
+
+export async function saveSettings(settings: AppSettings): Promise<AppSettings> {
+  if (shouldUseApi()) return adminApi.saveSettingsApi(settings);
   const next: AppSettings = {
     ...settings,
     updatedAt: new Date().toISOString(),
@@ -457,17 +550,19 @@ export interface AdminDataExport {
   homepage: HomepageConfig;
 }
 
-export function exportAllData(): void {
+export async function exportAllData(): Promise<void> {
   if (!isBrowser()) return;
   const payload: AdminDataExport = {
     version: 1,
     exportedAt: new Date().toISOString(),
-    products: getProducts(),
-    categories: getCategories(),
-    collections: getCollections(),
-    orders: getOrders(),
-    settings: getSettings(),
-    homepage: getSavedHomepageConfig(),
+    products: await getProducts(),
+    categories: await getCategories(),
+    collections: await getCollections(),
+    orders: await getOrders(),
+    settings: await getSettings(),
+    homepage: shouldUseApi()
+      ? await adminApi.fetchHomepageConfigApi()
+      : getSavedHomepageConfig(),
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -478,7 +573,9 @@ export function exportAllData(): void {
   URL.revokeObjectURL(url);
 }
 
-export function importData(json: string): { ok: boolean; error?: string } {
+export async function importData(
+  json: string
+): Promise<{ ok: boolean; error?: string }> {
   if (!isBrowser()) return { ok: false, error: 'Not in browser' };
   try {
     const data = JSON.parse(json) as AdminDataExport;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '@/lib/admin-store';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import { Button } from '@/components/admin/ui/Button';
@@ -27,20 +27,37 @@ const WHATSAPP_CODES = ['+880', '+91', '+1', '+44', '+971'];
 export default function AdminSettingsPage() {
   const { toast } = useAdminToast();
   const [tab, setTab] = useState<TabId>('Store Information');
-  const [form, setForm] = useState<AppSettings>(() => getSettings());
+  const [form, setForm] = useState<AppSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getSettings()
+      .then(setForm)
+      .finally(() => setLoading(false));
+  }, []);
   const [cityInput, setCityInput] = useState('');
 
   function patch<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    saveSettings(form);
-    toast('Settings saved successfully', 'success');
+    if (!form) return;
+    try {
+      await saveSettings(form);
+      toast('Settings saved successfully', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+    }
+  }
+
+  if (loading || !form) {
+    return <p className="text-neutral-500">Loading settings…</p>;
   }
 
   function addCity() {
+    if (!form) return;
     const city = cityInput.trim();
     if (!city || form.freeDeliveryCities.includes(city)) return;
     patch('freeDeliveryCities', [...form.freeDeliveryCities, city]);

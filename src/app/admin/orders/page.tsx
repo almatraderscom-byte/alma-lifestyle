@@ -1,12 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getOrders, updateOrderStatus, type AdminOrder, type OrderStatus } from '@/lib/admin-store';
 import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { Select } from '@/components/admin/ui/Select';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState(() => getOrders());
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getOrders()
+      .then(setOrders)
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function refresh() {
+    setOrders(await getOrders());
+  }
 
   const columns: TableColumn<AdminOrder>[] = useMemo(
     () => [
@@ -22,8 +33,7 @@ export default function AdminOrdersPage() {
           <Select
             value={o.status}
             onChange={(e) => {
-              updateOrderStatus(o.id, e.target.value as OrderStatus);
-              setOrders(getOrders());
+              void updateOrderStatus(o.id, e.target.value as OrderStatus).then(refresh);
             }}
             options={[
               { value: 'pending', label: 'Pending' },
@@ -38,16 +48,20 @@ export default function AdminOrdersPage() {
       {
         key: 'date',
         header: 'Date',
-        render: (o) => new Date(o.createdAt).toLocaleString('en-GB'),
+        render: (o) => new Date(o.createdAt).toLocaleDateString('en-GB'),
       },
     ],
     []
   );
 
+  if (loading) {
+    return <p className="text-neutral-500">Loading orders…</p>;
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-neutral-900">Orders</h1>
-      <Table columns={columns} data={orders} rowKey={(o) => o.id} emptyMessage="No orders yet." />
+      <Table columns={columns} data={orders} rowKey={(o) => o.id} />
     </div>
   );
 }

@@ -52,6 +52,11 @@ export interface Product {
   sku: string;
   slug: string;
   title: string;
+  title_bn?: string | null;
+  short_description?: string | null;
+  compare_at_price_bdt?: number | null;
+  tags?: string[] | null;
+  deleted_at?: string | null;
   description: string | null;
   price_usd: number;
   price_aed: number;
@@ -229,6 +234,21 @@ export interface AuditLog {
   admin_id: UUID | null;
   admin_ip: string | null;
   user_agent: string | null;
+  created_at: Timestamp;
+}
+
+export interface SiteConfigRow {
+  id: UUID;
+  key: string;
+  value: Json;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface AdminUserRow {
+  id: UUID;
+  email: string;
+  role: string;
   created_at: Timestamp;
 }
 
@@ -554,6 +574,19 @@ export interface Database {
             referencedColumns: ['id'];
           },
         ];
+      };
+      site_config: {
+        Row: SiteConfigRow;
+        Insert: Omit<SiteConfigRow, 'id' | 'created_at' | 'updated_at'> &
+          Partial<Pick<SiteConfigRow, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<Omit<SiteConfigRow, 'id' | 'created_at'>>;
+        Relationships: [];
+      };
+      admin_users: {
+        Row: AdminUserRow;
+        Insert: Omit<AdminUserRow, 'created_at'> & Partial<Pick<AdminUserRow, 'created_at'>>;
+        Update: Partial<Omit<AdminUserRow, 'id' | 'created_at'>>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

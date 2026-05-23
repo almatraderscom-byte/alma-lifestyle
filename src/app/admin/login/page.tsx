@@ -18,10 +18,10 @@ function LoginForm() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const ok = login(email, password);
+    const ok = await login(email, password);
     setLoading(false);
     if (!ok) {
       toast('Invalid email or password', 'error');

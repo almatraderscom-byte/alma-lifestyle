@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   getProducts,
@@ -21,8 +21,9 @@ type SortKey = 'date' | 'title' | 'price' | 'stock';
 
 export default function AdminProductsPage() {
   const { toast } = useAdminToast();
-  const [products, setProducts] = useState<AdminProduct[]>(() => getProducts());
-  const categories = useMemo(() => getCategories(), []);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -79,8 +80,23 @@ export default function AdminProductsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
+  useEffect(() => {
+    Promise.all([getProducts(), getCategories()])
+      .then(([p, c]) => {
+        setProducts(p);
+        setCategories(c);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   function refresh() {
-    setProducts(getProducts());
+    setLoading(true);
+    Promise.all([getProducts(), getCategories()])
+      .then(([p, c]) => {
+        setProducts(p);
+        setCategories(c);
+      })
+      .finally(() => setLoading(false));
   }
 
   function toggleRow(id: string) {
@@ -97,18 +113,18 @@ export default function AdminProductsPage() {
     else setSelected(new Set(paginated.map((p) => p.id)));
   }
 
-  function bulkUpdateStatus(status: 'published' | 'draft') {
+  async function bulkUpdateStatus(status: 'published' | 'draft') {
     const count = selected.size;
-    selected.forEach((id) => updateProduct(id, { status }));
+    await Promise.all([...selected].map((id) => updateProduct(id, { status })));
     refresh();
     setSelected(new Set());
     toast(`${count} products updated`, 'success');
   }
 
-  function bulkDelete() {
+  async function bulkDelete() {
     const count = selected.size;
     if (!confirm(`Delete ${count} products?`)) return;
-    selected.forEach((id) => deleteProduct(id));
+    await Promise.all([...selected].map((id) => deleteProduct(id)));
     refresh();
     setSelected(new Set());
     toast('Products deleted', 'info');
@@ -199,9 +215,10 @@ export default function AdminProductsPage() {
             className="p-2 hover:bg-neutral-100 rounded"
             title="Duplicate"
             onClick={() => {
-              duplicateProduct(p.id);
-              refresh();
-              toast('Product duplicated as draft', 'success');
+              void duplicateProduct(p.id).then(() => {
+                refresh();
+                toast('Product duplicated as draft', 'success');
+              });
             }}
           >
             ⧉
@@ -211,10 +228,9 @@ export default function AdminProductsPage() {
             className="p-2 hover:bg-neutral-100 rounded"
             title="Toggle publish"
             onClick={() => {
-              updateProduct(p.id, {
+              void updateProduct(p.id, {
                 status: p.status === 'published' ? 'draft' : 'published',
-              });
-              refresh();
+              }).then(refresh);
             }}
           >
             👁
@@ -225,9 +241,10 @@ export default function AdminProductsPage() {
             title="Delete"
             onClick={() => {
               if (confirm('Delete product?')) {
-                deleteProduct(p.id);
-                refresh();
-                toast('Product deleted', 'info');
+                void deleteProduct(p.id).then(() => {
+                  refresh();
+                  toast('Product deleted', 'info');
+                });
               }
             }}
           >
@@ -237,6 +254,10 @@ export default function AdminProductsPage() {
       ),
     },
   ];
+
+  if (loading && products.length === 0) {
+    return <p className="text-neutral-500">Loading products…</p>;
+  }
 
   return (
     <div className="space-y-6">

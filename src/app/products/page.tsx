@@ -1,5 +1,8 @@
 import { Suspense } from 'react';
 import { ProductsListing } from '@/components/product/ProductsListing';
+import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
+
+export const revalidate = 60;
 
 function ProductsFallback() {
   return (
@@ -9,10 +12,11 @@ function ProductsFallback() {
   );
 }
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const { products } = await loadCatalogProductsServer({ limit: 200 });
   return (
     <Suspense fallback={<ProductsFallback />}>
-      <ProductsListing />
+      <ProductsListing initialProducts={products} />
     </Suspense>
   );
 }
