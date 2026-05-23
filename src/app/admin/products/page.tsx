@@ -20,8 +20,6 @@ import { Input } from '@/components/admin/ui/Input';
 import { useAdminToast } from '@/context/AdminToastContext';
 
 type StatusFilter = 'all' | 'published' | 'draft';
-type SortKey = 'date' | 'title' | 'price' | 'stock';
-
 export default function AdminProductsPage() {
   const { toast } = useAdminToast();
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -33,17 +31,7 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
-  const [sortKey, setSortKey] = useState<SortKey>('date');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const perPage = 10;
-
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else {
-      setSortKey(key);
-      setSortDir(key === 'title' ? 'asc' : 'desc');
-    }
-  }
 
   const filtered = useMemo(() => {
     const list = products.filter((p) => {
@@ -119,11 +107,6 @@ export default function AdminProductsPage() {
       else next.add(id);
       return next;
     });
-  }
-
-  function toggleAll() {
-    if (selected.size === paginatedProducts.length) setSelected(new Set());
-    else setSelected(new Set(paginatedProducts.map((p) => p.id)));
   }
 
   async function bulkUpdateStatus(status: 'published' | 'draft') {
