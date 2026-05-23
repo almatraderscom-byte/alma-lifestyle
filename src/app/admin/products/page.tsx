@@ -1,0 +1,278 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  getProducts,
+  getCategories,
+  updateProduct,
+  deleteProduct,
+  getTotalStock,
+  type AdminProduct,
+} from '@/lib/admin-store';
+import { Button } from '@/components/admin/ui/Button';
+import { Input } from '@/components/admin/ui/Input';
+import { Table, type TableColumn } from '@/components/admin/ui/Table';
+import { useAdminToast } from '@/context/AdminToastContext';
+
+type StatusFilter = 'all' | 'published' | 'draft';
+
+export default function AdminProductsPage() {
+  const { toast } = useAdminToast();
+  const [products, setProducts] = useState<AdminProduct[]>(() => getProducts());
+  const categories = useMemo(() => getCategories(), []);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+
+  const filtered = useMemo(() => {
+    return products.filter((p) => {
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+      if (categoryFilter && p.categoryId !== categoryFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!p.title.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [products, search, statusFilter, categoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  function refresh() {
+    setProducts(getProducts());
+  }
+
+  function toggleRow(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selected.size === paginated.length) setSelected(new Set());
+    else setSelected(new Set(paginated.map((p) => p.id)));
+  }
+
+  function bulkUpdateStatus(status: 'published' | 'draft') {
+    const count = selected.size;
+    selected.forEach((id) => updateProduct(id, { status }));
+    refresh();
+    setSelected(new Set());
+    toast(`${count} products updated`, 'success');
+  }
+
+  function bulkDelete() {
+    const count = selected.size;
+    if (!confirm(`Delete ${count} products?`)) return;
+    selected.forEach((id) => deleteProduct(id));
+    refresh();
+    setSelected(new Set());
+    toast('Products deleted', 'info');
+  }
+
+  const columns: TableColumn<AdminProduct>[] = [
+    {
+      key: 'thumb',
+      header: '',
+      className: 'w-14',
+      render: (p) => (
+        <div
+          className="h-10 w-10 rounded bg-neutral-200 shrink-0"
+          style={
+            p.images[0]?.url
+              ? { backgroundImage: `url(${p.images[0].url})`, backgroundSize: 'cover' }
+              : undefined
+          }
+        />
+      ),
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      render: (p) => (
+        <Link href={`/admin/products/${p.id}/edit`} className="font-medium text-[#C97D5D] hover:underline">
+          {p.title}
+        </Link>
+      ),
+    },
+    { key: 'sku', header: 'SKU', render: (p) => <span className="text-neutral-500">{p.sku}</span> },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (p) => categories.find((c) => c.id === p.categoryId)?.name ?? '—',
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      render: (p) => <span>৳ {p.priceBdt.toLocaleString('en-US')}</span>,
+    },
+    {
+      key: 'stock',
+      header: 'Stock',
+      render: (p) => getTotalStock(p),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (p) => (
+        <span
+          className={
+            p.status === 'published'
+              ? 'inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800'
+              : 'inline-flex rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-600'
+          }
+        >
+          {p.status === 'published' ? 'Published' : 'Draft'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (p) => (
+        <div className="flex items-center gap-1">
+          <Link href={`/admin/products/${p.id}/edit`} className="p-2 hover:bg-neutral-100 rounded" title="Edit">
+            ✎
+          </Link>
+          <button
+            type="button"
+            className="p-2 hover:bg-neutral-100 rounded"
+            title="Toggle publish"
+            onClick={() => {
+              updateProduct(p.id, {
+                status: p.status === 'published' ? 'draft' : 'published',
+              });
+              refresh();
+            }}
+          >
+            👁
+          </button>
+          <button
+            type="button"
+            className="p-2 hover:bg-red-50 text-red-600 rounded"
+            title="Delete"
+            onClick={() => {
+              if (confirm('Delete product?')) {
+                deleteProduct(p.id);
+                refresh();
+                toast('Product deleted', 'info');
+              }
+            }}
+          >
+            🗑
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-semibold text-neutral-900">Products</h1>
+        <Link href="/admin/products/new">
+          <Button>Add New Product</Button>
+        </Link>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-4">
+        <Input
+          placeholder="Search by name or SKU..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="lg:max-w-xs"
+        />
+        <div className="flex gap-2 flex-wrap">
+          {(['all', 'published', 'draft'] as StatusFilter[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={
+                statusFilter === s
+                  ? 'rounded-lg bg-[#C97D5D] text-white px-4 py-2 text-sm font-medium min-h-10'
+                  : 'rounded-lg border border-neutral-300 px-4 py-2 text-sm min-h-10 hover:bg-neutral-50'
+              }
+            >
+              {s === 'all' ? 'All' : s === 'published' ? 'Published' : 'Draft'}
+            </button>
+          ))}
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="min-h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-neutral-100 px-4 py-3 text-sm">
+          <span className="font-medium">{selected.size} selected</span>
+          <Button size="sm" variant="secondary" onClick={() => bulkUpdateStatus('published')}>
+            Publish Selected
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => bulkUpdateStatus('draft')}>
+            Unpublish
+          </Button>
+          <Button size="sm" variant="danger" onClick={bulkDelete}>
+            Delete
+          </Button>
+        </div>
+      )}
+
+      <Table
+        columns={columns}
+        data={paginated}
+        rowKey={(p) => p.id}
+        emptyMessage="No products yet. Add your first product."
+        selectable
+        selectedIds={selected}
+        onToggleRow={toggleRow}
+        onToggleAll={toggleAll}
+        allSelected={paginated.length > 0 && selected.size === paginated.length}
+      />
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center text-sm text-neutral-600">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

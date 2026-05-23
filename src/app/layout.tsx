@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/google';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
-import { ToastProvider } from '@/components/ui/Toast';
-import { CartProvider } from '@/context/CartContext';
+import { RootShell } from '@/components/layout/RootShell';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -48,14 +44,7 @@ export default function RootLayout({
       className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
-        <ToastProvider>
-          <CartProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <WhatsAppButton />
-          </CartProvider>
-        </ToastProvider>
+        <RootShell>{children}</RootShell>
       </body>
     </html>
   );
