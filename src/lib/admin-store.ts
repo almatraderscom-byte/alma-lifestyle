@@ -11,6 +11,7 @@ import type { AppSettings } from '@/lib/admin-settings-types';
 import { getDefaultAppSettings, migrateLegacySettings } from '@/lib/admin-settings-types';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import {
+  ensureHomepageConfig,
   getSavedHomepageConfig,
   saveHomepageConfig as saveFullHomepageConfig,
 } from '@/lib/homepage-config';
@@ -569,13 +570,17 @@ export async function updateOrderStatus(
 
 // ——— Homepage ———
 export async function getHomepageConfig(): Promise<HomepageConfig> {
-  if (shouldUseApi()) return adminApi.fetchHomepageConfigApi();
+  if (shouldUseApi()) {
+    const config = await adminApi.fetchHomepageConfigApi();
+    return ensureHomepageConfig(config);
+  }
   return getSavedHomepageConfig();
 }
 
 export async function saveHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
-  if (shouldUseApi()) return adminApi.saveHomepageConfigApi(config);
-  return saveFullHomepageConfig(config);
+  const normalized = ensureHomepageConfig(config);
+  if (shouldUseApi()) return adminApi.saveHomepageConfigApi(normalized);
+  return saveFullHomepageConfig(normalized);
 }
 
 // ——— Settings ———

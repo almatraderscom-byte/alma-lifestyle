@@ -206,8 +206,22 @@ export function getDefaultHomepageConfig(): HomepageConfig {
   };
 }
 
+/** Valid config for builder + storefront (never empty sections). */
+export function ensureHomepageConfig(
+  config: HomepageConfig | null | undefined
+): HomepageConfig {
+  if (!config || !Array.isArray(config.sections) || config.sections.length === 0) {
+    return getDefaultHomepageConfig();
+  }
+  return normalizeHomepageConfig(config);
+}
+
 function migrateLegacyConfig(raw: Record<string, unknown>): HomepageConfig | null {
-  if (Array.isArray(raw.sections)) return raw as unknown as HomepageConfig;
+  if (Array.isArray(raw.sections)) {
+    const config = raw as unknown as HomepageConfig;
+    if (config.sections.length === 0) return null;
+    return normalizeHomepageConfig(config);
+  }
   if (typeof raw.heroTitle === 'string') {
     const def = getDefaultHomepageConfig();
     const hero = def.sections.find((s) => s.id === 'hero');
@@ -250,7 +264,7 @@ export function getSavedHomepageConfig(): HomepageConfig {
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const migrated = migrateLegacyConfig(parsed);
-    if (migrated) return normalizeHomepageConfig(migrated);
+    if (migrated) return ensureHomepageConfig(migrated);
     return def;
   } catch {
     return def;
@@ -259,7 +273,7 @@ export function getSavedHomepageConfig(): HomepageConfig {
 
 export function saveHomepageConfig(config: HomepageConfig): HomepageConfig {
   const next: HomepageConfig = {
-    ...normalizeHomepageConfig(config),
+    ...ensureHomepageConfig(config),
     lastSaved: new Date().toISOString(),
   };
   writeJson(HOMEPAGE_CONFIG_KEY, next);

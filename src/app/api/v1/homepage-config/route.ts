@@ -5,7 +5,7 @@ import {
   getHomepageConfigOrDefault,
   saveHomepageConfig,
 } from '@/server/db/queries/homepage';
-import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
@@ -16,7 +16,7 @@ export async function GET() {
   }
 
   return withPublicDb(async () => {
-    const config = await getHomepageConfigOrDefault();
+    const config = ensureHomepageConfig(await getHomepageConfigOrDefault());
     return apiSuccess(config);
   });
 }

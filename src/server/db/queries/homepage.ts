@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '../client';
 import type { Json, SiteConfigRow } from '../schema';
 import { assertNoError } from './errors';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
-import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-config';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 
@@ -27,12 +27,17 @@ async function getConfigRow(key: string): Promise<SiteConfigRow | null> {
 export async function getHomepageConfig(): Promise<HomepageConfig | null> {
   const row = await getConfigRow(HOMEPAGE_KEY);
   if (!row?.value) return null;
-  return row.value as unknown as HomepageConfig;
+  const config = row.value as unknown as HomepageConfig;
+  if (!Array.isArray(config.sections) || config.sections.length === 0) {
+    return null;
+  }
+  return config;
 }
 
 export async function saveHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
+  const normalized = ensureHomepageConfig(config);
   const value = {
-    ...config,
+    ...normalized,
     lastSaved: new Date().toISOString(),
   } as unknown as Json;
 
@@ -101,5 +106,6 @@ export async function saveAppSettings(settings: AppSettings): Promise<AppSetting
 }
 
 export async function getHomepageConfigOrDefault(): Promise<HomepageConfig> {
-  return (await getHomepageConfig()) ?? getDefaultHomepageConfig();
+  const stored = await getHomepageConfig();
+  return stored ? ensureHomepageConfig(stored) : getDefaultHomepageConfig();
 }

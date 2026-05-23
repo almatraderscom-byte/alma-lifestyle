@@ -44,35 +44,57 @@ function isAdminAuthenticated(request: NextRequest): boolean {
   return adminSession?.value === 'authenticated';
 }
 
+/** Allow admin live-preview iframe on same origin; deny embedding elsewhere. */
+function applyFrameOptions(request: NextRequest, response: NextResponse): NextResponse {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname.startsWith('/api')) return response;
+
+  const isPreview = searchParams.get('preview') === 'true';
+  if (isPreview) {
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  } else {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/v1')) {
     const limited = applyApiRateLimit(request);
     if (limited) return limited;
-    return NextResponse.next();
+    return applyFrameOptions(request, NextResponse.next());
   }
 
-  if (!pathname.startsWith('/admin')) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith('/admin/login')) {
-    if (isAdminAuthenticated(request)) {
-      return NextResponse.redirect(new URL('/admin', request.url));
+  if (pathname.startsWith('/admin')) {
+    if (pathname.startsWith('/admin/login')) {
+      if (isAdminAuthenticated(request)) {
+        return applyFrameOptions(
+          request,
+          NextResponse.redirect(new URL('/admin', request.url))
+        );
+      }
+      return applyFrameOptions(request, NextResponse.next());
     }
-    return NextResponse.next();
+
+    if (!isAdminAuthenticated(request)) {
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return applyFrameOptions(request, NextResponse.redirect(loginUrl));
+    }
+
+    return applyFrameOptions(request, NextResponse.next());
   }
 
-  if (!isAdminAuthenticated(request)) {
-    const loginUrl = new URL('/admin/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  return NextResponse.next();
+  return applyFrameOptions(request, NextResponse.next());
 }
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*', '/api/v1/:path*'],
+  matcher: [
+    '/admin',
+    '/admin/:path*',
+    '/api/v1/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 };

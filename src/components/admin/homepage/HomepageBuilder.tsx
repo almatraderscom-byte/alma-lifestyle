@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ensureHomepageConfig,
   getDefaultHomepageConfig,
   saveDraftHomepageConfig,
 } from '@/lib/homepage-config';
@@ -45,7 +46,19 @@ export function HomepageBuilder() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    getHomepageConfig().then(setConfig);
+    getHomepageConfig()
+      .then((loaded) => {
+        const next = ensureHomepageConfig(loaded);
+        setConfig(next);
+        saveDraftHomepageConfig(next);
+      })
+      .catch(() => {
+        const fallback = getDefaultHomepageConfig();
+        setConfig(fallback);
+        saveDraftHomepageConfig(fallback);
+        toast('Could not load saved config — showing defaults', 'error');
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   const sortedSections = useMemo(
