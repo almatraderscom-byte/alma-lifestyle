@@ -1,3 +1,5 @@
+import type { ProductType } from '@/lib/product-design-types';
+import { DISPLAY_ORDER_BY_TYPE } from '@/lib/product-design-types';
 import type { AdminProduct, AdminCategory, AdminCollection, AdminOrder, OrderStatus } from '@/lib/admin-store';
 import type {
   Category,
@@ -81,6 +83,11 @@ export function mapDbProductToAdmin(
     seoDescription: row.seo_description ?? undefined,
     seoKeywords: row.seo_keywords ?? undefined,
     sku: row.sku,
+    productType: (row.product_type ?? 'simple') as ProductType,
+    designGroupId: row.design_group_id ?? undefined,
+    designGroupName: row.design_group_name ?? undefined,
+    ageGroup: row.age_group ?? undefined,
+    displayOrder: row.display_order ?? 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -137,6 +144,12 @@ export function mapAdminProductToDbInsert({
     import_source_name: null,
     imported_at: null,
     deleted_at: null,
+    product_type: product.productType ?? 'simple',
+    design_group_id: product.designGroupId ?? null,
+    design_group_name: product.designGroupName ?? null,
+    age_group: product.ageGroup ?? null,
+    display_order:
+      product.displayOrder ?? DISPLAY_ORDER_BY_TYPE[product.productType ?? 'simple'],
   };
 
   const variants =

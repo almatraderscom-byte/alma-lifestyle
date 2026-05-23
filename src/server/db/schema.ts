@@ -45,6 +45,13 @@ export interface Category {
   updated_at: Timestamp;
 }
 
+export type ProductTypeDb =
+  | 'simple'
+  | 'men_panjabi'
+  | 'boy_panjabi'
+  | 'women_three_piece'
+  | 'girl_two_piece';
+
 export interface Product {
   id: UUID;
   brand_id: UUID;
@@ -52,6 +59,11 @@ export interface Product {
   sku: string;
   slug: string;
   title: string;
+  product_type: ProductTypeDb;
+  design_group_id: UUID | null;
+  design_group_name: string | null;
+  age_group: string | null;
+  display_order: number;
   title_bn?: string | null;
   short_description?: string | null;
   compare_at_price_bdt?: number | null;

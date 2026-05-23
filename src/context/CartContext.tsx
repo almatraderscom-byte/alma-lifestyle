@@ -22,6 +22,9 @@ export interface CartItem {
   size: string;
   image: string;
   slug: string;
+  /** Links cart lines added as one family set purchase */
+  familySetId?: string;
+  familySetLabel?: string;
 }
 
 export type AddToCartInput = Omit<CartItem, 'variantId' | 'quantity'> & {

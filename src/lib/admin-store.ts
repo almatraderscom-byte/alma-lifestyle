@@ -15,6 +15,7 @@ import {
   saveHomepageConfig as saveFullHomepageConfig,
 } from '@/lib/homepage-config';
 import { shouldUseApi } from '@/lib/data-source';
+import type { ProductType } from '@/lib/product-design-types';
 import * as adminApi from '@/lib/admin-api';
 
 const KEYS = {
@@ -77,6 +78,11 @@ export interface AdminProduct {
   compareAtPriceBdt?: number;
   costPriceBdt?: number;
   categoryId: string;
+  productType: ProductType;
+  designGroupId?: string;
+  designGroupName?: string;
+  ageGroup?: string;
+  displayOrder?: number;
   status: ProductStatus;
   hasVariants: boolean;
   stock?: number;
@@ -223,7 +229,8 @@ function mkProduct(
   compare: number | undefined,
   categoryId: string,
   stock: number,
-  status: ProductStatus
+  status: ProductStatus,
+  productType: ProductType = 'simple'
 ): AdminProduct {
   const now = new Date().toISOString();
   const id = uid('prod');
@@ -236,6 +243,7 @@ function mkProduct(
     priceBdt: price,
     compareAtPriceBdt: compare,
     categoryId,
+    productType,
     status,
     hasVariants: false,
     stock,
@@ -614,6 +622,7 @@ export function createEmptyProduct(): AdminProduct {
     description: '',
     priceBdt: 0,
     categoryId: '',
+    productType: 'simple',
     status: 'draft',
     hasVariants: false,
     stock: 0,

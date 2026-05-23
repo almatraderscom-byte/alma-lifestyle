@@ -104,6 +104,19 @@ export async function createAdminProduct(
   await syncVariantsAndImages(productId, withRelations);
   await syncCollectionProducts(productId, product.collectionIds);
 
+  const groupId = product.designGroupId ?? productId;
+  const isGroupRoot =
+    product.productType !== 'simple' &&
+    (!product.designGroupId || product.designGroupId === productId);
+
+  await getSupabaseAdmin()
+    .from('products')
+    .update({
+      design_group_id: isGroupRoot ? productId : groupId,
+      design_group_name: product.designGroupName ?? product.title,
+    } as never)
+    .eq('id', productId);
+
   const full = await getProductById(productId);
   if (!full) throw new Error('Product not found after create');
   const collectionIds = await getProductCollectionIds(productId);

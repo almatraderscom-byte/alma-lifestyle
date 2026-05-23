@@ -1,3 +1,4 @@
+import type { ProductType } from '@/lib/product-design-types';
 import type { CatalogProduct, CategorySlug } from '@/lib/products-data';
 import type { Category, ProductWithRelations } from '@/server/db/schema';
 
@@ -66,5 +67,35 @@ export function mapDbProductToCatalog(
     })),
     popularScore: 50 + index,
     createdAt: new Date(product.created_at).getTime(),
+    productType: (product.product_type ?? 'simple') as ProductType,
+    designGroupId: product.design_group_id ?? undefined,
+    designGroupName: product.design_group_name ?? undefined,
+    ageGroup: product.age_group ?? undefined,
+  };
+}
+
+export function mapDesignGroupToCatalogListing(
+  members: ProductWithRelations[],
+  category: Category | undefined,
+  index = 0
+): CatalogProduct {
+  const sorted = [...members].sort((a, b) => a.display_order - b.display_order);
+  const anchor =
+    sorted.find((m) => m.product_type === 'men_panjabi') ?? sorted[0];
+  const base = mapDbProductToCatalog(anchor, category, index);
+  const prices = sorted.map((m) => Number(m.price_bdt));
+  const types = [...new Set(sorted.map((m) => m.product_type as ProductType))];
+
+  return {
+    ...base,
+    title: anchor.design_group_name ?? base.title,
+    designGroupId: anchor.design_group_id ?? anchor.id,
+    designGroupName: anchor.design_group_name ?? anchor.title,
+    designGroupMembers: sorted.map((m, i) => mapDbProductToCatalog(m, category, i)),
+    priceMin: Math.min(...prices),
+    priceMax: Math.max(...prices),
+    price: Math.min(...prices),
+    availableTypes: types,
+    href: `/products/${anchor.slug}`,
   };
 }

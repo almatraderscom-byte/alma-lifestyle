@@ -1,4 +1,5 @@
 import type { FeaturedProduct } from '@/lib/content';
+import type { ProductType } from '@/lib/product-design-types';
 
 export type CategorySlug = 'panjabi' | 'electronics' | 'accessories' | 'home-decor';
 
@@ -21,6 +22,15 @@ export type CatalogProduct = FeaturedProduct & {
   images: { id: string; bgClass: string }[];
   popularScore: number;
   createdAt: number;
+  productType?: ProductType;
+  designGroupId?: string;
+  designGroupName?: string;
+  ageGroup?: string;
+  /** All members when part of a matching design group */
+  designGroupMembers?: CatalogProduct[];
+  priceMin?: number;
+  priceMax?: number;
+  availableTypes?: ProductType[];
 };
 
 export const CATEGORY_LABELS: Record<CategorySlug, string> = {

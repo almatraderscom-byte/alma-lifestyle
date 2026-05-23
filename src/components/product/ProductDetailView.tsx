@@ -4,6 +4,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductDetails } from '@/components/product/ProductDetails';
+import { ProductMatchingSetPDP } from '@/components/product/ProductMatchingSetPDP';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { BREADCRUMB, PDP } from '@/lib/content';
 import { CATALOG_PRODUCTS, toCardProduct, type CatalogProduct } from '@/lib/products-data';
@@ -31,14 +32,18 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           className="mb-6"
         />
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          <ProductGallery
-            images={product.images}
-            title={product.title}
-            aspectRatio={product.aspectRatio}
-          />
-          <ProductDetails product={product} />
-        </div>
+        {product.designGroupMembers && product.designGroupMembers.length > 1 ? (
+          <ProductMatchingSetPDP product={product} />
+        ) : (
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            <ProductGallery
+              images={product.images}
+              title={product.title}
+              aspectRatio={product.aspectRatio}
+            />
+            <ProductDetails product={product} />
+          </div>
+        )}
 
         {related.length > 0 && (
           <section className="mt-14 md:mt-20">

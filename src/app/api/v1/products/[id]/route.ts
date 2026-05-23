@@ -33,6 +33,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const product: AdminProduct = {
       ...parsed.data,
+      productType: parsed.data.productType ?? 'simple',
+      designGroupId: parsed.data.designGroupId ?? undefined,
+      designGroupName: parsed.data.designGroupName ?? undefined,
+      ageGroup: parsed.data.ageGroup ?? undefined,
       id,
       createdAt: parsed.data.id ? new Date().toISOString() : new Date().toISOString(),
       updatedAt: new Date().toISOString(),

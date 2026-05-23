@@ -67,6 +67,10 @@ export async function POST(request: NextRequest) {
 
     const product: AdminProduct = {
       ...parsed.data,
+      productType: parsed.data.productType ?? 'simple',
+      designGroupId: parsed.data.designGroupId ?? undefined,
+      designGroupName: parsed.data.designGroupName ?? undefined,
+      ageGroup: parsed.data.ageGroup ?? undefined,
       id: parsed.data.id ?? crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

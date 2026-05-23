@@ -5,6 +5,7 @@ import { getProducts, getProductBySlug, getFeaturedProducts } from '@/server/db/
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
 import { mapDbProductToCatalog } from '@/lib/mappers/catalog-product';
+import { getDesignGroupBySlug } from '@/server/db/queries/design-groups';
 import {
   CATALOG_PRODUCTS,
   getProductBySlug as getStaticProductBySlug,
@@ -92,14 +93,26 @@ export async function loadProductBySlugServer(
   }
 
   try {
-    const row = await getProductBySlug(slug);
-    if (!row || !row.published) return getStaticProductBySlug(slug) ?? null;
+    const group = await getDesignGroupBySlug(slug);
+    if (!group) return getStaticProductBySlug(slug) ?? null;
+
+    const row = group.members.find((m) => m.slug === slug) ?? group.anchor;
+    if (!row.published) return getStaticProductBySlug(slug) ?? null;
 
     const brandId = await getBrandId();
     const categories = await getCategories(brandId);
     const category = categories.find((c) => c.id === row.category_id);
 
-    return mapDbProductToCatalog(row, category);
+    const catalog = mapDbProductToCatalog(row, category);
+    if (group.members.length > 1) {
+      catalog.designGroupMembers = group.members.map((m, i) =>
+        mapDbProductToCatalog(m, category, i)
+      );
+      catalog.designGroupId = group.anchor.design_group_id ?? group.anchor.id;
+      catalog.designGroupName =
+        group.anchor.design_group_name ?? group.anchor.title;
+    }
+    return catalog;
   } catch {
     return getStaticProductBySlug(slug) ?? null;
   }

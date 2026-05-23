@@ -21,6 +21,15 @@ import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
 import { Select } from '@/components/admin/ui/Select';
 import { ImageUploader } from '@/components/admin/ui/ImageUploader';
+import {
+  ProductTypeSection,
+  type GirlAgeRow,
+} from '@/components/admin/products/ProductTypeSection';
+import {
+  GIRL_AGE_GROUPS,
+  slugForDesignMember,
+  DISPLAY_ORDER_BY_TYPE,
+} from '@/lib/product-design-types';
 import { useAdminToast } from '@/context/AdminToastContext';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Custom'];
@@ -51,6 +60,10 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
   const [collections, setCollections] = useState<Awaited<ReturnType<typeof getCollections>>>([]);
   const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null);
+  const [designGroups, setDesignGroups] = useState<{ id: string; name: string }[]>([]);
+  const [girlAgeRows, setGirlAgeRows] = useState<GirlAgeRow[]>(
+    GIRL_AGE_GROUPS.map((ageGroup) => ({ ageGroup, priceBdt: 0, stock: 0 }))
+  );
 
   useEffect(() => {
     void Promise.all([getCategories(), getCollections(), getSettings()]).then(
@@ -59,6 +72,17 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
         setCollections(col);
         setSettings(s);
       }
+    );
+    void import('@/lib/admin-store').then(({ getProducts }) =>
+      getProducts().then((products) => {
+        const map = new Map<string, string>();
+        for (const p of products) {
+          if (p.designGroupId && p.designGroupName) {
+            map.set(p.designGroupId, p.designGroupName);
+          }
+        }
+        setDesignGroups([...map.entries()].map(([id, name]) => ({ id, name })));
+      })
     );
   }, []);
 
@@ -112,17 +136,47 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
     if (!skipValidation && status === 'published' && !validate()) return;
     setSaving(true);
     try {
-      const payload: AdminProduct = {
-        ...form,
-        status,
-        updatedAt: new Date().toISOString(),
-      };
-      if (isEdit && initial) {
-        await updateProduct(initial.id, payload);
-        toast('Product updated successfully', 'success');
+      if (!isEdit && form.productType === 'girl_two_piece') {
+        const baseSlug = form.slug || generateProductSlug(form.designGroupName ?? form.title);
+        const groupName = form.designGroupName ?? form.title;
+        let rootId = form.designGroupId;
+        for (let i = 0; i < GIRL_AGE_GROUPS.length; i++) {
+          const age = GIRL_AGE_GROUPS[i];
+          const row = girlAgeRows[i];
+          const payload: AdminProduct = {
+            ...form,
+            id: uid('prod'),
+            productType: 'girl_two_piece',
+            ageGroup: age,
+            designGroupName: groupName,
+            designGroupId: rootId,
+            displayOrder: DISPLAY_ORDER_BY_TYPE.girl_two_piece,
+            slug: slugForDesignMember(baseSlug, 'girl_two_piece', age),
+            title: `${form.title} (${age})`,
+            priceBdt: row?.priceBdt ?? 0,
+            stock: row?.stock ?? 0,
+            hasVariants: false,
+            status,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          };
+          const saved = await saveProduct(payload);
+          if (i === 0 && !rootId) rootId = saved.id;
+        }
+        toast('Girl two-piece products created', 'success');
       } else {
-        await saveProduct(payload);
-        toast('Product created successfully', 'success');
+        const payload: AdminProduct = {
+          ...form,
+          status,
+          updatedAt: new Date().toISOString(),
+        };
+        if (isEdit && initial) {
+          await updateProduct(initial.id, payload);
+          toast('Product updated successfully', 'success');
+        } else {
+          await saveProduct(payload);
+          toast('Product created successfully', 'success');
+        }
       }
       setDirty(false);
       router.push('/admin/products');
@@ -183,6 +237,16 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div className="xl:col-span-8 space-y-6">
+        <ProductTypeSection
+          form={form}
+          designGroupOptions={designGroups}
+          onChange={(next) => {
+            setDirty(true);
+            setForm(next);
+          }}
+          girlAgeRows={girlAgeRows}
+          onGirlAgeRowsChange={setGirlAgeRows}
+        />
         <Card title="Basic Information">
           <div className="space-y-4">
             <Input

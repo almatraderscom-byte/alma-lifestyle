@@ -14,6 +14,10 @@ export const ProductsListQuerySchema = PaginationQuerySchema.extend({
   search: z.string().max(200).optional(),
   sort: z.enum(['date', 'title', 'price', 'stock']).optional(),
   sortDir: z.enum(['asc', 'desc']).optional(),
+  designGroup: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v === 'true'),
 });
 
 export const AdminProductImageSchema = z.object({
@@ -58,6 +62,20 @@ export const AdminProductBodySchema = z.object({
   seoDescription: z.string().optional(),
   seoKeywords: z.string().optional(),
   sku: z.string(),
+  productType: z
+    .enum([
+      'simple',
+      'men_panjabi',
+      'boy_panjabi',
+      'women_three_piece',
+      'girl_two_piece',
+    ])
+    .optional()
+    .default('simple'),
+  designGroupId: z.string().uuid().optional().nullable(),
+  designGroupName: z.string().optional().nullable(),
+  ageGroup: z.string().optional().nullable(),
+  displayOrder: z.number().int().optional(),
 });
 
 export const CategoryBodySchema = z.object({
