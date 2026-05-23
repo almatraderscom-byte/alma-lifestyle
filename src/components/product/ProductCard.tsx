@@ -5,14 +5,20 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatBdtPrice } from '@/lib/format-bn';
-import { FEATURED_SECTION } from '@/lib/content';
+import { FEATURED_SECTION, PDP } from '@/lib/content';
 import type { FeaturedProduct } from '@/lib/content';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/components/ui/Toast';
+import { getProductBySlug } from '@/lib/products-data';
+import { catalogToCartItem } from '@/lib/cart-helpers';
 
 interface ProductCardProps {
   product: FeaturedProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { addItem } = useCart();
+  const { showToast } = useToast();
   const [wished, setWished] = useState(false);
   const isLightBg =
     product.bgClass.includes('e8e4df') || product.bgClass.includes('c4a574');
@@ -56,6 +62,14 @@ export function ProductCard({ product }: ProductCardProps) {
             'opacity-100'
           )}
           whileTap={{ scale: 0.98 }}
+          onClick={(e) => {
+            e.preventDefault();
+            const slug = product.slug ?? product.href.replace('/products/', '');
+            const catalog = getProductBySlug(slug);
+            if (!catalog) return;
+            addItem(catalogToCartItem(catalog));
+            showToast(PDP.toastAdded);
+          }}
         >
           {FEATURED_SECTION.addToBag}
         </motion.button>

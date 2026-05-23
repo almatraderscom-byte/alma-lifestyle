@@ -46,3 +46,26 @@ export function formatDiscountPercent(percent: number): string {
 export function formatPageNumber(page: number): string {
   return toBanglaNumber(page);
 }
+
+const BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'] as const;
+
+/** Convert ASCII digits in a string to Bengali numerals */
+export function toBanglaDigits(value: string): string {
+  return value.replace(/\d/g, (d) => BN_DIGITS[Number(d)] ?? d);
+}
+
+/** Order number for display: ALM-১২৩৪৫৬৭৮ */
+export function formatOrderNumber(orderNumber: string): string {
+  return toBanglaDigits(orderNumber);
+}
+
+/** Cart item count label: ৩টি পণ্য */
+export function formatItemCount(count: number): string {
+  return `${toBanglaNumber(count)}টি পণ্য`;
+}
+
+/** Variant line: নেভি | XL */
+export function formatVariantLabel(color: string, size: string): string {
+  if (!size || size === '—') return color;
+  return `${color} | ${size}`;
+}

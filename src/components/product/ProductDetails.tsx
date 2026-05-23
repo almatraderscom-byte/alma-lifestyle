@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { SITE, PDP } from '@/lib/content';
+import { useCart } from '@/context/CartContext';
+import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
   formatBdtPrice,
   formatDiscountPercent,
@@ -20,6 +23,8 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
+  const router = useRouter();
+  const { addItem } = useCart();
   const { showToast } = useToast();
   const [selectedColorId, setSelectedColorId] = useState(product.colors[0]?.id ?? '');
   const [selectedSize, setSelectedSize] = useState(
@@ -37,8 +42,22 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     );
   }, [product.compareAtPrice, product.price]);
 
+  function buildCartPayload() {
+    return catalogToCartItem(product, {
+      colorName: selectedColor?.name,
+      size: selectedSize,
+      quantity,
+    });
+  }
+
   function handleAddToBag() {
+    addItem(buildCartPayload());
     showToast(PDP.toastAdded);
+  }
+
+  function handleBuyNow() {
+    addItem(buildCartPayload());
+    router.push('/checkout');
   }
 
   const whatsappMessage = `আসসালামু আলাইকুম, আমি "${product.title}" (${selectedColor?.name ?? ''}, ${selectedSize}, পরিমাণ: ${quantity}) অর্ডার করতে চাই।`;
@@ -171,6 +190,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </button>
         <button
           type="button"
+          onClick={handleBuyNow}
           className="w-full min-h-14 rounded-lg bg-primary text-secondary font-bn-body text-lg font-semibold hover:bg-primary/90 transition-colors"
         >
           {PDP.buyNow}

@@ -5,12 +5,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SITE, NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { useCart } from '@/context/CartContext';
+import { toBanglaNumber } from '@/lib/format-bn';
 
 const NAV_ITEMS = [NAV.shop, NAV.newArrivals, NAV.collections, NAV.about];
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const bagCount = 0;
+  const { itemCount, hydrated } = useCart();
+  const bagCount = hydrated ? itemCount : 0;
 
   return (
     <>
@@ -193,7 +196,7 @@ function BagIcon({ count }: { count: number }) {
       </svg>
       {count > 0 && (
         <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white px-1">
-          {count}
+          {toBanglaNumber(count)}
         </span>
       )}
     </span>

@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ToastProvider } from '@/components/ui/Toast';
+import { CartProvider } from '@/context/CartContext';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -48,10 +49,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
         <ToastProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <WhatsAppButton />
+          <CartProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <WhatsAppButton />
+          </CartProvider>
         </ToastProvider>
       </body>
     </html>
