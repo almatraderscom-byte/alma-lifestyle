@@ -185,6 +185,7 @@ export const FOOTER = {
   quickLinksTitle: 'দ্রুত লিংক',
   quickLinks: [
     { label: 'সব পণ্য', href: '/products' },
+    { label: 'শপিং ব্যাগ', href: '/cart' },
     { label: 'নতুন এসেছে', href: '/products?sort=newest' },
     { label: 'বেস্ট সেলার', href: '/collections/best-sellers' },
     { label: 'আমাদের সম্পর্কে', href: '/products' },

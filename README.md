@@ -44,23 +44,35 @@ src/
 
 ## Getting Started
 
-1. **Install dependencies**:
+1. **Use the latest `main` branch** (Bangla storefront, cart, and checkout live here):
+   ```bash
+   git pull origin main
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. **Set up environment**:
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your Supabase credentials
-   ```
-
-3. **Run development server**:
+3. **Environment** (optional for cart/checkout UI; required before Supabase queries):
    ```bash
    npm run dev
    ```
+   The `predev` script copies `.env.example` → `.env.local` automatically if missing.
 
 4. **Open** [http://localhost:3000](http://localhost:3000)
+
+### Customer routes (Bangla UI)
+
+| URL | Page |
+|-----|------|
+| `/` | Homepage |
+| `/products` | Product listing |
+| `/products/[slug]` | Product detail |
+| `/cart` | Shopping bag |
+| `/checkout` | Checkout (add items to cart first) |
+
+Bag icon in the header also links to `/cart`.
 
 ## Available Scripts
 
