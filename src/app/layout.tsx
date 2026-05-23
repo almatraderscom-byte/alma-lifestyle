@@ -1,28 +1,38 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Playfair_Display } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/google';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
+import './globals.css';
 
 const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  variable: '--font-playfair',
+  subsets: ['latin'],
+  weight: ['400', '600'],
+});
+
+const notoSerifBengali = Noto_Serif_Bengali({
+  variable: '--font-noto-serif-bengali',
+  subsets: ['bengali'],
+  weight: ['400', '600', '700'],
+});
+
+const hindSiliguri = Hind_Siliguri({
+  variable: '--font-hind-siliguri',
+  subsets: ['bengali'],
+  weight: ['400', '500', '600'],
 });
 
 export const metadata: Metadata = {
-  title: "Alma Lifestyle — Premium Punjabi Fashion",
+  title: 'ALMA Lifestyle | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল',
   description:
-    "Premium Punjabi fashion for Bangladesh. Easy browsing, clear BDT prices, kurtis, sarees, panjabi & more.",
+    'প্রিমিয়াম পাঞ্জাবি, ইলেকট্রনিক্স, এক্সেসরিজ ও হোম ডেকর — সারা বাংলাদেশে ডেলিভারি। ALMA Lifestyle।',
+  openGraph: {
+    title: 'ALMA Lifestyle | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল',
+    description:
+      'Premium fashion and lifestyle for Bangladesh — Panjabi, electronics, accessories, home decor.',
+    locale: 'bn_BD',
+  },
 };
 
 export default function RootLayout({
@@ -32,10 +42,15 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
+      lang="bn"
+      className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <WhatsAppButton />
+      </body>
     </html>
   );
 }

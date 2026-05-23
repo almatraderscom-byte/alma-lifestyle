@@ -1,39 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --alma-cream: #f7f4ef;
-  --alma-ink: #1a1814;
-  --alma-gold: #b8956a;
-  --alma-muted: #6b6560;
-  --alma-border: #e8e4dc;
-  --background: var(--alma-cream);
-  --foreground: var(--alma-ink);
+  --primary: #1a1a1a;
+  --secondary: #f5f0eb;
+  --accent: #8b7355;
+  --background: #ffffff;
+  --warm-white: #faf8f5;
+  --text-dark: #1a1a1a;
+  --text-light: #6b6b6b;
+  --border-subtle: #ebe6e0;
 }
 
 @theme inline {
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-alma-cream: var(--alma-cream);
-  --color-alma-ink: var(--alma-ink);
-  --color-alma-gold: var(--alma-gold);
-  --color-alma-muted: var(--alma-muted);
-  --color-alma-border: var(--alma-border);
-  --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-playfair);
-  --font-mono: var(--font-geist-mono);
+  --color-warm-white: var(--warm-white);
+  --color-text-dark: var(--text-dark);
+  --color-text-light: var(--text-light);
+  --color-border-subtle: var(--border-subtle);
+  --font-brand: var(--font-playfair);
+  --font-bn-heading: var(--font-noto-serif-bengali);
+  --font-bn-body: var(--font-hind-siliguri);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-color: var(--warm-white);
+  color: var(--text-dark);
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
 }
 
-.font-display {
-  font-family: var(--font-playfair), Georgia, serif;
+.font-bn-body {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', system-ui, sans-serif;
+  line-height: 1.8;
 }
 
-/* Dense product grids — familiar ecommerce scan pattern */
+.font-bn-heading {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  line-height: 1.8;
+}
+
+.font-brand {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+  line-height: 1.2;
+}
+
+::selection {
+  background-color: rgba(139, 115, 85, 0.35);
+  color: var(--text-dark);
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -41,9 +61,13 @@ body {
   overflow: hidden;
 }
 
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
