@@ -1,3 +1,8 @@
+/**
+ * GET  /api/v1/orders — List orders (admin).
+ * POST /api/v1/orders — Create order from checkout (public).
+ *   Body: checkout payload; assigns order number ALM-YYYYMMDD-####
+ */
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { PaginationQuerySchema, CreateOrderBodySchema } from '@/lib/api-validation';

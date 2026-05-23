@@ -10,6 +10,7 @@ import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { AdminToastProvider } from '@/context/AdminToastContext';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 
 const BREADCRUMB_MAP: Record<string, string[]> = {
   '/admin': ['Dashboard'],
@@ -103,7 +104,7 @@ function AdminLayoutInner({
               <AdminStorageBanner />
             </div>
           )}
-          {children}
+          <AdminErrorBoundary>{children}</AdminErrorBoundary>
         </main>
       </div>
       <AdminHelp />

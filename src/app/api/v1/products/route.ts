@@ -1,3 +1,12 @@
+/**
+ * GET  /api/v1/products — Paginated catalog (public).
+ *   Query: page, limit, category, published, search, sort, sortDir
+ *   Response: { status, data: { data: AdminProduct[], pagination } }
+ *
+ * POST /api/v1/products — Create product (admin session required).
+ *   Body: AdminProductBodySchema
+ *   Response: { status, data: AdminProduct } (201)
+ */
 import type { NextRequest } from 'next/server';
 import { ProductsListQuerySchema, AdminProductBodySchema } from '@/lib/api-validation';
 import { mapDbProductToAdmin } from '@/lib/mappers/admin-product';

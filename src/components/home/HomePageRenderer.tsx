@@ -16,6 +16,7 @@ import { ReviewsSection } from '@/components/home/ReviewsSection';
 import { CollectionBannerEditorial } from '@/components/home/CollectionBannerEditorial';
 import { CommunityGrid } from '@/components/home/CommunityGrid';
 import { TrustStrip } from '@/components/home/TrustStrip';
+import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
 
 interface HomePageRendererProps {
   initialConfig?: HomepageConfig;
@@ -56,37 +57,60 @@ export function HomePageRenderer({ initialConfig }: HomePageRendererProps) {
 
   const sections = getSortedEnabledSections(config);
 
+  const sectionLabels: Record<string, string> = {
+    hero: 'হিরো',
+    marquee: 'মারকি',
+    categories: 'ক্যাটাগরি',
+    featured: 'ফিচার্ড পণ্য',
+    brandStory: 'ব্র্যান্ড স্টোরি',
+    reviews: 'রিভিউ',
+    collectionBanner: 'কালেকশন',
+    community: 'কমিউনিটি',
+    trust: 'ট্রাস্ট স্ট্রিপ',
+  };
+
   return (
     <>
       {sections.map((section) => {
-        switch (section.id) {
-          case 'hero':
-            return <EditorialHero key={section.id} data={section.data} />;
-          case 'marquee':
-            return <StoryMarquee key={section.id} data={section.data} />;
-          case 'categories':
-            return <CategoryShowcase key={section.id} data={section.data} />;
-          case 'featured':
-            return (
-              <FeaturedProductsSection
-                key={section.id}
-                data={section.data}
-                products={resolveFeaturedProducts(section.data)}
-              />
-            );
-          case 'brandStory':
-            return <BrandStory key={section.id} data={section.data} />;
-          case 'reviews':
-            return <ReviewsSection key={section.id} data={section.data} />;
-          case 'collectionBanner':
-            return <CollectionBannerEditorial key={section.id} data={section.data} />;
-          case 'community':
-            return <CommunityGrid key={section.id} data={section.data} />;
-          case 'trust':
-            return <TrustStrip key={section.id} data={section.data} />;
-          default:
-            return null;
-        }
+        const label = sectionLabels[section.id] ?? 'সেকশন';
+
+        const content = (() => {
+          switch (section.id) {
+            case 'hero':
+              return <EditorialHero data={section.data} />;
+            case 'marquee':
+              return <StoryMarquee data={section.data} />;
+            case 'categories':
+              return <CategoryShowcase data={section.data} />;
+            case 'featured':
+              return (
+                <FeaturedProductsSection
+                  data={section.data}
+                  products={resolveFeaturedProducts(section.data)}
+                />
+              );
+            case 'brandStory':
+              return <BrandStory data={section.data} />;
+            case 'reviews':
+              return <ReviewsSection data={section.data} />;
+            case 'collectionBanner':
+              return <CollectionBannerEditorial data={section.data} />;
+            case 'community':
+              return <CommunityGrid data={section.data} />;
+            case 'trust':
+              return <TrustStrip data={section.data} />;
+            default:
+              return null;
+          }
+        })();
+
+        if (!content) return null;
+
+        return (
+          <CustomerErrorBoundary key={section.id} sectionLabel={label}>
+            {content}
+          </CustomerErrorBoundary>
+        );
       })}
     </>
   );

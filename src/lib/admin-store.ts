@@ -1,3 +1,12 @@
+/**
+ * Admin data layer for the dashboard.
+ *
+ * When `shouldUseApi()` is true (Supabase env configured), read/write functions
+ * call `/api/v1/*` via `admin-api.ts` (server uses service role + RLS bypass).
+ *
+ * When Supabase is not configured, the same functions use `localStorage` keys
+ * prefixed with `alma-admin-*` and seed demo data on first visit.
+ */
 import type { AppSettings } from '@/lib/admin-settings-types';
 import { getDefaultAppSettings, migrateLegacySettings } from '@/lib/admin-settings-types';
 import type { HomepageConfig } from '@/lib/homepage-config-types';

@@ -1,3 +1,7 @@
+/**
+ * API route wrappers: Supabase guard, admin auth, and error mapping.
+ * Rate limiting is applied in `src/middleware.ts` for `/api/v1/*`.
+ */
 import type { NextRequest } from 'next/server';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { apiError, apiNotConfigured, apiUnauthorized } from './response';

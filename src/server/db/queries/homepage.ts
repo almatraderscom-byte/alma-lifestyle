@@ -1,3 +1,7 @@
+/**
+ * Homepage and settings in `site_config` (JSONB keys: homepage, settings).
+ * RLS allows public SELECT; mutations use service role via API routes only.
+ */
 import { getSupabaseAdmin } from '../client';
 import type { Json, SiteConfigRow } from '../schema';
 import { assertNoError } from './errors';

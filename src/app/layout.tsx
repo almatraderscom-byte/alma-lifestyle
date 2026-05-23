@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import './globals.css';
 
@@ -45,6 +47,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
         <RootShell>{children}</RootShell>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
