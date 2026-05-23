@@ -33,6 +33,8 @@ Without Supabase env vars, the admin panel uses **localStorage** and the storefr
 
 ## Supabase setup
 
+**Wrong schema on an old project?** Create a fresh production DB: [docs/SUPABASE_NEW_PROJECT.md](./docs/SUPABASE_NEW_PROJECT.md) (`npm run bootstrap:supabase`).
+
 ### 1. Create a project
 
 1. [supabase.com](https://supabase.com) → New project.

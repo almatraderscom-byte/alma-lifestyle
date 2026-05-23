@@ -93,3 +93,27 @@ SET
   published = EXCLUDED.published,
   published_at = COALESCE(collections.published_at, EXCLUDED.published_at),
   updated_at = now();
+
+-- Site config (homepage + settings) — admin can customize later
+INSERT INTO site_config (key, value)
+VALUES
+  (
+    'homepage',
+    jsonb_build_object(
+      'version', 1,
+      'sections', '[]'::jsonb,
+      'lastSaved', now()
+    )
+  ),
+  (
+    'settings',
+    jsonb_build_object(
+      'storeName', 'ALMA Lifestyle',
+      'currency', 'BDT',
+      'updatedAt', now()
+    )
+  )
+ON CONFLICT (key) DO UPDATE
+SET
+  value = EXCLUDED.value,
+  updated_at = now();
