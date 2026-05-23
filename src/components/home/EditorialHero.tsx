@@ -6,9 +6,18 @@ import { EDITORIAL_HERO } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import type { HeroSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function EditorialHero() {
+interface EditorialHeroProps {
+  data?: HeroSectionData;
+}
+
+export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
   const reduceMotion = useReducedMotion();
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'hero')!.data;
 
   return (
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
@@ -18,11 +27,20 @@ export function EditorialHero() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <PlaceholderImage
-          hint={EDITORIAL_HERO.imageHint}
-          bgClass="bg-maroon h-full min-h-[60vh] md:min-h-full"
-          className="h-full w-full"
-        />
+        {data.backgroundImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={data.backgroundImageUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <PlaceholderImage
+            hint={data.imageHint || EDITORIAL_HERO.imageHint}
+            bgClass="bg-maroon h-full min-h-[60vh] md:min-h-full"
+            className="h-full w-full"
+          />
+        )}
 
         <motion.div
           className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 drop-shadow-md"
@@ -58,35 +76,35 @@ export function EditorialHero() {
         transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
       >
         <p className="editorial-label text-terracotta mb-6">
-          {formatBnText(EDITORIAL_HERO.caption)}
+          {formatBnText(data.caption)}
         </p>
 
         <h1 className="font-bn-heading text-[2.25rem] md:text-[3.5rem] font-bold text-charcoal leading-[1.35]">
-          {EDITORIAL_HERO.title}
+          {data.title}
         </h1>
 
         <p className="font-bn-body text-base md:text-lg text-text-light mt-5 max-w-md leading-relaxed">
-          {EDITORIAL_HERO.subtitle}
+          {data.subtitle}
         </p>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mt-8">
           <Link
-            href={EDITORIAL_HERO.ctaPrimaryHref}
+            href={data.ctaPrimaryHref}
             className="inline-flex items-center justify-center min-h-14 px-8 bg-terracotta text-white font-bn-body text-base font-semibold rounded hover:bg-[#b06d4f] transition-colors duration-300"
           >
-            {EDITORIAL_HERO.ctaPrimary}
+            {data.ctaPrimary}
           </Link>
           <Link
-            href={EDITORIAL_HERO.ctaSecondaryHref}
+            href={data.ctaSecondaryHref}
             className="link-underline font-bn-body text-base font-medium text-charcoal min-h-14 inline-flex items-center"
           >
-            {EDITORIAL_HERO.ctaSecondary}
+            {data.ctaSecondary}
           </Link>
         </div>
 
         <div className="mt-10 md:mt-14 pt-6 border-t border-border-subtle">
           <ul className="flex flex-wrap gap-x-4 gap-y-2 font-bn-body text-xs sm:text-sm text-text-light">
-            {EDITORIAL_HERO.badges.map((badge, i) => (
+            {data.badges.map((badge, i) => (
               <li key={badge} className="flex items-center gap-4">
                 {i > 0 && <span className="text-border-subtle hidden sm:inline" aria-hidden>|</span>}
                 <span>{formatBnText(badge)}</span>

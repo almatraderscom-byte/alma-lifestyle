@@ -44,6 +44,9 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [seoOpen, setSeoOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState('');
 
   const categories = useMemo(() => getCategories(), []);
   const collections = useMemo(() => getCollections(), []);
@@ -54,6 +57,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   }, [initial]);
 
   function update<K extends keyof AdminProduct>(key: K, value: AdminProduct[K]) {
+    setDirty(true);
     setForm((prev) => {
       const next = { ...prev, [key]: value };
       if (key === 'title' && !isEdit) {
@@ -63,6 +67,27 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
       return next;
     });
   }
+
+  useEffect(() => {
+    if (!dirty || !isEdit || !initial) return;
+    const timer = window.setInterval(() => {
+      if (!form.title.trim()) return;
+      updateProduct(initial.id, { ...form, status: 'draft', updatedAt: new Date().toISOString() });
+      setDraftSavedAt(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, [dirty, form, isEdit, initial]);
+
+  useEffect(() => {
+    function beforeUnload(e: BeforeUnloadEvent) {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    }
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [dirty]);
 
   function validate(): boolean {
     const next: Record<string, string> = {};
@@ -89,6 +114,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
       toast('Product created successfully', 'success');
     }
     setSaving(false);
+    setDirty(false);
     router.push('/admin/products');
   }
 
@@ -124,8 +150,20 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
     update('collectionIds', ids);
   }
 
-  const usd = settings ? (form.priceBdt * settings.bdtToUsd).toFixed(2) : '—';
-  const aed = settings ? (form.priceBdt * settings.bdtToAed).toFixed(2) : '—';
+  const usd = settings ? (form.priceBdt / settings.usdExchangeRate).toFixed(2) : '—';
+  const aed = settings ? (form.priceBdt / settings.aedExchangeRate).toFixed(2) : '—';
+
+  function addTag() {
+    const tag = tagInput.trim();
+    if (!tag) return;
+    const tags = form.tags ?? [];
+    if (!tags.includes(tag)) update('tags', [...tags, tag]);
+    setTagInput('');
+  }
+
+  function removeTag(tag: string) {
+    update('tags', (form.tags ?? []).filter((t) => t !== tag));
+  }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -133,11 +171,31 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
         <Card title="Basic Information">
           <div className="space-y-4">
             <Input
-              label="Product Title"
+              label="Product Title (English / internal)"
               value={form.title}
               onChange={(e) => update('title', e.target.value)}
               error={errors.title}
             />
+            <Input
+              label="Bangla Title (customer-facing)"
+              value={form.banglaTitle ?? ''}
+              onChange={(e) => update('banglaTitle', e.target.value)}
+            />
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-neutral-800">Tags / keywords</p>
+              <div className="flex flex-wrap gap-2">
+                {(form.tags ?? []).map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-3 py-1 text-sm">
+                    {tag}
+                    <button type="button" onClick={() => removeTag(tag)} className="text-neutral-500 hover:text-red-600">×</button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add tag" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} />
+                <Button type="button" variant="secondary" size="sm" onClick={addTag}>Add</Button>
+              </div>
+            </div>
             <Input
               label="URL Slug"
               value={form.slug}
@@ -336,14 +394,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
               { value: 'published', label: 'Published' },
             ]}
           />
-          <div className="mt-4 flex flex-col gap-2">
-            <Button variant="secondary" loading={saving} onClick={() => persist('draft', true)}>
-              Save Draft
-            </Button>
-            <Button loading={saving} onClick={() => persist('published')}>
-              Save & Publish
-            </Button>
-          </div>
+          <p className="text-xs text-neutral-500 mt-2">Use the action bar at the bottom to save or publish.</p>
           {isEdit && initial && (
             <Button
               variant="danger"
@@ -397,6 +448,34 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
           </div>
         </Card>
       </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur px-4 py-3 lg:pl-[calc(15rem+1rem)]">
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-neutral-500">
+            {draftSavedAt ? `Draft saved at ${draftSavedAt}` : dirty ? 'Unsaved changes' : 'All changes saved'}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/products">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={(e) => {
+                  if (dirty && !confirm('Leave without saving?')) e.preventDefault();
+                }}
+              >
+                Cancel
+              </Button>
+            </Link>
+            <Button variant="secondary" loading={saving} onClick={() => { persist('draft', true); setDirty(false); }}>
+              Save Draft
+            </Button>
+            <Button loading={saving} onClick={() => { persist('published'); setDirty(false); }}>
+              Publish
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="h-20" aria-hidden />
     </div>
   );
 }

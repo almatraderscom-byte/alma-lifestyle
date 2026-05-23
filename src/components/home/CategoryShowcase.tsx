@@ -2,20 +2,28 @@
 
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
-import { CATEGORY_SHOWCASE } from '@/lib/content';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import type { CategoriesSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function CategoryShowcase() {
-  const { featured, stacked } = CATEGORY_SHOWCASE;
+interface CategoryShowcaseProps {
+  data?: CategoriesSectionData;
+}
+
+export function CategoryShowcase({ data: dataProp }: CategoryShowcaseProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'categories')!.data;
+  const { featured, stacked } = data;
 
   return (
     <section className="section-padding">
       <div className="mx-auto max-w-7xl">
         <ScrollFadeIn>
-          <p className="editorial-label text-terracotta mb-4">{CATEGORY_SHOWCASE.label}</p>
+          <p className="editorial-label text-terracotta mb-4">{data.label}</p>
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal mb-10 md:mb-14">
-            {CATEGORY_SHOWCASE.title}
+            {data.title}
           </h2>
         </ScrollFadeIn>
 
@@ -23,22 +31,24 @@ export function CategoryShowcase() {
           <ScrollFadeIn className="md:col-span-7">
             <CategoryCard
               href={featured.href}
-              name={featured.name}
-              subtitle={featured.count}
-              bg={featured.bg}
+              name={featured.displayName}
+              subtitle={featured.subtitle}
+              bg={featured.bgClass}
               hint={featured.imageHint}
+              imageUrl={featured.imageUrl}
               large
             />
           </ScrollFadeIn>
 
           <div className="grid grid-cols-3 md:grid-cols-1 md:col-span-5 gap-3 md:gap-4">
             {stacked.map((cat, i) => (
-              <ScrollFadeIn key={cat.slug} delay={0.08 + i * 0.06} className="md:flex-1">
+              <ScrollFadeIn key={cat.categorySlug} delay={0.08 + i * 0.06} className="md:flex-1">
                 <CategoryCard
                   href={cat.href}
-                  name={cat.name}
-                  bg={cat.bg}
+                  name={cat.displayName}
+                  bg={cat.bgClass}
                   hint={cat.imageHint}
+                  imageUrl={cat.imageUrl}
                 />
               </ScrollFadeIn>
             ))}
@@ -55,6 +65,7 @@ function CategoryCard({
   subtitle,
   bg,
   hint,
+  imageUrl,
   large = false,
 }: {
   href: string;
@@ -62,6 +73,7 @@ function CategoryCard({
   subtitle?: string;
   bg: string;
   hint: string;
+  imageUrl?: string;
   large?: boolean;
 }) {
   return (
@@ -69,11 +81,15 @@ function CategoryCard({
       href={href}
       className={cn(
         'group relative flex flex-col justify-end overflow-hidden rounded text-white',
-        bg,
+        !imageUrl && bg,
         large ? 'min-h-[280px] md:min-h-full md:h-full aspect-[4/5] md:aspect-auto' : 'min-h-[100px] md:min-h-0 md:h-full aspect-square md:aspect-auto'
       )}
     >
       <span className="sr-only">{hint}</span>
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      ) : null}
       <div
         className="absolute inset-0 pattern-overlay transition-transform duration-500 md:group-hover:scale-[1.03]"
         aria-hidden

@@ -5,11 +5,12 @@ interface StatsCardProps {
   value: string;
   change?: { value: string; positive: boolean };
   icon?: React.ReactNode;
+  href?: string;
 }
 
-export function StatsCard({ title, value, change, icon }: StatsCardProps) {
-  return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+export function StatsCard({ title, value, change, icon, href }: StatsCardProps) {
+  const inner = (
+    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-neutral-500">{title}</p>
@@ -33,4 +34,13 @@ export function StatsCard({ title, value, change, icon }: StatsCardProps) {
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <a href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97D5D] rounded-xl">
+        {inner}
+      </a>
+    );
+  }
+  return inner;
 }

@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/context/AdminAuthContext';
-import { getOrders } from '@/lib/admin-store';
+import { exportAllData, getOrders, importData } from '@/lib/admin-store';
+import { useAdminToast } from '@/context/AdminToastContext';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },
@@ -41,8 +42,24 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAdminAuth();
+  const { toast } = useAdminToast();
+  const importRef = useRef<HTMLInputElement>(null);
   const pendingOrders = getOrders().filter((o) => o.status === 'pending').length;
   const [productsOpen, setProductsOpen] = useState(pathname.startsWith('/admin/products'));
+
+  function handleImport(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = importData(String(reader.result));
+      if (result.ok) {
+        toast('Data imported successfully', 'success');
+        window.location.reload();
+      } else {
+        toast(result.error ?? 'Import failed', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
@@ -89,7 +106,7 @@ export function AdminSidebar({
                     onClick={() => setProductsOpen(!productsOpen)}
                     className={cn(
                       'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                      active && 'border-l-2 border-[#C97D5D] bg-white/10',
+                      active && 'border-l-4 border-[#C97D5D] bg-white/10',
                       !active && 'hover:bg-white/5',
                       collapsed && 'justify-center px-2'
                     )}
@@ -136,7 +153,7 @@ export function AdminSidebar({
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative',
-                  active && 'border-l-2 border-[#C97D5D] bg-white/10',
+                  active && 'border-l-4 border-[#C97D5D] bg-white/10',
                   !active && 'hover:bg-white/5',
                   collapsed && 'justify-center px-2'
                 )}
@@ -159,6 +176,35 @@ export function AdminSidebar({
         </nav>
 
         <div className="border-t border-white/10 p-3 space-y-2">
+          {!collapsed && (
+            <>
+              <button
+                type="button"
+                onClick={() => exportAllData()}
+                className="w-full text-left rounded-lg px-3 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white"
+              >
+                Backup Data
+              </button>
+              <button
+                type="button"
+                onClick={() => importRef.current?.click()}
+                className="w-full text-left rounded-lg px-3 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white"
+              >
+                Import Data
+              </button>
+              <input
+                ref={importRef}
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImport(file);
+                  e.target.value = '';
+                }}
+              />
+            </>
+          )}
           <button
             type="button"
             onClick={onToggleCollapse}

@@ -3,36 +3,53 @@
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
-import { BRAND_STORY } from '@/lib/content';
+import type { BrandStorySectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function BrandStory() {
+interface BrandStoryProps {
+  data?: BrandStorySectionData;
+}
+
+export function BrandStory({ data: dataProp }: BrandStoryProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'brandStory')!.data;
   return (
     <section className="section-padding bg-warm-white">
       <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
         <ScrollFadeIn>
           <div>
-            <PlaceholderImage
-              hint={BRAND_STORY.imageHint}
-              bgClass="bg-mustard w-full aspect-[4/5] rounded"
-            />
-            <p className="font-bn-body text-sm text-text-light mt-3">{BRAND_STORY.imageCaption}</p>
+            {data.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.imageUrl}
+                alt=""
+                className="w-full aspect-[4/5] rounded object-cover"
+              />
+            ) : (
+              <PlaceholderImage
+                hint={data.imageHint}
+                bgClass="bg-mustard w-full aspect-[4/5] rounded"
+              />
+            )}
+            <p className="font-bn-body text-sm text-text-light mt-3">{data.imageCaption}</p>
           </div>
         </ScrollFadeIn>
 
         <ScrollFadeIn delay={0.1}>
           <div className="md:py-8">
-            <p className="editorial-label text-terracotta mb-4">{BRAND_STORY.label}</p>
+            <p className="editorial-label text-terracotta mb-4">{data.label}</p>
             <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal leading-[1.35]">
-              {BRAND_STORY.title}
+              {data.title}
             </h2>
             <p className="font-bn-body text-base md:text-lg text-text-light mt-6 leading-relaxed">
-              {BRAND_STORY.body}
+              {data.body}
             </p>
             <Link
-              href={BRAND_STORY.ctaHref}
+              href={data.ctaHref}
               className="link-underline inline-block mt-8 font-bn-body text-base font-semibold text-charcoal"
             >
-              {BRAND_STORY.cta}
+              {data.cta}
             </Link>
           </div>
         </ScrollFadeIn>

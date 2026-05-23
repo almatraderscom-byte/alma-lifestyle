@@ -1,3 +1,11 @@
+import type { AppSettings } from '@/lib/admin-settings-types';
+import { getDefaultAppSettings, migrateLegacySettings } from '@/lib/admin-settings-types';
+import type { HomepageConfig } from '@/lib/homepage-config-types';
+import {
+  getSavedHomepageConfig,
+  saveHomepageConfig as saveFullHomepageConfig,
+} from '@/lib/homepage-config';
+
 const KEYS = {
   products: 'alma-admin-products',
   categories: 'alma-admin-categories',
@@ -49,6 +57,8 @@ export interface ProductImage {
 export interface AdminProduct {
   id: string;
   title: string;
+  banglaTitle?: string;
+  tags?: string[];
   slug: string;
   shortDescription: string;
   description: string;
@@ -88,22 +98,10 @@ export interface AdminOrder {
   updatedAt: string;
 }
 
-export interface HomepageConfig {
-  heroTitle: string;
-  heroSubtitle: string;
-  featuredProductIds: string[];
-  updatedAt: string;
-}
-
-export interface StoreSettings {
-  storeName: string;
-  supportEmail: string;
-  supportPhone: string;
-  bdtToUsd: number;
-  bdtToAed: number;
-  lowStockThreshold: number;
-  updatedAt: string;
-}
+export type { AppSettings } from '@/lib/admin-settings-types';
+export { getDefaultAppSettings, migrateLegacySettings } from '@/lib/admin-settings-types';
+export type { HomepageConfig } from '@/lib/homepage-config-types';
+export { getDefaultHomepageConfig, getSavedHomepageConfig } from '@/lib/homepage-config';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -203,21 +201,7 @@ export function ensureAdminSeed(): void {
   writeJson(KEYS.collections, collections);
   writeJson(KEYS.products, products);
   writeJson(KEYS.orders, orders);
-  writeJson(KEYS.homepage, {
-    heroTitle: 'Heritage, Reimagined',
-    heroSubtitle: 'Premium fashion crafted in Bangladesh',
-    featuredProductIds: products.slice(0, 4).map((p) => p.id),
-    updatedAt: now,
-  } satisfies HomepageConfig);
-  writeJson(KEYS.settings, {
-    storeName: 'ALMA Lifestyle',
-    supportEmail: 'support@alma.com',
-    supportPhone: '8801000000000',
-    bdtToUsd: 0.0091,
-    bdtToAed: 0.033,
-    lowStockThreshold: 10,
-    updatedAt: now,
-  } satisfies StoreSettings);
+  writeJson(KEYS.settings, getDefaultAppSettings());
   localStorage.setItem(KEYS.seeded, '1');
 }
 
@@ -326,6 +310,23 @@ export function deleteProduct(id: string): boolean {
   return true;
 }
 
+export function duplicateProduct(id: string): AdminProduct | null {
+  const source = getProductById(id);
+  if (!source) return null;
+  const now = new Date().toISOString();
+  const copy: AdminProduct = {
+    ...source,
+    id: uid('prod'),
+    title: `${source.title} (Copy)`,
+    slug: `${source.slug}-copy-${Math.random().toString(36).slice(2, 6)}`,
+    sku: `${source.sku}-COPY`,
+    status: 'draft',
+    createdAt: now,
+    updatedAt: now,
+  };
+  return saveProduct(copy);
+}
+
 export function generateProductSlug(title: string): string {
   return slugify(title);
 }
@@ -416,28 +417,84 @@ export function updateOrderStatus(id: string, status: OrderStatus): AdminOrder |
   return orders[index];
 }
 
-// ——— Homepage ———
-export function getHomepageConfig(): HomepageConfig | null {
-  ensureAdminSeed();
-  return readJson<HomepageConfig | null>(KEYS.homepage, null);
+// ——— Homepage (delegates to homepage-config) ———
+export function getHomepageConfig() {
+  return getSavedHomepageConfig();
 }
 
-export function saveHomepageConfig(config: HomepageConfig): HomepageConfig {
-  const next = { ...config, updatedAt: new Date().toISOString() };
-  writeJson(KEYS.homepage, next);
-  return next;
+export function saveHomepageConfig(config: HomepageConfig) {
+  return saveFullHomepageConfig(config);
 }
 
 // ——— Settings ———
-export function getSettings(): StoreSettings | null {
+export function getSettings(): AppSettings {
   ensureAdminSeed();
-  return readJson<StoreSettings | null>(KEYS.settings, null);
+  const raw = readJson<Record<string, unknown> | null>(KEYS.settings, null);
+  if (!raw) return getDefaultAppSettings();
+  if ('supportEmail' in raw || !('contactEmail' in raw)) {
+    return migrateLegacySettings(raw);
+  }
+  return { ...getDefaultAppSettings(), ...(raw as unknown as AppSettings) };
 }
 
-export function saveSettings(settings: StoreSettings): StoreSettings {
-  const next = { ...settings, updatedAt: new Date().toISOString() };
+export function saveSettings(settings: AppSettings): AppSettings {
+  const next: AppSettings = {
+    ...settings,
+    updatedAt: new Date().toISOString(),
+  };
   writeJson(KEYS.settings, next);
   return next;
+}
+
+export interface AdminDataExport {
+  version: 1;
+  exportedAt: string;
+  products: AdminProduct[];
+  categories: AdminCategory[];
+  collections: AdminCollection[];
+  orders: AdminOrder[];
+  settings: AppSettings;
+  homepage: HomepageConfig;
+}
+
+export function exportAllData(): void {
+  if (!isBrowser()) return;
+  const payload: AdminDataExport = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    products: getProducts(),
+    categories: getCategories(),
+    collections: getCollections(),
+    orders: getOrders(),
+    settings: getSettings(),
+    homepage: getSavedHomepageConfig(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `alma-admin-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function importData(json: string): { ok: boolean; error?: string } {
+  if (!isBrowser()) return { ok: false, error: 'Not in browser' };
+  try {
+    const data = JSON.parse(json) as AdminDataExport;
+    if (!data.version || !data.products) {
+      return { ok: false, error: 'Invalid backup file' };
+    }
+    writeJson(KEYS.products, data.products);
+    writeJson(KEYS.categories, data.categories);
+    writeJson(KEYS.collections, data.collections);
+    writeJson(KEYS.orders, data.orders);
+    writeJson(KEYS.settings, data.settings);
+    saveFullHomepageConfig(data.homepage);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Could not parse JSON' };
+  }
 }
 
 export function createEmptyProduct(): AdminProduct {

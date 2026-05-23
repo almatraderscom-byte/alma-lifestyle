@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   getProducts,
   getOrders,
@@ -11,12 +11,14 @@ import {
 import { StatsCard } from '@/components/admin/ui/StatsCard';
 import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { Button } from '@/components/admin/ui/Button';
+import { Input } from '@/components/admin/ui/Input';
 import type { AdminOrder } from '@/lib/admin-store';
 
 export default function AdminDashboardPage() {
   const products = useMemo(() => getProducts(), []);
   const orders = useMemo(() => getOrders(), []);
   const settings = useMemo(() => getSettings(), []);
+  const [search, setSearch] = useState('');
 
   const revenue = orders.reduce((sum, o) => sum + o.totalBdt, 0);
   const customers = new Set(orders.map((o) => o.customerPhone)).size;
@@ -28,7 +30,36 @@ export default function AdminDashboardPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
-  const chartBars = [42, 58, 45, 72, 65, 88, 76];
+  const topProducts = [...products]
+    .filter((p) => p.status === 'published')
+    .sort((a, b) => getTotalStock(a) - getTotalStock(b))
+    .slice(0, 5);
+
+  const hourlySales = useMemo(() => {
+    const today = new Date().toDateString();
+    const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === today);
+    const buckets = Array.from({ length: 12 }, () => 0);
+    todayOrders.forEach((o) => {
+      const h = new Date(o.createdAt).getHours();
+      const bucket = Math.min(11, Math.floor(h / 2));
+      buckets[bucket] += o.totalBdt;
+    });
+    const max = Math.max(...buckets, 1);
+    return buckets.map((v) => Math.round((v / max) * 100));
+  }, [orders]);
+
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return null;
+    const q = search.toLowerCase();
+    const productHits = products.filter((p) => p.title.toLowerCase().includes(q)).slice(0, 3);
+    const orderHits = orders.filter(
+      (o) =>
+        o.orderNumber.toLowerCase().includes(q) ||
+        o.customerName.toLowerCase().includes(q)
+    ).slice(0, 3);
+    const customerHits = orders.filter((o) => o.customerPhone.includes(q)).slice(0, 3);
+    return { productHits, orderHits, customerHits };
+  }, [search, products, orders]);
 
   const orderColumns: TableColumn<AdminOrder>[] = [
     {
@@ -61,34 +92,100 @@ export default function AdminDashboardPage() {
     day: 'numeric',
   });
 
+  const todayRevenue = orders
+    .filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString())
+    .reduce((s, o) => s + o.totalBdt, 0);
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Welcome back, Admin</h1>
-        <p className="text-sm text-neutral-500 mt-1">{today}</p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-900">Welcome back, Admin</h1>
+          <p className="text-sm text-neutral-500 mt-1">{today}</p>
+        </div>
+        <div className="w-full sm:max-w-md">
+          <Input
+            placeholder="Search products, orders, customers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {searchResults && (
+            <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-3 text-sm shadow-sm space-y-2">
+              {searchResults.productHits.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase">Products</p>
+                  {searchResults.productHits.map((p) => (
+                    <Link key={p.id} href={`/admin/products/${p.id}/edit`} className="block py-1 text-[#C97D5D] hover:underline">
+                      {p.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {searchResults.orderHits.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase">Orders</p>
+                  {searchResults.orderHits.map((o) => (
+                    <Link key={o.id} href="/admin/orders" className="block py-1 text-[#C97D5D] hover:underline">
+                      {o.orderNumber} — {o.customerName}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {searchResults.customerHits.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase">Customers</p>
+                  {searchResults.customerHits.map((o) => (
+                    <Link key={o.id} href="/admin/customers" className="block py-1 text-[#C97D5D] hover:underline">
+                      {o.customerName} ({o.customerPhone})
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {!searchResults.productHits.length &&
+                !searchResults.orderHits.length &&
+                !searchResults.customerHits.length && (
+                  <p className="text-neutral-500">No results</p>
+                )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Products"
-          value={String(products.length)}
-          change={{ value: '5%', positive: true }}
-        />
-        <StatsCard
-          title="Total Orders"
-          value={String(orders.length)}
-          change={{ value: '12%', positive: true }}
-        />
-        <StatsCard
-          title="Revenue (BDT)"
-          value={`৳ ${revenue.toLocaleString('en-US')}`}
-          change={{ value: '8%', positive: true }}
-        />
-        <StatsCard
-          title="Customers"
-          value={String(customers)}
-          change={{ value: '3%', positive: true }}
-        />
+        <StatsCard title="Total Products" value={String(products.length)} href="/admin/products" change={{ value: '5%', positive: true }} />
+        <StatsCard title="Total Orders" value={String(orders.length)} href="/admin/orders" change={{ value: '12%', positive: true }} />
+        <StatsCard title="Revenue (BDT)" value={`৳ ${revenue.toLocaleString('en-US')}`} href="/admin/orders" change={{ value: '8%', positive: true }} />
+        <StatsCard title="Customers" value={String(customers)} href="/admin/customers" change={{ value: '3%', positive: true }} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-900">Today&apos;s Sales</h2>
+          <p className="text-2xl font-semibold text-[#C97D5D] mt-1">৳ {todayRevenue.toLocaleString('en-US')}</p>
+          <div className="flex items-end gap-2 h-32 mt-6">
+            {hourlySales.map((h, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full rounded-t bg-[#C97D5D]/80" style={{ height: `${Math.max(h, 8)}%` }} />
+                <span className="text-[9px] text-neutral-400">{i * 2}:00</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-900 mb-4">Top Selling Products</h2>
+          <ul className="space-y-3">
+            {topProducts.map((p, i) => (
+              <li key={p.id} className="flex items-center justify-between text-sm">
+                <span className="text-neutral-800">
+                  <span className="text-neutral-400 mr-2">{i + 1}.</span>
+                  {p.title}
+                </span>
+                <span className="text-neutral-500 shrink-0 ml-2">৳ {p.priceBdt.toLocaleString('en-US')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -137,23 +234,6 @@ export default function AdminDashboardPage() {
               Manage Inventory →
             </Link>
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-900 mb-6">Revenue Overview</h2>
-        <div className="flex items-end gap-3 h-40">
-          {chartBars.map((h, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-2">
-              <div
-                className="w-full rounded-t bg-[#C97D5D]/80 transition-all"
-                style={{ height: `${h}%` }}
-              />
-              <span className="text-[10px] text-neutral-400">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
-import { COMMUNITY_SECTION } from '@/lib/content';
 import { cn } from '@/lib/utils';
+import type { CommunitySectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
 const TILE_GRADIENTS: Record<string, string> = {
   'bg-maroon': 'bg-gradient-to-b from-maroon to-maroon/80',
@@ -14,33 +15,50 @@ const TILE_GRADIENTS: Record<string, string> = {
   'bg-charcoal': 'bg-gradient-to-b from-charcoal to-charcoal/80',
 };
 
-export function CommunityGrid() {
+interface CommunityGridProps {
+  data?: CommunitySectionData;
+}
+
+export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'community')!.data;
+
   return (
     <section className="section-padding bg-background">
       <div className="mx-auto max-w-7xl">
         <ScrollFadeIn className="text-center mb-10 md:mb-12">
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal">
-            {COMMUNITY_SECTION.title}
+            {data.title}
           </h2>
-          <p className="font-bn-body text-base text-text-light mt-3">{COMMUNITY_SECTION.subtitle}</p>
+          <p className="font-bn-body text-base text-text-light mt-3">{data.subtitle}</p>
         </ScrollFadeIn>
 
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
-          {COMMUNITY_SECTION.tiles.map((tile, i) => (
+          {data.tiles.map((tile, i) => (
             <ScrollFadeIn key={tile.id} delay={i * 0.04}>
               <Link
-                href={COMMUNITY_SECTION.instagramUrl}
+                href={data.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative block aspect-square rounded overflow-hidden"
               >
-                <div
-                  className={cn(
-                    'absolute inset-0 pattern-overlay transition-transform duration-500 group-hover:scale-105',
-                    TILE_GRADIENTS[tile.bg] ?? tile.bg
-                  )}
-                  aria-hidden
-                />
+                {tile.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={tile.imageUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div
+                    className={cn(
+                      'absolute inset-0 pattern-overlay transition-transform duration-500 group-hover:scale-105',
+                      TILE_GRADIENTS[tile.bgClass] ?? tile.bgClass
+                    )}
+                    aria-hidden
+                  />
+                )}
                 <span className="sr-only">{tile.hint}</span>
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <InstagramIcon className="text-white opacity-20 group-hover:opacity-0 transition-opacity duration-300" />

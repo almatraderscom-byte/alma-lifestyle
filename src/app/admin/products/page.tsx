@@ -7,6 +7,7 @@ import {
   getCategories,
   updateProduct,
   deleteProduct,
+  duplicateProduct,
   getTotalStock,
   type AdminProduct,
 } from '@/lib/admin-store';
@@ -16,6 +17,7 @@ import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { useAdminToast } from '@/context/AdminToastContext';
 
 type StatusFilter = 'all' | 'published' | 'draft';
+type SortKey = 'date' | 'title' | 'price' | 'stock';
 
 export default function AdminProductsPage() {
   const { toast } = useAdminToast();
@@ -26,10 +28,20 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
+  const [sortKey, setSortKey] = useState<SortKey>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const perPage = 10;
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortKey(key);
+      setSortDir(key === 'title' ? 'asc' : 'desc');
+    }
+  }
+
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       if (statusFilter !== 'all' && p.status !== statusFilter) return false;
       if (categoryFilter && p.categoryId !== categoryFilter) return false;
       if (search) {
@@ -38,7 +50,31 @@ export default function AdminProductsPage() {
       }
       return true;
     });
-  }, [products, search, statusFilter, categoryFilter]);
+    list.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'date') cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      if (sortKey === 'title') cmp = a.title.localeCompare(b.title);
+      if (sortKey === 'price') cmp = a.priceBdt - b.priceBdt;
+      if (sortKey === 'stock') cmp = getTotalStock(a) - getTotalStock(b);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return list;
+  }, [products, search, statusFilter, categoryFilter, sortKey, sortDir]);
+
+  function stockIndicator(stock: number) {
+    if (stock > 10) return 'bg-green-500';
+    if (stock > 0) return 'bg-amber-400';
+    return 'bg-red-500';
+  }
+
+  function SortHeader({ label, col }: { label: string; col: SortKey }) {
+    return (
+      <button type="button" className="font-medium hover:text-[#C97D5D] flex items-center gap-1" onClick={() => toggleSort(col)}>
+        {label}
+        {sortKey === col && <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+      </button>
+    );
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -83,20 +119,17 @@ export default function AdminProductsPage() {
       key: 'thumb',
       header: '',
       className: 'w-14',
-      render: (p) => (
-        <div
-          className="h-10 w-10 rounded bg-neutral-200 shrink-0"
-          style={
-            p.images[0]?.url
-              ? { backgroundImage: `url(${p.images[0].url})`, backgroundSize: 'cover' }
-              : undefined
-          }
-        />
-      ),
+      render: (p) =>
+        p.images[0]?.url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.images[0].url} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
+        ) : (
+          <div className="h-10 w-10 rounded bg-neutral-200 shrink-0" />
+        ),
     },
     {
       key: 'title',
-      header: 'Title',
+      header: <SortHeader label="Title" col="title" />,
       render: (p) => (
         <Link href={`/admin/products/${p.id}/edit`} className="font-medium text-[#C97D5D] hover:underline">
           {p.title}
@@ -111,13 +144,21 @@ export default function AdminProductsPage() {
     },
     {
       key: 'price',
-      header: 'Price',
+      header: <SortHeader label="Price" col="price" />,
       render: (p) => <span>৳ {p.priceBdt.toLocaleString('en-US')}</span>,
     },
     {
       key: 'stock',
-      header: 'Stock',
-      render: (p) => getTotalStock(p),
+      header: <SortHeader label="Stock" col="stock" />,
+      render: (p) => {
+        const stock = getTotalStock(p);
+        return (
+          <span className="inline-flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${stockIndicator(stock)}`} />
+            {stock}
+          </span>
+        );
+      },
     },
     {
       key: 'status',
@@ -142,6 +183,29 @@ export default function AdminProductsPage() {
           <Link href={`/admin/products/${p.id}/edit`} className="p-2 hover:bg-neutral-100 rounded" title="Edit">
             ✎
           </Link>
+          {p.status === 'published' && (
+            <a
+              href={`/products/${p.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 hover:bg-neutral-100 rounded text-xs"
+              title="View on site"
+            >
+              ↗
+            </a>
+          )}
+          <button
+            type="button"
+            className="p-2 hover:bg-neutral-100 rounded"
+            title="Duplicate"
+            onClick={() => {
+              duplicateProduct(p.id);
+              refresh();
+              toast('Product duplicated as draft', 'success');
+            }}
+          >
+            ⧉
+          </button>
           <button
             type="button"
             className="p-2 hover:bg-neutral-100 rounded"

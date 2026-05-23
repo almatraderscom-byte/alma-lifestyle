@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AdminHelp } from '@/components/admin/AdminHelp';
+
+const SIDEBAR_COLLAPSED_KEY = 'alma-admin-sidebar-collapsed';
 import { usePathname } from 'next/navigation';
 import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { AdminToastProvider } from '@/context/AdminToastContext';
@@ -60,18 +63,42 @@ function AdminLayoutInner({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored === '1') setCollapsed(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function toggleCollapse() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+  const isHomepageBuilder = breadcrumbs.includes('Homepage Builder');
+
   return (
     <div className="font-sans min-h-screen bg-[#FAFAFA] text-neutral-900 flex">
       <AdminSidebar
         collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
+        onToggleCollapse={toggleCollapse}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
         <AdminHeader breadcrumbs={breadcrumbs} onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className={isHomepageBuilder ? 'flex-1 p-0' : 'flex-1 p-4 lg:p-6'}>{children}</main>
       </div>
+      <AdminHelp />
     </div>
   );
 }

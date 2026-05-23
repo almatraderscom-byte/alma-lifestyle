@@ -1,12 +1,21 @@
-import { TRUST_STRIP } from '@/lib/content';
 import { formatBnText } from '@/lib/format-bn';
+import type { TrustSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function TrustStrip() {
+interface TrustStripProps {
+  data?: TrustSectionData;
+}
+
+export function TrustStrip({ data: dataProp }: TrustStripProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'trust')!.data;
+
   return (
     <section className="section-padding bg-cream border-t border-border-subtle">
       <div className="mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
-        {TRUST_STRIP.map((item) => (
-          <div key={item.title} className="text-center md:text-left">
+        {data.items.map((item) => (
+          <div key={item.id} className="text-center md:text-left">
             <span className="text-3xl md:text-4xl" aria-hidden>
               {item.icon}
             </span>

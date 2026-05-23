@@ -3,11 +3,26 @@
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { ProductCard } from '@/components/product/ProductCard';
-import { FEATURED_SECTION, HOME_FEATURED_PRODUCTS } from '@/lib/content';
+import { FEATURED_SECTION } from '@/lib/content';
+import type { FeaturedProduct } from '@/lib/content';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import type { FeaturedSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function FeaturedProductsSection() {
+interface FeaturedProductsSectionProps {
+  data?: FeaturedSectionData;
+  products?: FeaturedProduct[];
+}
+
+export function FeaturedProductsSection({
+  data: dataProp,
+  products: productsProp,
+}: FeaturedProductsSectionProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'featured')!.data;
+  const products = productsProp ?? [];
   return (
     <section className="section-padding bg-background">
       <div className="mx-auto max-w-7xl">
@@ -15,23 +30,23 @@ export function FeaturedProductsSection() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 md:mb-12">
             <div>
               <p className="editorial-label text-terracotta mb-3">
-                {formatBnText(FEATURED_SECTION.label)}
+                {formatBnText(data.label)}
               </p>
               <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal">
-                {FEATURED_SECTION.title}
+                {data.title}
               </h2>
             </div>
             <Link
-              href={FEATURED_SECTION.viewAllHref}
+              href={data.viewAllHref}
               className="link-underline font-bn-body text-base font-semibold text-charcoal shrink-0"
             >
-              {FEATURED_SECTION.viewAll}
+              {data.viewAllText}
             </Link>
           </div>
         </ScrollFadeIn>
 
         <div className="flex md:grid md:grid-cols-4 md:items-end gap-4 md:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {HOME_FEATURED_PRODUCTS.map((product, i) => (
+          {products.map((product, i) => (
             <ScrollFadeIn
               key={product.id}
               delay={i * 0.05}

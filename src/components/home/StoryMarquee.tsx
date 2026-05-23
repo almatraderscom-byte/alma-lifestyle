@@ -1,7 +1,16 @@
 import { STORY_MARQUEE } from '@/lib/content';
+import type { MarqueeSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-export function StoryMarquee() {
-  const segment = STORY_MARQUEE.text;
+interface StoryMarqueeProps {
+  data?: MarqueeSectionData;
+}
+
+export function StoryMarquee({ data: dataProp }: StoryMarqueeProps) {
+  const data =
+    dataProp ??
+    getDefaultHomepageConfig().sections.find((s) => s.id === 'marquee')!.data;
+  const segment = data.text || STORY_MARQUEE.text;
   const repeated = Array(3).fill(segment).join('');
 
   return (
