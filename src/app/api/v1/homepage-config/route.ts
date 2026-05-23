@@ -29,7 +29,11 @@ export async function PUT(request: NextRequest) {
       return apiError('Invalid homepage config', 400, 'VALIDATION_ERROR');
     }
 
-    const saved = await saveHomepageConfig(ensureHomepageConfig(body));
+    const normalized = ensureHomepageConfig(body);
+    const hero = normalized.sections.find((s) => s.id === 'hero');
+    console.log('[Config API] Saving homepage, hero backgroundImageUrl:', 
+      hero?.id === 'hero' ? hero.data.backgroundImageUrl : '(no hero)');
+    const saved = await saveHomepageConfig(normalized);
     revalidatePath('/');
     return apiSuccess(saved);
   });

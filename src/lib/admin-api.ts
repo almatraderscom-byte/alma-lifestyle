@@ -100,11 +100,25 @@ export async function uploadImageApi(
     body: form,
     credentials: 'include',
   });
-  const json = (await res.json()) as ApiSuccess<{ url: string }> | ApiError;
+  const json = (await res.json()) as ApiSuccess<{ url: string } | string> | ApiError;
   if (json.status === 'error' || !res.ok) {
-    throw new Error('error' in json ? json.error : 'Upload failed');
+    const message = 'error' in json ? json.error : `Upload failed (${res.status})`;
+    console.error('[admin-api] upload failed:', res.status, message);
+    throw new Error(message);
   }
-  return json.data.url;
+  const payload = json.data;
+  const url =
+    typeof payload === 'string'
+      ? payload
+      : payload && typeof payload === 'object' && 'url' in payload
+        ? payload.url
+        : '';
+  if (!url) {
+    console.error('[admin-api] upload missing url in response:', json);
+    throw new Error('Upload response missing image URL');
+  }
+  console.log('[admin-api] upload ok:', url);
+  return url;
 }
 
 export async function fetchCategories(admin = true): Promise<AdminCategory[]> {

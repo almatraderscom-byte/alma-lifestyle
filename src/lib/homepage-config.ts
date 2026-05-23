@@ -19,6 +19,7 @@ import type {
   CategoryColorClass,
   CommunitySectionData,
   FeaturedSectionData,
+  HeroSectionData,
   HomepageConfig,
   HomepageSectionConfig,
   HomepageSectionId,
@@ -222,10 +223,19 @@ export function mergeHomepageConfig(
     if (!savedSection || savedSection.id !== defaultSection.id) {
       return { ...defaultSection, order: index };
     }
-    const mergedData = {
+    let mergedData = {
       ...defaultSection.data,
       ...savedSection.data,
     } as typeof defaultSection.data;
+
+    if (defaultSection.id === 'hero') {
+      const raw = savedSection.data as HeroSectionData & { heroImage?: string };
+      const hero = mergedData as HeroSectionData;
+      if (!hero.backgroundImageUrl?.trim() && raw.heroImage?.trim()) {
+        hero.backgroundImageUrl = raw.heroImage.trim();
+      }
+      mergedData = hero as typeof defaultSection.data;
+    }
     return {
       ...defaultSection,
       enabled: savedSection.enabled,
@@ -305,7 +315,8 @@ export function getDraftHomepageConfig(): HomepageConfig | null {
 }
 
 export function saveDraftHomepageConfig(config: HomepageConfig): void {
-  writeJson(HOMEPAGE_DRAFT_KEY, normalizeHomepageConfig(config));
+  const next = ensureHomepageConfig(config);
+  writeJson(HOMEPAGE_DRAFT_KEY, next);
 }
 
 export function isPreviewMode(): boolean {

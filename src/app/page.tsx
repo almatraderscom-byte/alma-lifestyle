@@ -14,16 +14,10 @@ export default async function HomePage() {
       ? await resolveFeaturedProductsServer(featuredSection.data)
       : [];
 
-  if (process.env.NODE_ENV === 'development') {
-    const hero = config.sections.find((s) => s.id === 'hero');
-    const heroUrl =
-      hero?.id === 'hero' ? hero.data.backgroundImageUrl : undefined;
-    console.log('[Homepage] Config source: database', {
-      sections: config.sections.length,
-      heroImage: heroUrl ? 'set' : 'none',
-      lastSaved: config.lastSaved,
-    });
-  }
+  const hero = config.sections.find((s) => s.id === 'hero');
+  const heroUrl = hero?.id === 'hero' ? hero.data.backgroundImageUrl : '';
+  console.log('[Homepage] Config source: database');
+  console.log('[Homepage] Hero backgroundImageUrl:', heroUrl || '(empty)');
 
   return (
     <HomePageRenderer initialConfig={config} featuredProducts={featuredProducts} />

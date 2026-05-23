@@ -19,8 +19,9 @@ import type {
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
 import { Select } from '@/components/admin/ui/Select';
-import { SingleImageUploader } from '@/components/admin/ui/SingleImageUploader';
 import { ColorSwatchPicker } from '@/components/admin/ui/ColorSwatchPicker';
+import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
+import { useAdminToast } from '@/context/AdminToastContext';
 
 type SectionData = HomepageSectionConfig['data'];
 
@@ -45,6 +46,7 @@ function ToggleRow({
 }
 
 export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
+  const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
       <Input label="Caption" value={data.caption} onChange={(e) => onChange({ ...data, caption: e.target.value })} />
@@ -56,7 +58,16 @@ export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
         <Input label="Secondary CTA text" value={data.ctaSecondary} onChange={(e) => onChange({ ...data, ctaSecondary: e.target.value })} />
         <Input label="Secondary CTA link" value={data.ctaSecondaryHref} onChange={(e) => onChange({ ...data, ctaSecondaryHref: e.target.value })} />
       </div>
-      <SingleImageUploader label="Background image" value={data.backgroundImageUrl} onChange={(url) => onChange({ ...data, backgroundImageUrl: url })} />
+      <HomepageImageUpload
+        label="Background image"
+        folder="hero"
+        value={data.backgroundImageUrl}
+        onChange={(url) => {
+          console.log('[HomepageBuilder] Hero backgroundImageUrl updated:', url);
+          onChange({ ...data, backgroundImageUrl: url });
+        }}
+        onError={(msg) => toast(msg, 'error')}
+      />
       <Input label="Image hint (placeholder)" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
       <div className="space-y-2">
         <p className="text-sm font-medium text-neutral-700">Badges</p>
@@ -95,6 +106,7 @@ function CategoryCardEditor({
   showSubtitle?: boolean;
   categories: Awaited<ReturnType<typeof getCategories>>;
 }) {
+  const { toast } = useAdminToast();
   return (
     <div className="rounded-lg border border-neutral-200 p-4 space-y-3">
       <p className="text-sm font-semibold text-neutral-800">{label}</p>
@@ -119,7 +131,13 @@ function CategoryCardEditor({
       {showSubtitle && (
         <Input label="Subtitle" value={card.subtitle} onChange={(e) => onChange({ ...card, subtitle: e.target.value })} />
       )}
-      <SingleImageUploader label="Background image" value={card.imageUrl} onChange={(url) => onChange({ ...card, imageUrl: url })} />
+      <HomepageImageUpload
+        label="Background image"
+        folder={`categories/${card.categorySlug || 'card'}`}
+        value={card.imageUrl}
+        onChange={(url) => onChange({ ...card, imageUrl: url })}
+        onError={(msg) => toast(msg, 'error')}
+      />
       <ColorSwatchPicker label="Background color" value={card.bgClass} onChange={(bgClass) => onChange({ ...card, bgClass })} />
       <Input label="Image hint" value={card.imageHint} onChange={(e) => onChange({ ...card, imageHint: e.target.value })} />
     </div>
@@ -225,6 +243,7 @@ export function FeaturedEditor({ data, onChange }: EditorProps<FeaturedSectionDa
 }
 
 export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySectionData>) {
+  const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
       <Input label="Section label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
@@ -234,7 +253,13 @@ export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySecti
         <Input label="CTA text" value={data.cta} onChange={(e) => onChange({ ...data, cta: e.target.value })} />
         <Input label="CTA link" value={data.ctaHref} onChange={(e) => onChange({ ...data, ctaHref: e.target.value })} />
       </div>
-      <SingleImageUploader label="Image" value={data.imageUrl} onChange={(url) => onChange({ ...data, imageUrl: url })} />
+      <HomepageImageUpload
+        label="Image"
+        folder="brand-story"
+        value={data.imageUrl}
+        onChange={(url) => onChange({ ...data, imageUrl: url })}
+        onError={(msg) => toast(msg, 'error')}
+      />
       <Input label="Image caption" value={data.imageCaption} onChange={(e) => onChange({ ...data, imageCaption: e.target.value })} />
       <Input label="Image hint" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
     </div>
@@ -285,6 +310,7 @@ export function ReviewsEditor({ data, onChange }: EditorProps<ReviewsSectionData
 }
 
 export function CollectionBannerEditor({ data, onChange }: EditorProps<CollectionBannerSectionData>) {
+  const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
       <Input label="Label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
@@ -296,13 +322,20 @@ export function CollectionBannerEditor({ data, onChange }: EditorProps<Collectio
       </div>
       <Input label="Promo text" value={data.promo} onChange={(e) => onChange({ ...data, promo: e.target.value })} />
       <ColorSwatchPicker label="Background color" value={data.bgClass} onChange={(bgClass: CategoryColorClass) => onChange({ ...data, bgClass })} />
-      <SingleImageUploader label="Background image (optional)" value={data.backgroundImageUrl} onChange={(url) => onChange({ ...data, backgroundImageUrl: url })} />
+      <HomepageImageUpload
+        label="Background image (optional)"
+        folder="collection-banner"
+        value={data.backgroundImageUrl}
+        onChange={(url) => onChange({ ...data, backgroundImageUrl: url })}
+        onError={(msg) => toast(msg, 'error')}
+      />
       <Input label="Image hint" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
     </div>
   );
 }
 
 export function CommunityEditor({ data, onChange }: EditorProps<CommunitySectionData>) {
+  const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
       <Input label="Section title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
@@ -312,7 +345,19 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
         {data.tiles.map((tile, i) => (
           <div key={tile.id} className="space-y-2 rounded-lg border border-neutral-200 p-3">
             <p className="text-xs font-medium text-neutral-500">Tile {i + 1}</p>
-            <SingleImageUploader value={tile.imageUrl} onChange={(url) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, imageUrl: url } : t)) })} />
+            <HomepageImageUpload
+              folder={`community/${tile.id}`}
+              value={tile.imageUrl}
+              onChange={(url) =>
+                onChange({
+                  ...data,
+                  tiles: data.tiles.map((t) =>
+                    t.id === tile.id ? { ...t, imageUrl: url } : t
+                  ),
+                })
+              }
+              onError={(msg) => toast(msg, 'error')}
+            />
             <ColorSwatchPicker value={tile.bgClass} onChange={(bgClass) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, bgClass } : t)) })} />
             <Input label="Hint" value={tile.hint} onChange={(e) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, hint: e.target.value } : t)) })} />
           </div>

@@ -95,8 +95,15 @@ export function HomepageBuilder() {
   async function handleSave() {
     setSaving(true);
     try {
+      const hero = config.sections.find((s) => s.id === 'hero');
+      if (hero?.id === 'hero') {
+        console.log('[Save] Draft hero data:', JSON.stringify(hero.data));
+      }
+      console.log('[Save] Payload sections count:', config.sections.length);
       const saved = await saveHomepageConfig(config);
       setConfig(saved);
+      saveDraftHomepageConfig(saved);
+      dispatchDraftUpdated();
       toast('Homepage saved successfully', 'success');
       setPreviewKey((k) => k + 1);
     } catch (err) {

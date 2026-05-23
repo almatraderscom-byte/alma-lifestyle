@@ -579,7 +579,17 @@ export async function getHomepageConfig(): Promise<HomepageConfig> {
 
 export async function saveHomepageConfig(config: HomepageConfig): Promise<HomepageConfig> {
   const normalized = ensureHomepageConfig(config);
-  if (shouldUseApi()) return adminApi.saveHomepageConfigApi(normalized);
+  const hero = normalized.sections.find((s) => s.id === 'hero');
+  if (hero?.id === 'hero') {
+    console.log('[Save] Hero backgroundImageUrl:', hero.data.backgroundImageUrl || '(empty)');
+  }
+  if (shouldUseApi()) {
+    console.log('[Save] PUT /api/v1/homepage-config');
+    const saved = await adminApi.saveHomepageConfigApi(normalized);
+    const ensured = ensureHomepageConfig(saved);
+    saveFullHomepageConfig(ensured);
+    return ensured;
+  }
   return saveFullHomepageConfig(normalized);
 }
 

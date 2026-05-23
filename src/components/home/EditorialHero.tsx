@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
-import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { isUsableImageUrl } from '@/lib/homepage-image';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -30,11 +29,13 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         {isUsableImageUrl(data.backgroundImageUrl) ? (
-          <HomepageSectionImage
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={data.backgroundImageUrl}
             alt={data.title}
-            priority
-            sizes="(max-width: 768px) 100vw, 60vw"
+            className="absolute inset-0 h-full w-full object-cover"
+            onLoad={() => console.log('[Homepage] Hero image loaded:', data.backgroundImageUrl)}
+            onError={() => console.error('[Homepage] Hero image failed:', data.backgroundImageUrl)}
           />
         ) : (
           <PlaceholderImage
