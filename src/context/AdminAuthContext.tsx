@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   getAdminUser,
   isLoggedIn,
@@ -49,8 +50,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     authLogout();
     setUser(null);
-    window.location.href = '/admin/login';
-  }, []);
+    router.push('/admin/login');
+  }, [router]);
 
   const value = useMemo(
     () => ({ user, ready, login, logout }),
