@@ -12,9 +12,14 @@ import {
   FAMILY_MEMBER_TYPES,
   FAMILY_MEMBER_LABELS,
   FAMILY_CARD_BG,
+  FAMILY_IMAGE_BORDER,
+  FAMILY_IMAGE_SLOT_LABELS,
+  getActiveFamilyImageSlots,
+  type FamilyImageSlotKey,
   type FamilyMemberType,
   type FamilySetFormState,
 } from '@/lib/family-set-admin';
+import { FamilyImageSlot } from '@/components/admin/products/FamilyImageSlot';
 import {
   GIRL_AGE_GROUPS,
   GIRL_AGE_LABELS_BN,
@@ -25,7 +30,6 @@ import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
 import { Select } from '@/components/admin/ui/Select';
-import { ImageUploader } from '@/components/admin/ui/ImageUploader';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { cn } from '@/lib/utils';
 
@@ -73,6 +77,15 @@ export function FamilySetForm() {
   function patch(partial: Partial<FamilySetFormState>) {
     setState((s) => ({ ...s, ...partial }));
   }
+
+  function setMemberImage(slot: FamilyImageSlotKey, image: import('@/lib/admin-store').ProductImage | null) {
+    setState((s) => ({
+      ...s,
+      memberImages: { ...s.memberImages, [slot]: image },
+    }));
+  }
+
+  const imageSlots = useMemo(() => getActiveFamilyImageSlots(state), [state.members]);
 
   function patchMember(type: FamilyMemberType, partial: Partial<FamilySetFormState['members'][FamilyMemberType]>) {
     setState((s) => ({
@@ -200,13 +213,6 @@ export function FamilySetForm() {
         {errors.categoryId && (
           <p className="text-sm text-red-600">{errors.categoryId}</p>
         )}
-        <div>
-          <p className="text-sm font-medium text-neutral-800 mb-2">Shared Images</p>
-          <ImageUploader
-            images={state.images}
-            onChange={(images) => patch({ images })}
-          />
-        </div>
       </section>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
@@ -233,6 +239,28 @@ export function FamilySetForm() {
           ))}
         </div>
       </section>
+
+      {imageSlots.length > 0 && (
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
+          <h2 className="text-base font-semibold text-neutral-900">Product photos</h2>
+          <p className="text-sm text-neutral-500">
+            One slot per selected family member. Optional group photo is shown first in the customer
+            gallery on every product in this set.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {imageSlots.map((slot) => (
+              <FamilyImageSlot
+                key={slot}
+                label={FAMILY_IMAGE_SLOT_LABELS[slot]}
+                borderClass={FAMILY_IMAGE_BORDER[slot]}
+                value={state.memberImages[slot] ?? null}
+                onChange={(img) => setMemberImage(slot, img)}
+                uploadFolder={`family-sets/${designSlug || 'draft'}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {FAMILY_MEMBER_TYPES.map((type) => {
         if (!state.members[type].enabled) return null;

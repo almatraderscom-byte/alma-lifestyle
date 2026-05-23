@@ -37,7 +37,10 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
         ) : (
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             <ProductGallery
-              images={product.images}
+              images={product.images.map((img) => ({
+                ...img,
+                url: (img as { url?: string }).url,
+              }))}
               title={product.title}
               aspectRatio={product.aspectRatio}
             />

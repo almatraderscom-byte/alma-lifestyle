@@ -1,6 +1,7 @@
 import type { FeaturedProduct } from '@/lib/content';
 import type { ProductType } from '@/lib/product-design-types';
 import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
+import { buildListingCardGallery } from '@/lib/product-gallery';
 
 export type CategorySlug = 'panjabi' | 'electronics' | 'accessories' | 'home-decor';
 
@@ -20,7 +21,9 @@ export type CatalogProduct = FeaturedProduct & {
   materialCare: string;
   deliveryInfo: string;
   returnPolicy: string;
-  images: { id: string; bgClass: string }[];
+  images: { id: string; bgClass: string; url?: string; isFamilyGroup?: boolean }[];
+  /** For listing card hover / dots */
+  galleryImages?: { id: string; bgClass: string; url?: string }[];
   popularScore: number;
   createdAt: number;
   productType?: ProductType;
@@ -261,6 +264,8 @@ export function toCardProduct(
   isDesignGroup?: boolean;
   priceRange?: { min: number; max: number };
   typeLabels?: string[];
+  galleryImages?: { id: string; bgClass: string; url?: string }[];
+  aspectRatio?: '3/4' | '1/1';
 } {
   const isDesignGroup = catalogIsDesignGroupCard(product);
   return {
@@ -279,5 +284,11 @@ export function toCardProduct(
         ? { min: product.priceMin, max: product.priceMax }
         : undefined,
     typeLabels: isDesignGroup ? catalogListingTypeLabels(product) : undefined,
+    galleryImages: buildListingCardGallery(product).map(({ id, bgClass, url }) => ({
+      id,
+      bgClass,
+      url,
+    })),
+    aspectRatio: product.aspectRatio,
   };
 }

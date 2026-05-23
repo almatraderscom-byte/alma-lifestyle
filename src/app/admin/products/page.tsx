@@ -52,14 +52,6 @@ export default function AdminProductsPage() {
   const listRows = useMemo(() => groupAdminProductsForList(filtered), [filtered]);
   const totalPages = Math.max(1, Math.ceil(listRows.length / perPage));
   const paginatedRows = listRows.slice((page - 1) * perPage, page * perPage);
-  const paginatedProducts = useMemo(() => {
-    const list: AdminProduct[] = [];
-    for (const row of paginatedRows) {
-      if (row.kind === 'group') list.push(...row.products);
-      else list.push(row.product);
-    }
-    return list;
-  }, [paginatedRows]);
 
   useEffect(() => {
     console.log('[AdminProducts] Loading, useApi:', shouldUseApi());

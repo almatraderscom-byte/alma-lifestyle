@@ -74,12 +74,21 @@ export function mapDbProductToAdmin(
           sku: v.sku,
         }))
       : undefined,
-    images: images.map((img, i) => ({
-      id: img.id,
-      url: img.url,
-      isFeatured: i === 0,
-      sortOrder: img.sort_order,
-    })),
+    images: (() => {
+      const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
+      const featuredRow =
+        sorted.find((img) => img.alt_text !== 'family-group') ?? sorted[0];
+      return sorted.map((img) => {
+        const alt = img.alt_text ?? '';
+        return {
+          id: img.id,
+          url: img.url,
+          isFeatured: featuredRow ? img.id === featuredRow.id : false,
+          sortOrder: img.sort_order,
+          imageRole: alt === 'family-group' ? 'family-group' : 'member',
+        };
+      });
+    })(),
     collectionIds,
     fabric: row.fabric ?? undefined,
     careInstructions: row.care_instructions ?? undefined,
@@ -187,7 +196,10 @@ export function mapAdminProductToDbInsert({
     product_id: product.id,
     variant_id: null,
     url: img.url,
-    alt_text: product.title,
+    alt_text:
+      img.imageRole === 'family-group'
+        ? 'family-group'
+        : product.title,
     sort_order: img.sortOrder ?? i,
   }));
 

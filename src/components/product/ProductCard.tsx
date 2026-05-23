@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatBdtPrice, formatBdtRange } from '@/lib/format-bn';
@@ -17,10 +18,18 @@ import { useToast } from '@/components/ui/Toast';
 import { getProductBySlug } from '@/lib/products-data';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 
+export type ProductCardGalleryImage = {
+  id: string;
+  bgClass: string;
+  url?: string;
+};
+
 export type ProductCardExtras = {
   isDesignGroup?: boolean;
   priceRange?: { min: number; max: number };
   typeLabels?: string[];
+  galleryImages?: ProductCardGalleryImage[];
+  aspectRatio?: '3/4' | '1/1';
 };
 
 interface ProductCardProps {
@@ -37,6 +46,36 @@ const BADGE_BY_LABEL: Record<string, { type: Exclude<ProductType, 'simple'> }> =
   [PRODUCT_TYPE_BADGE_BN.girl_two_piece]: { type: 'girl_two_piece' },
 };
 
+function CardImageLayer({
+  image,
+  title,
+  priority,
+  className,
+}: {
+  image: ProductCardGalleryImage;
+  title: string;
+  priority?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn('absolute inset-0', className)}>
+      {image.url ? (
+        <Image
+          src={image.url}
+          alt={title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 50vw, 25vw"
+          priority={priority}
+          loading={priority ? 'eager' : 'lazy'}
+        />
+      ) : (
+        <div className={cn('absolute inset-0', image.bgClass)} aria-hidden />
+      )}
+    </div>
+  );
+}
+
 export function ProductCard({
   product,
   layout = 'normal',
@@ -45,7 +84,23 @@ export function ProductCard({
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [wished, setWished] = useState(false);
-  const aspectClass = layout === 'tall' ? 'aspect-[3/5]' : 'aspect-[3/4]';
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  const aspectClass =
+    product.aspectRatio === '1/1'
+      ? 'aspect-square'
+      : layout === 'tall'
+        ? 'aspect-[3/5]'
+        : 'aspect-[3/4]';
+
+  const gallery = useMemo(() => {
+    const imgs = product.galleryImages;
+    if (imgs && imgs.length > 0) return imgs;
+    return [{ id: product.id, bgClass: product.bgClass }];
+  }, [product.galleryImages, product.id, product.bgClass]);
+
+  const hasHoverPair = gallery.length > 1;
   const imageHint = product.imageHint ?? 'Product photo';
   const captionHint = imageHint.replace(/^Image:\s*/i, '');
   const isDesignGroup = Boolean(product.isDesignGroup && product.priceRange);
@@ -54,6 +109,18 @@ export function ProductCard({
     const slug = product.slug ?? product.href.replace('/products/', '');
     return getProductBySlug(slug)?.categoryName ?? 'পণ্য';
   }, [product.slug, product.href]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    const fn = () => setReducedMotion(mq.matches);
+    mq.addEventListener('change', fn);
+    return () => mq.removeEventListener('change', fn);
+  }, []);
+
+  const transitionMs = reducedMotion ? 0 : 400;
+  const primary = gallery[mobileIndex] ?? gallery[0];
+  const hoverImage = gallery[1] ?? gallery[0];
 
   function handleAddToBag(e: React.MouseEvent) {
     e.preventDefault();
@@ -74,33 +141,69 @@ export function ProductCard({
           aspectClass
         )}
       >
-        <div
-          className={cn(
-            'absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105',
-            product.bgClass
-          )}
-          aria-hidden
-        />
-        <div
-          className={cn(
-            'absolute inset-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100',
-            product.bgClass,
-            'brightness-95'
-          )}
-          aria-hidden
-        />
-
-        <div className="absolute inset-0 z-[1] flex flex-col pointer-events-none">
-          <span className="font-bn-body text-[10px] sm:text-xs text-charcoal/50 text-center pt-3 px-2">
-            {categoryLabel}
-          </span>
-          <div className="flex-1 flex items-center justify-center">
-            <HangerIcon className="text-charcoal opacity-[0.15]" />
+        {/* Desktop: crossfade primary → secondary on hover */}
+        <div className="absolute inset-0 hidden md:block">
+          <div
+            className="absolute inset-0"
+            style={{ transition: `opacity ${transitionMs}ms cubic-bezier(0.25, 0.1, 0.25, 1)` }}
+          >
+            <CardImageLayer image={gallery[0]} title={product.title} priority className="z-0" />
           </div>
-          <p className="font-bn-body text-[9px] sm:text-[10px] text-charcoal/55 text-center px-3 pb-3 leading-snug line-clamp-2">
-            {captionHint}
-          </p>
+          {hasHoverPair && (
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100"
+              style={{ transition: `opacity ${transitionMs}ms cubic-bezier(0.25, 0.1, 0.25, 1)` }}
+            >
+              <CardImageLayer image={hoverImage} title={product.title} className="z-0" />
+            </div>
+          )}
         </div>
+
+        {/* Mobile: single image + dots */}
+        <div className="absolute inset-0 md:hidden">
+          <CardImageLayer
+            image={primary}
+            title={product.title}
+            priority={mobileIndex === 0}
+          />
+          {gallery.length > 1 && (
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+              {gallery.map((img, index) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMobileIndex(index);
+                  }}
+                  className={cn(
+                    'h-1.5 w-1.5 rounded-full border transition-all',
+                    index === mobileIndex
+                      ? 'bg-terracotta border-terracotta'
+                      : 'bg-cream/40 border-cream/80'
+                  )}
+                  aria-label={`ছবি ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Placeholder overlay when no real URLs */}
+        {!gallery.some((g) => g.url) && (
+          <div className="absolute inset-0 z-[1] flex flex-col pointer-events-none">
+            <span className="font-bn-body text-[10px] sm:text-xs text-charcoal/50 text-center pt-3 px-2">
+              {categoryLabel}
+            </span>
+            <div className="flex-1 flex items-center justify-center">
+              <HangerIcon className="text-charcoal opacity-[0.15]" />
+            </div>
+            <p className="font-bn-body text-[9px] sm:text-[10px] text-charcoal/55 text-center px-3 pb-3 leading-snug line-clamp-2">
+              {captionHint}
+            </p>
+          </div>
+        )}
 
         {product.isNew && editorial && (
           <span className="absolute top-3 left-3 z-10 bg-terracotta text-white font-bn-body text-xs font-semibold px-2.5 py-1 rounded-full">

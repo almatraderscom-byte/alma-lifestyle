@@ -61,10 +61,14 @@ export function mapDbProductToCatalog(
     materialCare: product.care_instructions ?? '',
     deliveryInfo: '',
     returnPolicy: '',
-    images: (product.product_images ?? []).map((img, i) => ({
-      id: img.id,
-      bgClass: img.url ? 'bg-cream' : pickBg(i),
-    })),
+    images: [...(product.product_images ?? [])]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((img, i) => ({
+        id: img.id,
+        url: img.url || undefined,
+        bgClass: img.url ? 'bg-cream' : pickBg(i),
+        isFamilyGroup: img.alt_text === 'family-group',
+      })),
     popularScore: 50 + index,
     createdAt: new Date(product.created_at).getTime(),
     productType: (product.product_type ?? 'simple') as ProductType,

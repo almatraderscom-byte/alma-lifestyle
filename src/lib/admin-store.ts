@@ -65,6 +65,8 @@ export interface ProductImage {
   url: string;
   isFeatured: boolean;
   sortOrder: number;
+  /** Persisted in product_images.alt_text for gallery ordering */
+  imageRole?: 'family-group' | 'member';
 }
 
 export interface AdminProduct {

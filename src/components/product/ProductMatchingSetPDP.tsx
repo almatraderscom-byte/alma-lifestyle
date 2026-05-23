@@ -15,6 +15,7 @@ import { catalogToCartItem } from '@/lib/cart-helpers';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 import { ProductGallery } from '@/components/product/ProductGallery';
+import { buildMatchingSetGallery } from '@/lib/product-gallery';
 import { Accordion } from '@/components/product/Accordion';
 
 const TAB_ORDER: ProductType[] = [
@@ -71,6 +72,11 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
   const familyTotal = members.reduce((sum, m) => sum + m.price, 0);
   const familyDiscounted = Math.max(0, familyTotal - FAMILY_SET_DISCOUNT_BDT);
 
+  const galleryImages = useMemo(
+    () => buildMatchingSetGallery(product, active),
+    [product, active]
+  );
+
   if (!active) return null;
 
   function handleAddToBag() {
@@ -95,9 +101,11 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
   return (
     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
       <ProductGallery
-        images={active.images}
-        title={active.title}
+        images={galleryImages}
+        title={product.designGroupName ?? active.title}
         aspectRatio={active.aspectRatio}
+        designGroupName={product.designGroupName}
+        resetKey={activeId}
       />
 
       <div className="space-y-6">

@@ -55,6 +55,24 @@ export interface FamilyMemberConfig {
   girlAges?: GirlAgePricing[];
 }
 
+export type FamilyImageSlotKey = FamilyMemberType | 'family_group';
+
+export const FAMILY_IMAGE_SLOT_LABELS: Record<FamilyImageSlotKey, string> = {
+  men_panjabi: '📸 বাবার ছবি',
+  boy_panjabi: '📸 ছেলের ছবি',
+  women_three_piece: '📸 মায়ের ছবি',
+  girl_two_piece: '📸 মেয়ের ছবি',
+  family_group: '📸 ফ্যামিলি গ্রুপ ছবি',
+};
+
+export const FAMILY_IMAGE_BORDER: Record<FamilyImageSlotKey, string> = {
+  men_panjabi: 'border-charcoal',
+  boy_panjabi: 'border-terracotta',
+  women_three_piece: 'border-maroon',
+  girl_two_piece: 'border-mustard',
+  family_group: 'border-emerald',
+};
+
 export interface FamilySetFormState {
   designName: string;
   description: string;
@@ -62,7 +80,8 @@ export interface FamilySetFormState {
   fabric: string;
   careInstructions: string;
   originCountry: string;
-  images: ProductImage[];
+  /** Per enabled member type + optional family group */
+  memberImages: Partial<Record<FamilyImageSlotKey, ProductImage | null>>;
   status: 'draft' | 'published';
   categoryId: string;
   members: Record<FamilyMemberType, FamilyMemberConfig>;
@@ -77,7 +96,7 @@ export function createDefaultFamilySetState(): FamilySetFormState {
     fabric: 'Cotton Silk',
     careInstructions: '',
     originCountry: 'BD',
-    images: [],
+    memberImages: {},
     status: 'draft',
     categoryId: '',
     members: {
@@ -149,6 +168,52 @@ function newProductId(): string {
   return shouldUseApi() ? newDatabaseId() : uid('prod');
 }
 
+function newImageId(): string {
+  return shouldUseApi() ? newDatabaseId() : uid('img');
+}
+
+/** Slots to show: enabled members + optional family group */
+export function getActiveFamilyImageSlots(
+  state: FamilySetFormState
+): FamilyImageSlotKey[] {
+  const slots: FamilyImageSlotKey[] = FAMILY_MEMBER_TYPES.filter(
+    (t) => state.members[t].enabled
+  );
+  slots.push('family_group');
+  return slots;
+}
+
+function buildImagesForProduct(
+  type: FamilyMemberType,
+  state: FamilySetFormState
+): ProductImage[] {
+  const list: ProductImage[] = [];
+  const family = state.memberImages.family_group;
+  const member = state.memberImages[type];
+
+  if (family?.url) {
+    list.push({
+      id: family.id || newImageId(),
+      url: family.url,
+      isFeatured: false,
+      sortOrder: 0,
+      imageRole: 'family-group',
+    });
+  }
+
+  if (member?.url) {
+    list.push({
+      id: member.id || newImageId(),
+      url: member.url,
+      isFeatured: true,
+      sortOrder: family?.url ? 1 : 0,
+      imageRole: 'member',
+    });
+  }
+
+  return list;
+}
+
 function buildVariants(
   type: FamilyMemberType,
   skuPrefix: string,
@@ -194,7 +259,6 @@ export function buildFamilySetProducts(
     fabric: state.fabric,
     careInstructions: state.careInstructions,
     originCountry: state.originCountry,
-    images: state.images,
     categoryId: state.categoryId,
     status: state.status,
     designGroupName: groupName,
@@ -228,6 +292,8 @@ export function buildFamilySetProducts(
           hasVariants: false,
           stock: row.stock,
           variants: undefined,
+          images: buildImagesForProduct('girl_two_piece', state),
+          banglaTitle: titleBn,
         });
       }
       continue;
@@ -250,6 +316,8 @@ export function buildFamilySetProducts(
       hasVariants: variants.length > 0,
       variants: variants.length > 0 ? variants : undefined,
       stock: variants.length > 0 ? undefined : cfg.stockPerSize,
+      images: buildImagesForProduct(type, state),
+      banglaTitle: `${groupName} - ${labelBn}`,
     });
   }
 
