@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { CATEGORY_SHOWCASE } from '@/lib/content';
+import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 
 export function CategoryShowcase() {
   const { featured, stacked } = CATEGORY_SHOWCASE;
 
   return (
-    <section className="py-16 md:py-28 px-6 md:px-12">
+    <section className="section-padding">
       <div className="mx-auto max-w-7xl">
         <ScrollFadeIn>
           <p className="editorial-label text-terracotta mb-4">{CATEGORY_SHOWCASE.label}</p>
@@ -67,25 +68,31 @@ function CategoryCard({
     <Link
       href={href}
       className={cn(
-        'group relative flex flex-col justify-end overflow-hidden rounded text-white pattern-overlay',
+        'group relative flex flex-col justify-end overflow-hidden rounded text-white',
         bg,
         large ? 'min-h-[280px] md:min-h-full md:h-full aspect-[4/5] md:aspect-auto' : 'min-h-[100px] md:min-h-0 md:h-full aspect-square md:aspect-auto'
       )}
     >
       <span className="sr-only">{hint}</span>
+      <div
+        className="absolute inset-0 pattern-overlay transition-transform duration-500 md:group-hover:scale-[1.03]"
+        aria-hidden
+      />
       <div className="relative z-10 p-4 md:p-6">
         <h3
           className={cn(
-            'font-bn-heading font-bold',
+            'font-bn-heading font-bold transition-all duration-300 md:group-hover:tracking-wide md:group-hover:font-extrabold',
             large ? 'text-2xl md:text-4xl' : 'text-sm md:text-2xl'
           )}
         >
           {name}
         </h3>
         {subtitle && (
-          <p className="font-bn-body text-sm md:text-base mt-1 opacity-90">{subtitle}</p>
+          <p className="font-bn-body text-sm md:text-base mt-1 opacity-90">
+            {formatBnText(subtitle)}
+          </p>
         )}
-        <span className="inline-block mt-2 font-bn-body text-sm transition-transform duration-300 group-hover:translate-x-1">
+        <span className="inline-block mt-2 font-bn-body text-sm transition-transform duration-300 md:group-hover:translate-x-1.5">
           →
         </span>
       </div>

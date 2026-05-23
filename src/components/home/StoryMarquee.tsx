@@ -2,7 +2,7 @@ import { STORY_MARQUEE } from '@/lib/content';
 
 export function StoryMarquee() {
   const segment = STORY_MARQUEE.text;
-  const repeated = Array(4).fill(segment).join('');
+  const repeated = Array(3).fill(segment).join('');
 
   return (
     <section

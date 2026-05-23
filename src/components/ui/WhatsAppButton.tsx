@@ -1,10 +1,11 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { SITE, WHATSAPP } from '@/lib/content';
 import { cn } from '@/lib/utils';
 
 export function WhatsAppButton() {
+  const reduceMotion = useReducedMotion();
   const href = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(SITE.whatsappPrefill)}`;
 
   return (
@@ -14,7 +15,7 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       aria-label={WHATSAPP.label}
       className={cn(
-        'fixed bottom-5 right-4 z-50 flex items-center gap-2',
+        'fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-2',
         'rounded-full bg-[#25D366] text-white shadow-lg',
         'px-4 py-3 md:px-5 md:py-3.5',
         'hover:bg-[#20bd5a] transition-colors'
@@ -22,11 +23,13 @@ export function WhatsAppButton() {
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.8, type: 'spring', stiffness: 200 }}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       <span className="relative flex h-6 w-6 items-center justify-center">
-        <span className="absolute inset-0 rounded-full bg-white/30 animate-ping" />
+        {!reduceMotion && (
+          <span className="absolute inset-0 rounded-full bg-white/20 animate-pulse motion-reduce:hidden" />
+        )}
         <WhatsAppIcon />
       </span>
       <span className="hidden sm:inline font-bn-body text-sm font-medium pr-1">

@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { COLLECTION_BANNER } from '@/lib/content';
+import { formatBnText } from '@/lib/format-bn';
 
 export function CollectionBannerEditorial() {
   return (
@@ -14,13 +16,21 @@ export function CollectionBannerEditorial() {
           {COLLECTION_BANNER.title}
         </h2>
         <p className="font-bn-body text-lg md:text-xl text-cream/85 mt-5">{COLLECTION_BANNER.subtitle}</p>
-        <Link
-          href={COLLECTION_BANNER.href}
-          className="inline-flex items-center justify-center mt-10 min-h-14 px-10 bg-cream text-charcoal font-bn-body text-lg font-semibold rounded hover:bg-white transition-colors duration-300"
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-10"
         >
-          {COLLECTION_BANNER.cta}
-        </Link>
-        <p className="font-bn-body text-sm text-mustard mt-6">{COLLECTION_BANNER.promo}</p>
+          <Link
+            href={COLLECTION_BANNER.href}
+            className="inline-flex items-center justify-center min-h-14 px-10 bg-cream text-charcoal font-bn-body text-lg font-semibold rounded hover:bg-white transition-colors duration-300"
+          >
+            {COLLECTION_BANNER.cta}
+          </Link>
+        </motion.div>
+        <p className="font-bn-body text-sm text-mustard mt-6">{formatBnText(COLLECTION_BANNER.promo)}</p>
         <p className="sr-only">{COLLECTION_BANNER.imageHint}</p>
       </ScrollFadeIn>
     </section>

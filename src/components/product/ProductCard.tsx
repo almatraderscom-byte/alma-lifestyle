@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatBdtPrice } from '@/lib/format-bn';
@@ -28,7 +28,13 @@ export function ProductCard({
   const { showToast } = useToast();
   const [wished, setWished] = useState(false);
   const aspectClass = layout === 'tall' ? 'aspect-[3/5]' : 'aspect-[3/4]';
-  const imageHint = product.imageHint ?? 'Image: Product photo';
+  const imageHint = product.imageHint ?? 'Product photo';
+  const captionHint = imageHint.replace(/^Image:\s*/i, '');
+
+  const categoryLabel = useMemo(() => {
+    const slug = product.slug ?? product.href.replace('/products/', '');
+    return getProductBySlug(slug)?.categoryName ?? 'পণ্য';
+  }, [product.slug, product.href]);
 
   function handleAddToBag(e: React.MouseEvent) {
     e.preventDefault();
@@ -45,7 +51,7 @@ export function ProductCard({
       <Link
         href={product.href}
         className={cn(
-          'block relative overflow-hidden rounded-sm bg-cream',
+          'block relative overflow-hidden rounded-sm bg-cream pattern-overlay-dark',
           aspectClass
         )}
       >
@@ -64,9 +70,18 @@ export function ProductCard({
           )}
           aria-hidden
         />
-        <span className="absolute inset-0 flex items-center justify-center p-3 text-center font-bn-body text-[9px] sm:text-[10px] text-charcoal/40 pointer-events-none z-[1]">
-          {imageHint}
-        </span>
+
+        <div className="absolute inset-0 z-[1] flex flex-col pointer-events-none">
+          <span className="font-bn-body text-[10px] sm:text-xs text-charcoal/50 text-center pt-3 px-2">
+            {categoryLabel}
+          </span>
+          <div className="flex-1 flex items-center justify-center">
+            <HangerIcon className="text-charcoal opacity-[0.15]" />
+          </div>
+          <p className="font-bn-body text-[9px] sm:text-[10px] text-charcoal/55 text-center px-3 pb-3 leading-snug line-clamp-2">
+            {captionHint}
+          </p>
+        </div>
 
         {product.isNew && editorial && (
           <span className="absolute top-3 left-3 z-10 bg-terracotta text-white font-bn-body text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -136,6 +151,24 @@ export function ProductCard({
         </motion.button>
       </div>
     </article>
+  );
+}
+
+function HangerIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="48"
+      height="48"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      aria-hidden
+    >
+      <path d="M6 4a3 3 0 016 0c0 1.5-1 2.5-2 3.5L20 12H4l12-4.5C15 7 14 6 14 4a3 3 0 00-6 0" />
+      <path d="M4 12v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+    </svg>
   );
 }
 

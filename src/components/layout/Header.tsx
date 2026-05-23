@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SITE, NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
 import { useCart } from '@/context/CartContext';
 import { toBanglaNumber } from '@/lib/format-bn';
 
@@ -27,17 +29,9 @@ export function Header() {
             {SITE.brandName}
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8" aria-label="প্রধান মেনু">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="font-bn-body text-base font-medium text-text-dark hover:text-accent transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <Suspense fallback={<div className="hidden md:block w-48 h-6 bg-secondary/50 rounded" aria-hidden />}>
+            <HeaderNavLinks />
+          </Suspense>
 
           <div className="flex items-center gap-1 sm:gap-2">
             <IconLink

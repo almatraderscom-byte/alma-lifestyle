@@ -9,7 +9,12 @@ export function toBanglaNumber(value: number, options?: Intl.NumberFormatOptions
 
 /** Format price in BDT with Bengali numerals (৳ ১,৫৫০) */
 export function formatBdtPrice(amount: number): string {
-  return `৳ ${toBanglaNumber(amount)}`;
+  return toBanglaDigits(`৳ ${toBanglaNumber(amount)}`);
+}
+
+/** Display any string with Latin digits converted to Bengali numerals */
+export function formatBnText(text: string): string {
+  return toBanglaDigits(text);
 }
 
 /** Format a price range for filters */

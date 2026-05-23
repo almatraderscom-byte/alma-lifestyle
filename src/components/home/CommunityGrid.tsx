@@ -2,12 +2,21 @@
 
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
-import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
 import { COMMUNITY_SECTION } from '@/lib/content';
+import { cn } from '@/lib/utils';
+
+const TILE_GRADIENTS: Record<string, string> = {
+  'bg-maroon': 'bg-gradient-to-b from-maroon to-maroon/80',
+  'bg-terracotta': 'bg-gradient-to-b from-terracotta to-terracotta/80',
+  'bg-mustard': 'bg-gradient-to-b from-mustard to-mustard/80',
+  'bg-emerald': 'bg-gradient-to-b from-emerald to-emerald/80',
+  'bg-cream': 'bg-gradient-to-b from-cream to-cream/80',
+  'bg-charcoal': 'bg-gradient-to-b from-charcoal to-charcoal/80',
+};
 
 export function CommunityGrid() {
   return (
-    <section className="py-16 md:py-28 px-6 md:px-12 bg-background">
+    <section className="section-padding bg-background">
       <div className="mx-auto max-w-7xl">
         <ScrollFadeIn className="text-center mb-10 md:mb-12">
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal">
@@ -25,12 +34,17 @@ export function CommunityGrid() {
                 rel="noopener noreferrer"
                 className="group relative block aspect-square rounded overflow-hidden"
               >
-                <PlaceholderImage
-                  hint={tile.hint}
-                  bgClass={tile.bg}
-                  className="h-full w-full transition-transform duration-500 group-hover:scale-105"
-                  textClassName="text-white/50 text-[8px] md:text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                <div
+                  className={cn(
+                    'absolute inset-0 pattern-overlay transition-transform duration-500 group-hover:scale-105',
+                    TILE_GRADIENTS[tile.bg] ?? tile.bg
+                  )}
+                  aria-hidden
                 />
+                <span className="sr-only">{tile.hint}</span>
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <InstagramIcon className="text-white opacity-20 group-hover:opacity-0 transition-opacity duration-300" />
+                </span>
                 <span className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/40 transition-colors duration-300 flex items-center justify-center">
                   <InstagramIcon className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white" />
                 </span>

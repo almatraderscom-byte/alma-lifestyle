@@ -91,8 +91,29 @@ body {
   inset: 0;
   background-image: var(--pattern-diamond);
   background-size: 48px 48px;
-  opacity: 0.05;
+  opacity: 0.12;
   pointer-events: none;
+}
+
+.pattern-overlay-dark::before {
+  opacity: 0.18;
+}
+
+/* Consistent homepage section rhythm */
+.section-padding {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .section-padding {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
 }
 
 /* Marquee strip */
@@ -116,7 +137,7 @@ body {
 .marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee-scroll 35s linear infinite;
+  animation: marquee-scroll 22s linear infinite;
 }
 
 /* Underline link hover */
@@ -136,7 +157,8 @@ body {
   transition: width 300ms ease-out;
 }
 
-.link-underline:hover::after {
+.link-underline:hover::after,
+.link-underline[aria-current='page']::after {
   width: 100%;
 }
 

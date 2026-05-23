@@ -7,7 +7,7 @@ import { BRAND_STORY } from '@/lib/content';
 
 export function BrandStory() {
   return (
-    <section className="py-16 md:py-28 px-6 md:px-12 bg-warm-white">
+    <section className="section-padding bg-warm-white">
       <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
         <ScrollFadeIn>
           <div>

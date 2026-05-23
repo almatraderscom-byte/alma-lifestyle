@@ -5,7 +5,7 @@ import { REVIEWS_SECTION } from '@/lib/content';
 
 export function ReviewsSection() {
   return (
-    <section className="py-16 md:py-28 px-6 md:px-12">
+    <section className="section-padding">
       <div className="mx-auto max-w-7xl">
         <ScrollFadeIn>
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal mb-10 md:mb-12">
