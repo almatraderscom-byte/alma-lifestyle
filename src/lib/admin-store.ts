@@ -300,7 +300,7 @@ function getProductsLocal(): AdminProduct[] {
 export async function getProducts(): Promise<AdminProduct[]> {
   if (shouldUseApi()) {
     try {
-      const result = await adminApi.fetchProducts({ limit: 500 });
+      const result = await adminApi.fetchProducts({ limit: 1000 });
       const legacy = result.filter((p) => isLegacyLocalId(p.id));
       if (legacy.length > 0) {
         console.warn(

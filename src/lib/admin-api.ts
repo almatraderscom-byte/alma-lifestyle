@@ -50,7 +50,7 @@ export async function fetchProducts(params?: {
   published?: boolean;
 }): Promise<AdminProduct[]> {
   const q = new URLSearchParams();
-  q.set('limit', String(params?.limit ?? 500));
+  q.set('limit', String(params?.limit ?? 200));
   if (params?.published !== undefined) {
     q.set('published', String(params.published));
   }
@@ -173,7 +173,7 @@ export async function deleteCollectionApi(id: string): Promise<void> {
 
 export async function fetchOrders(): Promise<AdminOrder[]> {
   const payload = await request<AdminOrder[] | { data: AdminOrder[] }>(
-    '/api/v1/orders?limit=200'
+    '/api/v1/orders?limit=500'
   );
   if (Array.isArray(payload)) return payload;
   if (payload && Array.isArray(payload.data)) return payload.data;
