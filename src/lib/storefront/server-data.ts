@@ -15,22 +15,128 @@ import {
   getAllProductSlugs as getStaticSlugs,
   type CatalogProduct,
 } from '@/lib/products-data';
-import { getDefaultHomepageConfig } from '@/lib/homepage-config';
-import type { HomepageConfig } from '@/lib/homepage-config-types';
+import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-config';
+import type {
+  CategoriesSectionData,
+  CategoryCardConfig,
+  FeaturedSectionData,
+  HomepageConfig,
+} from '@/lib/homepage-config-types';
+import type { FeaturedProduct } from '@/lib/content';
+import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import type { Category } from '@/server/db/schema';
 
 export const STOREFRONT_REVALIDATE = 60;
 
+function enrichCategoryCard(
+  card: CategoryCardConfig,
+  categories: Category[],
+  countBySlug: Map<string, number>
+): CategoryCardConfig {
+  const dbCat = categories.find((c) => c.slug === card.categorySlug);
+  const count = countBySlug.get(card.categorySlug) ?? 0;
+  return {
+    ...card,
+    displayName: dbCat?.name ?? card.displayName,
+    href: dbCat ? `/products?category=${dbCat.slug}` : card.href,
+    subtitle:
+      count > 0
+        ? `${count} ${count === 1 ? 'পণ্য' : 'পণ্য'}`
+        : card.subtitle,
+  };
+}
+
+async function enrichHomepageCategories(
+  config: HomepageConfig,
+  categories: Category[],
+  products: CatalogProduct[]
+): Promise<HomepageConfig> {
+  if (!categories.length) return config;
+
+  const countBySlug = new Map<string, number>();
+  for (const p of products) {
+    countBySlug.set(p.categorySlug, (countBySlug.get(p.categorySlug) ?? 0) + 1);
+  }
+
+  return {
+    ...config,
+    sections: config.sections.map((section) => {
+      if (section.id !== 'categories') return section;
+      const data = section.data as CategoriesSectionData;
+      return {
+        ...section,
+        data: {
+          ...data,
+          featured: enrichCategoryCard(data.featured, categories, countBySlug),
+          stacked: data.stacked.map((c) =>
+            enrichCategoryCard(c, categories, countBySlug)
+          ) as CategoriesSectionData['stacked'],
+        },
+      };
+    }),
+  };
+}
+
 export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
   if (!isSupabaseAdminConfigured()) {
     return getDefaultHomepageConfig();
   }
   try {
-    return await getHomepageConfigOrDefault();
+    const stored = await getHomepageConfigOrDefault();
+    let config = ensureHomepageConfig(stored);
+    const categories = await loadCategoriesServer();
+    const { products } = await loadCatalogProductsServer({ limit: 500 });
+    config = await enrichHomepageCategories(config, categories, products);
+    return config;
   } catch {
     return getDefaultHomepageConfig();
+  }
+}
+
+export async function resolveFeaturedProductsServer(
+  data: FeaturedSectionData
+): Promise<FeaturedProduct[]> {
+  const limit = data.productCount;
+
+  if (!isSupabaseAdminConfigured()) {
+    const { CATALOG_PRODUCTS } = await import('@/lib/products-data');
+    return CATALOG_PRODUCTS.slice(0, limit).map((p, i) => ({
+      ...toCardProduct(p),
+      layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',
+    }));
+  }
+
+  try {
+    const { products } = await loadCatalogProductsServer({ limit: 200 });
+    let list = [...products];
+
+    if (data.source === 'latest') {
+      list.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (data.source === 'bestsellers') {
+      list.sort((a, b) => b.popularScore - a.popularScore);
+    } else if (data.manualProductIds.length > 0) {
+      const byId = new Map(products.map((p) => [p.id, p]));
+      list = data.manualProductIds
+        .map((id) => byId.get(id))
+        .filter((p): p is CatalogProduct => !!p);
+    }
+
+    if (list.length === 0) {
+      list = await loadFeaturedProductsServer(limit);
+    }
+
+    return list.slice(0, limit).map((p, i) => ({
+      ...toCardProduct(p),
+      layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',
+    }));
+  } catch {
+    const fallback = await loadFeaturedProductsServer(limit);
+    return fallback.map((p, i) => ({
+      ...toCardProduct(p),
+      layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',
+    }));
   }
 }
 

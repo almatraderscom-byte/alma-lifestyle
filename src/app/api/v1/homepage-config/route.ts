@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import type { NextRequest } from 'next/server';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import {
@@ -28,7 +29,8 @@ export async function PUT(request: NextRequest) {
       return apiError('Invalid homepage config', 400, 'VALIDATION_ERROR');
     }
 
-    const saved = await saveHomepageConfig(body);
+    const saved = await saveHomepageConfig(ensureHomepageConfig(body));
+    revalidatePath('/');
     return apiSuccess(saved);
   });
 }

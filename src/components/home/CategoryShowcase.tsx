@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 import type { CategoriesSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
@@ -86,9 +88,8 @@ function CategoryCard({
       )}
     >
       <span className="sr-only">{hint}</span>
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      {isUsableImageUrl(imageUrl) ? (
+        <HomepageSectionImage src={imageUrl} alt={name} sizes="(max-width: 768px) 50vw, 33vw" />
       ) : null}
       <div
         className="absolute inset-0 pattern-overlay transition-transform duration-500 md:group-hover:scale-[1.03]"

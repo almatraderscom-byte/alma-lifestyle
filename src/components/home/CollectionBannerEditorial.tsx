@@ -7,6 +7,8 @@ import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { CollectionBannerSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 
 interface CollectionBannerEditorialProps {
   data?: CollectionBannerSectionData;
@@ -17,22 +19,29 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'collectionBanner')!.data;
 
+  const hasBgImage = isUsableImageUrl(data.backgroundImageUrl);
+
   return (
     <section
       className={cn(
         'relative min-h-[70vh] flex items-center justify-center pattern-overlay',
-        !data.backgroundImageUrl && data.bgClass
+        !hasBgImage && data.bgClass
       )}
     >
-      {data.backgroundImageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+      {hasBgImage && (
+        <HomepageSectionImage
           src={data.backgroundImageUrl}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          alt={data.title}
+          sizes="100vw"
         />
       )}
-      <div className="absolute inset-0 bg-maroon/95" aria-hidden />
+      <div
+        className={cn(
+          'absolute inset-0',
+          hasBgImage ? 'bg-charcoal/50' : 'bg-maroon/95'
+        )}
+        aria-hidden
+      />
       <ScrollFadeIn className="relative z-10 text-center px-6 md:px-12 max-w-3xl">
         <p className="editorial-label text-mustard mb-6 mx-auto w-fit">{data.label}</p>
         <h2 className="font-bn-heading text-[2rem] sm:text-5xl md:text-6xl font-bold text-cream leading-[1.3]">

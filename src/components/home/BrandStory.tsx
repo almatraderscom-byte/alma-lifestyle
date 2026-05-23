@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 import type { BrandStorySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
@@ -19,13 +21,14 @@ export function BrandStory({ data: dataProp }: BrandStoryProps) {
       <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
         <ScrollFadeIn>
           <div>
-            {data.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={data.imageUrl}
-                alt=""
-                className="w-full aspect-[4/5] rounded object-cover"
-              />
+            {isUsableImageUrl(data.imageUrl) ? (
+              <div className="relative w-full aspect-[4/5] rounded overflow-hidden">
+                <HomepageSectionImage
+                  src={data.imageUrl}
+                  alt={data.title}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
             ) : (
               <PlaceholderImage
                 hint={data.imageHint}

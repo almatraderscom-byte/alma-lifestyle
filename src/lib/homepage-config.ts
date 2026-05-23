@@ -207,20 +207,55 @@ export function getDefaultHomepageConfig(): HomepageConfig {
 }
 
 /** Valid config for builder + storefront (never empty sections). */
+/** Deep-merge saved homepage config with defaults so image URLs and text are preserved. */
+export function mergeHomepageConfig(
+  saved: HomepageConfig | null | undefined,
+  defaults: HomepageConfig = getDefaultHomepageConfig()
+): HomepageConfig {
+  if (!saved || !Array.isArray(saved.sections) || saved.sections.length === 0) {
+    return defaults;
+  }
+
+  const byId = new Map(saved.sections.map((s) => [s.id, s]));
+  const sections = defaults.sections.map((defaultSection, index) => {
+    const savedSection = byId.get(defaultSection.id);
+    if (!savedSection || savedSection.id !== defaultSection.id) {
+      return { ...defaultSection, order: index };
+    }
+    const mergedData = {
+      ...defaultSection.data,
+      ...savedSection.data,
+    } as typeof defaultSection.data;
+    return {
+      ...defaultSection,
+      enabled: savedSection.enabled,
+      order: savedSection.order ?? index,
+      data: mergedData,
+    };
+  });
+
+  return {
+    ...defaults,
+    ...saved,
+    sections: sections.sort((a, b) => a.order - b.order) as HomepageSectionConfig[],
+    lastSaved: saved.lastSaved || defaults.lastSaved,
+  };
+}
+
 export function ensureHomepageConfig(
   config: HomepageConfig | null | undefined
 ): HomepageConfig {
   if (!config || !Array.isArray(config.sections) || config.sections.length === 0) {
     return getDefaultHomepageConfig();
   }
-  return normalizeHomepageConfig(config);
+  return mergeHomepageConfig(config);
 }
 
 function migrateLegacyConfig(raw: Record<string, unknown>): HomepageConfig | null {
   if (Array.isArray(raw.sections)) {
     const config = raw as unknown as HomepageConfig;
     if (config.sections.length === 0) return null;
-    return normalizeHomepageConfig(config);
+    return mergeHomepageConfig(config);
   }
   if (typeof raw.heroTitle === 'string') {
     const def = getDefaultHomepageConfig();
@@ -235,25 +270,7 @@ function migrateLegacyConfig(raw: Record<string, unknown>): HomepageConfig | nul
 }
 
 export function normalizeHomepageConfig(config: HomepageConfig): HomepageConfig {
-  const defaults = getDefaultHomepageConfig();
-  const byId = new Map(config.sections.map((s) => [s.id, s]));
-  const sections = DEFAULT_SECTION_ORDER.map((id, index) => {
-    const existing = byId.get(id);
-    const fallback = defaults.sections.find((s) => s.id === id);
-    if (existing && fallback) {
-      return {
-        ...fallback,
-        ...existing,
-        order: existing.order ?? index,
-        data: { ...fallback.data, ...existing.data },
-      } as HomepageSectionConfig;
-    }
-    return fallback!;
-  });
-  return {
-    sections: sections.sort((a, b) => a.order - b.order),
-    lastSaved: config.lastSaved || new Date().toISOString(),
-  };
+  return mergeHomepageConfig(config);
 }
 
 export function getSavedHomepageConfig(): HomepageConfig {

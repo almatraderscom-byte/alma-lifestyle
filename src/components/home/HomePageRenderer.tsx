@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import {
-  getActiveHomepageConfig,
+  getDraftHomepageConfig,
   getSortedEnabledSections,
+  isPreviewMode,
   resolveFeaturedProducts,
 } from '@/lib/homepage-config';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
+import type { FeaturedProduct } from '@/lib/content';
 import { EditorialHero } from '@/components/home/EditorialHero';
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
@@ -19,43 +21,43 @@ import { TrustStrip } from '@/components/home/TrustStrip';
 import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
 
 interface HomePageRendererProps {
-  initialConfig?: HomepageConfig;
+  /** Server-loaded config from database (never localStorage on customer site). */
+  initialConfig: HomepageConfig;
+  /** Published products for featured section (resolved on server). */
+  featuredProducts?: FeaturedProduct[];
 }
 
-export function HomePageRenderer({ initialConfig }: HomePageRendererProps) {
-  const [config, setConfig] = useState<HomepageConfig | null>(initialConfig ?? null);
+export function HomePageRenderer({
+  initialConfig,
+  featuredProducts = [],
+}: HomePageRendererProps) {
+  const [config, setConfig] = useState<HomepageConfig>(initialConfig);
 
   useEffect(() => {
-    if (!initialConfig) {
-      setConfig(getActiveHomepageConfig());
+    setConfig(initialConfig);
+  }, [initialConfig]);
+
+  useEffect(() => {
+    if (!isPreviewMode()) return;
+
+    function refreshFromDraft() {
+      const draft = getDraftHomepageConfig();
+      if (draft) setConfig(draft);
+      else setConfig(initialConfig);
     }
 
-    function refresh() {
-      setConfig(getActiveHomepageConfig());
-    }
-    function onStorage(e: StorageEvent) {
-      if (
-        e.key === 'alma-homepage-draft' ||
-        e.key === 'alma-homepage-config'
-      ) {
-        refresh();
-      }
-    }
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('alma-homepage-draft-updated', refresh);
-    const interval = setInterval(refresh, 800);
+    refreshFromDraft();
+    window.addEventListener('alma-homepage-draft-updated', refreshFromDraft);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'alma-homepage-draft') refreshFromDraft();
+    });
     return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('alma-homepage-draft-updated', refresh);
-      clearInterval(interval);
+      window.removeEventListener('alma-homepage-draft-updated', refreshFromDraft);
     };
-  }, []);
-
-  if (!config) {
-    return <div className="min-h-screen bg-warm-white" aria-hidden />;
-  }
+  }, [initialConfig]);
 
   const sections = getSortedEnabledSections(config);
+  const preview = isPreviewMode();
 
   const sectionLabels: Record<string, string> = {
     hero: 'হিরো',
@@ -86,7 +88,11 @@ export function HomePageRenderer({ initialConfig }: HomePageRendererProps) {
               return (
                 <FeaturedProductsSection
                   data={section.data}
-                  products={resolveFeaturedProducts(section.data)}
+                  products={
+                    preview
+                      ? resolveFeaturedProducts(section.data)
+                      : featuredProducts
+                  }
                 />
               );
             case 'brandStory':

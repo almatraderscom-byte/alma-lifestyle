@@ -5,6 +5,8 @@ import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { cn } from '@/lib/utils';
 import type { CommunitySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 
 const TILE_GRADIENTS: Record<string, string> = {
   'bg-maroon': 'bg-gradient-to-b from-maroon to-maroon/80',
@@ -43,12 +45,12 @@ export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
                 rel="noopener noreferrer"
                 className="group relative block aspect-square rounded overflow-hidden"
               >
-                {tile.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                {isUsableImageUrl(tile.imageUrl) ? (
+                  <HomepageSectionImage
                     src={tile.imageUrl}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    alt={tile.hint}
+                    className="transition-transform duration-500 group-hover:scale-105"
+                    sizes="120px"
                   />
                 ) : (
                   <div

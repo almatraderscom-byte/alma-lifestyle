@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { HeroSectionData } from '@/lib/homepage-config-types';
@@ -27,12 +29,12 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        {data.backgroundImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+        {isUsableImageUrl(data.backgroundImageUrl) ? (
+          <HomepageSectionImage
             src={data.backgroundImageUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            alt={data.title}
+            priority
+            sizes="(max-width: 768px) 100vw, 60vw"
           />
         ) : (
           <PlaceholderImage
