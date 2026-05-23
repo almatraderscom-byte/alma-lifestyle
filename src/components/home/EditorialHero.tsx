@@ -24,24 +24,25 @@ export function EditorialHero() {
           className="h-full w-full"
         />
 
-        <div
-          className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-cream/70 z-10"
+        <motion.div
+          className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 drop-shadow-md"
+          animate={
+            reduceMotion ? undefined : { y: [0, 12, 0], opacity: [0.8, 1, 0.8] }
+          }
+          transition={
+            reduceMotion
+              ? undefined
+              : { repeat: Infinity, duration: 2, ease: 'easeInOut' }
+          }
           aria-hidden
         >
-          <motion.div
-            animate={reduceMotion ? undefined : { y: [0, 8, 0] }}
-            transition={
-              reduceMotion
-                ? undefined
-                : { repeat: Infinity, duration: 2, ease: 'easeInOut' }
-            }
-          >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream/15 backdrop-blur-sm border border-cream/30">
             <ScrollArrowIcon />
-          </motion.div>
-          <span className="font-bn-body text-xs text-mustard/90">
+          </div>
+          <span className="font-bn-body text-xs tracking-wider uppercase text-cream">
             {formatBnText('নিচে দেখুন')}
           </span>
-        </div>
+        </motion.div>
       </motion.div>
 
       <motion.div
@@ -100,7 +101,16 @@ export function EditorialHero() {
 
 function ScrollArrowIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="text-cream"
+      aria-hidden
+    >
       <path d="M12 5v14M5 12l7 7 7-7" />
     </svg>
   );
