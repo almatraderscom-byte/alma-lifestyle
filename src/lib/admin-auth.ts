@@ -9,6 +9,7 @@ export const ADMIN_CREDENTIALS = {
 export const ADMIN_SESSION_COOKIE = 'alma_admin_session';
 export const ADMIN_SESSION_STORAGE_KEY = 'alma_admin_session';
 export const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const SUPABASE_AUTH_TIMEOUT_MS = 5000;
 
 export interface AdminUser {
   email: string;
@@ -35,7 +36,7 @@ function decodeSessionPayload(value: string): string {
   if (typeof Buffer !== 'undefined') {
     return Buffer.from(value, 'base64url').toString('utf8');
   }
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = value.replace(/-/g, '+').replace(/\//g, '/');
   return atob(padded);
 }
 
@@ -63,7 +64,7 @@ function createSession(user: AdminUser): AdminSession {
   };
 }
 
-function persistSessionClient(session: AdminSession) {
+function persistSessionClient(session: AdminSession): void {
   if (typeof window === 'undefined') return;
   const encoded = encodeSession(session);
   localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, encoded);
@@ -71,40 +72,70 @@ function persistSessionClient(session: AdminSession) {
   document.cookie = `${ADMIN_SESSION_COOKIE}=${encoded}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
+function matchesLegacyCredentials(email: string, password: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  return (
+    normalized === ADMIN_CREDENTIALS.email &&
+    password === ADMIN_CREDENTIALS.password
+  );
+}
+
+async function trySupabaseAuth(email: string, password: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const supabase = getSupabaseBrowser();
+  if (!supabase) return false;
+
+  try {
+    const { data, error } = await Promise.race([
+      supabase.auth.signInWithPassword({
+        email,
+        password,
+      }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('SUPABASE_AUTH_TIMEOUT')), SUPABASE_AUTH_TIMEOUT_MS);
+      }),
+    ]);
+
+    if (error || !data.user?.email) return false;
+
+    const user: AdminUser = {
+      email: data.user.email,
+      name: (data.user.user_metadata?.name as string | undefined) ?? 'Admin',
+    };
+    persistSessionClient(createSession(user));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Admin login: legacy credentials first (instant), then Supabase Auth (5s max).
+ */
 export async function login(email: string, password: string): Promise<boolean> {
   const normalized = email.trim().toLowerCase();
 
-  const supabase = getSupabaseBrowser();
-  if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalized,
-      password,
-    });
-    if (!error && data.user?.email) {
-      const user: AdminUser = {
-        email: data.user.email,
-        name: data.user.user_metadata?.name ?? 'Admin',
-      };
-      persistSessionClient(createSession(user));
-      return true;
-    }
+  if (matchesLegacyCredentials(normalized, password)) {
+    const user: AdminUser = { email: ADMIN_CREDENTIALS.email, name: 'Admin' };
+    persistSessionClient(createSession(user));
+    return true;
   }
 
-  if (
-    normalized !== ADMIN_CREDENTIALS.email ||
-    password !== ADMIN_CREDENTIALS.password
-  ) {
-    return false;
-  }
-  const user: AdminUser = { email: ADMIN_CREDENTIALS.email, name: 'Admin' };
-  persistSessionClient(createSession(user));
-  return true;
+  return trySupabaseAuth(normalized, password);
 }
 
 export async function logout(): Promise<void> {
   const supabase = getSupabaseBrowser();
   if (supabase) {
-    await supabase.auth.signOut();
+    try {
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise<void>((resolve) => setTimeout(resolve, SUPABASE_AUTH_TIMEOUT_MS)),
+      ]);
+    } catch {
+      /* ignore */
+    }
   }
   if (typeof window === 'undefined') return;
   localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);

@@ -11,7 +11,7 @@ import { ADMIN_CREDENTIALS } from '@/lib/admin-auth';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, ready } = useAdminAuth();
+  const { login } = useAdminAuth();
   const { toast } = useAdminToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,16 +20,30 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
-    const ok = await login(email, password);
-    setLoading(false);
-    if (!ok) {
-      toast('Invalid email or password', 'error');
-      return;
+    try {
+      const loginPromise = login(email, password);
+      const ok = await Promise.race([
+        loginPromise,
+        new Promise<boolean>((resolve) => {
+          setTimeout(() => resolve(false), 6000);
+        }),
+      ]);
+
+      if (!ok) {
+        toast('Invalid email or password', 'error');
+        return;
+      }
+
+      void remember;
+      const from = searchParams.get('from') || '/admin';
+      router.replace(from);
+      router.refresh();
+    } finally {
+      setLoading(false);
     }
-    void remember;
-    const from = searchParams.get('from') || '/admin';
-    router.push(from);
   }
 
   return (
@@ -65,7 +79,7 @@ function LoginForm() {
           />
           Remember me
         </label>
-        <Button type="submit" className="w-full" size="lg" loading={loading || !ready}>
+        <Button type="submit" className="w-full" size="lg" loading={loading} disabled={loading}>
           Login
         </Button>
       </form>
