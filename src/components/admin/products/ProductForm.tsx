@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { newDatabaseId } from '@/lib/admin-ids';
+import { shouldUseApi } from '@/lib/data-source';
 import {
   type AdminProduct,
   type ProductVariant,
@@ -191,7 +193,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
           const row = girlAgeRows[i];
           const payload: AdminProduct = {
             ...form,
-            id: uid('prod'),
+            id: shouldUseApi() ? newDatabaseId() : uid('prod'),
             productType: 'girl_two_piece',
             ageGroup: age,
             designGroupName: groupName,

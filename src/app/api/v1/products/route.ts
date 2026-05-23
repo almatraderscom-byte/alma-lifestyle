@@ -129,6 +129,10 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await Promise.all(result.data.map(mapRowToAdmin));
+    console.log(
+      '[API /products] Product IDs:',
+      data.map((p) => p.id).slice(0, 5)
+    );
 
     return apiSuccess({
       data,

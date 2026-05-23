@@ -1,3 +1,4 @@
+import { isDatabaseUuid } from '@/lib/admin-ids';
 import type { ProductType } from '@/lib/product-design-types';
 import { DISPLAY_ORDER_BY_TYPE } from '@/lib/product-design-types';
 import type { AdminProduct, AdminCategory, AdminCollection, AdminOrder, OrderStatus } from '@/lib/admin-store';
@@ -40,8 +41,13 @@ export function mapDbProductToAdmin(
     tags?: string[] | null;
   };
 
+  const id = row.id;
+  if (!id || !isDatabaseUuid(id)) {
+    console.error('[mapDbProductToAdmin] Invalid product id from database:', id, row.sku);
+  }
+
   return {
-    id: row.id,
+    id,
     title: row.title,
     banglaTitle: ext.title_bn ?? undefined,
     tags: ext.tags ?? undefined,

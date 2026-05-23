@@ -14,6 +14,7 @@ import {
   getSavedHomepageConfig,
   saveHomepageConfig as saveFullHomepageConfig,
 } from '@/lib/homepage-config';
+import { isDatabaseUuid, isLegacyLocalId, newDatabaseId } from '@/lib/admin-ids';
 import { shouldUseApi } from '@/lib/data-source';
 import type { ProductType } from '@/lib/product-design-types';
 import * as adminApi from '@/lib/admin-api';
@@ -300,11 +301,17 @@ export async function getProducts(): Promise<AdminProduct[]> {
   if (shouldUseApi()) {
     try {
       const result = await adminApi.fetchProducts({ limit: 500 });
-      if (result && result.length > 0) return result;
-      return result || [];
+      const legacy = result.filter((p) => isLegacyLocalId(p.id));
+      if (legacy.length > 0) {
+        console.warn(
+          '[admin-store] API returned legacy localStorage-style IDs — check API mapper:',
+          legacy.map((p) => p.id).slice(0, 3)
+        );
+      }
+      return result;
     } catch (error) {
       console.error('[admin-store] API fetchProducts failed:', error);
-      return getProductsLocal();
+      throw error;
     }
   }
   return getProductsLocal();
@@ -312,11 +319,23 @@ export async function getProducts(): Promise<AdminProduct[]> {
 
 export async function getProductById(id: string): Promise<AdminProduct | null> {
   if (shouldUseApi()) {
-    try {
-      return await adminApi.fetchProduct(id);
-    } catch {
-      return null;
+    if (isDatabaseUuid(id)) {
+      try {
+        return await adminApi.fetchProduct(id);
+      } catch (error) {
+        console.error('[admin-store] API fetchProduct failed for', id, error);
+        return null;
+      }
     }
+    if (isLegacyLocalId(id)) {
+      console.warn(
+        '[admin-store] Legacy local id in API mode — not in Supabase:',
+        id
+      );
+      return getProductsLocal().find((p) => p.id === id) ?? null;
+    }
+    console.error('[admin-store] Invalid product id format:', id);
+    return null;
   }
   return getProductsLocal().find((p) => p.id === id) ?? null;
 }
@@ -376,7 +395,7 @@ export async function duplicateProduct(id: string): Promise<AdminProduct | null>
   const now = new Date().toISOString();
   const copy: AdminProduct = {
     ...source,
-    id: uid('prod'),
+    id: shouldUseApi() ? newDatabaseId() : uid('prod'),
     title: `${source.title} (Copy)`,
     slug: `${source.slug}-copy-${Math.random().toString(36).slice(2, 6)}`,
     sku: `${source.sku}-COPY`,
@@ -407,12 +426,10 @@ function getCategoriesLocal(): AdminCategory[] {
 export async function getCategories(): Promise<AdminCategory[]> {
   if (shouldUseApi()) {
     try {
-      const result = await adminApi.fetchCategories(true);
-      if (result && result.length > 0) return result;
-      return result || [];
+      return await adminApi.fetchCategories(true);
     } catch (error) {
       console.error('[admin-store] API fetchCategories failed:', error);
-      return getCategoriesLocal();
+      throw error;
     }
   }
   return getCategoriesLocal();
@@ -467,12 +484,10 @@ function getCollectionsLocal(): AdminCollection[] {
 export async function getCollections(): Promise<AdminCollection[]> {
   if (shouldUseApi()) {
     try {
-      const result = await adminApi.fetchCollections();
-      if (result && result.length > 0) return result;
-      return result || [];
+      return await adminApi.fetchCollections();
     } catch (error) {
       console.error('[admin-store] API fetchCollections failed:', error);
-      return getCollectionsLocal();
+      throw error;
     }
   }
   return getCollectionsLocal();
@@ -524,11 +539,10 @@ function getOrdersLocal(): AdminOrder[] {
 export async function getOrders(): Promise<AdminOrder[]> {
   if (shouldUseApi()) {
     try {
-      const result = await adminApi.fetchOrders();
-      return result || [];
+      return await adminApi.fetchOrders();
     } catch (error) {
       console.error('[admin-store] API fetchOrders failed:', error);
-      return getOrdersLocal();
+      throw error;
     }
   }
   return getOrdersLocal();
@@ -653,7 +667,7 @@ export async function importData(
 
 export function createEmptyProduct(): AdminProduct {
   const now = new Date().toISOString();
-  const id = uid('prod');
+  const id = shouldUseApi() ? newDatabaseId() : uid('prod');
   return {
     id,
     title: '',

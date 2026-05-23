@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { newDatabaseId } from '@/lib/admin-ids';
+import { shouldUseApi } from '@/lib/data-source';
 import { getCollections, saveCollection, deleteCollection, uid } from '@/lib/admin-store';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
@@ -26,7 +28,7 @@ export default function AdminCollectionsPage() {
     const now = new Date().toISOString();
     try {
       await saveCollection({
-        id: uid('col'),
+        id: shouldUseApi() ? newDatabaseId() : uid('col'),
         name: name.trim(),
         slug: name.toLowerCase().replace(/\s+/g, '-'),
         productIds: [],

@@ -34,6 +34,17 @@ async function request<T>(
   return json.data;
 }
 
+type ProductsListPayload =
+  | AdminProduct[]
+  | { data: AdminProduct[]; pagination?: { total: number } };
+
+function normalizeProductsList(payload: ProductsListPayload): AdminProduct[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  console.error('[admin-api] Unexpected products list shape:', payload);
+  return [];
+}
+
 export async function fetchProducts(params?: {
   limit?: number;
   published?: boolean;
@@ -43,11 +54,11 @@ export async function fetchProducts(params?: {
   if (params?.published !== undefined) {
     q.set('published', String(params.published));
   }
-  const result = await request<{
-    data: AdminProduct[];
-    pagination: { total: number };
-  }>(`/api/v1/products?${q}`);
-  return result.data;
+  const payload = await request<ProductsListPayload>(`/api/v1/products?${q}`);
+  const products = normalizeProductsList(payload);
+  const sampleIds = products.slice(0, 3).map((p) => p.id);
+  console.log('[admin-api] fetchProducts count:', products.length, 'sample IDs:', sampleIds);
+  return products;
 }
 
 export async function fetchProduct(id: string): Promise<AdminProduct> {
@@ -161,10 +172,12 @@ export async function deleteCollectionApi(id: string): Promise<void> {
 }
 
 export async function fetchOrders(): Promise<AdminOrder[]> {
-  const result = await request<{
-    data: AdminOrder[];
-  }>('/api/v1/orders?limit=200');
-  return result.data;
+  const payload = await request<AdminOrder[] | { data: AdminOrder[] }>(
+    '/api/v1/orders?limit=200'
+  );
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  return [];
 }
 
 export async function updateOrderStatusApi(

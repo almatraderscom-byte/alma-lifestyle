@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { isDatabaseUuid } from '@/lib/admin-ids';
+import { shouldUseApi } from '@/lib/data-source';
 import {
   getProducts,
   getCategories,
@@ -24,6 +26,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -81,20 +84,40 @@ export default function AdminProductsPage() {
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   useEffect(() => {
+    console.log('[AdminProducts] Loading, useApi:', shouldUseApi());
     Promise.all([getProducts(), getCategories()])
       .then(([p, c]) => {
+        console.log(
+          '[AdminProducts] Loaded',
+          p.length,
+          'products, sample IDs:',
+          p.slice(0, 3).map((x) => x.id)
+        );
+        const bad = p.filter((x) => shouldUseApi() && !isDatabaseUuid(x.id));
+        if (bad.length > 0) {
+          setLoadError(
+            `${bad.length} product(s) have invalid IDs (localStorage format). Clear site data or fix API connection.`
+          );
+        }
         setProducts(p);
         setCategories(c);
+      })
+      .catch((err) => {
+        setLoadError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => setLoading(false));
   }, []);
 
   function refresh() {
     setLoading(true);
+    setLoadError(null);
     Promise.all([getProducts(), getCategories()])
       .then(([p, c]) => {
         setProducts(p);
         setCategories(c);
+      })
+      .catch((err) => {
+        setLoadError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => setLoading(false));
   }
@@ -257,6 +280,22 @@ export default function AdminProductsPage() {
 
   if (loading && products.length === 0) {
     return <p className="text-neutral-500">Loading products…</p>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 space-y-2">
+        <h1 className="text-lg font-semibold text-red-900">Could not load products</h1>
+        <p className="text-sm text-red-800">{loadError}</p>
+        <p className="text-xs text-red-700">
+          Check <a href="/api/v1/debug" className="underline" target="_blank" rel="noreferrer">/api/v1/debug</a> and ensure{' '}
+          <code className="bg-red-100 px-1">NEXT_PUBLIC_USE_API=true</code>.
+        </p>
+        <Button variant="secondary" onClick={refresh}>
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (

@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { isDatabaseUuid } from '@/lib/admin-ids';
 import { AdminProductBodySchema } from '@/lib/api-validation';
 import {
   getAdminProductById,
@@ -15,6 +16,10 @@ interface RouteParams {
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!isDatabaseUuid(id)) {
+    console.warn('[API /products/:id] Invalid UUID:', id);
+    return apiNotFound('Product');
+  }
   return withPublicDb(async () => {
     const product = await getAdminProductById(id);
     if (!product) return apiNotFound('Product');
@@ -24,6 +29,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!isDatabaseUuid(id)) {
+    return apiNotFound('Product');
+  }
   return withAdmin(request, async () => {
     const body = await request.json();
     const parsed = AdminProductBodySchema.safeParse(body);
@@ -50,6 +58,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!isDatabaseUuid(id)) {
+    return apiNotFound('Product');
+  }
   return withAdmin(request, async () => {
     await softDeleteProduct(id);
     return apiSuccess({ id, deleted: true });
