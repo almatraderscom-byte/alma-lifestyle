@@ -73,6 +73,7 @@ export const FEATURED_SECTION = {
 
 export type FeaturedProduct = {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   bgClass: string;
@@ -82,59 +83,67 @@ export type FeaturedProduct = {
 export const FEATURED_PRODUCTS: FeaturedProduct[] = [
   {
     id: '1',
+    slug: 'royal-navy-panjabi',
     title: 'রয়্যাল নেভি পাঞ্জাবি',
     price: 2550,
     bgClass: 'bg-[#2c3e5c]',
-    href: '/products',
+    href: '/products/royal-navy-panjabi',
   },
   {
     id: '2',
+    slug: 'classic-white-panjabi',
     title: 'ক্লাসিক সাদা পাঞ্জাবি',
     price: 1850,
     bgClass: 'bg-[#e8e4df]',
-    href: '/products',
+    href: '/products/classic-white-panjabi',
   },
   {
     id: '3',
+    slug: 'premium-cotton-panjabi',
     title: 'প্রিমিয়াম কটন পাঞ্জাবি',
     price: 2150,
     bgClass: 'bg-[#8b7355]',
-    href: '/products',
+    href: '/products/premium-cotton-panjabi',
   },
   {
     id: '4',
+    slug: 'wireless-earbuds-pro',
     title: 'ওয়্যারলেস ইয়ারবাড প্রো',
     price: 3500,
     bgClass: 'bg-[#4a4a4a]',
-    href: '/products',
+    href: '/products/wireless-earbuds-pro',
   },
   {
     id: '5',
+    slug: 'leather-wallet',
     title: 'লেদার ওয়ালেট',
     price: 950,
     bgClass: 'bg-[#6b4f3a]',
-    href: '/products',
+    href: '/products/leather-wallet',
   },
   {
     id: '6',
+    slug: 'smart-watch-elite',
     title: 'স্মার্ট ওয়াচ এলিট',
     price: 4200,
     bgClass: 'bg-[#1a1a1a]',
-    href: '/products',
+    href: '/products/smart-watch-elite',
   },
   {
     id: '7',
+    slug: 'handmade-jute-bag',
     title: 'হ্যান্ডমেড জুট ব্যাগ',
     price: 750,
     bgClass: 'bg-[#c4a574]',
-    href: '/products',
+    href: '/products/handmade-jute-bag',
   },
   {
     id: '8',
+    slug: 'ceramic-flower-vase',
     title: 'সিরামিক ফ্লাওয়ার ভাস',
     price: 1200,
     bgClass: 'bg-[#9cb5a0]',
-    href: '/products',
+    href: '/products/ceramic-flower-vase',
   },
 ];
 
@@ -190,4 +199,71 @@ export const FOOTER = {
   payments: ['bKash', 'Nagad', 'ক্যাশ অন ডেলিভারি'] as const,
   bottomLine: `© ${SITE.copyrightYear} ALMA Lifestyle | 🇧🇩 বাংলাদেশে তৈরি`,
   phoneDisplay: '+৮৮০ ১০০০-০০০০০০',
+} as const;
+
+export const BREADCRUMB = {
+  home: 'হোম',
+  allProducts: 'সব পণ্য',
+} as const;
+
+export const PRODUCTS_PAGE = {
+  titleAll: 'সব পণ্য',
+  filter: 'ফিল্টার',
+  closeFilter: 'বন্ধ করুন',
+  applyFilter: 'ফিল্টার প্রয়োগ করুন',
+  resetFilter: 'রিসেট করুন',
+  categoriesTitle: 'ক্যাটাগরি',
+  priceRangeTitle: 'দামের পরিসীমা',
+  colorTitle: 'রঙ',
+  sizeTitle: 'সাইজ',
+  sortLabel: 'সাজান',
+  sortOptions: {
+    newest: 'নতুন আগে',
+    'price-asc': 'দাম: কম থেকে বেশি',
+    'price-desc': 'দাম: বেশি থেকে কম',
+    popular: 'জনপ্রিয়তা',
+  } as const,
+  emptyTitle: 'কোনো পণ্য পাওয়া যায়নি',
+  emptySubtitle: 'অন্য ফিল্টার চেষ্টা করুন বা সব পণ্য দেখুন',
+  emptyReset: 'ফিল্টার রিসেট করুন',
+  prevPage: '← আগের পাতা',
+  nextPage: '→ পরের পাতা',
+  perPage: 12,
+} as const;
+
+export const PDP = {
+  selectColor: 'রঙ নির্বাচন করুন',
+  selectSize: 'সাইজ নির্বাচন করুন',
+  quantity: 'পরিমাণ',
+  sizeChart: 'সাইজ চার্ট দেখুন',
+  addToBag: 'ব্যাগে যোগ করুন',
+  buyNow: 'এখনই কিনুন',
+  whatsappOrder: '📱 হোয়াটসঅ্যাপে অর্ডার করুন',
+  trust: {
+    freeDelivery: 'ফ্রি ডেলিভারি ঢাকার মধ্যে',
+    cod: 'ক্যাশ অন ডেলিভারি',
+    returns: '৭ দিনের রিটার্ন',
+    original: '১০০% অরিজিনাল',
+  },
+  accordion: {
+    description: 'বিবরণ',
+    material: 'উপাদান ও যত্ন',
+    delivery: 'ডেলিভারি তথ্য',
+    returns: 'রিটার্ন পলিসি',
+  },
+  relatedTitle: 'আপনার জন্য আরও পণ্য',
+  recentTitle: 'সাম্প্রতিক দেখা পণ্য',
+  toastAdded: 'ব্যাগে যোগ করা হয়েছে!',
+} as const;
+
+export const SIZE_CHART = {
+  title: 'সাইজ চার্ট',
+  close: 'বন্ধ করুন',
+  sizeCol: 'সাইজ',
+  chest: 'বুক',
+  waist: 'কোমর',
+  length: 'লম্বা',
+  inch: 'ইঞ্চি',
+  cm: 'সেমি',
+  note: 'মাপ সেন্টিমিটারে নেওয়া হয়েছে। আপনার সাধারণ সাইজ বেছে নিন।',
 } as const;
