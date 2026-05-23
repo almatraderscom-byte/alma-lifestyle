@@ -18,6 +18,7 @@ import {
   type CatalogProduct,
   type CategorySlug,
   type ProductFilters,
+  type ListingSetFilter,
   type SortKey,
 } from '@/lib/products-data';
 import {
@@ -69,7 +70,13 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const filtered = useMemo(() => {
     const list = filterCatalogProducts(catalogSource, appliedFilters);
     return sortCatalogProducts(list, sort);
-  }, [appliedFilters, sort]);
+  }, [catalogSource, appliedFilters, sort]);
+
+  function setListingSetFilter(value: ListingSetFilter) {
+    const next = { ...appliedFilters, listingSet: value };
+    setFilters(next);
+    setAppliedFilters(next);
+  }
 
   const pagination = useMemo(
     () => paginateProducts(filtered, page, PRODUCTS_PAGE.perPage),
@@ -134,6 +141,24 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
             >
               {PRODUCTS_PAGE.filter}
             </button>
+
+            <div className="flex flex-wrap gap-2 order-first w-full md:order-none md:w-auto">
+              <ListingSetChip
+                label={PRODUCTS_PAGE.filterAll}
+                active={appliedFilters.listingSet === 'all'}
+                onClick={() => setListingSetFilter('all')}
+              />
+              <ListingSetChip
+                label={PRODUCTS_PAGE.filterMatchingSet}
+                active={appliedFilters.listingSet === 'matching'}
+                onClick={() => setListingSetFilter('matching')}
+              />
+              <ListingSetChip
+                label={PRODUCTS_PAGE.filterSingleProduct}
+                active={appliedFilters.listingSet === 'single'}
+                onClick={() => setListingSetFilter('single')}
+              />
+            </div>
 
             <p className="font-bn-body text-sm text-text-light order-last w-full md:order-none md:w-auto md:flex-1 md:text-center">
               {pagination.total > 0
@@ -236,6 +261,31 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function ListingSetChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'min-h-10 px-4 rounded-full font-bn-body text-sm font-medium border transition-colors',
+        active
+          ? 'bg-primary text-secondary border-primary'
+          : 'bg-background text-primary border-border-subtle hover:border-primary/40'
+      )}
+    >
+      {label}
+    </button>
   );
 }
 

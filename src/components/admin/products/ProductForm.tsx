@@ -29,8 +29,10 @@ import {
   GIRL_AGE_GROUPS,
   slugForDesignMember,
   DISPLAY_ORDER_BY_TYPE,
+  PRODUCT_TYPE_LABELS_ADMIN,
 } from '@/lib/product-design-types';
 import { useAdminToast } from '@/context/AdminToastContext';
+import { QuickAddMatchingModal } from '@/components/admin/products/QuickAddMatchingModal';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Custom'];
 const COUNTRIES = [
@@ -44,12 +46,32 @@ const COUNTRIES = [
 interface ProductFormProps {
   initial?: AdminProduct;
   isEdit?: boolean;
+  /** Pre-fill from Quick Add Matching (query params on /admin/products/new) */
+  prefill?: {
+    designGroupId?: string;
+    designGroupName?: string;
+    menSlug?: string;
+    productType?: AdminProduct['productType'];
+  };
 }
 
-export function ProductForm({ initial, isEdit }: ProductFormProps) {
+function designBaseSlugFromMenSlug(menSlug: string): string {
+  return menSlug
+    .replace(/-men$/, '')
+    .replace(/-panjabi-men$/, '-panjabi')
+    .replace(/-panjabi$/, '');
+}
+
+export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   const router = useRouter();
   const { toast } = useAdminToast();
   const [form, setForm] = useState<AdminProduct>(initial ?? createEmptyProduct());
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [savedMenProduct, setSavedMenProduct] = useState<{
+    designGroupId: string;
+    designGroupName: string;
+    slug: string;
+  } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [seoOpen, setSeoOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -89,6 +111,30 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   useEffect(() => {
     if (initial) setForm(initial);
   }, [initial]);
+
+  useEffect(() => {
+    if (initial || !prefill?.designGroupId) return;
+    const type = prefill.productType ?? 'boy_panjabi';
+    const baseSlug = prefill.menSlug ? designBaseSlugFromMenSlug(prefill.menSlug) : '';
+    setForm((prev) => ({
+      ...prev,
+      productType: type,
+      designGroupId: prefill.designGroupId,
+      designGroupName: prefill.designGroupName ?? prev.designGroupName,
+      displayOrder: DISPLAY_ORDER_BY_TYPE[type],
+      slug: baseSlug
+        ? slugForDesignMember(
+            baseSlug,
+            type,
+            type === 'girl_two_piece' ? '1-5' : undefined
+          )
+        : prev.slug,
+      title: prefill.designGroupName
+        ? `${prefill.designGroupName} (${PRODUCT_TYPE_LABELS_ADMIN[type]})`
+        : prev.title,
+      status: 'draft',
+    }));
+  }, [initial, prefill]);
 
   function update<K extends keyof AdminProduct>(key: K, value: AdminProduct[K]) {
     setDirty(true);
@@ -174,8 +220,23 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
           await updateProduct(initial.id, payload);
           toast('Product updated successfully', 'success');
         } else {
-          await saveProduct(payload);
+          const saved = await saveProduct(payload);
           toast('Product created successfully', 'success');
+          if (
+            status === 'published' &&
+            payload.productType === 'men_panjabi' &&
+            !prefill?.designGroupId
+          ) {
+            setSavedMenProduct({
+              designGroupId: saved.designGroupId ?? saved.id,
+              designGroupName: saved.designGroupName ?? saved.title,
+              slug: saved.slug,
+            });
+            setQuickAddOpen(true);
+            setDirty(false);
+            setSaving(false);
+            return;
+          }
         }
       }
       setDirty(false);
@@ -555,6 +616,18 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
         </div>
       </div>
       <div className="h-20" aria-hidden />
+
+      {quickAddOpen && savedMenProduct && (
+        <QuickAddMatchingModal
+          designGroupId={savedMenProduct.designGroupId}
+          designGroupName={savedMenProduct.designGroupName}
+          menSlug={savedMenProduct.slug}
+          onDismiss={() => {
+            setQuickAddOpen(false);
+            router.push('/admin/products');
+          }}
+        />
+      )}
     </div>
   );
 }

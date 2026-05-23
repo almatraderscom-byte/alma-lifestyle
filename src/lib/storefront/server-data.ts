@@ -4,7 +4,10 @@ import { getCategories } from '@/server/db/queries/categories';
 import { getProducts, getProductBySlug, getFeaturedProducts } from '@/server/db/queries/products';
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
-import { mapDbProductToCatalog } from '@/lib/mappers/catalog-product';
+import {
+  groupProductsForListing,
+  mapDbProductToCatalog,
+} from '@/lib/mappers/catalog-product';
 import { getDesignGroupBySlug } from '@/server/db/queries/design-groups';
 import {
   CATALOG_PRODUCTS,
@@ -75,11 +78,9 @@ export async function loadCatalogProductsServer(options?: {
       search: options?.search,
     });
 
-    const products = result.data.map((row, i) =>
-      mapDbProductToCatalog(row, catById.get(row.category_id), i)
-    );
+    const products = groupProductsForListing(result.data, catById);
 
-    return { products, total: result.total };
+    return { products, total: products.length };
   } catch {
     return { products: CATALOG_PRODUCTS, total: CATALOG_PRODUCTS.length };
   }

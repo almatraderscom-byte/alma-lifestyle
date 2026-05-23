@@ -329,6 +329,9 @@ export const BREADCRUMB = {
 
 export const PRODUCTS_PAGE = {
   titleAll: 'সব পণ্য',
+  filterMatchingSet: 'ম্যাচিং সেট',
+  filterSingleProduct: 'একক পণ্য',
+  filterAll: 'সব',
   filter: 'ফিল্টার',
   closeFilter: 'বন্ধ করুন',
   applyFilter: 'ফিল্টার প্রয়োগ করুন',

@@ -40,6 +40,38 @@ export const PRODUCT_TYPE_LABELS_BN: Record<ProductType, string> = {
   girl_two_piece: 'মেয়ে শিশু Two Piece',
 };
 
+/** Short badges for product listing cards */
+export const PRODUCT_TYPE_BADGE_BN: Record<
+  Exclude<ProductType, 'simple'>,
+  string
+> = {
+  men_panjabi: 'পুরুষ',
+  boy_panjabi: 'ছেলে',
+  women_three_piece: 'মহিলা',
+  girl_two_piece: 'মেয়ে',
+};
+
+export const PRODUCT_TYPE_BADGE_CLASS: Record<
+  Exclude<ProductType, 'simple'>,
+  string
+> = {
+  men_panjabi: 'bg-charcoal text-white',
+  boy_panjabi: 'bg-terracotta text-white',
+  women_three_piece: 'bg-maroon text-white',
+  girl_two_piece: 'bg-mustard text-charcoal',
+};
+
+export function typeLabelsForDesignGroup(types: ProductType[]): string[] {
+  const order: Exclude<ProductType, 'simple'>[] = [
+    'men_panjabi',
+    'boy_panjabi',
+    'women_three_piece',
+    'girl_two_piece',
+  ];
+  const set = new Set(types.filter((t) => t !== 'simple'));
+  return order.filter((t) => set.has(t)).map((t) => PRODUCT_TYPE_BADGE_BN[t]);
+}
+
 export const SIZE_PRESETS: Record<Exclude<ProductType, 'simple' | 'girl_two_piece'>, string[]> = {
   men_panjabi: ['38', '40', '42', '44', '46', '48', '50', '52', '54'],
   boy_panjabi: ['16', '18', '20', '22', '24', '26', '28', '30', '32', '34', '36'],

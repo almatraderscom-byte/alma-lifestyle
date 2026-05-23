@@ -1,5 +1,6 @@
 import type { FeaturedProduct } from '@/lib/content';
 import type { ProductType } from '@/lib/product-design-types';
+import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
 
 export type CategorySlug = 'panjabi' | 'electronics' | 'accessories' | 'home-decor';
 
@@ -153,12 +154,29 @@ export function getAllProductSlugs(): string[] {
   return CATALOG_PRODUCTS.map((p) => p.slug);
 }
 
+export type ListingSetFilter = 'all' | 'matching' | 'single';
+
+export function catalogIsDesignGroupCard(product: CatalogProduct): boolean {
+  return Boolean(
+    product.designGroupMembers &&
+      product.designGroupMembers.length > 1 &&
+      product.priceMin != null &&
+      product.priceMax != null
+  );
+}
+
+export function catalogListingTypeLabels(product: CatalogProduct): string[] {
+  if (!product.availableTypes?.length) return [];
+  return typeLabelsForDesignGroup(product.availableTypes);
+}
+
 export interface ProductFilters {
   categories: CategorySlug[];
   priceMin: number;
   priceMax: number;
   colors: string[];
   sizes: string[];
+  listingSet: ListingSetFilter;
 }
 
 export const DEFAULT_FILTERS: ProductFilters = {
@@ -167,6 +185,7 @@ export const DEFAULT_FILTERS: ProductFilters = {
   priceMax: 10000,
   colors: [],
   sizes: [],
+  listingSet: 'all',
 };
 
 export function filterCatalogProducts(
@@ -187,6 +206,12 @@ export function filterCatalogProducts(
     if (filters.sizes.length > 0 && p.sizes.length > 0) {
       const hasSize = p.sizes.some((s) => filters.sizes.includes(s));
       if (!hasSize) return false;
+    }
+    if (filters.listingSet === 'matching' && !catalogIsDesignGroupCard(p)) {
+      return false;
+    }
+    if (filters.listingSet === 'single' && catalogIsDesignGroupCard(p)) {
+      return false;
     }
     return true;
   });
@@ -230,13 +255,29 @@ export function paginateProducts<T>(
   };
 }
 
-export function toCardProduct(product: CatalogProduct): FeaturedProduct {
+export function toCardProduct(
+  product: CatalogProduct
+): FeaturedProduct & {
+  isDesignGroup?: boolean;
+  priceRange?: { min: number; max: number };
+  typeLabels?: string[];
+} {
+  const isDesignGroup = catalogIsDesignGroupCard(product);
   return {
     id: product.id,
-    title: product.title,
+    title: isDesignGroup
+      ? (product.designGroupName ?? product.title)
+      : product.title,
     price: product.price,
+    compareAtPrice: product.compareAtPrice,
     bgClass: product.bgClass,
     href: product.href,
     slug: product.slug,
+    isDesignGroup,
+    priceRange:
+      isDesignGroup && product.priceMin != null && product.priceMax != null
+        ? { min: product.priceMin, max: product.priceMax }
+        : undefined,
+    typeLabels: isDesignGroup ? catalogListingTypeLabels(product) : undefined,
   };
 }

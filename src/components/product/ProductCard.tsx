@@ -4,20 +4,38 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { formatBdtPrice } from '@/lib/format-bn';
+import { formatBdtPrice, formatBdtRange } from '@/lib/format-bn';
 import { FEATURED_SECTION, PDP } from '@/lib/content';
 import type { FeaturedProduct } from '@/lib/content';
+import {
+  PRODUCT_TYPE_BADGE_BN,
+  PRODUCT_TYPE_BADGE_CLASS,
+  type ProductType,
+} from '@/lib/product-design-types';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/components/ui/Toast';
 import { getProductBySlug } from '@/lib/products-data';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 
+export type ProductCardExtras = {
+  isDesignGroup?: boolean;
+  priceRange?: { min: number; max: number };
+  typeLabels?: string[];
+};
+
 interface ProductCardProps {
-  product: FeaturedProduct;
+  product: FeaturedProduct & ProductCardExtras;
   layout?: 'normal' | 'tall';
   /** Editorial homepage styling */
   editorial?: boolean;
 }
+
+const BADGE_BY_LABEL: Record<string, { type: Exclude<ProductType, 'simple'> }> = {
+  [PRODUCT_TYPE_BADGE_BN.men_panjabi]: { type: 'men_panjabi' },
+  [PRODUCT_TYPE_BADGE_BN.boy_panjabi]: { type: 'boy_panjabi' },
+  [PRODUCT_TYPE_BADGE_BN.women_three_piece]: { type: 'women_three_piece' },
+  [PRODUCT_TYPE_BADGE_BN.girl_two_piece]: { type: 'girl_two_piece' },
+};
 
 export function ProductCard({
   product,
@@ -30,6 +48,7 @@ export function ProductCard({
   const aspectClass = layout === 'tall' ? 'aspect-[3/5]' : 'aspect-[3/4]';
   const imageHint = product.imageHint ?? 'Product photo';
   const captionHint = imageHint.replace(/^Image:\s*/i, '');
+  const isDesignGroup = Boolean(product.isDesignGroup && product.priceRange);
 
   const categoryLabel = useMemo(() => {
     const slug = product.slug ?? product.href.replace('/products/', '');
@@ -119,19 +138,47 @@ export function ProductCard({
           </h3>
         </Link>
 
-        <div className="flex flex-wrap items-baseline gap-2">
-          <p
-            className={cn(
-              'font-bold text-charcoal',
-              editorial ? 'font-bn-heading text-xl md:text-2xl' : 'font-bn-heading text-xl'
-            )}
-          >
-            {formatBdtPrice(product.price)}
-          </p>
-          {product.compareAtPrice && product.compareAtPrice > product.price && (
-            <p className="font-bn-body text-sm text-text-light line-through">
-              {formatBdtPrice(product.compareAtPrice)}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <p
+              className={cn(
+                'font-bold text-charcoal',
+                editorial ? 'font-bn-heading text-xl md:text-2xl' : 'font-bn-heading text-xl'
+              )}
+            >
+              {isDesignGroup && product.priceRange
+                ? formatBdtRange(product.priceRange.min, product.priceRange.max)
+                : formatBdtPrice(product.price)}
             </p>
+            {!isDesignGroup &&
+              product.compareAtPrice &&
+              product.compareAtPrice > product.price && (
+                <p className="font-bn-body text-sm text-text-light line-through">
+                  {formatBdtPrice(product.compareAtPrice)}
+                </p>
+              )}
+          </div>
+
+          {isDesignGroup && product.typeLabels && product.typeLabels.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {product.typeLabels.map((label) => {
+                const badge = BADGE_BY_LABEL[label];
+                const className = badge
+                  ? PRODUCT_TYPE_BADGE_CLASS[badge.type]
+                  : 'bg-charcoal text-white';
+                return (
+                  <span
+                    key={label}
+                    className={cn(
+                      'font-bn-body text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full',
+                      className
+                    )}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
 

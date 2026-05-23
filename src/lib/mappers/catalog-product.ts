@@ -99,3 +99,54 @@ export function mapDesignGroupToCatalogListing(
     href: `/products/${anchor.slug}`,
   };
 }
+
+/** True when the storefront should show a matching-set card (2+ types or 2+ products). */
+export function isMatchingDesignGroup(members: ProductWithRelations[]): boolean {
+  if (members.length <= 1) return false;
+  const types = new Set(
+    members.map((m) => (m.product_type ?? 'simple') as ProductType).filter((t) => t !== 'simple')
+  );
+  return types.size >= 2 || members.length >= 2;
+}
+
+/** Flat catalog rows → one card per matching set + simple products. */
+export function groupProductsForListing(
+  rows: ProductWithRelations[],
+  catById: Map<string, Category>
+): CatalogProduct[] {
+  const simple: ProductWithRelations[] = [];
+  const byGroup = new Map<string, ProductWithRelations[]>();
+
+  for (const row of rows) {
+    const gid = row.design_group_id;
+    const isPanjabi = row.product_type && row.product_type !== 'simple';
+    if (gid && isPanjabi) {
+      const list = byGroup.get(gid) ?? [];
+      list.push(row);
+      byGroup.set(gid, list);
+    } else {
+      simple.push(row);
+    }
+  }
+
+  const listing: CatalogProduct[] = [];
+  let index = 0;
+
+  for (const members of byGroup.values()) {
+    const category = catById.get(members[0].category_id);
+    if (isMatchingDesignGroup(members)) {
+      listing.push(mapDesignGroupToCatalogListing(members, category, index++));
+    } else {
+      for (const m of members) {
+        listing.push(mapDbProductToCatalog(m, category, index++));
+      }
+    }
+  }
+
+  for (const m of simple) {
+    listing.push(mapDbProductToCatalog(m, catById.get(m.category_id), index++));
+  }
+
+  return listing;
+}
+
