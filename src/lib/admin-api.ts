@@ -100,6 +100,17 @@ export async function uploadImageApi(
     body: form,
     credentials: 'include',
   });
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    console.error('[Upload] Non-JSON response:', res.status, text.slice(0, 200));
+    if (res.status === 413) {
+      throw new Error('Image too large. Maximum 4MB allowed.');
+    }
+    throw new Error(`Upload failed: server returned ${res.status}`);
+  }
+
   const json = (await res.json()) as ApiSuccess<{ url: string } | string> | ApiError;
   if (json.status === 'error' || !res.ok) {
     const message = 'error' in json ? json.error : `Upload failed (${res.status})`;

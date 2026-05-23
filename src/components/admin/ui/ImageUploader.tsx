@@ -5,6 +5,7 @@ import type { ProductImage } from '@/lib/admin-store';
 import { uid } from '@/lib/admin-store';
 import { uploadImageApi } from '@/lib/admin-api';
 import { shouldUseApi } from '@/lib/data-source';
+import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 import { cn } from '@/lib/utils';
 
 interface ImageUploaderProps {
@@ -30,7 +31,8 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
           let url: string;
 
           if (shouldUseApi()) {
-            url = await uploadImageApi(file, 'products');
+            const prepared = await prepareImageForUpload(file);
+            url = await uploadImageApi(prepared, 'products');
           } else {
             url = await new Promise<string>((resolve) => {
               const reader = new FileReader();
@@ -112,7 +114,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         ) : (
           <>
             <p className="text-sm font-medium text-neutral-700">Drop images here or click to upload</p>
-            <p className="text-xs text-neutral-500 mt-1">PNG, JPG, WebP up to 5MB each</p>
+            <p className="text-xs text-neutral-500 mt-1">PNG, JPG, WebP — auto-compressed to 4MB max</p>
           </>
         )}
         <input

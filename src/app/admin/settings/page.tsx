@@ -7,6 +7,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
 import { SingleImageUploader } from '@/components/admin/ui/SingleImageUploader';
+import { AdminTestUpload } from '@/components/admin/settings/AdminTestUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { cn } from '@/lib/utils';
 
@@ -67,6 +68,8 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
+
+      <AdminTestUpload />
 
       <div className="flex gap-1 overflow-x-auto border-b border-neutral-200 pb-px">
         {TABS.map((t) => (

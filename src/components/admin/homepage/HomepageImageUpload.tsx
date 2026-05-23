@@ -26,7 +26,7 @@ export function HomepageImageUpload({
 
   const processFile = useCallback(
     async (file: File | undefined) => {
-      if (!file?.type.startsWith('image/')) {
+      if (!file?.type.match(/^image\/(jpeg|png|webp)$/)) {
         onError?.('Please choose a JPEG, PNG, or WebP image');
         return;
       }
@@ -79,7 +79,9 @@ export function HomepageImageUpload({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" className="max-h-40 rounded object-contain" />
         ) : (
-          <p className="text-sm text-neutral-600">Drop image or click to upload (Supabase)</p>
+          <p className="text-sm text-neutral-600">
+            Drop image or click — auto-compressed, max 4MB upload
+          </p>
         )}
         <input
           ref={inputRef}

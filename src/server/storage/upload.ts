@@ -1,14 +1,15 @@
 import { getSupabaseAdmin } from '@/server/db/client';
+import { MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = MAX_UPLOAD_BYTES;
 
 export function validateImageFile(file: File): string | null {
   if (!ALLOWED_TYPES.has(file.type)) {
     return 'Only JPEG, PNG, and WebP images are allowed';
   }
   if (file.size > MAX_BYTES) {
-    return 'Image must be smaller than 5MB';
+    return 'Image must be smaller than 4MB';
   }
   return null;
 }

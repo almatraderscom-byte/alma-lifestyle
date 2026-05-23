@@ -32,6 +32,7 @@ import {
   toggleSectionEnabled,
   updateSection,
 } from '@/components/admin/homepage/homepage-builder-utils';
+import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/HomepageSectionErrorBoundary';
 
 type MobileTab = 'editor' | 'preview';
 
@@ -91,6 +92,30 @@ export function HomepageBuilder() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
+
+  async function handleResetToDefaults() {
+    if (
+      !window.confirm(
+        'Reset the homepage to default content? This replaces your saved configuration in the database.'
+      )
+    ) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const defaults = getDefaultHomepageConfig();
+      const saved = await saveHomepageConfig(defaults);
+      setConfig(saved);
+      saveDraftHomepageConfig(saved);
+      dispatchDraftUpdated();
+      setPreviewKey((k) => k + 1);
+      toast('Homepage reset to defaults', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Reset failed', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -198,6 +223,14 @@ export function HomepageBuilder() {
           <Button
             variant="secondary"
             size="sm"
+            onClick={() => void handleResetToDefaults()}
+            disabled={saving}
+          >
+            Reset to Defaults
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => window.open('/?preview=true', '_blank')}
           >
             Preview in New Tab
@@ -293,7 +326,9 @@ export function HomepageBuilder() {
                     enabled={section.enabled}
                     onToggle={() => updateConfig((c) => toggleSectionEnabled(c, section.id))}
                   />
-                  {renderSectionEditor(section)}
+                  <HomepageSectionErrorBoundary sectionLabel={HOMEPAGE_SECTION_LABELS[section.id]}>
+                    {renderSectionEditor(section)}
+                  </HomepageSectionErrorBoundary>
                 </div>
               )}
             </div>

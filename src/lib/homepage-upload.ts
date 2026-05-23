@@ -1,4 +1,5 @@
 import { uploadImageApi } from '@/lib/admin-api';
+import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 
 const LOG = '[HomepageUpload]';
 
@@ -10,9 +11,15 @@ export async function uploadHomepageImage(
   file: File,
   folder: string
 ): Promise<string> {
-  console.log(LOG, 'Uploading', { name: file.name, size: file.size, folder });
+  const prepared = await prepareImageForUpload(file);
+  console.log(LOG, 'Uploading', {
+    name: file.name,
+    originalSize: file.size,
+    uploadSize: prepared.size,
+    folder,
+  });
 
-  const url = await uploadImageApi(file, folder, 'homepage-images');
+  const url = await uploadImageApi(prepared, folder, 'homepage-images');
 
   if (!url || typeof url !== 'string') {
     console.error(LOG, 'Invalid response URL', url);

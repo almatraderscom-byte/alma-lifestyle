@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { uploadImageApi } from '@/lib/admin-api';
 import { shouldUseApi } from '@/lib/data-source';
+import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 import { cn } from '@/lib/utils';
 
 interface SingleImageUploaderProps {
@@ -10,8 +11,9 @@ interface SingleImageUploaderProps {
   value: string;
   onChange: (url: string) => void;
   hint?: string;
-  /** Supabase folder under homepage-images bucket */
   uploadFolder?: string;
+  bucket?: 'product-images' | 'homepage-images';
+  onError?: (message: string) => void;
 }
 
 export function SingleImageUploader({
@@ -20,6 +22,8 @@ export function SingleImageUploader({
   onChange,
   hint,
   uploadFolder = 'homepage',
+  bucket = 'homepage-images',
+  onError,
 }: SingleImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -27,22 +31,29 @@ export function SingleImageUploader({
 
   const processFile = useCallback(
     async (file: File | undefined) => {
-      if (!file?.type.startsWith('image/')) return;
+      if (!file?.type.startsWith('image/')) {
+        onError?.('Please choose a JPEG, PNG, or WebP image');
+        return;
+      }
       setUploading(true);
       try {
         if (shouldUseApi()) {
-          const url = await uploadImageApi(file, uploadFolder, 'homepage-images');
+          const prepared = await prepareImageForUpload(file);
+          const url = await uploadImageApi(prepared, uploadFolder, bucket);
           onChange(url);
         } else {
           const reader = new FileReader();
           reader.onload = () => onChange(reader.result as string);
           reader.readAsDataURL(file);
         }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Upload failed';
+        onError?.(message);
       } finally {
         setUploading(false);
       }
     },
-    [onChange, uploadFolder]
+    [bucket, onChange, onError, uploadFolder]
   );
 
   return (
@@ -64,7 +75,7 @@ export function SingleImageUploader({
           void processFile(e.dataTransfer.files[0]);
         }}
         className={cn(
-          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors',
+          'flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors',
           dragOver ? 'border-[#C97D5D] bg-[#C97D5D]/5' : 'border-neutral-300 hover:border-neutral-400 bg-neutral-50',
           uploading && 'pointer-events-none opacity-70'
         )}
@@ -86,7 +97,7 @@ export function SingleImageUploader({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           className="hidden"
           disabled={uploading}
           onChange={(e) => {

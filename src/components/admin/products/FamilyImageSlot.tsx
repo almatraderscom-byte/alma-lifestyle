@@ -5,6 +5,7 @@ import type { ProductImage } from '@/lib/admin-store';
 import { uid } from '@/lib/admin-store';
 import { uploadImageApi } from '@/lib/admin-api';
 import { shouldUseApi } from '@/lib/data-source';
+import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 import { newDatabaseId } from '@/lib/admin-ids';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +34,8 @@ export function FamilyImageSlot({
       try {
         let url: string;
         if (shouldUseApi()) {
-          url = await uploadImageApi(file, uploadFolder);
+          const prepared = await prepareImageForUpload(file);
+          url = await uploadImageApi(prepared, uploadFolder);
         } else {
           url = await new Promise<string>((resolve) => {
             const reader = new FileReader();
