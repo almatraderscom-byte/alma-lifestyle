@@ -26,7 +26,10 @@ async function request<T>(
 
   const json = (await res.json()) as ApiSuccess<T> | ApiError;
   if (json.status === 'error' || !res.ok) {
-    throw new Error('error' in json ? json.error : `Request failed (${res.status})`);
+    const message =
+      'error' in json ? json.error : `Request failed (${res.status})`;
+    console.error(`[admin-api] ${path} failed:`, res.status, message);
+    throw new Error(message);
   }
   return json.data;
 }

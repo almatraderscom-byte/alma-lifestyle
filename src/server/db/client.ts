@@ -59,13 +59,22 @@ export const supabase: SupabaseClient<Database> = new Proxy({} as SupabaseClient
   },
 });
 
+let adminClientLogged = false;
+
 /** Server-only client (service role). */
 export function getSupabaseAdmin(): SupabaseClient<Database> {
   if (!isSupabaseAdminConfigured()) {
     throw new Error('Supabase service role is not configured');
   }
   if (!supabaseAdminClient) {
-    const { url, anonKey } = getPublicEnv();
+    const { url } = getPublicEnv();
+    if (!adminClientLogged) {
+      console.log(
+        '[supabaseAdmin] Initializing service-role client for',
+        url.replace(/^(https:\/\/)[^.]+/, '$1***')
+      );
+      adminClientLogged = true;
+    }
     supabaseAdminClient = createClient<Database>(url, getServiceRoleKey(), {
       auth: {
         persistSession: false,

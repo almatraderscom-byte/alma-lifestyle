@@ -7,6 +7,7 @@
  * POST /api/v1/products — Create product (admin session required).
  */
 import type { NextRequest } from 'next/server';
+import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { ProductsListQuerySchema, AdminProductBodySchema } from '@/lib/api-validation';
 import { mapDbProductToAdmin } from '@/lib/mappers/admin-product';
 import {
@@ -82,6 +83,14 @@ function groupRowsForDesignGroupApi(
 }
 
 export async function GET(request: NextRequest) {
+  const adminOk = isSupabaseAdminConfigured();
+  console.log('[API /products] GET handler called, supabaseAdminConfigured:', adminOk);
+  if (!adminOk) {
+    console.error(
+      '[API /products] Supabase not configured — missing NEXT_PUBLIC_SUPABASE_* or SUPABASE_SERVICE_ROLE_KEY'
+    );
+  }
+
   return withPublicDb(async () => {
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const parsed = ProductsListQuerySchema.safeParse(params);

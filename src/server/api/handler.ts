@@ -9,6 +9,9 @@ import { requireAdmin } from './auth';
 
 export function ensureSupabase() {
   if (!isSupabaseAdminConfigured()) {
+    console.error(
+      '[API] Supabase not configured — set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY'
+    );
     return apiNotConfigured();
   }
   return null;

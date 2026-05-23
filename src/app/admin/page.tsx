@@ -13,19 +13,47 @@ import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import type { AdminOrder } from '@/lib/admin-store';
+import { shouldUseApi } from '@/lib/data-source';
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
   const [orders, setOrders] = useState<Awaited<ReturnType<typeof getOrders>>>([]);
   const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([getProducts(), getOrders(), getSettings()])
+    const useApi = shouldUseApi();
+    console.log('[Dashboard] Loading data, useApi:', useApi);
+
+    Promise.all([
+      getProducts().catch((err) => {
+        console.error('[Dashboard] getProducts error:', err);
+        throw err;
+      }),
+      getOrders().catch((err) => {
+        console.error('[Dashboard] getOrders error:', err);
+        throw err;
+      }),
+      getSettings().catch((err) => {
+        console.error('[Dashboard] getSettings error:', err);
+        throw err;
+      }),
+    ])
       .then(([p, o, s]) => {
+        console.log('[Dashboard] Products:', p.length, 'Orders:', o.length);
         setProducts(p);
         setOrders(o);
         setSettings(s);
+        if (useApi && p.length === 0) {
+          setLoadError(
+            'No products returned from API. Check /api/v1/debug and ensure NEXT_PUBLIC_USE_API is not false. Verify SUPABASE_SERVICE_ROLE_KEY on the server.'
+          );
+        }
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        setLoadError(message);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -109,6 +137,27 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return <p className="text-neutral-500">Loading dashboard…</p>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 space-y-3">
+        <h1 className="text-lg font-semibold text-red-900">Dashboard data failed to load</h1>
+        <p className="text-sm text-red-800">{loadError}</p>
+        <p className="text-sm text-red-700">
+          Open{' '}
+          <a href="/api/v1/debug" className="underline font-medium" target="_blank" rel="noreferrer">
+            /api/v1/debug
+          </a>{' '}
+          to verify Supabase env vars and database connectivity.
+        </p>
+        <p className="text-xs text-red-600">
+          API mode: {shouldUseApi() ? 'enabled' : 'disabled (localStorage)'}
+          {process.env.NEXT_PUBLIC_USE_API === 'false' &&
+            ' — set NEXT_PUBLIC_USE_API=true in .env.local and restart dev server'}
+        </p>
+      </div>
+    );
   }
 
   return (

@@ -297,7 +297,16 @@ function getProductsLocal(): AdminProduct[] {
 }
 
 export async function getProducts(): Promise<AdminProduct[]> {
-  if (shouldUseApi()) return adminApi.fetchProducts({ limit: 500 });
+  if (shouldUseApi()) {
+    try {
+      const result = await adminApi.fetchProducts({ limit: 500 });
+      if (result && result.length > 0) return result;
+      return result || [];
+    } catch (error) {
+      console.error('[admin-store] API fetchProducts failed:', error);
+      return getProductsLocal();
+    }
+  }
   return getProductsLocal();
 }
 
@@ -396,7 +405,16 @@ function getCategoriesLocal(): AdminCategory[] {
 }
 
 export async function getCategories(): Promise<AdminCategory[]> {
-  if (shouldUseApi()) return adminApi.fetchCategories(true);
+  if (shouldUseApi()) {
+    try {
+      const result = await adminApi.fetchCategories(true);
+      if (result && result.length > 0) return result;
+      return result || [];
+    } catch (error) {
+      console.error('[admin-store] API fetchCategories failed:', error);
+      return getCategoriesLocal();
+    }
+  }
   return getCategoriesLocal();
 }
 
@@ -447,7 +465,16 @@ function getCollectionsLocal(): AdminCollection[] {
 }
 
 export async function getCollections(): Promise<AdminCollection[]> {
-  if (shouldUseApi()) return adminApi.fetchCollections();
+  if (shouldUseApi()) {
+    try {
+      const result = await adminApi.fetchCollections();
+      if (result && result.length > 0) return result;
+      return result || [];
+    } catch (error) {
+      console.error('[admin-store] API fetchCollections failed:', error);
+      return getCollectionsLocal();
+    }
+  }
   return getCollectionsLocal();
 }
 
@@ -495,7 +522,15 @@ function getOrdersLocal(): AdminOrder[] {
 }
 
 export async function getOrders(): Promise<AdminOrder[]> {
-  if (shouldUseApi()) return adminApi.fetchOrders();
+  if (shouldUseApi()) {
+    try {
+      const result = await adminApi.fetchOrders();
+      return result || [];
+    } catch (error) {
+      console.error('[admin-store] API fetchOrders failed:', error);
+      return getOrdersLocal();
+    }
+  }
   return getOrdersLocal();
 }
 
@@ -540,8 +575,13 @@ function getSettingsLocal(): AppSettings {
 
 export async function getSettings(): Promise<AppSettings> {
   if (shouldUseApi()) {
-    const partial = await adminApi.fetchSettingsApi();
-    return { ...getDefaultAppSettings(), ...partial };
+    try {
+      const partial = await adminApi.fetchSettingsApi();
+      return { ...getDefaultAppSettings(), ...partial };
+    } catch (error) {
+      console.error('[admin-store] API fetchSettings failed:', error);
+      return getSettingsLocal();
+    }
   }
   return getSettingsLocal();
 }
