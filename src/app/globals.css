@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #1a1a1a;
-  --secondary: #f5f0eb;
-  --accent: #8b7355;
+  --primary: #2a2622;
+  --secondary: #f5ebdd;
+  --accent: #c97d5d;
   --background: #ffffff;
   --warm-white: #faf8f5;
-  --text-dark: #1a1a1a;
-  --text-light: #6b6b6b;
-  --border-subtle: #ebe6e0;
+  --text-dark: #2a2622;
+  --text-light: #6b6560;
+  --border-subtle: #e8dfd4;
+  --color-terracotta: #c97d5d;
+  --color-maroon: #6b2737;
+  --color-mustard: #c89b3c;
+  --color-emerald: #2d5f4f;
+  --color-cream: #f5ebdd;
+  --color-charcoal: #2a2622;
+  --pattern-diamond: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23ffffff' fill-opacity='1' d='M24 4 L44 24 L24 44 L4 24 Z M24 12 L36 24 L24 36 L12 24 Z'/%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -20,6 +27,12 @@
   --color-text-dark: var(--text-dark);
   --color-text-light: var(--text-light);
   --color-border-subtle: var(--border-subtle);
+  --color-terracotta: var(--color-terracotta);
+  --color-maroon: var(--color-maroon);
+  --color-mustard: var(--color-mustard);
+  --color-emerald: var(--color-emerald);
+  --color-cream: var(--color-cream);
+  --color-charcoal: var(--color-charcoal);
   --font-brand: var(--font-playfair);
   --font-bn-heading: var(--font-noto-serif-bengali);
   --font-bn-body: var(--font-hind-siliguri);
@@ -41,7 +54,7 @@ body {
 
 .font-bn-heading {
   font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
-  line-height: 1.8;
+  line-height: 1.4;
 }
 
 .font-brand {
@@ -50,7 +63,7 @@ body {
 }
 
 ::selection {
-  background-color: rgba(139, 115, 85, 0.35);
+  background-color: rgba(201, 125, 93, 0.35);
   color: var(--text-dark);
 }
 
@@ -61,6 +74,72 @@ body {
   overflow: hidden;
 }
 
+/* Editorial label with underline */
+.editorial-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid currentColor;
+}
+
+/* Bangladeshi geometric pattern overlay */
+.pattern-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--pattern-diamond);
+  background-size: 48px 48px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Marquee strip */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-strip {
+  overflow: hidden;
+}
+
+.marquee-strip:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 35s linear infinite;
+}
+
+/* Underline link hover */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transition: width 300ms ease-out;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -69,5 +148,9 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .marquee-track {
+    animation: none;
   }
 }

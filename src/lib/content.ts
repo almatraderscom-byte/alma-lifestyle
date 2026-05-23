@@ -24,51 +24,69 @@ export const MOBILE_NAV_ICONS = {
   bag: { label: 'ব্যাগ', href: '/cart' },
 } as const;
 
-export const HERO = {
-  title: 'প্রতিটি সুতায় আভিজাত্য',
-  subtitle: 'প্রিমিয়াম পাঞ্জাবি, ইলেকট্রনিক্স ও লাইফস্টাইল পণ্যের সংগ্রহ',
-  ctaShop: 'কেনাকাটা শুরু করুন',
-  ctaNew: 'নতুন পণ্য দেখুন',
-  shopHref: '/products',
-  newHref: '/products?sort=newest',
+/** Editorial split hero — Section 1 */
+export const EDITORIAL_HERO = {
+  caption: 'নতুন কালেকশন · ২০২৬',
+  title: 'ঐতিহ্যের নতুন রূপ',
+  subtitle: 'হাতে বোনা প্রতিটি সুতায়, লুকিয়ে আছে বাংলার গল্প',
+  ctaPrimary: 'কালেকশন দেখুন',
+  ctaPrimaryHref: '/collections',
+  ctaSecondary: 'গল্পটা জানুন →',
+  ctaSecondaryHref: '/products',
+  imageHint: 'Image: Editorial hero — model in maroon panjabi, soft natural light, full body',
+  badges: ['১০,০০০+ ক্রেতা', '৪.৮ ★', '৬৪ জেলা', '৩ দিনে ডেলিভারি'] as const,
 } as const;
 
-export const CATEGORIES_SECTION = {
-  title: 'ক্যাটাগরি অনুযায়ী কিনুন',
-  viewLabel: 'দেখুন →',
-  items: [
-    {
-      slug: 'panjabi',
-      name: 'পাঞ্জাবি',
-      href: '/products?category=panjabi',
-      bgClass: 'bg-[#8b7355]',
-    },
+/** Story marquee — Section 2 */
+export const STORY_MARQUEE = {
+  text: 'হাতে তৈরি · বাংলাদেশের গর্ব · প্রিমিয়াম মানের · ১০০% অরিজিনাল · ক্যাশ অন ডেলিভারি · ',
+} as const;
+
+/** Category showcase — Section 3 */
+export const CATEGORY_SHOWCASE = {
+  label: 'ক্যাটাগরি',
+  title: 'কী খুঁজছেন আপনি?',
+  featured: {
+    slug: 'panjabi',
+    name: 'পাঞ্জাবি',
+    count: '১২০+ ডিজাইন',
+    href: '/products?category=panjabi',
+    bg: 'bg-maroon',
+    imageHint: 'Image: Panjabi collection — layered fabrics, rich maroon tones',
+  },
+  stacked: [
     {
       slug: 'electronics',
       name: 'ইলেকট্রনিক্স',
       href: '/products?category=electronics',
-      bgClass: 'bg-[#5c6570]',
+      bg: 'bg-terracotta',
+      imageHint: 'Image: Electronics — earbuds, watch on cream surface',
     },
     {
       slug: 'accessories',
       name: 'এক্সেসরিজ',
       href: '/products?category=accessories',
-      bgClass: 'bg-[#a68b5b]',
+      bg: 'bg-mustard',
+      imageHint: 'Image: Accessories — leather wallet, belt flat lay',
     },
     {
       slug: 'home-decor',
       name: 'হোম ও ডেকর',
       href: '/products?category=home-decor',
-      bgClass: 'bg-[#6b8f71]',
+      bg: 'bg-emerald',
+      imageHint: 'Image: Home decor — ceramic vase, cushions',
     },
   ],
 } as const;
 
+/** Featured products — Section 4 */
 export const FEATURED_SECTION = {
-  title: 'নতুন এসেছে',
-  viewAll: 'সব পণ্য দেখুন →',
+  label: 'নতুন এসেছে — মে ২০২৬',
+  title: 'এই সপ্তাহের পছন্দ',
+  viewAll: 'সব দেখুন →',
   viewAllHref: '/products',
   addToBag: 'ব্যাগে যোগ করুন',
+  newBadge: 'নতুন',
 } as const;
 
 export type FeaturedProduct = {
@@ -76,58 +94,83 @@ export type FeaturedProduct = {
   slug?: string;
   title: string;
   price: number;
+  compareAtPrice?: number;
   bgClass: string;
   href: string;
+  isNew?: boolean;
+  layout?: 'normal' | 'tall';
+  imageHint?: string;
 };
 
-export const FEATURED_PRODUCTS: FeaturedProduct[] = [
+/** Homepage featured row (4 editorial cards) */
+export const HOME_FEATURED_PRODUCTS: FeaturedProduct[] = [
   {
     id: '1',
     slug: 'royal-navy-panjabi',
     title: 'রয়্যাল নেভি পাঞ্জাবি',
     price: 2550,
+    compareAtPrice: 3200,
     bgClass: 'bg-[#2c3e5c]',
     href: '/products/royal-navy-panjabi',
+    isNew: true,
+    layout: 'normal',
+    imageHint: 'Image: Royal navy panjabi — close-up embroidery detail',
   },
   {
     id: '2',
+    slug: 'premium-cotton-panjabi',
+    title: 'প্রিমিয়াম কটন পাঞ্জাবি',
+    price: 2150,
+    compareAtPrice: 2490,
+    bgClass: 'bg-[#8b7355]',
+    href: '/products/premium-cotton-panjabi',
+    layout: 'tall',
+    imageHint: 'Image: Premium cotton panjabi — full length on model',
+  },
+  {
+    id: '3',
+    slug: 'silk-premium-panjabi',
+    title: 'সিল্ক প্রিমিয়াম পাঞ্জাবি',
+    price: 3850,
+    compareAtPrice: 4500,
+    bgClass: 'bg-[#4a5568]',
+    href: '/products/silk-premium-panjabi',
+    layout: 'normal',
+    imageHint: 'Image: Silk panjabi — fabric texture, folded sleeve',
+  },
+  {
+    id: '4',
     slug: 'classic-white-panjabi',
     title: 'ক্লাসিক সাদা পাঞ্জাবি',
     price: 1850,
     bgClass: 'bg-[#e8e4df]',
     href: '/products/classic-white-panjabi',
+    isNew: true,
+    layout: 'tall',
+    imageHint: 'Image: Classic white panjabi — Eid-ready styling',
   },
+];
+
+/** Full catalog cards (cart recommendations, etc.) */
+export const FEATURED_PRODUCTS: FeaturedProduct[] = [
+  ...HOME_FEATURED_PRODUCTS,
   {
-    id: '3',
-    slug: 'premium-cotton-panjabi',
-    title: 'প্রিমিয়াম কটন পাঞ্জাবি',
-    price: 2150,
-    bgClass: 'bg-[#8b7355]',
-    href: '/products/premium-cotton-panjabi',
-  },
-  {
-    id: '4',
+    id: '5',
     slug: 'wireless-earbuds-pro',
     title: 'ওয়্যারলেস ইয়ারবাড প্রো',
     price: 3500,
     bgClass: 'bg-[#4a4a4a]',
     href: '/products/wireless-earbuds-pro',
+    imageHint: 'Image: Wireless earbuds product shot',
   },
   {
-    id: '5',
+    id: '6',
     slug: 'leather-wallet',
     title: 'লেদার ওয়ালেট',
     price: 950,
     bgClass: 'bg-[#6b4f3a]',
     href: '/products/leather-wallet',
-  },
-  {
-    id: '6',
-    slug: 'smart-watch-elite',
-    title: 'স্মার্ট ওয়াচ এলিট',
-    price: 4200,
-    bgClass: 'bg-[#1a1a1a]',
-    href: '/products/smart-watch-elite',
+    imageHint: 'Image: Leather wallet flat lay',
   },
   {
     id: '7',
@@ -136,6 +179,7 @@ export const FEATURED_PRODUCTS: FeaturedProduct[] = [
     price: 750,
     bgClass: 'bg-[#c4a574]',
     href: '/products/handmade-jute-bag',
+    imageHint: 'Image: Handmade jute bag lifestyle',
   },
   {
     id: '8',
@@ -144,38 +188,114 @@ export const FEATURED_PRODUCTS: FeaturedProduct[] = [
     price: 1200,
     bgClass: 'bg-[#9cb5a0]',
     href: '/products/ceramic-flower-vase',
+    imageHint: 'Image: Ceramic vase with flowers',
   },
 ];
 
-export const TRUST_FEATURES = [
+/** Brand story — Section 5 */
+export const BRAND_STORY = {
+  label: 'আমাদের গল্প',
+  title: 'প্রতিটি পাঞ্জাবি, একটি যাত্রা',
+  body: 'ALMA তৈরি হয় বাংলাদেশের ৭০+ পরিবারের তাঁতিদের হাতে। আমরা শুধু পোশাক বিক্রি করি না — আমরা ঐতিহ্য বহন করি, কারিগরদের জীবিকা নিশ্চিত করি।',
+  cta: 'আমাদের সম্পর্কে জানুন →',
+  ctaHref: '/products',
+  imageCaption: 'তাঁতিদের সাথে — সিরাজগঞ্জ',
+  imageHint: 'Image: Weavers at loom — Sirajganj, warm documentary style',
+} as const;
+
+/** Reviews — Section 6 */
+export const REVIEWS_SECTION = {
+  title: 'ক্রেতাদের কথা',
+  verified: 'Verified Purchase',
+  items: [
+    {
+      id: '1',
+      text: 'অসাধারণ মানের পাঞ্জাবি! কাপড় খুব আরামদায়ক, সেলাই perfect। ঈদে পরেছি, সবাই প্রশংসা করেছে।',
+      name: 'রফিকুল ইসলাম',
+      city: 'ঢাকা',
+    },
+    {
+      id: '2',
+      text: 'অনলাইনে অর্ডার করেছিলাম, ৩ দিনেই পেয়েছি। প্যাকেজিং খুব সুন্দর, পণ্য একদম ছবির মতো।',
+      name: 'ফাতেমা বেগম',
+      city: 'চট্টগ্রাম',
+    },
+    {
+      id: '3',
+      text: 'সিলেটের জন্য ডেলিভারি একটু দেরি হয়েছিল কিন্তু মান দেখে মন খুশি। আবার অর্ডার করবো ইনশাআল্লাহ।',
+      name: 'কামরুল হাসান',
+      city: 'সিলেট',
+    },
+    {
+      id: '4',
+      text: 'রাজশাহীতে এমন প্রিমিয়াম শপ খুব কম। ক্যাশ অন ডেলিভারি সুবিধা পেয়ে ভালো লাগলো।',
+      name: 'নাসির উদ্দিন',
+      city: 'রাজশাহী',
+    },
+    {
+      id: '5',
+      text: 'কুমিল্লা থেকে অর্ডার — সাইজ ঠিক ছিল, রিটার্নের দরকার পড়েনি। দাম অনুযায়ী মান ভালো।',
+      name: 'সালমা আক্তার',
+      city: 'কুমিল্লা',
+    },
+    {
+      id: '6',
+      text: 'খুলনায় পাঞ্জাবি পাওয়া কঠিন, ALMA দিয়ে সহজ হয়েছে। হোয়াটসঅ্যাপে সাপোর্টও দ্রুত।',
+      name: 'আব্দুল করিম',
+      city: 'খুলনা',
+    },
+  ],
+} as const;
+
+/** Eid collection banner — Section 7 */
+export const COLLECTION_BANNER = {
+  label: 'বিশেষ আয়োজন',
+  title: 'ঈদ কালেকশন ২০২৬',
+  subtitle: 'এই ঈদে নিজেকে সাজান আভিজাত্যে',
+  cta: 'কালেকশন দেখুন →',
+  promo: 'সীমিত সময়ের জন্য — ২০% ছাড়',
+  href: '/collections',
+  imageHint: 'Image: Eid collection hero — family in festive panjabi, golden hour',
+} as const;
+
+/** Community / Instagram — Section 8 */
+export const COMMUNITY_SECTION = {
+  title: 'আমাদের কমিউনিটি',
+  subtitle: '#ALMALifestyle দিয়ে শেয়ার করুন',
+  instagramUrl: 'https://www.instagram.com/',
+  tiles: [
+    { id: '1', bg: 'bg-maroon', hint: 'Image: Customer OOTD — navy panjabi' },
+    { id: '2', bg: 'bg-terracotta', hint: 'Image: Flat lay — accessories' },
+    { id: '3', bg: 'bg-mustard', hint: 'Image: Weaver workshop' },
+    { id: '4', bg: 'bg-emerald', hint: 'Image: Home decor styling' },
+    { id: '5', bg: 'bg-cream', hint: 'Image: Eid family portrait' },
+    { id: '6', bg: 'bg-charcoal', hint: 'Image: Product detail macro' },
+  ],
+} as const;
+
+/** Trust strip — Section 9 */
+export const TRUST_STRIP = [
   {
     icon: '🚚',
-    title: 'দ্রুত ডেলিভারি',
-    text: 'সারা বাংলাদেশে',
+    title: 'ফ্রি ডেলিভারি',
+    text: '১৫০০ টাকার বেশি অর্ডারে',
   },
   {
-    icon: '💯',
-    title: 'অরিজিনাল পণ্য',
-    text: '১০০% গ্যারান্টি',
+    icon: '💵',
+    title: 'ক্যাশ অন ডেলিভারি',
+    text: 'সারা দেশে',
   },
   {
     icon: '🔄',
-    title: 'সহজ রিটার্ন',
-    text: '৭ দিনের মধ্যে',
+    title: '৭ দিনের রিটার্ন',
+    text: 'কোনো প্রশ্ন ছাড়াই',
   },
   {
     icon: '📞',
     title: '২৪/৭ সাপোর্ট',
-    text: 'যেকোনো সময়',
+    text: '০১XXXXXXXXX',
   },
 ] as const;
-
-export const COLLECTION_BANNER = {
-  title: 'ঈদ কালেকশন ২০২৬',
-  subtitle: 'ঈদের জন্য বিশেষভাবে বাছাই করা পাঞ্জাবি ও লাইফস্টাইল পণ্য',
-  cta: 'কালেকশন দেখুন',
-  href: '/collections',
-} as const;
 
 export const WHATSAPP = {
   label: 'আমাদের মেসেজ করুন',
