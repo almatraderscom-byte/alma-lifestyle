@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
@@ -29,13 +30,14 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         {isUsableImageUrl(data.backgroundImageUrl) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={data.backgroundImageUrl}
             alt={data.title}
-            className="absolute inset-0 h-full w-full object-cover"
-            onLoad={() => console.log('[Homepage] Hero image loaded:', data.backgroundImageUrl)}
-            onError={() => console.error('[Homepage] Hero image failed:', data.backgroundImageUrl)}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+            quality={75}
           />
         ) : (
           <PlaceholderImage
