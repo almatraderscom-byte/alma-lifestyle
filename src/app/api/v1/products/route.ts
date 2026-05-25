@@ -8,7 +8,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { ProductsListQuerySchema, AdminProductBodySchema } from '@/lib/api-validation';
-import { mapDbProductToAdmin } from '@/lib/mappers/admin-product';
+import { mapRowsToAdminBulk } from '@/lib/mappers/admin-product';
 import {
   isMatchingDesignGroup,
   mapDesignGroupToCatalogListing,
@@ -20,11 +20,15 @@ import {
 } from '@/lib/mappers/public-product';
 import { getProducts } from '@/server/db/queries/products';
 import { createAdminProduct } from '@/server/db/queries/products-mutations';
-import { getProductCollectionIds } from '@/server/db/queries/products-mutations';
+import { getProductCollectionIdsBulk } from '@/server/db/queries/products-mutations';
 import { getCategories } from '@/server/db/queries/categories';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 import type { AdminProduct } from '@/lib/admin-store';
 import type { ProductWithRelations } from '@/server/db/schema';
 import type { ProductType } from '@/lib/product-design-types';
@@ -42,11 +46,6 @@ export interface DesignGroupListItem {
   types: ProductType[];
   typeLabels: string[];
   members: AdminProduct[];
-}
-
-async function mapRowToAdmin(row: ProductWithRelations): Promise<AdminProduct> {
-  const collectionIds = await getProductCollectionIds(row.id);
-  return mapDbProductToAdmin(row, collectionIds);
 }
 
 function groupRowsForDesignGroupAdmin(
@@ -171,7 +170,11 @@ export async function GET(request: NextRequest) {
       });
 
       if (designGroup) {
-        const adminRows = await Promise.all(result.data.map(mapRowToAdmin));
+        // Bulk-fetch collection links to avoid N+1 (see PERF-001/002).
+        const collectionMap = await getProductCollectionIdsBulk(
+          result.data.map((row) => row.id)
+        );
+        const adminRows = mapRowsToAdminBulk(result.data, collectionMap);
         const adminById = new Map(adminRows.map((a) => [a.id, a]));
         const groups = groupRowsForDesignGroupAdmin(result.data, adminById);
 
@@ -186,7 +189,11 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      const data = await Promise.all(result.data.map(mapRowToAdmin));
+      // Bulk-fetch collection links to avoid N+1 (see PERF-001/002).
+      const collectionMap = await getProductCollectionIdsBulk(
+        result.data.map((row) => row.id)
+      );
+      const data = mapRowsToAdminBulk(result.data, collectionMap);
 
       return apiSuccess({
         data,
@@ -275,6 +282,9 @@ export async function POST(request: NextRequest) {
     };
 
     const created = await createAdminProduct(product);
+    if (created.status === 'published') {
+      revalidateStorefront(STOREFRONT_PATHS.product(created.slug));
+    }
     return apiSuccess(created, { status: 201 });
   });
 }

@@ -26,6 +26,47 @@ export async function getCollectionProductIds(collectionId: string): Promise<str
   return (data ?? []).map((r) => (r as { product_id: string }).product_id);
 }
 
+export async function getCollectionProductIdsBulk(
+  collectionIds: readonly string[]
+): Promise<Map<string, string[]>> {
+  if (collectionIds.length === 0) return new Map();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('collection_products')
+    .select('product_id, collection_id, sort_order')
+    .in('collection_id', [...collectionIds]);
+
+  assertNoError(error, 'getCollectionProductIdsBulk');
+
+  const map = new Map<string, string[]>();
+  for (const id of collectionIds) map.set(id, []);
+
+  const buckets = new Map<string, Array<{ product_id: string; sort_order: number }>>();
+  for (const row of data ?? []) {
+    const link = row as {
+      product_id: string;
+      collection_id: string;
+      sort_order: number;
+    };
+    const bucket = buckets.get(link.collection_id) ?? [];
+    bucket.push({
+      product_id: link.product_id,
+      sort_order: link.sort_order ?? 0,
+    });
+    buckets.set(link.collection_id, bucket);
+  }
+
+  for (const [collectionId, bucket] of buckets) {
+    bucket.sort((a, b) => a.sort_order - b.sort_order);
+    map.set(
+      collectionId,
+      bucket.map((entry) => entry.product_id)
+    );
+  }
+
+  return map;
+}
+
 export async function getCollectionById(id: string): Promise<Collection | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('collections')

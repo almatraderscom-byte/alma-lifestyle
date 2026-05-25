@@ -108,6 +108,16 @@ export function mapDbProductToAdmin(
   };
 }
 
+/** List endpoints: map many products using a pre-fetched collection-id map (PERF-001). */
+export function mapRowsToAdminBulk(
+  rows: ProductWithRelations[],
+  collectionIdsByProductId: Map<string, string[]>
+): AdminProduct[] {
+  return rows.map((row) =>
+    mapDbProductToAdmin(row, collectionIdsByProductId.get(row.id) ?? [])
+  );
+}
+
 export interface AdminProductWriteInput {
   product: AdminProduct;
   brandId: string;
@@ -230,6 +240,16 @@ export function mapDbCollectionToAdmin(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+/** List endpoints: map many collections using a pre-fetched product-id map (PERF-002). */
+export function mapDbCollectionsToAdminBulk(
+  rows: Collection[],
+  productIdsByCollectionId: Map<string, string[]>
+): AdminCollection[] {
+  return rows.map((row) =>
+    mapDbCollectionToAdmin(row, productIdsByCollectionId.get(row.id) ?? [])
+  );
 }
 
 const ORDER_STATUS_TO_ADMIN: Record<string, OrderStatus> = {

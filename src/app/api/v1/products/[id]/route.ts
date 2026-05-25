@@ -16,6 +16,10 @@ import {
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { tryRequireAdmin } from '@/server/api/auth';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 import type { AdminProduct } from '@/lib/admin-store';
 
 export const runtime = 'nodejs';
@@ -64,6 +68,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return apiNotFound('Product');
   }
   return withAdmin(request, async () => {
+    const existing = await getAdminProductById(id);
+    if (!existing) return apiNotFound('Product');
+
     const body = await request.json();
     const parsed = AdminProductBodySchema.safeParse(body);
     if (!parsed.success) {
@@ -83,6 +90,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const updated = await updateAdminProduct(id, product);
     if (!updated) return apiNotFound('Product');
+
+    const paths: string[] = [...STOREFRONT_PATHS.product(updated.slug)];
+    if (existing.slug !== updated.slug) {
+      paths.push(...STOREFRONT_PATHS.product(existing.slug));
+    }
+    revalidateStorefront(paths);
+
     return apiSuccess(updated);
   });
 }
@@ -93,7 +107,17 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return apiNotFound('Product');
   }
   return withAdmin(request, async () => {
+    const existing = await getAdminProductById(id);
+    if (!existing) return apiNotFound('Product');
+
     await softDeleteProduct(id);
+
+    revalidateStorefront([
+      ...STOREFRONT_PATHS.product(existing.slug),
+      ...STOREFRONT_PATHS.collectionsIndex,
+      ...STOREFRONT_PATHS.home,
+    ]);
+
     return apiSuccess({ id, deleted: true });
   });
 }

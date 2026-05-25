@@ -1,16 +1,27 @@
 import type { NextRequest } from 'next/server';
 import { CollectionBodySchema } from '@/lib/api-validation';
-import { mapDbCollectionToAdmin } from '@/lib/mappers/admin-product';
+import {
+  mapDbCollectionToAdmin,
+  mapDbCollectionsToAdminBulk,
+} from '@/lib/mappers/admin-product';
 import {
   createCollection,
   getAllCollectionsAdmin,
   getCollectionProductIds,
+  getCollectionProductIdsBulk,
   syncCollectionProducts,
 } from '@/server/db/queries/collections-admin';
 import { getPublishedCollections } from '@/server/db/queries/collections';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = request.nextUrl.searchParams.get('admin') === 'true';
@@ -18,12 +29,11 @@ export async function GET(request: NextRequest) {
   if (admin) {
     return withAdmin(request, async () => {
       const rows = await getAllCollectionsAdmin();
-      const data = await Promise.all(
-        rows.map(async (row) => {
-          const productIds = await getCollectionProductIds(row.id);
-          return mapDbCollectionToAdmin(row, productIds);
-        })
+      // Bulk-fetch collection links to avoid N+1 (see PERF-001/002).
+      const productIdsByCollection = await getCollectionProductIdsBulk(
+        rows.map((row) => row.id)
       );
+      const data = mapDbCollectionsToAdminBulk(rows, productIdsByCollection);
       return apiSuccess(data);
     });
   }
@@ -57,6 +67,15 @@ export async function POST(request: NextRequest) {
     }
 
     const productIds = await getCollectionProductIds(created.id);
+    const paths: string[] = [
+      ...STOREFRONT_PATHS.collectionsIndex,
+      ...STOREFRONT_PATHS.home,
+    ];
+    if (created.published) {
+      paths.push(...STOREFRONT_PATHS.collection(created.slug));
+    }
+    revalidateStorefront(paths);
+
     return apiSuccess(mapDbCollectionToAdmin(created, productIds), { status: 201 });
   });
 }

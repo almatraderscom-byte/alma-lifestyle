@@ -1,8 +1,9 @@
-import { revalidatePath } from 'next/cache';
 import type { NextRequest } from 'next/server';
-import type { HomepageConfig } from '@/lib/homepage-config-types';
 import {
-  getHomepageConfig,
+  formatZodError,
+  HomepageConfigSchema,
+} from '@/lib/api-validation';
+import {
   getHomepageConfigOrDefault,
   saveHomepageConfig,
 } from '@/server/db/queries/homepage';
@@ -10,6 +11,17 @@ import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-c
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function methodNotAllowed() {
+  return apiError('Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+}
 
 export async function GET() {
   if (!isSupabaseAdminConfigured()) {
@@ -24,17 +36,25 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   return withAdmin(request, async () => {
-    const body = (await request.json()) as HomepageConfig;
-    if (!body?.sections || !Array.isArray(body.sections)) {
-      return apiError('Invalid homepage config', 400, 'VALIDATION_ERROR');
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError('Invalid JSON body', 400, 'VALIDATION_ERROR');
     }
 
-    const normalized = ensureHomepageConfig(body);
-    const hero = normalized.sections.find((s) => s.id === 'hero');
-    console.log('[Config API] Saving homepage, hero backgroundImageUrl:', 
-      hero?.id === 'hero' ? hero.data.backgroundImageUrl : '(no hero)');
+    const parsed = HomepageConfigSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError(formatZodError(parsed.error), 400, 'VALIDATION_ERROR');
+    }
+
+    const normalized = ensureHomepageConfig(parsed.data);
     const saved = await saveHomepageConfig(normalized);
-    revalidatePath('/');
+    revalidateStorefront(STOREFRONT_PATHS.home);
     return apiSuccess(saved);
   });
 }
+
+export const POST = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;
