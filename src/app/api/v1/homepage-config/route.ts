@@ -1,4 +1,3 @@
-import { revalidatePath } from 'next/cache';
 import type { NextRequest } from 'next/server';
 import {
   formatZodError,
@@ -12,6 +11,10 @@ import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-c
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,7 +50,7 @@ export async function PUT(request: NextRequest) {
 
     const normalized = ensureHomepageConfig(parsed.data);
     const saved = await saveHomepageConfig(normalized);
-    revalidatePath('/');
+    revalidateStorefront(STOREFRONT_PATHS.home);
     return apiSuccess(saved);
   });
 }

@@ -6,6 +6,10 @@ import { getCategories } from '@/server/db/queries/categories';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,6 +47,11 @@ export async function POST(request: NextRequest) {
       display_order: parsed.data.display_order ?? 0,
       active: parsed.data.active ?? true,
     });
+
+    revalidateStorefront([
+      ...STOREFRONT_PATHS.category,
+      ...STOREFRONT_PATHS.home,
+    ]);
 
     return apiSuccess(mapDbCategoryToAdmin(created), { status: 201 });
   });

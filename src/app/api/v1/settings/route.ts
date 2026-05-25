@@ -5,6 +5,10 @@ import { getAppSettings, saveAppSettings } from '@/server/db/queries/homepage';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,6 +80,8 @@ export async function PUT(request: NextRequest) {
       createdAt: parsed.data.createdAt ?? now,
       updatedAt: now,
     });
+
+    revalidateStorefront(STOREFRONT_PATHS.settings);
 
     return apiSuccess(saved);
   });
