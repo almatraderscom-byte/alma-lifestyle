@@ -1,6 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { reportError } from '@/lib/errors/report';
 
 function AdminFallback() {
   return (
@@ -28,9 +29,7 @@ export function AdminErrorBoundary({ children }: { children: React.ReactNode }) 
     <ErrorBoundary
       fallback={<AdminFallback />}
       onError={(error) => {
-        if (typeof window !== 'undefined' && 'reportError' in window) {
-          window.reportError(error);
-        }
+        reportError({ error, context: { boundary: 'AdminErrorBoundary' } });
       }}
     >
       {children}

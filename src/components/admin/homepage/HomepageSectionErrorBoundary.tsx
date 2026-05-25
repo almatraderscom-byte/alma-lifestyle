@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ReactNode } from 'react';
+import { reportError } from '@/lib/errors/report';
 
 interface Props {
   sectionLabel: string;
@@ -19,7 +20,13 @@ export class HomepageSectionErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error) {
-    console.error(`[HomepageBuilder] Section "${this.props.sectionLabel}" crashed:`, error);
+    reportError({
+      error,
+      context: {
+        boundary: 'HomepageSectionErrorBoundary',
+        sectionLabel: this.props.sectionLabel,
+      },
+    });
   }
 
   render() {
