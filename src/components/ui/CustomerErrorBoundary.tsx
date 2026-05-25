@@ -1,6 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { reportError } from '@/lib/errors/report';
 
 interface CustomerErrorBoundaryProps {
   children: React.ReactNode;
@@ -35,9 +36,13 @@ export function CustomerErrorBoundary({
     <ErrorBoundary
       fallback={<CustomerSectionFallback sectionLabel={sectionLabel} />}
       onError={(error) => {
-        if (typeof window !== 'undefined' && 'reportError' in window) {
-          window.reportError(error);
-        }
+        reportError({
+          error,
+          context: {
+            boundary: 'CustomerErrorBoundary',
+            sectionLabel,
+          },
+        });
       }}
     >
       {children}

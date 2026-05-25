@@ -8,6 +8,13 @@ import {
 } from '@/server/db/queries/categories-admin';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -33,6 +40,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const updated = await updateCategory(id, parsed.data);
     if (!updated) return apiNotFound('Category');
+
+    revalidateStorefront([
+      ...STOREFRONT_PATHS.category,
+      ...STOREFRONT_PATHS.home,
+    ]);
+
     return apiSuccess(mapDbCategoryToAdmin(updated));
   });
 }
@@ -41,6 +54,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
     await deleteCategory(id);
+
+    revalidateStorefront([
+      ...STOREFRONT_PATHS.category,
+      ...STOREFRONT_PATHS.home,
+    ]);
+
     return apiSuccess({ id, deleted: true });
   });
 }

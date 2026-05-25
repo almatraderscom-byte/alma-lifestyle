@@ -25,6 +25,10 @@ import { getCategories } from '@/server/db/queries/categories';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 import type { AdminProduct } from '@/lib/admin-store';
 import type { ProductWithRelations } from '@/server/db/schema';
 import type { ProductType } from '@/lib/product-design-types';
@@ -275,6 +279,9 @@ export async function POST(request: NextRequest) {
     };
 
     const created = await createAdminProduct(product);
+    if (created.status === 'published') {
+      revalidateStorefront(STOREFRONT_PATHS.product(created.slug));
+    }
     return apiSuccess(created, { status: 201 });
   });
 }
