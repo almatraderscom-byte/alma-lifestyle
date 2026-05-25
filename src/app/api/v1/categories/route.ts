@@ -7,6 +7,9 @@ import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const admin = request.nextUrl.searchParams.get('admin') === 'true';
 

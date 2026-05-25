@@ -165,6 +165,8 @@ export async function loadCatalogProductsServer(options?: {
   page?: number;
   limit?: number;
   categoryId?: string;
+  /** Resolve category id from slug (storefront URLs use slug). */
+  categorySlug?: string;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
   if (!isSupabaseAdminConfigured()) {
@@ -176,10 +178,15 @@ export async function loadCatalogProductsServer(options?: {
     const categories = await getCategories(brandId);
     const catById = new Map(categories.map((c) => [c.id, c]));
 
+    let categoryId = options?.categoryId;
+    if (!categoryId && options?.categorySlug) {
+      categoryId = categories.find((c) => c.slug === options.categorySlug)?.id;
+    }
+
     const result = await getProducts({
       page: options?.page ?? 1,
       limit: options?.limit ?? 100,
-      categoryId: options?.categoryId,
+      categoryId,
       published: true,
       search: options?.search,
     });
