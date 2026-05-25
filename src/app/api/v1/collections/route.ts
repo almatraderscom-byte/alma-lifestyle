@@ -1,10 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { CollectionBodySchema } from '@/lib/api-validation';
-import { mapDbCollectionToAdmin } from '@/lib/mappers/admin-product';
+import {
+  mapDbCollectionToAdmin,
+  mapDbCollectionsToAdminBulk,
+} from '@/lib/mappers/admin-product';
 import {
   createCollection,
   getAllCollectionsAdmin,
   getCollectionProductIds,
+  getCollectionProductIdsBulk,
   syncCollectionProducts,
 } from '@/server/db/queries/collections-admin';
 import { getPublishedCollections } from '@/server/db/queries/collections';
@@ -25,12 +29,11 @@ export async function GET(request: NextRequest) {
   if (admin) {
     return withAdmin(request, async () => {
       const rows = await getAllCollectionsAdmin();
-      const data = await Promise.all(
-        rows.map(async (row) => {
-          const productIds = await getCollectionProductIds(row.id);
-          return mapDbCollectionToAdmin(row, productIds);
-        })
+      // Bulk-fetch collection links to avoid N+1 (see PERF-001/002).
+      const productIdsByCollection = await getCollectionProductIdsBulk(
+        rows.map((row) => row.id)
       );
+      const data = mapDbCollectionsToAdminBulk(rows, productIdsByCollection);
       return apiSuccess(data);
     });
   }

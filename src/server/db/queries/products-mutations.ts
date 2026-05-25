@@ -26,6 +26,28 @@ export async function getProductCollectionIds(productId: string): Promise<string
   return (data ?? []).map((r) => (r as { collection_id: string }).collection_id);
 }
 
+export async function getProductCollectionIdsBulk(
+  productIds: readonly string[]
+): Promise<Map<string, string[]>> {
+  if (productIds.length === 0) return new Map();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('collection_products')
+    .select('product_id, collection_id')
+    .in('product_id', [...productIds]);
+
+  assertNoError(error, 'getProductCollectionIdsBulk');
+
+  const map = new Map<string, string[]>();
+  for (const id of productIds) map.set(id, []);
+  for (const row of data ?? []) {
+    const link = row as { product_id: string; collection_id: string };
+    const list = map.get(link.product_id);
+    if (list) list.push(link.collection_id);
+  }
+  return map;
+}
+
 async function syncCollectionProducts(productId: string, collectionIds: string[]): Promise<void> {
   await getSupabaseAdmin()
     .from('collection_products')
