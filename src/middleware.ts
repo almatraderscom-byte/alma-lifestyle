@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit } from '@/lib/rate-limit';
-
-const ADMIN_SESSION_COOKIE = 'alma_admin_session';
+import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session/constants';
+import { verifySessionEdge } from '@/lib/admin-session/edge';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -39,9 +39,21 @@ function applyApiRateLimit(request: NextRequest): NextResponse | null {
   return null;
 }
 
-function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE);
-  return adminSession?.value === 'authenticated';
+function clearAdminSessionCookie(response: NextResponse): void {
+  response.cookies.set(ADMIN_SESSION_COOKIE, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+}
+
+async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!token) return false;
+  const verified = await verifySessionEdge(token);
+  return verified.ok;
 }
 
 /** Allow admin live-preview iframe on same origin; deny embedding elsewhere. */
@@ -58,7 +70,7 @@ function applyFrameOptions(request: NextRequest, response: NextResponse): NextRe
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/v1')) {
@@ -69,7 +81,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/admin')) {
     if (pathname.startsWith('/admin/login')) {
-      if (isAdminAuthenticated(request)) {
+      if (await isAdminAuthenticated(request)) {
         return applyFrameOptions(
           request,
           NextResponse.redirect(new URL('/admin', request.url))
@@ -78,10 +90,12 @@ export function middleware(request: NextRequest) {
       return applyFrameOptions(request, NextResponse.next());
     }
 
-    if (!isAdminAuthenticated(request)) {
+    if (!(await isAdminAuthenticated(request))) {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('from', pathname);
-      return applyFrameOptions(request, NextResponse.redirect(loginUrl));
+      const response = NextResponse.redirect(loginUrl);
+      clearAdminSessionCookie(response);
+      return applyFrameOptions(request, response);
     }
 
     return applyFrameOptions(request, NextResponse.next());

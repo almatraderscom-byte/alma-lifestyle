@@ -1,58 +1,91 @@
-const ADMIN_EMAIL = 'admin@alma.com';
-const ADMIN_PASSWORD = 'admin123';
-const COOKIE_NAME = 'alma_admin_session';
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+import { ADMIN_SESSION_COOKIE } from '@/lib/admin-session/constants';
 
-/** @deprecated Use COOKIE_NAME — kept for middleware / API imports */
-export const ADMIN_SESSION_COOKIE = COOKIE_NAME;
-
-export const ADMIN_CREDENTIALS = {
-  email: ADMIN_EMAIL,
-  password: ADMIN_PASSWORD,
-} as const;
+export { ADMIN_SESSION_COOKIE };
 
 export type AdminUser = {
   email: string;
   name: string;
+  role?: string;
 };
 
-export function login(email: string, password: string): boolean {
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    if (typeof document !== 'undefined') {
-      document.cookie = `${COOKIE_NAME}=authenticated; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
-    }
-    return true;
-  }
-  return false;
+const ADMIN_USER_STORAGE_KEY = 'alma_admin_display_user';
+
+type SessionSuccess = { status: 'success'; data: { email: string; role: string } };
+type SessionError = { status: 'error'; error: string };
+
+function displayNameFromEmail(email: string): string {
+  const local = email.split('@')[0] ?? 'Admin';
+  return local.charAt(0).toUpperCase() + local.slice(1);
 }
 
-export function logout(): void {
-  if (typeof document !== 'undefined') {
-    document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`;
+function saveDisplayUser(email: string, role: string): void {
+  if (typeof window === 'undefined') return;
+  const user: AdminUser = {
+    email,
+    name: displayNameFromEmail(email),
+    role,
+  };
+  try {
+    sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(user));
+  } catch {
+    /* ignore */
   }
 }
 
+export function loadDisplayAdminUser(): AdminUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(ADMIN_USER_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as AdminUser;
+  } catch {
+    return null;
+  }
+}
+
+function clearDisplayUser(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(ADMIN_USER_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** UI hint only — HttpOnly cookie is not readable from JavaScript. */
 export function isLoggedIn(): boolean {
-  if (typeof document === 'undefined') return false;
-  return document.cookie.includes(`${COOKIE_NAME}=authenticated`);
+  return loadDisplayAdminUser() !== null;
 }
 
 export function getAdminUser(): AdminUser | null {
-  return isLoggedIn() ? { email: ADMIN_EMAIL, name: 'Admin' } : null;
+  return loadDisplayAdminUser();
 }
 
-/** Server/middleware helper — cookie value must be exactly "authenticated" */
-export function isAdminSessionCookie(value: string | undefined): boolean {
-  return value === 'authenticated';
+export async function login(email: string, password: string): Promise<boolean> {
+  const res = await fetch('/api/v1/admin/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  });
+
+  const json = (await res.json()) as SessionSuccess | SessionError;
+  if (!res.ok || json.status === 'error') {
+    return false;
+  }
+
+  saveDisplayUser(json.data.email, json.data.role);
+  return true;
 }
 
-/** Used by API routes — maps simple cookie to session shape */
-export function parseSessionCookie(
-  value: string | undefined
-): { user: AdminUser; expiresAt: number } | null {
-  if (!isAdminSessionCookie(value)) return null;
-  return {
-    user: { email: ADMIN_EMAIL, name: 'Admin' },
-    expiresAt: Date.now() + COOKIE_MAX_AGE * 1000,
-  };
+export async function logout(): Promise<void> {
+  try {
+    await fetch('/api/v1/admin/session', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+  } catch {
+    /* still clear local display state */
+  }
+  clearDisplayUser();
 }
