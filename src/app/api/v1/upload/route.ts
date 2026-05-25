@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { ensureStorageBuckets } from '@/server/storage/ensure-buckets';
 import { uploadImage, validateImageFile } from '@/server/storage/upload';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin } from '@/server/api/handler';
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
 
   return withAdmin(request, async () => {
     console.log('[Upload API] withAdmin passed, processing...');
+    await ensureStorageBuckets();
     const formData = await request.formData();
     const file = formData.get('file');
     const folder = String(formData.get('folder') ?? 'uploads');

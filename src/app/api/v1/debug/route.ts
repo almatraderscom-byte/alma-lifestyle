@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured, isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import { ensureStorageBuckets, listStorageBucketNames } from '@/server/storage/ensure-buckets';
 
 export async function GET() {
   const debug: Record<string, unknown> = {
@@ -36,11 +37,25 @@ export async function GET() {
       .select('id, name, slug')
       .limit(5);
 
+    let storageBuckets: string[] = [];
+    let storageError: string | undefined;
+    try {
+      await ensureStorageBuckets();
+      storageBuckets = await listStorageBucketNames();
+    } catch (err) {
+      storageError = err instanceof Error ? err.message : String(err);
+    }
+
     Object.assign(debug, {
       db: {
         brands: { data: brands, error: brandsError?.message },
         products: { data: products, error: productsError?.message },
         categories: { data: categories, error: categoriesError?.message },
+      },
+      storage: {
+        buckets: storageBuckets,
+        required: ['product-images', 'homepage-images'],
+        error: storageError,
       },
     });
   } catch (err) {

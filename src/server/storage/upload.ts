@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '@/server/db/client';
 import { MAX_UPLOAD_BYTES } from '@/lib/upload-limits';
+import { ensureStorageBuckets } from '@/server/storage/ensure-buckets';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_BYTES = MAX_UPLOAD_BYTES;
@@ -37,12 +38,30 @@ export async function uploadImage(
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const { error } = await getSupabaseAdmin().storage.from(bucket).upload(name, buffer, {
-    contentType: type,
-    upsert: false,
-  });
+  async function doUpload() {
+    return getSupabaseAdmin().storage.from(bucket).upload(name, buffer, {
+      contentType: type,
+      upsert: false,
+    });
+  }
 
-  if (error) throw new Error(error.message);
+  let { error } = await doUpload();
+
+  if (error?.message?.toLowerCase().includes('bucket not found')) {
+    console.warn('[Storage] Bucket missing, creating buckets and retrying:', bucket);
+    await ensureStorageBuckets();
+    ({ error } = await doUpload());
+  }
+
+  if (error) {
+    const msg = error.message ?? 'Upload failed';
+    if (msg.toLowerCase().includes('bucket not found')) {
+      throw new Error(
+        `Storage bucket "${bucket}" not found. Open Supabase Dashboard → Storage → New bucket → name it "${bucket}" (public), or run migration 003_storage_buckets.sql.`
+      );
+    }
+    throw new Error(msg);
+  }
 
   const { data } = getSupabaseAdmin().storage.from(bucket).getPublicUrl(name);
   return data.publicUrl;
