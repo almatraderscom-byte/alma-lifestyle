@@ -22,7 +22,7 @@ import {
 import { FamilyImageSlot } from '@/components/admin/products/FamilyImageSlot';
 import {
   GIRL_AGE_GROUPS,
-  GIRL_AGE_LABELS_BN,
+  GIRL_VARIANT_SIZE_BN,
   SIZE_PRESETS,
 } from '@/lib/product-design-types';
 import { getCategories, saveProduct } from '@/lib/admin-store';
@@ -291,57 +291,47 @@ export function FamilySetForm() {
               <>
                 {type === 'girl_two_piece' ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-neutral-600">
-                      Creates 3 products (one per age group), each with its own price.
-                    </p>
-                    {GIRL_AGE_GROUPS.map((age, i) => (
-                      <div
-                        key={age}
-                        className="rounded-lg border border-neutral-200/80 bg-white/80 p-4 grid sm:grid-cols-2 gap-3"
-                      >
-                        <p className="sm:col-span-2 text-sm font-medium">
-                          {GIRL_AGE_LABELS_BN[age]}
-                        </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Input
+                        label="Price BDT ৳ *"
+                        type="number"
+                        min={0}
+                        value={cfg.priceBdt || ''}
+                        onChange={(e) =>
+                          patchMember(type, { priceBdt: Number(e.target.value) })
+                        }
+                        error={errors[type]}
+                      />
+                      <p className="text-xs text-neutral-600 sm:col-span-2">
+                        One product — age ranges (১-৫, ৬-৯, ১০-১৪ বছর) are size variants with
+                        the same price.
+                      </p>
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-3">
+                      {GIRL_AGE_GROUPS.map((age, i) => (
                         <Input
-                          label="Price BDT ৳ *"
-                          type="number"
-                          min={0}
-                          value={cfg.girlAges?.[i]?.priceBdt || ''}
-                          onChange={(e) => {
-                            const girlAges = [...(cfg.girlAges ?? [])];
-                            girlAges[i] = {
-                              ...girlAges[i],
-                              ageGroup: age,
-                              priceBdt: Number(e.target.value),
-                              stock: girlAges[i]?.stock ?? 10,
-                            };
-                            patchMember(type, { girlAges });
-                          }}
-                          error={errors[`girl_${age}`]}
-                        />
-                        <Input
-                          label="Stock"
+                          key={age}
+                          label={`Stock — ${GIRL_VARIANT_SIZE_BN[age]}`}
                           type="number"
                           min={0}
                           value={cfg.girlAges?.[i]?.stock ?? 10}
                           onChange={(e) => {
                             const girlAges = [...(cfg.girlAges ?? [])];
                             girlAges[i] = {
-                              ...girlAges[i],
                               ageGroup: age,
-                              priceBdt: girlAges[i]?.priceBdt ?? 0,
                               stock: Number(e.target.value),
                             };
                             patchMember(type, { girlAges });
                           }}
                         />
-                        {designSlug && (
-                          <p className="sm:col-span-2 text-xs text-neutral-500">
-                            SKU: {skuPrefixForType(designSlug, type, age)}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    {designSlug && (
+                      <p className="text-xs text-neutral-500">
+                        SKU prefix: <code className="bg-white/60 px-1">{sku}</code> (variants:{' '}
+                        -G15, -G69, -G1014)
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <>

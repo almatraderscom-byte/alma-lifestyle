@@ -127,9 +127,7 @@ DECLARE
   v_men UUID;
   v_boy UUID;
   v_women UUID;
-  v_g1 UUID;
-  v_g2 UUID;
-  v_g3 UUID;
+  v_girl UUID;
   men_sizes TEXT[] := ARRAY['38','40','42','44','46','48','50','52','54'];
   boy_sizes TEXT[] := ARRAY['16','18','20','22','24','26','28','30','32','34','36'];
   women_sizes TEXT[] := ARRAY['S','M','L','XL','XXL'];
@@ -165,34 +163,33 @@ BEGIN
     'ম্যাচিং রয়্যাল নেভি থ্রি পিস — পরিবারের সাথে মিলিয়ে পরুন।'
   );
 
-  v_g1 := seed_upsert_product(
-    'ALM-PNJ-RN-G15', 'royal-navy-girl-1-5',
-    'Royal Navy Girl 1-5', 'রয়্যাল নেভি মেয়ে (১-৫ বছর)',
-    'ছোট মেয়েদের জন্য রয়্যাল নেভি টু পিস — নরম কাপড়, সহজ পরিধান।',
-    800, 'panjabi', 'girl_two_piece', v_men, 'রয়্যাল নেভি', 4, '1-5',
-    'Cotton Silk', 'BD', 'রয়্যাল নেভি মেয়ে ১-৫ | ALMA', 'ম্যাচিং গার্লস টু পিস ১-৫ বছর।'
+  -- Remove legacy per-age girl products if re-running seed
+  DELETE FROM product_variants WHERE product_id IN (
+    SELECT id FROM products WHERE sku IN ('ALM-PNJ-RN-G15', 'ALM-PNJ-RN-G69', 'ALM-PNJ-RN-G1014')
   );
-  v_g2 := seed_upsert_product(
-    'ALM-PNJ-RN-G69', 'royal-navy-girl-6-9',
-    'Royal Navy Girl 6-9', 'রয়্যাল নেভি মেয়ে (৬-৯ বছর)',
-    'স্কুল-ঈদ উভয় উপলক্ষে উপযুক্ত মেয়েদের টু পিস। একই পরিবারের ডিজাইন।',
-    950, 'panjabi', 'girl_two_piece', v_men, 'রয়্যাল নেভি', 4, '6-9',
-    'Cotton Silk', 'BD', 'রয়্যাল নেভি মেয়ে ৬-৯ | ALMA', 'ম্যাচিং গার্লস টু পিস ৬-৯ বছর।'
+  DELETE FROM products WHERE sku IN ('ALM-PNJ-RN-G15', 'ALM-PNJ-RN-G69', 'ALM-PNJ-RN-G1014');
+
+  v_girl := seed_upsert_product(
+    'ALM-PNJ-RN-G', 'royal-navy-girl',
+    'Royal Navy Girl Two Piece', 'রয়্যাল নেভি মেয়ে শিশু Two Piece',
+    'রয়্যাল নেভি ম্যাচিং টু পিস — বয়স অনুযায়ী সাইজ (১-৫, ৬-৯, ১০-১৪ বছর), একই মূল্য।',
+    900, 'panjabi', 'girl_two_piece', v_men, 'রয়্যাল নেভি', 4,
+    NULL, 'Cotton Silk', 'BD',
+    'রয়্যাল নেভি মেয়ে Two Piece | ALMA', 'ম্যাচিং গার্লস টু পিস — এক পণ্য, তিন সাইজ।'
   );
-  v_g3 := seed_upsert_product(
-    'ALM-PNJ-RN-G1014', 'royal-navy-girl-10-14',
-    'Royal Navy Girl 10-14', 'রয়্যাল নেভি মেয়ে (১০-১৪ বছর)',
-    'বড় মেয়েদের সাইজে রয়্যাল নেভি ম্যাচিং সেট। প্রিমিয়াম ফিনিশ ও আরামদায়ক ফিট।',
-    1100, 'panjabi', 'girl_two_piece', v_men, 'রয়্যাল নেভি', 4, '10-14',
-    'Cotton Silk', 'BD', 'রয়্যাল নেভি মেয়ে ১০-১৪ | ALMA', 'ম্যাচিং গার্লস টু পিস ১০-১৪ বছর।'
-  );
+
+  INSERT INTO product_variants (product_id, sku, size, color, stock_quantity)
+  VALUES
+    (v_girl, 'ALM-PNJ-RN-G-G15', '১-৫ বছর', 'Default', 10),
+    (v_girl, 'ALM-PNJ-RN-G-G69', '৬-৯ বছর', 'Default', 10),
+    (v_girl, 'ALM-PNJ-RN-G-G1014', '১০-১৪ বছর', 'Default', 10)
+  ON CONFLICT (product_id, sku) DO UPDATE SET
+    size = EXCLUDED.size,
+    stock_quantity = EXCLUDED.stock_quantity;
 
   PERFORM seed_insert_variants(v_men, 'ALM-PNJ-RN-M', men_sizes, 20);
   PERFORM seed_insert_variants(v_boy, 'ALM-PNJ-RN-B', boy_sizes, 15);
   PERFORM seed_insert_variants(v_women, 'ALM-PNJ-RN-W', women_sizes, 12);
-  PERFORM seed_insert_variants(v_g1, 'ALM-PNJ-RN-G15', ARRAY['1-2','3-4','5'], 10);
-  PERFORM seed_insert_variants(v_g2, 'ALM-PNJ-RN-G69', ARRAY['6-7','8-9'], 10);
-  PERFORM seed_insert_variants(v_g3, 'ALM-PNJ-RN-G1014', ARRAY['10-11','12-14'], 10);
 
   PERFORM seed_add_to_collection('new-arrivals', v_men, 1);
   PERFORM seed_add_to_collection('new-arrivals', v_boy, 2);

@@ -28,10 +28,13 @@ import {
   type GirlAgeRow,
 } from '@/components/admin/products/ProductTypeSection';
 import {
+  buildGirlTwoPieceVariants,
   GIRL_AGE_GROUPS,
+  GIRL_VARIANT_SIZE_BN,
   slugForDesignMember,
   DISPLAY_ORDER_BY_TYPE,
   PRODUCT_TYPE_LABELS_ADMIN,
+  type GirlAgeGroup,
 } from '@/lib/product-design-types';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { QuickAddMatchingModal } from '@/components/admin/products/QuickAddMatchingModal';
@@ -102,7 +105,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null);
   const [designGroups, setDesignGroups] = useState<{ id: string; name: string }[]>([]);
   const [girlAgeRows, setGirlAgeRows] = useState<GirlAgeRow[]>(
-    GIRL_AGE_GROUPS.map((ageGroup) => ({ ageGroup, priceBdt: 0, stock: 0 }))
+    GIRL_AGE_GROUPS.map((ageGroup) => ({ ageGroup, stock: 0 }))
   );
 
   useEffect(() => {
@@ -128,6 +131,19 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
 
   useEffect(() => {
     if (initial) setForm(initial);
+    if (initial?.productType === 'girl_two_piece' && initial.variants?.length) {
+      const sizeToAge = Object.fromEntries(
+        Object.entries(GIRL_VARIANT_SIZE_BN).map(([k, v]) => [v, k as GirlAgeGroup])
+      ) as Record<string, GirlAgeGroup>;
+      setGirlAgeRows(
+        GIRL_AGE_GROUPS.map((ageGroup) => {
+          const variant = initial.variants?.find(
+            (v) => sizeToAge[v.size] === ageGroup || v.size === GIRL_VARIANT_SIZE_BN[ageGroup]
+          );
+          return { ageGroup, stock: variant?.stock ?? 0 };
+        })
+      );
+    }
   }, [initial]);
 
   useEffect(() => {
@@ -140,13 +156,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
       designGroupId: prefill.designGroupId,
       designGroupName: prefill.designGroupName ?? prev.designGroupName,
       displayOrder: DISPLAY_ORDER_BY_TYPE[type],
-      slug: baseSlug
-        ? slugForDesignMember(
-            baseSlug,
-            type,
-            type === 'girl_two_piece' ? '1-5' : undefined
-          )
-        : prev.slug,
+      slug: baseSlug ? slugForDesignMember(baseSlug, type) : prev.slug,
       title: prefill.designGroupName
         ? `${prefill.designGroupName} (${PRODUCT_TYPE_LABELS_ADMIN[type]})`
         : prev.title,
@@ -200,61 +210,57 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
     if (!skipValidation && status === 'published' && !validate()) return;
     setSaving(true);
     try {
-      if (!isEdit && form.productType === 'girl_two_piece') {
-        const baseSlug = form.slug || generateProductSlug(form.designGroupName ?? form.title);
-        const groupName = form.designGroupName ?? form.title;
-        let rootId = form.designGroupId;
-        for (let i = 0; i < GIRL_AGE_GROUPS.length; i++) {
-          const age = GIRL_AGE_GROUPS[i];
-          const row = girlAgeRows[i];
-          const payload: AdminProduct = {
-            ...form,
-            id: shouldUseApi() ? newDatabaseId() : uid('prod'),
-            productType: 'girl_two_piece',
-            ageGroup: age,
-            designGroupName: groupName,
-            designGroupId: rootId,
-            displayOrder: DISPLAY_ORDER_BY_TYPE.girl_two_piece,
-            slug: slugForDesignMember(baseSlug, 'girl_two_piece', age),
-            title: `${form.title} (${age})`,
-            priceBdt: row?.priceBdt ?? 0,
-            stock: row?.stock ?? 0,
-            hasVariants: false,
-            status,
-            updatedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-          };
-          const saved = await saveProduct(payload);
-          if (i === 0 && !rootId) rootId = saved.id;
-        }
-        toast('Girl two-piece products created', 'success');
-      } else {
-        const payload: AdminProduct = {
-          ...form,
-          status,
-          updatedAt: new Date().toISOString(),
+      let payload: AdminProduct = {
+        ...form,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (form.productType === 'girl_two_piece') {
+        const skuPrefix = form.sku || `ALM-PNJ-${(form.slug || 'design').replace(/-/g, '').slice(0, 6).toUpperCase()}-G`;
+        const stocks = GIRL_AGE_GROUPS.map((ageGroup, i) => ({
+          ageGroup,
+          stock: girlAgeRows[i]?.stock ?? 0,
+        }));
+        const variants = buildGirlTwoPieceVariants(skuPrefix, stocks).map((v, i) => ({
+          id: form.variants?.[i]?.id ?? (shouldUseApi() ? newDatabaseId() : uid('var')),
+          ...v,
+        }));
+        payload = {
+          ...payload,
+          sku: skuPrefix,
+          ageGroup: undefined,
+          hasVariants: true,
+          variants,
+          stock: undefined,
+          displayOrder: DISPLAY_ORDER_BY_TYPE.girl_two_piece,
         };
-        if (isEdit && initial) {
-          await updateProduct(initial.id, payload);
-          toast('Product updated successfully', 'success');
-        } else {
-          const saved = await saveProduct(payload);
-          toast('Product created successfully', 'success');
-          if (
-            status === 'published' &&
-            payload.productType === 'men_panjabi' &&
-            !prefill?.designGroupId
-          ) {
-            setSavedMenProduct({
-              designGroupId: saved.designGroupId ?? saved.id,
-              designGroupName: saved.designGroupName ?? saved.title,
-              slug: saved.slug,
-            });
-            setQuickAddOpen(true);
-            setDirty(false);
-            setSaving(false);
-            return;
-          }
+      }
+
+      if (isEdit && initial) {
+        await updateProduct(initial.id, payload);
+        toast('Product updated successfully', 'success');
+      } else {
+        const saved = await saveProduct({
+          ...payload,
+          id: payload.id || (shouldUseApi() ? newDatabaseId() : uid('prod')),
+          createdAt: payload.createdAt || new Date().toISOString(),
+        });
+        toast('Product created successfully', 'success');
+        if (
+          status === 'published' &&
+          payload.productType === 'men_panjabi' &&
+          !prefill?.designGroupId
+        ) {
+          setSavedMenProduct({
+            designGroupId: saved.designGroupId ?? saved.id,
+            designGroupName: saved.designGroupName ?? saved.title,
+            slug: saved.slug,
+          });
+          setQuickAddOpen(true);
+          setDirty(false);
+          setSaving(false);
+          return;
         }
       }
       setDirty(false);

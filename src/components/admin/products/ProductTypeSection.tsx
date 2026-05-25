@@ -2,9 +2,10 @@
 
 import type { AdminProduct } from '@/lib/admin-store';
 import {
+  buildGirlTwoPieceVariants,
   buildVariantsForType,
   GIRL_AGE_GROUPS,
-  GIRL_AGE_LABELS_BN,
+  GIRL_VARIANT_SIZE_BN,
   isPanjabiProductType,
   PANJABI_PRODUCT_TYPES,
   PRODUCT_TYPE_LABELS_ADMIN,
@@ -26,7 +27,6 @@ const TYPE_EMOJI: Record<ProductType, string> = {
 
 export interface GirlAgeRow {
   ageGroup: string;
-  priceBdt: number;
   stock: number;
 }
 
@@ -36,6 +36,20 @@ interface ProductTypeSectionProps {
   onChange: (next: AdminProduct) => void;
   girlAgeRows: GirlAgeRow[];
   onGirlAgeRowsChange: (rows: GirlAgeRow[]) => void;
+}
+
+function girlVariantsFromRows(
+  skuPrefix: string,
+  rows: GirlAgeRow[]
+): AdminProduct['variants'] {
+  const stocks = GIRL_AGE_GROUPS.map((ageGroup) => {
+    const row = rows.find((r) => r.ageGroup === ageGroup);
+    return { ageGroup, stock: row?.stock ?? 0 };
+  });
+  return buildGirlTwoPieceVariants(skuPrefix, stocks).map((v) => ({
+    id: uid('var'),
+    ...v,
+  }));
 }
 
 export function ProductTypeSection({
@@ -49,27 +63,49 @@ export function ProductTypeSection({
     const next: AdminProduct = {
       ...form,
       productType: type,
-      hasVariants: isPanjabiProductType(type) && type !== 'girl_two_piece',
+      ageGroup: undefined,
+      hasVariants: isPanjabiProductType(type),
     };
 
     if (type === 'simple') {
-      onChange({ ...next, designGroupId: undefined, designGroupName: undefined, ageGroup: undefined });
+      onChange({ ...next, designGroupId: undefined, designGroupName: undefined, variants: undefined });
       return;
     }
 
     const baseSlug = form.slug || 'design';
-    const variants = buildVariantsForType(type, form.sku || 'SKU', 0).map((v) => ({
+    const skuPrefix = form.sku || 'SKU';
+
+    if (type === 'girl_two_piece') {
+      next.variants = girlVariantsFromRows(skuPrefix, girlAgeRows);
+      next.hasVariants = true;
+      next.slug = slugForDesignMember(baseSlug.replace(/-men|-boy|-women|-girl.*/, ''), type);
+      onChange(next);
+      return;
+    }
+
+    const variants = buildVariantsForType(type, skuPrefix, 0).map((v) => ({
       id: uid('var'),
       ...v,
     }));
-
-    if (type !== 'girl_two_piece') {
-      next.variants = variants;
-      next.hasVariants = true;
-      next.slug = slugForDesignMember(baseSlug.replace(/-men|-boy|-women|-girl.*/, ''), type);
-    }
-
+    next.variants = variants;
+    next.hasVariants = true;
+    next.slug = slugForDesignMember(baseSlug.replace(/-men|-boy|-women|-girl.*/, ''), type);
     onChange(next);
+  }
+
+  function patchGirlStock(age: (typeof GIRL_AGE_GROUPS)[number], stock: number) {
+    const rows = [...girlAgeRows];
+    const i = GIRL_AGE_GROUPS.indexOf(age);
+    rows[i] = { ageGroup: age, stock };
+    onGirlAgeRowsChange(rows);
+    if (form.productType === 'girl_two_piece') {
+      onChange({
+        ...form,
+        variants: girlVariantsFromRows(form.sku || 'SKU', rows),
+        hasVariants: true,
+        ageGroup: undefined,
+      });
+    }
   }
 
   return (
@@ -134,44 +170,20 @@ export function ProductTypeSection({
       {form.productType === 'girl_two_piece' && (
         <div className="space-y-4 border-t border-neutral-200 pt-4">
           <p className="text-sm text-neutral-600">
-            Girl&apos;s Two Piece creates three linked products (one per age group), each with its
-            own price.
+            One product with one price. Set stock per age size (১-৫, ৬-৯, ১০-১৪ বছর).
           </p>
-          {GIRL_AGE_GROUPS.map((age, i) => (
-            <div key={age} className="grid gap-3 sm:grid-cols-3 rounded-lg border p-3 bg-white">
-              <p className="sm:col-span-3 text-sm font-medium">{GIRL_AGE_LABELS_BN[age]}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {GIRL_AGE_GROUPS.map((age, i) => (
               <Input
-                label="Price (BDT)"
+                key={age}
+                label={`Stock — ${GIRL_VARIANT_SIZE_BN[age]}`}
                 type="number"
-                value={girlAgeRows[i]?.priceBdt ?? 0}
-                onChange={(e) => {
-                  const rows = [...girlAgeRows];
-                  rows[i] = {
-                    ...rows[i],
-                    ageGroup: age,
-                    priceBdt: Number(e.target.value),
-                    stock: rows[i]?.stock ?? 0,
-                  };
-                  onGirlAgeRowsChange(rows);
-                }}
-              />
-              <Input
-                label="Stock (Free Size)"
-                type="number"
+                min={0}
                 value={girlAgeRows[i]?.stock ?? 0}
-                onChange={(e) => {
-                  const rows = [...girlAgeRows];
-                  rows[i] = {
-                    ...rows[i],
-                    ageGroup: age,
-                    priceBdt: rows[i]?.priceBdt ?? 0,
-                    stock: Number(e.target.value),
-                  };
-                  onGirlAgeRowsChange(rows);
-                }}
+                onChange={(e) => patchGirlStock(age, Number(e.target.value))}
               />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

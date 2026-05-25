@@ -86,6 +86,34 @@ export const GIRL_AGE_LABELS_BN: Record<GirlAgeGroup, string> = {
   '10-14': 'মেয়ে (১০-১৪ বছর)',
 };
 
+/** Size labels on PDP / variants (age ranges as sizes). */
+export const GIRL_VARIANT_SIZE_BN: Record<GirlAgeGroup, string> = {
+  '1-5': '১-৫ বছর',
+  '6-9': '৬-৯ বছর',
+  '10-14': '১০-১৪ বছর',
+};
+
+const GIRL_VARIANT_SKU_SUFFIX: Record<GirlAgeGroup, string> = {
+  '1-5': '-G15',
+  '6-9': '-G69',
+  '10-14': '-G1014',
+};
+
+export function buildGirlTwoPieceVariants(
+  skuPrefix: string,
+  stocksByAge: Array<{ ageGroup: GirlAgeGroup; stock: number }>
+): Array<{ size: string; color: string; stock: number; sku: string }> {
+  return GIRL_AGE_GROUPS.map((ageGroup) => {
+    const row = stocksByAge.find((r) => r.ageGroup === ageGroup);
+    return {
+      size: GIRL_VARIANT_SIZE_BN[ageGroup],
+      color: 'Default',
+      stock: row?.stock ?? 0,
+      sku: `${skuPrefix}${GIRL_VARIANT_SKU_SUFFIX[ageGroup]}`,
+    };
+  });
+}
+
 export const DISPLAY_ORDER_BY_TYPE: Record<ProductType, number> = {
   simple: 0,
   men_panjabi: 1,
@@ -120,11 +148,8 @@ export function buildVariantsForType(
 export function slugForDesignMember(
   designSlug: string,
   type: ProductType,
-  ageGroup?: string
+  _ageGroup?: string
 ): string {
-  if (type === 'girl_two_piece' && ageGroup) {
-    return `${designSlug}-girl-${ageGroup}`;
-  }
   const suffix: Record<ProductType, string> = {
     simple: '',
     men_panjabi: 'men',

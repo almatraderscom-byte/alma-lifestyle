@@ -1,3 +1,4 @@
+import { dedupeDesignGroupMembersByType } from '@/lib/mappers/catalog-product';
 import { getSupabaseAdmin } from '../client';
 import type { ProductWithRelations } from '../schema';
 import { assertNoError } from './errors';
@@ -32,7 +33,7 @@ export async function getDesignGroupProducts(
     .order('display_order', { ascending: true });
 
   assertNoError(error, 'getDesignGroupProducts');
-  return (data ?? []) as ProductWithRelations[];
+  return dedupeDesignGroupMembersByType((data ?? []) as ProductWithRelations[]);
 }
 
 export async function getDesignGroups(): Promise<DesignGroupSummary[]> {
@@ -58,7 +59,7 @@ export async function getDesignGroups(): Promise<DesignGroupSummary[]> {
   const summaries: DesignGroupSummary[] = [];
 
   for (const [designGroupId, members] of byGroup) {
-    const sorted = [...members].sort((a, b) => a.display_order - b.display_order);
+    const sorted = dedupeDesignGroupMembersByType(members);
     const anchor =
       sorted.find((m) => m.product_type === 'men_panjabi') ?? sorted[0];
     const prices = sorted.map((m) => Number(m.price_bdt));

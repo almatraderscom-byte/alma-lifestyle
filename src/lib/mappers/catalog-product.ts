@@ -2,6 +2,43 @@ import type { ProductType } from '@/lib/product-design-types';
 import type { CatalogProduct, CategorySlug } from '@/lib/products-data';
 import type { Category, ProductWithRelations } from '@/server/db/schema';
 
+const DESIGN_MEMBER_TAB_ORDER: ProductType[] = [
+  'men_panjabi',
+  'boy_panjabi',
+  'women_three_piece',
+  'girl_two_piece',
+];
+
+/** Legacy DB rows may have 3 girl_two_piece products; keep one (prefer variants). */
+export function dedupeDesignGroupMembersByType(
+  members: ProductWithRelations[]
+): ProductWithRelations[] {
+  const sorted = [...members].sort((a, b) => a.display_order - b.display_order);
+  const byType = new Map<string, ProductWithRelations>();
+
+  for (const m of sorted) {
+    const type = m.product_type ?? 'simple';
+    const prev = byType.get(type);
+    if (!prev) {
+      byType.set(type, m);
+      continue;
+    }
+    if (type !== 'girl_two_piece') continue;
+
+    const prevVariants = prev.product_variants?.length ?? 0;
+    const nextVariants = m.product_variants?.length ?? 0;
+    if (nextVariants > prevVariants) {
+      byType.set(type, m);
+    } else if (nextVariants === prevVariants && !m.age_group && prev.age_group) {
+      byType.set(type, m);
+    }
+  }
+
+  return DESIGN_MEMBER_TAB_ORDER.map((t) => byType.get(t)).filter(
+    (m): m is ProductWithRelations => Boolean(m)
+  );
+}
+
 const BG_CLASSES = [
   'bg-[#2c3e5c]',
   'bg-[#e8e4df]',
@@ -83,7 +120,7 @@ export function mapDesignGroupToCatalogListing(
   category: Category | undefined,
   index = 0
 ): CatalogProduct {
-  const sorted = [...members].sort((a, b) => a.display_order - b.display_order);
+  const sorted = dedupeDesignGroupMembersByType(members);
   const anchor =
     sorted.find((m) => m.product_type === 'men_panjabi') ?? sorted[0];
   const base = mapDbProductToCatalog(anchor, category, index);
@@ -106,11 +143,14 @@ export function mapDesignGroupToCatalogListing(
 
 /** True when the storefront should show a matching-set card (2+ types or 2+ products). */
 export function isMatchingDesignGroup(members: ProductWithRelations[]): boolean {
-  if (members.length <= 1) return false;
+  const deduped = dedupeDesignGroupMembersByType(members);
+  if (deduped.length <= 1) return false;
   const types = new Set(
-    members.map((m) => (m.product_type ?? 'simple') as ProductType).filter((t) => t !== 'simple')
+    deduped
+      .map((m) => (m.product_type ?? 'simple') as ProductType)
+      .filter((t) => t !== 'simple')
   );
-  return types.size >= 2 || members.length >= 2;
+  return types.size >= 2 || deduped.length >= 2;
 }
 
 /** Flat catalog rows → one card per matching set + simple products. */
@@ -137,9 +177,10 @@ export function groupProductsForListing(
   let index = 0;
 
   for (const members of byGroup.values()) {
-    const category = catById.get(members[0].category_id);
-    if (isMatchingDesignGroup(members)) {
-      listing.push(mapDesignGroupToCatalogListing(members, category, index++));
+    const deduped = dedupeDesignGroupMembersByType(members);
+    const category = catById.get(deduped[0]?.category_id ?? members[0].category_id);
+    if (isMatchingDesignGroup(deduped)) {
+      listing.push(mapDesignGroupToCatalogListing(deduped, category, index++));
     } else {
       for (const m of members) {
         listing.push(mapDbProductToCatalog(m, category, index++));

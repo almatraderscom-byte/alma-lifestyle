@@ -7,10 +7,11 @@ import {
   type ProductVariant,
 } from '@/lib/admin-store';
 import {
+  buildGirlTwoPieceVariants,
   buildVariantsForType,
   DISPLAY_ORDER_BY_TYPE,
   GIRL_AGE_GROUPS,
-  GIRL_AGE_LABELS_BN,
+  GIRL_VARIANT_SIZE_BN,
   PRODUCT_TYPE_LABELS_BN,
   slugForDesignMember,
   type GirlAgeGroup,
@@ -41,9 +42,8 @@ export const FAMILY_CARD_BG: Record<FamilyMemberType, string> = {
   girl_two_piece: 'bg-[#f5f0d8] border-[#c9a227]',
 };
 
-export interface GirlAgePricing {
+export interface GirlAgeStock {
   ageGroup: GirlAgeGroup;
-  priceBdt: number;
   stock: number;
 }
 
@@ -52,7 +52,8 @@ export interface FamilyMemberConfig {
   priceBdt: number;
   stockPerSize: number;
   womenFreeSize?: boolean;
-  girlAges?: GirlAgePricing[];
+  /** Per age-range stock (girl two piece — one price on member). */
+  girlAges?: GirlAgeStock[];
 }
 
 export type FamilyImageSlotKey = FamilyMemberType | 'family_group';
@@ -109,7 +110,6 @@ export function createDefaultFamilySetState(): FamilySetFormState {
         stockPerSize: 10,
         girlAges: GIRL_AGE_GROUPS.map((ageGroup) => ({
           ageGroup,
-          priceBdt: 0,
           stock: 10,
         })),
       },
@@ -137,11 +137,7 @@ export function skuCodeFromDesignSlug(designSlug: string): string {
   return code.slice(0, 8) || 'DSN';
 }
 
-export function skuPrefixForType(
-  designSlug: string,
-  type: FamilyMemberType,
-  ageGroup?: GirlAgeGroup
-): string {
+export function skuPrefixForType(designSlug: string, type: FamilyMemberType): string {
   const code = skuCodeFromDesignSlug(designSlug);
   switch (type) {
     case 'men_panjabi':
@@ -151,9 +147,6 @@ export function skuPrefixForType(
     case 'women_three_piece':
       return `ALM-PNJ-${code}-W`;
     case 'girl_two_piece':
-      if (ageGroup === '1-5') return `ALM-PNJ-${code}-G15`;
-      if (ageGroup === '6-9') return `ALM-PNJ-${code}-G69`;
-      if (ageGroup === '10-14') return `ALM-PNJ-${code}-G1014`;
       return `ALM-PNJ-${code}-G`;
     default:
       return `ALM-PNJ-${code}`;
@@ -214,13 +207,27 @@ function buildImagesForProduct(
   return list;
 }
 
+function buildGirlVariants(skuPrefix: string, girlAges: GirlAgeStock[]): ProductVariant[] {
+  const stocks = GIRL_AGE_GROUPS.map((ageGroup) => {
+    const row = girlAges.find((a) => a.ageGroup === ageGroup);
+    return { ageGroup, stock: row?.stock ?? 10 };
+  });
+  return buildGirlTwoPieceVariants(skuPrefix, stocks).map((v) => ({
+    id: newVariantId(),
+    ...v,
+  }));
+}
+
 function buildVariants(
   type: FamilyMemberType,
   skuPrefix: string,
   stockPerSize: number,
-  womenFreeSize?: boolean
+  womenFreeSize?: boolean,
+  girlAges?: GirlAgeStock[]
 ): ProductVariant[] {
-  if (type === 'girl_two_piece') return [];
+  if (type === 'girl_two_piece') {
+    return buildGirlVariants(skuPrefix, girlAges ?? []);
+  }
   if (type === 'women_three_piece' && womenFreeSize) {
     return [
       {
@@ -273,35 +280,15 @@ export function buildFamilySetProducts(
   for (const type of enabledTypes) {
     const cfg = state.members[type];
 
-    if (type === 'girl_two_piece') {
-      const ages = cfg.girlAges ?? [];
-      for (const row of ages) {
-        const sku = skuPrefixForType(designSlug, type, row.ageGroup);
-        const titleBn = `${groupName} - ${GIRL_AGE_LABELS_BN[row.ageGroup]}`;
-        products.push({
-          ...shared,
-          id: newProductId(),
-          productType: 'girl_two_piece',
-          designGroupId: groupId,
-          ageGroup: row.ageGroup,
-          displayOrder: DISPLAY_ORDER_BY_TYPE.girl_two_piece,
-          title: `${groupName} - Girl ${row.ageGroup}`,
-          slug: slugForDesignMember(designSlug, type, row.ageGroup),
-          priceBdt: row.priceBdt,
-          sku,
-          hasVariants: false,
-          stock: row.stock,
-          variants: undefined,
-          images: buildImagesForProduct('girl_two_piece', state),
-          banglaTitle: titleBn,
-        });
-      }
-      continue;
-    }
-
     const sku = skuPrefixForType(designSlug, type);
     const labelBn = PRODUCT_TYPE_LABELS_BN[type];
-    const variants = buildVariants(type, sku, cfg.stockPerSize, cfg.womenFreeSize);
+    const variants = buildVariants(
+      type,
+      sku,
+      cfg.stockPerSize,
+      cfg.womenFreeSize,
+      cfg.girlAges
+    );
 
     products.push({
       ...shared,
@@ -336,14 +323,7 @@ export function validateFamilySetState(state: FamilySetFormState): Record<string
   }
 
   for (const type of enabled) {
-    if (type === 'girl_two_piece') {
-      const ages = state.members.girl_two_piece.girlAges ?? [];
-      for (const row of ages) {
-        if (!row.priceBdt || row.priceBdt <= 0) {
-          errors[`girl_${row.ageGroup}`] = `Price required for ${GIRL_AGE_LABELS_BN[row.ageGroup]}`;
-        }
-      }
-    } else if (!state.members[type].priceBdt || state.members[type].priceBdt <= 0) {
+    if (!state.members[type].priceBdt || state.members[type].priceBdt <= 0) {
       errors[type] = `Price required for ${FAMILY_MEMBER_LABELS[type]}`;
     }
   }
@@ -372,7 +352,21 @@ export function groupAdminProductsForList(products: AdminProduct[]): AdminProduc
   const rows: AdminProductGroupRow[] = [];
 
   for (const [designGroupId, members] of byGroup) {
-    const sorted = [...members].sort(
+    const byType = new Map<string, AdminProduct>();
+    for (const p of members) {
+      const t = p.productType ?? 'simple';
+      const prev = byType.get(t);
+      if (!prev) {
+        byType.set(t, p);
+        continue;
+      }
+      if (t === 'girl_two_piece') {
+        const prevV = prev.variants?.length ?? 0;
+        const nextV = p.variants?.length ?? 0;
+        if (nextV > prevV || (!p.ageGroup && prev.ageGroup)) byType.set(t, p);
+      }
+    }
+    const sorted = [...byType.values()].sort(
       (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
     );
     if (sorted.length >= 2) {

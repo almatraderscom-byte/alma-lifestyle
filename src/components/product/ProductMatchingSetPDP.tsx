@@ -56,8 +56,17 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
     [members]
   );
 
-  const [selectedSize, setSelectedSize] = useState(
-    active?.sizes.includes('XL') ? 'XL' : active?.sizes[0] ?? ''
+  const defaultSizeForMember = (m: CatalogProduct) =>
+    m.productType === 'girl_two_piece'
+      ? m.sizes[0] ?? ''
+      : m.sizes.includes('XL')
+        ? 'XL'
+        : m.sizes[0] ?? '';
+
+  const [selectedSize, setSelectedSize] = useState(() =>
+    defaultSizeForMember(
+      members.find((m) => m.id === initialId) ?? members[0] ?? product
+    )
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -123,7 +132,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
               type="button"
               onClick={() => {
                 setActiveId(member.id);
-                setSelectedSize(member.sizes[0] ?? 'M');
+                setSelectedSize(defaultSizeForMember(member));
                 setQuantity(1);
               }}
               className={cn(
