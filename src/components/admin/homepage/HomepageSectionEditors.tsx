@@ -21,6 +21,7 @@ import { Textarea } from '@/components/admin/ui/Textarea';
 import { Select } from '@/components/admin/ui/Select';
 import { ColorSwatchPicker } from '@/components/admin/ui/ColorSwatchPicker';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
+import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
 import { useAdminToast } from '@/context/AdminToastContext';
 
 type SectionData = HomepageSectionConfig['data'];
@@ -66,7 +67,7 @@ export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
           console.log('[HomepageBuilder] Hero backgroundImageUrl updated:', url);
           onChange({ ...data, backgroundImageUrl: url });
         }}
-        onError={(msg) => toast(msg, 'error')}
+        onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
       />
       <Input label="Image hint (placeholder)" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
       <div className="space-y-2">
@@ -136,7 +137,7 @@ function CategoryCardEditor({
         folder={`categories/${card.categorySlug || 'card'}`}
         value={card.imageUrl}
         onChange={(url) => onChange({ ...card, imageUrl: url })}
-        onError={(msg) => toast(msg, 'error')}
+        onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
       />
       <ColorSwatchPicker label="Background color" value={card.bgClass} onChange={(bgClass) => onChange({ ...card, bgClass })} />
       <Input label="Image hint" value={card.imageHint} onChange={(e) => onChange({ ...card, imageHint: e.target.value })} />
@@ -258,7 +259,7 @@ export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySecti
         folder="brand-story"
         value={data.imageUrl}
         onChange={(url) => onChange({ ...data, imageUrl: url })}
-        onError={(msg) => toast(msg, 'error')}
+        onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
       />
       <Input label="Image caption" value={data.imageCaption} onChange={(e) => onChange({ ...data, imageCaption: e.target.value })} />
       <Input label="Image hint" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
@@ -327,7 +328,7 @@ export function CollectionBannerEditor({ data, onChange }: EditorProps<Collectio
         folder="collection-banner"
         value={data.backgroundImageUrl}
         onChange={(url) => onChange({ ...data, backgroundImageUrl: url })}
-        onError={(msg) => toast(msg, 'error')}
+        onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
       />
       <Input label="Image hint" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
     </div>
@@ -356,7 +357,7 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
                   ),
                 })
               }
-              onError={(msg) => toast(msg, 'error')}
+              onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
             />
             <ColorSwatchPicker value={tile.bgClass} onChange={(bgClass) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, bgClass } : t)) })} />
             <Input label="Hint" value={tile.hint} onChange={(e) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, hint: e.target.value } : t)) })} />

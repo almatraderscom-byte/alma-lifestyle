@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { uploadImageApi } from '@/lib/admin-api';
 import { prepareImageForUpload } from '@/lib/prepare-image-upload';
+import { uploadPreparedHomepageImage } from '@/lib/homepage-upload';
 import { formatFileSize } from '@/lib/upload-limits';
 import { Button } from '@/components/admin/ui/Button';
 import { useAdminToast } from '@/context/AdminToastContext';
@@ -24,7 +24,7 @@ export function AdminTestUpload() {
       setLastLog(
         `Original: ${formatFileSize(file.size)} → Upload: ${formatFileSize(prepared.size)}`
       );
-      const url = await uploadImageApi(prepared, 'test-upload', 'homepage-images');
+      const url = await uploadPreparedHomepageImage(prepared, 'test-upload');
       setResultUrl(url);
       console.log('[TestUpload] URL:', url);
       toast('Test upload succeeded', 'success');
@@ -32,6 +32,7 @@ export function AdminTestUpload() {
       const msg = err instanceof Error ? err.message : 'Upload failed';
       setLastLog(msg);
       toast(msg, 'error');
+      window.alert(`Upload failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -42,8 +43,10 @@ export function AdminTestUpload() {
       <h2 className="text-sm font-semibold text-neutral-900">Test image upload</h2>
       <p className="text-xs text-neutral-600">
         Uploads to Supabase <code className="bg-white px-1">homepage-images</code> via{' '}
-        <code className="bg-white px-1">POST /api/v1/upload</code>. Use this to debug size limits
-        without the homepage builder.
+        <code className="bg-white px-1">POST /api/v1/upload</code>.{' '}
+        <a href="/admin/test-upload" className="text-[#C97D5D] underline">
+          Full step-by-step test page →
+        </a>
       </p>
       <input
         ref={inputRef}

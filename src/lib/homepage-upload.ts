@@ -4,22 +4,19 @@ import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 const LOG = '[HomepageUpload]';
 
 /**
- * Upload a homepage section image to Supabase (homepage-images bucket).
- * Always uses POST /api/v1/upload — never base64.
+ * Upload an already-compressed file to Supabase (homepage-images bucket).
  */
-export async function uploadHomepageImage(
+export async function uploadPreparedHomepageImage(
   file: File,
   folder: string
 ): Promise<string> {
-  const prepared = await prepareImageForUpload(file);
-  console.log(LOG, 'Uploading', {
+  console.log(LOG, 'Uploading prepared file', {
     name: file.name,
-    originalSize: file.size,
-    uploadSize: prepared.size,
+    size: file.size,
     folder,
   });
 
-  const url = await uploadImageApi(prepared, folder, 'homepage-images');
+  const url = await uploadImageApi(file, folder, 'homepage-images');
 
   if (!url || typeof url !== 'string') {
     console.error(LOG, 'Invalid response URL', url);
@@ -38,4 +35,15 @@ export async function uploadHomepageImage(
 
   console.log(LOG, 'Success', url);
   return url;
+}
+
+/**
+ * Compress (if needed) then upload to Supabase.
+ */
+export async function uploadHomepageImage(
+  file: File,
+  folder: string
+): Promise<string> {
+  const prepared = await prepareImageForUpload(file);
+  return uploadPreparedHomepageImage(prepared, folder);
 }

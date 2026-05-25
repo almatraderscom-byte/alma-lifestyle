@@ -4,8 +4,14 @@ import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin } from '@/server/api/handler';
 
 export async function POST(request: NextRequest) {
+  console.log('[Upload API] ========== Request received ==========');
+  console.log(
+    '[Upload API] Cookie alma_admin_session:',
+    request.cookies.get('alma_admin_session')?.value ?? '(missing)'
+  );
+
   return withAdmin(request, async () => {
-    console.log('[Upload API] Called');
+    console.log('[Upload API] withAdmin passed, processing...');
     const formData = await request.formData();
     const file = formData.get('file');
     const folder = String(formData.get('folder') ?? 'uploads');
