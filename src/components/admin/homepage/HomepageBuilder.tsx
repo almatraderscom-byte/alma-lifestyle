@@ -33,6 +33,7 @@ import {
   updateSection,
 } from '@/components/admin/homepage/homepage-builder-utils';
 import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/HomepageSectionErrorBoundary';
+import { HomepageUploadDiagnostics } from '@/components/admin/homepage/HomepageUploadDiagnostics';
 
 type MobileTab = 'editor' | 'preview';
 
@@ -333,6 +334,8 @@ export function HomepageBuilder() {
               )}
             </div>
           ))}
+
+          <HomepageUploadDiagnostics />
         </div>
 
         <div className="hidden lg:flex flex-col w-[60%] bg-neutral-100">
