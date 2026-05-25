@@ -50,6 +50,7 @@ export async function fetchProducts(params?: {
   published?: boolean;
 }): Promise<AdminProduct[]> {
   const q = new URLSearchParams();
+  q.set('admin', 'true');
   q.set('limit', String(params?.limit ?? 200));
   if (params?.published !== undefined) {
     q.set('published', String(params.published));

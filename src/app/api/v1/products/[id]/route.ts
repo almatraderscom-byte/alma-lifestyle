@@ -6,24 +6,55 @@ import {
   softDeleteProduct,
   updateAdminProduct,
 } from '@/server/db/queries/products-mutations';
+import { getProductById } from '@/server/db/queries/products';
+import { getCategories } from '@/server/db/queries/categories';
+import { getBrandId } from '@/server/db/brand';
+import {
+  isProductVisibleOnStorefront,
+  mapDbProductToPublic,
+} from '@/lib/mappers/public-product';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
+import { tryRequireAdmin } from '@/server/api/auth';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import type { AdminProduct } from '@/lib/admin-store';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+function methodNotAllowed() {
+  return apiError('Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   if (!isDatabaseUuid(id)) {
-    console.warn('[API /products/:id] Invalid UUID:', id);
     return apiNotFound('Product');
   }
+
+  const admin = await tryRequireAdmin(request);
+  if (admin) {
+    return withPublicDb(async () => {
+      const product = await getAdminProductById(id);
+      if (!product) return apiNotFound('Product');
+      return apiSuccess(product);
+    });
+  }
+
   return withPublicDb(async () => {
-    const product = await getAdminProductById(id);
-    if (!product) return apiNotFound('Product');
-    return apiSuccess(product);
+    const row = await getProductById(id);
+    if (!row || !isProductVisibleOnStorefront(row)) {
+      return apiNotFound('Product');
+    }
+
+    const brandId = await getBrandId();
+    const categories = await getCategories(brandId);
+    const category = categories.find((c) => c.id === row.category_id);
+
+    return apiSuccess(mapDbProductToPublic(row, category ?? null));
   });
 }
 
@@ -66,3 +97,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return apiSuccess({ id, deleted: true });
   });
 }
+
+export const POST = methodNotAllowed;
+export const PUT = methodNotAllowed;
