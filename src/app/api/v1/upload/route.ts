@@ -4,6 +4,9 @@ import { uploadImage, validateImageFile } from '@/server/storage/upload';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin } from '@/server/api/handler';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   console.log('[Upload API] ========== Request received ==========');
   console.log(

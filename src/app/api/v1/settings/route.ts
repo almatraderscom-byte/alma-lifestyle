@@ -1,12 +1,19 @@
 import type { NextRequest } from 'next/server';
-import type { AppSettings } from '@/lib/admin-settings-types';
+import { AppSettingsSchema, formatZodError } from '@/lib/api-validation';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import { getAppSettings, saveAppSettings } from '@/server/db/queries/homepage';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
 
-function publicSettings(settings: AppSettings) {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function publicSettings(settings: ReturnType<typeof getDefaultAppSettings>) {
   return {
     storeName: settings.storeName,
     tagline: settings.tagline,
@@ -35,6 +42,10 @@ function publicSettings(settings: AppSettings) {
   };
 }
 
+function methodNotAllowed() {
+  return apiError('Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+}
+
 export async function GET() {
   const defaults = getDefaultAppSettings();
 
@@ -50,16 +61,32 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   return withAdmin(request, async () => {
-    const body = (await request.json()) as AppSettings;
-    if (!body?.storeName) {
-      return apiError('Invalid settings payload', 400, 'VALIDATION_ERROR');
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError('Invalid JSON body', 400, 'VALIDATION_ERROR');
     }
 
+    const parsed = AppSettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError(formatZodError(parsed.error), 400, 'VALIDATION_ERROR');
+    }
+
+    const now = new Date().toISOString();
     const saved = await saveAppSettings({
       ...getDefaultAppSettings(),
-      ...body,
+      ...parsed.data,
+      createdAt: parsed.data.createdAt ?? now,
+      updatedAt: now,
     });
+
+    revalidateStorefront(STOREFRONT_PATHS.settings);
 
     return apiSuccess(saved);
   });
 }
+
+export const POST = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;

@@ -11,6 +11,13 @@ import { getPublishedCollections } from '@/server/db/queries/collections';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import {
+  revalidateStorefront,
+  STOREFRONT_PATHS,
+} from '@/server/cache/revalidate';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = request.nextUrl.searchParams.get('admin') === 'true';
@@ -57,6 +64,15 @@ export async function POST(request: NextRequest) {
     }
 
     const productIds = await getCollectionProductIds(created.id);
+    const paths: string[] = [
+      ...STOREFRONT_PATHS.collectionsIndex,
+      ...STOREFRONT_PATHS.home,
+    ];
+    if (created.published) {
+      paths.push(...STOREFRONT_PATHS.collection(created.slug));
+    }
+    revalidateStorefront(paths);
+
     return apiSuccess(mapDbCollectionToAdmin(created, productIds), { status: 201 });
   });
 }
