@@ -1,70 +1,111 @@
-import { NextResponse } from 'next/server';
+// TODO: consider deleting — superseded by /api/v1/upload-health
+
+import type { NextRequest } from 'next/server';
 import { isSupabaseConfigured, isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { ensureStorageBuckets, listStorageBucketNames } from '@/server/storage/ensure-buckets';
+import { withAdmin } from '@/server/api/handler';
+import { apiError, apiSuccess } from '@/server/api/response';
 
-export async function GET() {
-  const debug: Record<string, unknown> = {
-    env: {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'MISSING',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        ? `SET (length: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length})`
-        : 'MISSING',
-      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
-        ? `SET (length: ${process.env.SUPABASE_SERVICE_ROLE_KEY.length})`
-        : 'MISSING',
-      NEXT_PUBLIC_USE_API: process.env.NEXT_PUBLIC_USE_API ?? 'NOT SET',
-    },
-    supabaseConfigured: isSupabaseConfigured(),
-    supabaseAdminConfigured: isSupabaseAdminConfigured(),
-  };
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-  try {
-    const { supabaseAdmin } = await import('@/server/db/client');
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-    const redactedUrl = url ? `${url.slice(0, 30)}…` : 'none';
-    console.log('[API /debug] Supabase URL (redacted):', redactedUrl);
+const ENV_KEYS = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'NEXT_PUBLIC_APP_URL',
+  'NEXT_PUBLIC_USE_API',
+] as const;
 
-    const { data: brands, error: brandsError } = await supabaseAdmin
-      .from('brands')
-      .select('id, name, slug')
-      .limit(5);
-    const { data: products, error: productsError } = await supabaseAdmin
-      .from('products')
-      .select('id, title, sku')
-      .limit(5);
-    const { data: categories, error: categoriesError } = await supabaseAdmin
-      .from('categories')
-      .select('id, name, slug')
-      .limit(5);
+const TABLE_NAMES = ['brands', 'products', 'categories'] as const;
 
-    let storageBuckets: string[] = [];
-    let storageError: string | undefined;
-    try {
-      await ensureStorageBuckets();
-      storageBuckets = await listStorageBucketNames();
-    } catch (err) {
-      storageError = err instanceof Error ? err.message : String(err);
+type TableName = (typeof TABLE_NAMES)[number];
+
+function methodNotAllowed() {
+  return apiError('Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+}
+
+export async function GET(request: NextRequest) {
+  return withAdmin(request, async () => {
+    const env: Record<string, boolean> = {};
+    for (const key of ENV_KEYS) {
+      const value = process.env[key];
+      env[key] = Boolean(value && String(value).trim().length > 0);
     }
 
-    Object.assign(debug, {
-      db: {
-        brands: { data: brands, error: brandsError?.message },
-        products: { data: products, error: productsError?.message },
-        categories: { data: categories, error: categoriesError?.message },
-      },
-      storage: {
-        buckets: storageBuckets,
+    const payload: Record<string, unknown> = {
+      supabaseConfigured: isSupabaseConfigured(),
+      supabaseAdminConfigured: isSupabaseAdminConfigured(),
+      env,
+      tables: [...TABLE_NAMES],
+    };
+
+    try {
+      const { getSupabaseAdmin } = await import('@/server/db/client');
+      const client = getSupabaseAdmin();
+
+      const tableCounts: Record<
+        TableName,
+        { count: number | null; error?: string }
+      > = {
+        brands: { count: null },
+        products: { count: null },
+        categories: { count: null },
+      };
+
+      for (const table of TABLE_NAMES) {
+        const { count, error } = await client
+          .from(table)
+          .select('*', { count: 'exact', head: true });
+        if (error) {
+          tableCounts[table] = { count: null, error: error.message };
+        } else {
+          tableCounts[table] = { count: count ?? 0 };
+        }
+      }
+
+      let storageError: string | undefined;
+      let buckets: Array<{ name: string; public: boolean | null }> = [];
+
+      try {
+        await ensureStorageBuckets();
+        const names = await listStorageBucketNames();
+        const { data: bucketRows, error: listError } =
+          await client.storage.listBuckets();
+
+        if (listError) {
+          storageError = listError.message;
+          buckets = names.map((name) => ({ name, public: null }));
+        } else {
+          const flags = new Map(
+            (bucketRows ?? []).map((b) => [b.name, b.public ?? null])
+          );
+          buckets = names.map((name) => ({
+            name,
+            public: flags.get(name) ?? null,
+          }));
+        }
+      } catch (err) {
+        storageError = err instanceof Error ? err.message : String(err);
+      }
+
+      payload.db = { tableCounts };
+      payload.storage = {
+        buckets,
         required: ['product-images', 'homepage-images'],
         error: storageError,
-      },
-    });
-  } catch (err) {
-    Object.assign(debug, {
-      db: {
+      };
+    } catch (err) {
+      payload.db = {
         connectionError: err instanceof Error ? err.message : String(err),
-      },
-    });
-  }
+      };
+    }
 
-  return NextResponse.json(debug);
+    return apiSuccess(payload);
+  });
 }
+
+export const POST = methodNotAllowed;
+export const PUT = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;
