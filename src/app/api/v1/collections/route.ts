@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const brandId = await getBrandId();
     const rows = await getPublishedCollections(brandId);
     return apiSuccess(rows);

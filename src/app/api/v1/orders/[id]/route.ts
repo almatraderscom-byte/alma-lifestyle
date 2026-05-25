@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   if (!admin) return apiUnauthorized();
 
   const { id } = await params;
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const order = await getOrderById(id);
     if (!order) return apiNotFound('Order');
     return apiSuccess({
