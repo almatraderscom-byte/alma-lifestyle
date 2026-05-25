@@ -4,14 +4,13 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import { CategoryBar } from '@/components/shop/CategoryBar';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { mapPublicProductToShopProduct } from '@/lib/mappers/shop-from-public';
 import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
 import { pageMetadata } from '@/lib/seo/metadata-helpers';
-import { getSiteUrl } from '@/lib/seo/site-url';
-import {
-  COLLECTIONS,
-  filterProducts,
-  getCollectionBySlug,
-} from '@/lib/shop/mock-data';
+import { getSiteUrl, absoluteUrl } from '@/lib/seo/site-url';
+import { loadCollectionBySlugServer } from '@/lib/storefront/server-data';
+
+export const revalidate = 60;
 
 interface CollectionPageProps {
   params: Promise<{ slug: string }>;
@@ -19,39 +18,52 @@ interface CollectionPageProps {
 
 export async function generateMetadata({ params }: CollectionPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const collection = getCollectionBySlug(slug);
+  const data = await loadCollectionBySlugServer(slug);
 
-  if (!collection) {
+  if (!data) {
     return {
       title: 'Collection not found | ALMA Lifestyle',
       robots: { index: false, follow: false },
     };
   }
 
+  const { collection } = data;
+  const heroImage = collection.heroImageUrl?.trim();
+  const ogImageUrl =
+    heroImage ?
+      heroImage.startsWith('http://') || heroImage.startsWith('https://') ?
+        heroImage
+      : absoluteUrl(heroImage)
+    : undefined;
+
   return pageMetadata({
-    title: `${collection.name} | ALMA Lifestyle`,
-    description: collection.description,
+    title: `${collection.title} | ALMA Lifestyle`,
+    description: collection.description || `Shop the ${collection.title} collection at ALMA Lifestyle.`,
     canonicalPath: `/collections/${slug}`,
     openGraph: {
-      images: collection.imageUrl ? [{ url: collection.imageUrl, alt: collection.name }] : undefined,
+      images: ogImageUrl ? [{ url: ogImageUrl, alt: collection.title }] : undefined,
     },
   });
 }
 
 export default async function CollectionPage({ params }: CollectionPageProps) {
   const { slug } = await params;
-  const collection = getCollectionBySlug(slug);
+  const data = await loadCollectionBySlugServer(slug);
 
-  if (!collection) {
+  if (!data) {
     notFound();
   }
 
-  const products = filterProducts({ collection: slug });
+  const { collection, products } = data;
+  const shopProducts = products.map((product) =>
+    mapPublicProductToShopProduct(product, { collectionSlug: slug })
+  );
+
   const breadcrumb = breadcrumbJsonLd(
     [
       { name: 'Home', path: '/' },
       { name: 'Collections', path: '/collections' },
-      { name: collection.name, path: `/collections/${slug}` },
+      { name: collection.title, path: `/collections/${slug}` },
     ],
     getSiteUrl()
   );
@@ -64,24 +76,20 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           items={[
             { label: 'Home', href: '/' },
             { label: 'Collections', href: '/collections' },
-            { label: collection.name },
+            { label: collection.title },
           ]}
         />
-        <h1 className="font-display text-2xl sm:text-3xl text-alma-ink mt-4">{collection.name}</h1>
+        <h1 className="font-display text-2xl sm:text-3xl text-alma-ink mt-4">{collection.title}</h1>
         <p className="text-sm text-alma-muted mt-1">
-          {collection.description} · {products.length} products
+          {collection.description || 'Curated selection'} · {shopProducts.length} products
         </p>
         <div className="mt-4">
           <CategoryBar />
         </div>
         <div className="mt-6">
-          <ProductGrid products={products} />
+          <ProductGrid products={shopProducts} />
         </div>
       </div>
     </>
   );
-}
-
-export function generateStaticParams() {
-  return COLLECTIONS.map((c) => ({ slug: c.slug }));
 }

@@ -1,4 +1,3 @@
-import { COLLECTIONS } from '@/lib/shop/mock-data';
 import { CATALOG_PRODUCTS, CATEGORY_LABELS, type CategorySlug } from '@/lib/products-data';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { getBrandId } from '@/server/db/brand';
@@ -28,15 +27,6 @@ export async function loadSitemapEntries(): Promise<SitemapEntryInput[]> {
         lastModified: new Date(product.createdAt),
         changeFrequency: 'weekly',
         priority: 0.7,
-      });
-    }
-    // TODO(ARCH-001): replace mock collection slugs when storefront collections use Supabase.
-    for (const collection of COLLECTIONS) {
-      entries.push({
-        path: `/collections/${collection.slug}`,
-        lastModified: now,
-        changeFrequency: 'weekly',
-        priority: 0.75,
       });
     }
     for (const slug of Object.keys(CATEGORY_LABELS) as CategorySlug[]) {
@@ -69,25 +59,13 @@ export async function loadSitemapEntries(): Promise<SitemapEntryInput[]> {
     }
 
     const collections = await getPublishedCollections(brandId);
-    if (collections.length > 0) {
-      for (const collection of collections) {
-        entries.push({
-          path: `/collections/${collection.slug}`,
-          lastModified: new Date(collection.updated_at),
-          changeFrequency: 'weekly',
-          priority: 0.75,
-        });
-      }
-    } else {
-      // TODO(ARCH-001): remove mock slugs once collections page reads Supabase.
-      for (const collection of COLLECTIONS) {
-        entries.push({
-          path: `/collections/${collection.slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly',
-          priority: 0.75,
-        });
-      }
+    for (const collection of collections) {
+      entries.push({
+        path: `/collections/${collection.slug}`,
+        lastModified: new Date(collection.updated_at),
+        changeFrequency: 'weekly',
+        priority: 0.75,
+      });
     }
 
     const categories = await getCategories(brandId);
@@ -100,21 +78,12 @@ export async function loadSitemapEntries(): Promise<SitemapEntryInput[]> {
       });
     }
   } catch {
-    /* fall back to static catalog on DB errors */
     for (const product of CATALOG_PRODUCTS) {
       entries.push({
         path: `/products/${product.slug}`,
         lastModified: new Date(product.createdAt),
         changeFrequency: 'weekly',
         priority: 0.7,
-      });
-    }
-    for (const collection of COLLECTIONS) {
-      entries.push({
-        path: `/collections/${collection.slug}`,
-        lastModified: now,
-        changeFrequency: 'weekly',
-        priority: 0.75,
       });
     }
   }

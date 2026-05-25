@@ -35,7 +35,7 @@ If you see a yellow **local storage mode** banner, Supabase env vars are missing
 ### Categories & collections
 
 - **Categories** — taxonomy (Panjabi, Accessories, etc.).
-- **Collections** — curated groups (Eid, New Arrivals); link products from the product form.
+- **Collections** — curated groups (Eid, New Arrivals); link products from the product form. To bring back a “best-sellers” shortcut in the footer, create a collection with slug `best-sellers` in the admin panel and add it back to `src/lib/content.ts` under `FOOTER.quickLinks`.
 
 ## Orders
 

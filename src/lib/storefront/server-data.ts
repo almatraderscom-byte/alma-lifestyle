@@ -2,6 +2,19 @@ import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { getBrandId } from '@/server/db/brand';
 import { getCategories } from '@/server/db/queries/categories';
 import { getProducts, getProductBySlug, getFeaturedProducts } from '@/server/db/queries/products';
+import {
+  getCollectionBySlug,
+  getPublishedCollections,
+} from '@/server/db/queries/collections';
+import {
+  isProductVisibleOnStorefront,
+  mapDbProductToPublic,
+} from '@/lib/mappers/public-product';
+import type {
+  StorefrontCollectionDetail,
+  StorefrontCollectionSummary,
+} from '@/lib/storefront/collections-types';
+import type { PublicApiProduct } from '@/lib/mappers/public-product';
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
 import {
@@ -235,6 +248,71 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
     return result.data.map((p) => p.slug);
   } catch {
     return getStaticSlugs();
+  }
+}
+
+export async function loadCollectionsServer(): Promise<StorefrontCollectionSummary[]> {
+  if (!isSupabaseAdminConfigured()) {
+    return [];
+  }
+
+  try {
+    const brandId = await getBrandId();
+    const rows = await getPublishedCollections(brandId);
+    return rows.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: row.name,
+      description: row.description ?? '',
+      heroImageUrl: row.hero_image_url,
+      productCount: row.product_count,
+      updatedAt: row.updated_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadCollectionBySlugServer(
+  slug: string
+): Promise<StorefrontCollectionDetail | null> {
+  if (!isSupabaseAdminConfigured()) {
+    return null;
+  }
+
+  try {
+    const row = await getCollectionBySlug(slug);
+    if (!row) {
+      return null;
+    }
+
+    const brandId = await getBrandId();
+    const categories = await getCategories(brandId);
+    const catById = new Map(categories.map((c) => [c.id, c]));
+
+    const products: PublicApiProduct[] = [];
+    for (const link of row.collection_products ?? []) {
+      const productRow = link.products;
+      if (!productRow || !isProductVisibleOnStorefront(productRow)) {
+        continue;
+      }
+      const category = catById.get(productRow.category_id);
+      products.push(mapDbProductToPublic(productRow, category ?? null));
+    }
+
+    const collection: StorefrontCollectionSummary = {
+      id: row.id,
+      slug: row.slug,
+      title: row.name,
+      description: row.description ?? '',
+      heroImageUrl: row.hero_image_url,
+      productCount: products.length,
+      updatedAt: row.updated_at,
+    };
+
+    return { collection, products };
+  } catch {
+    return null;
   }
 }
 

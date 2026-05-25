@@ -8,6 +8,7 @@ import { getSiteUrl, absoluteUrl } from '@/lib/seo/site-url';
 import { truncateMetaDescription } from '@/lib/seo/truncate';
 import {
   loadAllProductSlugsServer,
+  loadCatalogProductsServer,
   loadProductBySlugServer,
 } from '@/lib/storefront/server-data';
 import type { CatalogProduct } from '@/lib/products-data';
@@ -76,6 +77,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const { products: catalog } = await loadCatalogProductsServer({ limit: 200 });
+  const relatedProducts = catalog
+    .filter((p) => p.categorySlug === product.categorySlug && p.slug !== slug)
+    .slice(0, 4);
+  const recentProducts = catalog.filter((p) => p.slug !== slug).slice(0, 4);
+
   const baseUrl = getSiteUrl();
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
@@ -90,7 +97,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <JsonLd
         data={[productJsonLd(product, baseUrl), breadcrumbJsonLd(breadcrumbItems, baseUrl)]}
       />
-      <ProductDetailView product={product} />
+      <ProductDetailView
+        product={product}
+        relatedProducts={relatedProducts}
+        recentProducts={recentProducts}
+      />
     </>
   );
 }

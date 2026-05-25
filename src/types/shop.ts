@@ -24,7 +24,8 @@ export interface ShopProduct {
   id: string;
   slug: string;
   title: string;
-  category: ProductCategorySlug;
+  /** Category slug from Supabase (e.g. panjabi, electronics). */
+  category: string;
   categoryLabel: string;
   collectionSlugs: string[];
   price: number;
@@ -41,7 +42,7 @@ export interface ShopProduct {
 export type SortOption = 'featured' | 'newest' | 'price-asc' | 'price-desc';
 
 export interface ProductFilters {
-  category?: ProductCategorySlug;
+  category?: string;
   collection?: string;
   sort?: SortOption;
   query?: string;
