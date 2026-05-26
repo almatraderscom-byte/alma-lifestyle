@@ -5,14 +5,15 @@ import { useState } from 'react';
 import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { SITE, NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { SITE, NAV, MOBILE_NAV_ICONS, PRODUCTS_PAGE } from '@/lib/content';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
 import { useCart } from '@/context/CartContext';
 import { toBanglaNumber } from '@/lib/format-bn';
 
 const NAV_ITEMS = [NAV.shop, NAV.newArrivals, NAV.collections, NAV.about];
 
-export function Header() {
+export function Header({ categories = [] }: { categories?: StorefrontNavCategory[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount, hydrated } = useCart();
   const bagCount = hydrated ? itemCount : 0;
@@ -116,6 +117,28 @@ export function Header() {
                     </Link>
                   </motion.li>
                 ))}
+                {categories.length > 0 && (
+                  <>
+                    <li className="pt-4 pb-1 px-2 font-bn-body text-sm font-semibold text-text-light">
+                      {PRODUCTS_PAGE.categoriesTitle}
+                    </li>
+                    {categories.map((cat) => (
+                      <motion.li
+                        key={cat.slug}
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                      >
+                        <Link
+                          href={`/products?category=${cat.slug}`}
+                          className="flex items-center min-h-11 py-2 px-2 font-bn-body text-base text-primary"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {cat.name}
+                        </Link>
+                      </motion.li>
+                    ))}
+                  </>
+                )}
               </ul>
               <div className="grid grid-cols-3 gap-2 p-4 border-t border-border-subtle bg-warm-white">
                 {Object.values(MOBILE_NAV_ICONS).map((item) => (

@@ -6,8 +6,15 @@ import { Footer } from '@/components/layout/Footer';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ToastProvider } from '@/components/ui/Toast';
 import { CartProvider } from '@/context/CartContext';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 
-export function RootShell({ children }: { children: React.ReactNode }) {
+export function RootShell({
+  children,
+  categories = [],
+}: {
+  children: React.ReactNode;
+  categories?: StorefrontNavCategory[];
+}) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
 
@@ -18,9 +25,9 @@ export function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
       <CartProvider>
-        <Header />
+        <Header categories={categories} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer categories={categories} />
         <WhatsAppButton />
       </CartProvider>
     </ToastProvider>

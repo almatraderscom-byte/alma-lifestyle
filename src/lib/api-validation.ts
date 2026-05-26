@@ -128,6 +128,12 @@ export const OrderStatusPatchSchema = z.object({
   status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']),
 });
 
+/** Admin login body (SEC-004) — use when POST /api/v1/admin/session exists. */
+export const AdminLoginSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(1).max(200),
+});
+
 const CategoryColorClassSchema = z.enum(['bg-maroon', 'bg-terracotta', 'bg-emerald', 'bg-mustard']);
 
 const CategoryCardConfigSchema = z.object({

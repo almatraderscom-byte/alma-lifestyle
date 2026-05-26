@@ -9,18 +9,17 @@ import { ProductFiltersPanel } from '@/components/product/ProductFiltersPanel';
 import { BREADCRUMB, PRODUCTS_PAGE } from '@/lib/content';
 import {
   CATALOG_PRODUCTS,
-  CATEGORY_LABELS,
   DEFAULT_FILTERS,
   filterCatalogProducts,
   sortCatalogProducts,
   paginateProducts,
   toCardProduct,
   type CatalogProduct,
-  type CategorySlug,
   type ProductFilters,
   type ListingSetFilter,
   type SortKey,
 } from '@/lib/products-data';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 import {
   formatPageNumber,
   formatProductRange,
@@ -30,20 +29,29 @@ import { cn } from '@/lib/utils';
 
 interface ProductsListingProps {
   initialProducts?: CatalogProduct[];
+  categories?: StorefrontNavCategory[];
 }
 
-export function ProductsListing({ initialProducts }: ProductsListingProps) {
+export function ProductsListing({
+  initialProducts,
+  categories = [],
+}: ProductsListingProps) {
   const catalogSource = initialProducts ?? CATALOG_PRODUCTS;
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const categoryParam = searchParams.get('category') as CategorySlug | null;
+  const categorySlugs = new Set(categories.map((c) => c.slug));
+  const categoryParam = searchParams.get('category');
+  const categoryLabels = new Map(categories.map((c) => [c.slug, c.name]));
   const sortParam = (searchParams.get('sort') as SortKey) || 'newest';
   const pageParam = Number(searchParams.get('page') ?? '1');
 
   const [filters, setFilters] = useState<ProductFilters>(() => ({
     ...DEFAULT_FILTERS,
-    categories: categoryParam && categoryParam in CATEGORY_LABELS ? [categoryParam] : [],
+    categories:
+      categoryParam && (categorySlugs.size === 0 || categorySlugs.has(categoryParam))
+        ? [categoryParam]
+        : [],
   }));
   const [appliedFilters, setAppliedFilters] = useState<ProductFilters>(filters);
   const [sort, setSort] = useState<SortKey>(
@@ -53,7 +61,10 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
-    if (categoryParam && categoryParam in CATEGORY_LABELS) {
+    if (
+      categoryParam &&
+      (categorySlugs.size === 0 || categorySlugs.has(categoryParam))
+    ) {
       const next = { ...DEFAULT_FILTERS, categories: [categoryParam] };
       setFilters(next);
       setAppliedFilters(next);
@@ -62,10 +73,13 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
 
   const pageTitle = useMemo(() => {
     if (appliedFilters.categories.length === 1) {
-      return CATEGORY_LABELS[appliedFilters.categories[0]];
+      return (
+        categoryLabels.get(appliedFilters.categories[0]) ??
+        appliedFilters.categories[0]
+      );
     }
     return PRODUCTS_PAGE.titleAll;
-  }, [appliedFilters.categories]);
+  }, [appliedFilters.categories, categoryLabels]);
 
   const filtered = useMemo(() => {
     const list = filterCatalogProducts(catalogSource, appliedFilters);
@@ -191,6 +205,7 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
           <aside className="hidden md:block w-64 shrink-0">
             <div className="sticky top-36 rounded-xl border border-border-subtle bg-background p-5">
               <ProductFiltersPanel
+                categories={categories}
                 filters={filters}
                 onChange={setFilters}
                 onApply={applyFilters}
@@ -250,6 +265,7 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
               </div>
               <div className="flex-1 overflow-y-auto p-4">
                 <ProductFiltersPanel
+                  categories={categories}
                   filters={filters}
                   onChange={setFilters}
                   onApply={applyFilters}

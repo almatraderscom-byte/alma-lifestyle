@@ -1,17 +1,13 @@
 'use client';
 
 import { PRODUCTS_PAGE } from '@/lib/content';
-import {
-  CATEGORY_LABELS,
-  FILTER_COLORS,
-  FILTER_SIZES,
-  type CategorySlug,
-  type ProductFilters,
-} from '@/lib/products-data';
+import { FILTER_COLORS, FILTER_SIZES, type ProductFilters } from '@/lib/products-data';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 import { formatBdtRange } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 
 interface ProductFiltersPanelProps {
+  categories: StorefrontNavCategory[];
   filters: ProductFilters;
   onChange: (filters: ProductFilters) => void;
   onApply: () => void;
@@ -20,15 +16,14 @@ interface ProductFiltersPanelProps {
 }
 
 export function ProductFiltersPanel({
+  categories,
   filters,
   onChange,
   onApply,
   onReset,
   className,
 }: ProductFiltersPanelProps) {
-  const categoryEntries = Object.entries(CATEGORY_LABELS) as [CategorySlug, string][];
-
-  function toggleCategory(slug: CategorySlug) {
+  function toggleCategory(slug: string) {
     const next = filters.categories.includes(slug)
       ? filters.categories.filter((c) => c !== slug)
       : [...filters.categories, slug];
@@ -56,16 +51,16 @@ export function ProductFiltersPanel({
           {PRODUCTS_PAGE.categoriesTitle}
         </h3>
         <ul className="space-y-2">
-          {categoryEntries.map(([slug, label]) => (
-            <li key={slug}>
+          {categories.map((cat) => (
+            <li key={cat.slug}>
               <label className="flex items-center gap-3 min-h-12 cursor-pointer font-bn-body text-base">
                 <input
                   type="checkbox"
-                  checked={filters.categories.includes(slug)}
-                  onChange={() => toggleCategory(slug)}
+                  checked={filters.categories.includes(cat.slug)}
+                  onChange={() => toggleCategory(cat.slug)}
                   className="h-5 w-5 rounded border-border-subtle accent-accent"
                 />
-                {label}
+                {cat.name}
               </label>
             </li>
           ))}

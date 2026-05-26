@@ -3,6 +3,7 @@ import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/g
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
+import { loadCategoriesServer } from '@/lib/storefront/server-data';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -35,18 +36,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await loadCategoriesServer();
+
   return (
     <html
       lang="bn"
       className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
-        <RootShell>{children}</RootShell>
+        <RootShell categories={categories}>{children}</RootShell>
         <Analytics />
         <SpeedInsights />
       </body>

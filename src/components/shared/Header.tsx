@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { CATEGORIES } from '@/lib/shop/mock-data';
 import { APP_CONFIG } from '@/lib/constants';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 
 const NAV_LINKS = [
   { href: '/products', label: 'Shop All' },
@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { href: '/products?sort=newest', label: 'New Arrivals' },
 ];
 
-export function Header() {
+export function Header({ categories = [] }: { categories?: StorefrontNavCategory[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
 
@@ -63,7 +63,7 @@ export function Header() {
               {categoriesOpen && (
                 <div className="absolute top-full left-0 pt-1 w-56">
                   <div className="bg-white border border-alma-border shadow-lg rounded-sm py-2">
-                    {CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <Link
                         key={cat.slug}
                         href={`/products?category=${cat.slug}`}
@@ -110,7 +110,7 @@ export function Header() {
 
       <div className="lg:hidden border-t border-alma-border overflow-x-auto">
         <div className="flex gap-2 px-4 py-2.5 min-w-max">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/products?category=${cat.slug}`}
@@ -138,7 +138,7 @@ export function Header() {
             <p className="pt-3 pb-1 text-xs uppercase tracking-wider text-alma-muted">
               Categories
             </p>
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/products?category=${cat.slug}`}
