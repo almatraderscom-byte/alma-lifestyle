@@ -1,5 +1,7 @@
 # ALMA Lifestyle
 
+[![CI](https://github.com/almatraderscom-byte/alma-lifestyle/actions/workflows/ci.yml/badge.svg)](https://github.com/almatraderscom-byte/alma-lifestyle/actions/workflows/ci.yml)
+
 Next.js 16 storefront (Bangla editorial UI) and English admin dashboard for ALMA Lifestyle, Bangladesh. Data is stored in **Supabase** when configured, with **localStorage fallback** for local development without a database.
 
 ## Prerequisites

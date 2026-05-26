@@ -7,8 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix --max-warnings=0",
+    "precommit": "lint-staged",
     "type-check": "tsc --noEmit",
     "verify:production": "node scripts/verify-production-readiness.mjs",
     "bootstrap:supabase": "node scripts/bootstrap-supabase-prod.mjs",
@@ -42,6 +43,15 @@
     "prettier": "^3.2.5",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^1.3.1"
+    "vitest": "^1.3.1",
+    "lint-staged": "^15.4.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.{ts,tsx,json,md}": [
+      "prettier --write"
+    ]
   }
 }
