@@ -1,6 +1,8 @@
 # ALMA Lifestyle
 
-Next.js 16 storefront (Bangla editorial UI) and English admin dashboard for ALMA Lifestyle, Bangladesh. Data is stored in **Supabase** when configured, with **localStorage fallback** for local development without a database.
+[![CI](https://github.com/almatraderscom-byte/alma-lifestyle/actions/workflows/ci.yml/badge.svg)](https://github.com/almatraderscom-byte/alma-lifestyle/actions/workflows/ci.yml)
+
+Next.js 16 storefront (Bangla editorial UI) and English admin dashboard for ALMA Lifestyle, Bangladesh. Production data lives in **Supabase**. Local development can run without Supabase using **localStorage and static fallbacks only** — that path is not supported in production.
 
 ## Prerequisites
 
@@ -9,27 +11,28 @@ Next.js 16 storefront (Bangla editorial UI) and English admin dashboard for ALMA
 | Node.js | 20+ |
 | npm | 9+ |
 | Git | any recent |
-| Supabase account | optional for offline dev |
+| Supabase account | required for production |
 | Supabase CLI | optional (`npx supabase`) |
 
-## Quick start (local)
+## Getting started (local)
 
 ```bash
 git clone <your-repo-url>
 cd alma-lifestyle
 npm install
 cp .env.example .env.local
-# Edit .env.local with your Supabase keys (see below)
+# Optional: add Supabase keys (see below) for full-stack dev
 npm run dev
 ```
 
 - Storefront: [http://localhost:3000](http://localhost:3000)
 - Admin: [http://localhost:3000/admin](http://localhost:3000/admin)
-- Legacy admin login (no Supabase Auth): `admin@alma.com` / `admin123`
 
 > **Note:** Do not set `NODE_ENV=development` in `.env.local` — it breaks `npm run build`. Next.js sets `NODE_ENV` automatically.
 
-Without Supabase env vars, the admin panel uses **localStorage** and the storefront uses static catalog fallbacks. A banner appears in admin when in this mode.
+**Without Supabase env vars** (and with `VERCEL_ENV` unset), the app starts for local dev. The admin panel may use **localStorage** and the storefront may use static catalog fallbacks; a banner appears in admin. This mode is **development-only**. On Vercel Production, missing required env vars cause the Node server to **fail at boot** (`validateEnvOrThrow` in `src/instrumentation.ts`).
+
+With Supabase configured locally, use Supabase Auth for admin (see [Supabase setup](#supabase-setup)). Legacy `admin@alma.com` / `admin123` may still work until signed-session hardening (SEC-004) is deployed.
 
 ## Supabase setup
 
@@ -49,6 +52,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+ADMIN_SESSION_SECRET=your-local-dev-secret-at-least-32-chars
 NEXT_PUBLIC_BRAND_SLUG=alma-lifestyle
 ```
 
@@ -91,17 +95,37 @@ INSERT INTO admin_users (id, email, role)
 VALUES ('AUTH_USER_UUID', 'you@example.com', 'admin');
 ```
 
-## Vercel deployment
+## Production deployment
+
+Deploy to Vercel with a production Supabase project. Full steps: [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
 1. Import the GitHub repo in [Vercel](https://vercel.com).
-2. Add environment variables from [`vercel.env.production.example`](./vercel.env.production.example).
-3. Set `NEXT_PUBLIC_APP_URL` to your production domain.
-4. Run migrations against the **production** Supabase project.
-5. Deploy `main`.
+2. Set **Production** environment variables from [`vercel.env.production.example`](./vercel.env.production.example) (Supabase URL/keys, `NEXT_PUBLIC_APP_URL`, `ADMIN_SESSION_SECRET`, optional Upstash/Sentry/CSP vars per merged infra PRs).
+3. Run migrations against the **production** Supabase project.
+4. Deploy `main`.
 
-Full steps: [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)
+**Boot-time validation:** On Vercel Production (`VERCEL_ENV=production`), `validateEnvOrThrow()` runs in `src/instrumentation.ts` before the server accepts traffic. Missing or invalid required vars produce a clear startup error instead of silent localStorage fallback.
+
+**Pre-launch verification:** [`docs/PRE_LAUNCH_CHECKLIST.md`](./docs/PRE_LAUNCH_CHECKLIST.md) — copy-paste smoke tests for the owner.
 
 Enable **Vercel Analytics** in the project dashboard (Analytics + Speed Insights are wired in the app).
+
+## Architecture decisions
+
+Incremental hardening and SSR work landed as focused PRs:
+
+| Track | Scope |
+|-------|--------|
+| **SEC-001 – SEC-004** | API hardening, admin auth, signed HttpOnly admin sessions |
+| **SEO-001** | `robots.txt`, sitemap, JSON-LD, canonical URLs |
+| **SSR-001 / 002 / 003** | Server-rendered storefront paths (home, PLP, PDP) |
+| **CACHE-001** | On-demand ISR revalidation after admin writes |
+| **ERR-001 + OBS-001** | Branded error boundaries, Sentry reporting |
+| **INFRA-001 + SEC-005** | Upstash rate limiting, CSP / HSTS headers |
+| **CI-001** | GitHub Actions (typecheck, lint, build, Vitest) |
+| **PERF-001 / 002** | Bulk `collection_products` fetches (N+1 elimination) |
+
+See also: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md).
 
 ## Admin panel
 
@@ -131,7 +155,7 @@ Guide: [`docs/ADMIN_GUIDE.md`](./docs/ADMIN_GUIDE.md)
 
 Response shape: `{ "status": "success", "data": ... }` or `{ "status": "error", "error": "...", "code": "..." }`.
 
-API routes are rate-limited in `src/middleware.ts` (per IP).
+API routes are rate-limited in `src/middleware.ts` (per IP; Redis when INFRA-001 is merged).
 
 ## Scripts
 
@@ -147,35 +171,32 @@ API routes are rate-limited in `src/middleware.ts` (per IP).
 ## Architecture
 
 - **Storefront:** Server components + ISR (`revalidate = 60`), Bangla UI, config-driven homepage.
-- **Admin:** Client components, `admin-store` → `/api/v1/*` when Supabase configured.
+- **Admin:** Client components, `admin-store` → `/api/v1/*` when Supabase is configured.
 - **Database:** PostgreSQL via Supabase, RLS in `002_rls_policies.sql`.
 - **Storage:** Supabase buckets for product/homepage images.
 
-See also: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md).
+## Known gaps / future work
+
+- **ADMIN-001:** Admin dashboard still client-fetched (UX; not a launch blocker).
+- **Collections PLP:** Some collection pages still use mock taxonomy from `mock-data.ts` (partially deprecated).
+- **E2E:** No Playwright/Cypress suite yet — manual checklist + Vitest only.
+- **Customer auth** and abandoned-cart recovery.
+- **Payments:** COD-only; bKash / Nagad / SSLCommerz not integrated.
+- **Order confirmation** email/SMS not wired.
+- **Multi-currency / UAE locale** not implemented.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| Admin “local storage mode” banner | Set all Supabase env vars; restart dev server |
+| Vercel deploy fails immediately on Production | Check build logs for `[env] Invalid configuration`; set vars from `vercel.env.production.example` |
+| Admin “local storage mode” banner (local dev) | Set Supabase env vars; restart dev server |
 | `npm run build` fails / React errors | Remove `NODE_ENV` from `.env.local` |
-| API 429 | Too many requests; wait or adjust rate limits in middleware |
+| API 429 | Too many requests; wait or adjust rate limits |
 | Images not loading | Check buckets are public; Supabase URL in `next.config.ts` |
-| Homepage changes delayed | ISR 60s — wait or redeploy |
+| Homepage changes delayed | ISR 60s — wait or trigger on-demand revalidation (CACHE-001) |
 | `supabase link` needs token | Run `npx supabase login` or set `SUPABASE_ACCESS_TOKEN` |
 | Migrations fail on existing DB | Schema may differ — see `docs/DEPLOYMENT.md` |
-
-## Production checklist
-
-Before launch, verify:
-
-- [ ] `npm run type-check` and `npm run build` pass
-- [ ] No secrets in git (only `.env.example` / `vercel.env.production.example`)
-- [ ] Vercel env vars set (including service role)
-- [ ] Migrations applied; storage buckets exist
-- [ ] Smoke test: storefront checkout + admin login + upload
-- [ ] Custom domain + SSL (Vercel)
-- [ ] Supabase backups enabled
 
 ## Security
 
