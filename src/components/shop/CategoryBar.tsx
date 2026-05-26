@@ -1,14 +1,14 @@
 import Link from 'next/link';
-import { CATEGORIES } from '@/lib/shop/mock-data';
 import { cn } from '@/lib/utils';
-import type { ProductCategorySlug } from '@/types/shop';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 
 interface CategoryBarProps {
-  activeCategory?: ProductCategorySlug;
+  categories: StorefrontNavCategory[];
+  activeCategory?: string;
   className?: string;
 }
 
-export function CategoryBar({ activeCategory, className }: CategoryBarProps) {
+export function CategoryBar({ categories, activeCategory, className }: CategoryBarProps) {
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       <Link
@@ -22,7 +22,7 @@ export function CategoryBar({ activeCategory, className }: CategoryBarProps) {
       >
         All
       </Link>
-      {CATEGORIES.map((cat) => (
+      {categories.map((cat) => (
         <Link
           key={cat.slug}
           href={`/products?category=${cat.slug}`}

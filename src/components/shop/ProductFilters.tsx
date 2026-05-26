@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { CATEGORIES } from '@/lib/shop/mock-data';
-import type { SortOption, ProductCategorySlug } from '@/types/shop';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
+import type { SortOption } from '@/types/shop';
 import { cn } from '@/lib/utils';
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -12,12 +12,12 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'price-desc', label: 'Price: High to Low' },
 ];
 
-export function ProductFilters() {
+export function ProductFilters({ categories }: { categories: StorefrontNavCategory[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const category = searchParams.get('category') as ProductCategorySlug | null;
+  const category = searchParams.get('category');
   const sort = (searchParams.get('sort') as SortOption) || 'featured';
 
   function updateParams(key: string, value: string | null) {
@@ -49,7 +49,7 @@ export function ProductFilters() {
               All products
             </button>
           </li>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <li key={cat.slug}>
               <button
                 type="button"
@@ -89,7 +89,7 @@ export function ProductFilters() {
   );
 }
 
-export function ProductFiltersMobile() {
+export function ProductFiltersMobile({ categories }: { categories: StorefrontNavCategory[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -122,7 +122,7 @@ export function ProductFiltersMobile() {
         className="shrink-0 border border-alma-border rounded-sm px-3 py-2 text-sm bg-white flex-1 min-w-[140px]"
       >
         <option value="">All categories</option>
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <option key={cat.slug} value={cat.slug}>
             {cat.name}
           </option>

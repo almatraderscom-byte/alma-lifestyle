@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { APP_CONFIG } from '@/lib/constants';
-import { CATEGORIES } from '@/lib/shop/mock-data';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 
 const FOOTER_LINKS = {
   shop: [
@@ -15,7 +15,7 @@ const FOOTER_LINKS = {
   ],
 };
 
-export function Footer() {
+export function Footer({ categories = [] }: { categories?: StorefrontNavCategory[] }) {
   return (
     <footer className="mt-auto border-t border-alma-border bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
@@ -49,7 +49,7 @@ export function Footer() {
               Categories
             </h3>
             <ul className="space-y-2">
-              {CATEGORIES.slice(0, 4).map((cat) => (
+              {categories.slice(0, 8).map((cat) => (
                 <li key={cat.slug}>
                   <Link
                     href={`/products?category=${cat.slug}`}

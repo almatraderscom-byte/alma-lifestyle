@@ -1,3 +1,7 @@
+/**
+ * @deprecated Collections PLP still uses mock helpers here. Category nav/filters use
+ * `loadCategoriesServer()` — do not add new imports of CATEGORIES from this file.
+ */
 import type {
   ShopCategory,
   ShopCollection,
@@ -7,7 +11,8 @@ import type {
   ProductFilters,
 } from '@/types/shop';
 
-export const CATEGORIES: ShopCategory[] = [
+/** @deprecated Use loadCategoriesServer() — kept only for legacy references in this file. */
+const LEGACY_CATEGORIES = [
   { slug: 'kurtis', name: 'Kurtis', nameBn: 'কুর্তি', productCount: 24 },
   { slug: 'sarees', name: 'Sarees', nameBn: 'শাড়ি', productCount: 18 },
   { slug: 'dupattas', name: 'Dupattas', nameBn: 'দুপাট্টা', productCount: 12 },
@@ -18,7 +23,7 @@ export const CATEGORIES: ShopCategory[] = [
     nameBn: 'শালোয়ার কামিজ',
     productCount: 20,
   },
-];
+] as const;
 
 export const COLLECTIONS: ShopCollection[] = [
   {
@@ -294,7 +299,7 @@ export function getProductBySlug(slug: string): ShopProduct | undefined {
 }
 
 export function getCategoryBySlug(slug: ProductCategorySlug): ShopCategory | undefined {
-  return CATEGORIES.find((c) => c.slug === slug);
+  return LEGACY_CATEGORIES.find((c) => c.slug === slug) as ShopCategory | undefined;
 }
 
 export function getCollectionBySlug(slug: string): ShopCollection | undefined {

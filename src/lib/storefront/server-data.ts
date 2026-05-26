@@ -27,6 +27,7 @@ import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import type { Category } from '@/server/db/schema';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 
 export const STOREFRONT_REVALIDATE = 60;
 
@@ -86,7 +87,7 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
   try {
     const stored = await getHomepageConfigOrDefault();
     let config = ensureHomepageConfig(stored);
-    const categories = await loadCategoriesServer();
+    const categories = await fetchActiveCategories();
     const { products } = await loadCatalogProductsServer({ limit: 500 });
     config = await enrichHomepageCategories(config, categories, products);
     return config;
@@ -151,7 +152,8 @@ export async function loadPublicSettingsServer(): Promise<AppSettings> {
   }
 }
 
-export async function loadCategoriesServer(): Promise<Category[]> {
+/** Active categories from Supabase (`display_order`, then `name`). */
+async function fetchActiveCategories(): Promise<Category[]> {
   if (!isSupabaseAdminConfigured()) return [];
   try {
     const brandId = await getBrandId();
@@ -159,6 +161,34 @@ export async function loadCategoriesServer(): Promise<Category[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Published categories for header/footer/filters with per-slug product counts.
+ * Sorted by `categories.display_order` (see getCategories).
+ */
+export async function loadCategoriesServer(): Promise<StorefrontNavCategory[]> {
+  const rows = await fetchActiveCategories();
+  if (rows.length === 0) return [];
+
+  const countBySlug = new Map<string, number>();
+  if (isSupabaseAdminConfigured()) {
+    try {
+      const { products } = await loadCatalogProductsServer({ limit: 500 });
+      for (const p of products) {
+        countBySlug.set(p.categorySlug, (countBySlug.get(p.categorySlug) ?? 0) + 1);
+      }
+    } catch {
+      // counts stay 0
+    }
+  }
+
+  return rows.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    nameBn: c.name,
+    productCount: countBySlug.get(c.slug) ?? 0,
+  }));
 }
 
 export async function loadCatalogProductsServer(options?: {

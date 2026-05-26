@@ -1,14 +1,20 @@
 import Link from 'next/link';
-import { SITE, FOOTER } from '@/lib/content';
+import { SITE, FOOTER, PRODUCTS_PAGE } from '@/lib/content';
+import type { StorefrontNavCategory } from '@/lib/storefront/categories';
 import { cn } from '@/lib/utils';
 
-export function Footer() {
+export function Footer({ categories = [] }: { categories?: StorefrontNavCategory[] }) {
   const whatsappHref = `https://wa.me/${SITE.whatsappNumber}`;
 
   return (
     <footer className="bg-primary text-secondary mt-auto">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
+        <div
+          className={cn(
+            'grid grid-cols-1 gap-10 md:gap-8',
+            categories.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'
+          )}
+        >
           <div>
             <p className="font-brand text-3xl text-secondary">{SITE.brandName}</p>
             <p className="font-bn-body text-base text-secondary/80 mt-3 leading-relaxed">
@@ -46,6 +52,26 @@ export function Footer() {
               ))}
             </ul>
           </div>
+
+          {categories.length > 0 && (
+            <div>
+              <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
+                {PRODUCTS_PAGE.categoriesTitle}
+              </h3>
+              <ul className="space-y-3">
+                {categories.map((cat) => (
+                  <li key={cat.slug}>
+                    <Link
+                      href={`/products?category=${cat.slug}`}
+                      className="font-bn-body text-base text-secondary/75 hover:text-secondary transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">

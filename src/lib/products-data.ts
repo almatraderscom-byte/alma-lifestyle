@@ -174,7 +174,7 @@ export function catalogListingTypeLabels(product: CatalogProduct): string[] {
 }
 
 export interface ProductFilters {
-  categories: CategorySlug[];
+  categories: string[];
   priceMin: number;
   priceMax: number;
   colors: string[];

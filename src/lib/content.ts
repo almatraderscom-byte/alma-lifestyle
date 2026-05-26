@@ -268,8 +268,8 @@ export const COMMUNITY_SECTION = {
     { id: '2', bg: 'bg-terracotta', hint: 'Image: Flat lay — accessories' },
     { id: '3', bg: 'bg-mustard', hint: 'Image: Weaver workshop' },
     { id: '4', bg: 'bg-emerald', hint: 'Image: Home decor styling' },
-    { id: '5', bg: 'bg-cream', hint: 'Image: Eid family portrait' },
-    { id: '6', bg: 'bg-charcoal', hint: 'Image: Product detail macro' },
+    { id: '5', bg: 'bg-emerald', hint: 'Image: Eid family portrait' },
+    { id: '6', bg: 'bg-maroon', hint: 'Image: Product detail macro' },
   ],
 } as const;
 
