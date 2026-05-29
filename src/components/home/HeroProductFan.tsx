@@ -2,141 +2,307 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { FeaturedProduct } from '@/lib/content';
 import { SITE } from '@/lib/content';
 import { cn } from '@/lib/utils';
-import { EASE_PREMIUM } from '@/lib/animation-variants';
 
-const FAN_LAYOUT = [
-  { x: -120, y: 20, rotate: -15, zIndex: 1 },
-  { x: -60, y: -10, rotate: -7, zIndex: 2 },
-  { x: 0, y: 0, rotate: 0, zIndex: 5 },
-  { x: 60, y: -10, rotate: 7, zIndex: 3 },
-  { x: 120, y: 20, rotate: 15, zIndex: 2 },
-  { x: 90, y: 32, rotate: 12, zIndex: 1 },
+const FAN_LAYOUT_DESKTOP = [
+  { x: -110, y: -10, rotate: -15, zIndex: 1 },
+  { x: -55, y: -20, rotate: -7, zIndex: 2 },
+  { x: 0, y: -28, rotate: 0, zIndex: 5 },
+  { x: 55, y: -20, rotate: 7, zIndex: 3 },
+  { x: 110, y: -10, rotate: 15, zIndex: 2 },
+] as const;
+
+const FAN_LAYOUT_MOBILE = [
+  { x: -48, y: -8, rotate: -12, zIndex: 2 },
+  { x: 0, y: -16, rotate: 0, zIndex: 5 },
+  { x: 48, y: -8, rotate: 12, zIndex: 2 },
 ] as const;
 
 const PLACEHOLDER_BGS = [
-  'bg-maroon',
   'bg-terracotta',
+  'bg-maroon',
   'bg-mustard',
   'bg-emerald',
-  'bg-cream',
   'bg-charcoal',
 ] as const;
 
+const CARD_W_DESKTOP = 140;
+const CARD_H_DESKTOP = 180;
+const CARD_W_MOBILE = 100;
+const CARD_H_MOBILE = 130;
+
 type FanCard = FeaturedProduct & {
   galleryImages?: { id: string; bgClass: string; url?: string }[];
+};
+
+type FanSlot = {
+  key: string;
+  product: FanCard;
+  imageUrl?: string;
+  bgClass: string;
+  isPlaceholder: boolean;
 };
 
 interface HeroProductFanProps {
   products?: FanCard[];
 }
 
+function placeholderCard(index: number): FanCard {
+  return {
+    id: `fan-placeholder-${index}`,
+    title: 'আলমা কালেকশন',
+    price: 0,
+    bgClass: PLACEHOLDER_BGS[index % PLACEHOLDER_BGS.length],
+    href: '/products',
+  };
+}
+
+function getProductImageUrl(product: FanCard): string | undefined {
+  const url = product.galleryImages?.[0]?.url;
+  return url && url.trim().length > 0 ? url : undefined;
+}
+
+/** slot[i] = products[i] or color placeholder; never duplicate the same image across slots */
+function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
+  const slots: FanSlot[] = [];
+  const seenImageUrls = new Set<string>();
+  const seenProductIds = new Set<string>();
+
+  for (let i = 0; i < slotCount; i++) {
+    const source = products[i];
+    let usePlaceholder = !source;
+
+    if (source) {
+      if (products.length === 1 && i > 0) {
+        usePlaceholder = true;
+      } else if (i > 0 && seenProductIds.has(source.id)) {
+        usePlaceholder = true;
+      } else {
+        const imageUrl = getProductImageUrl(source);
+        if (imageUrl && seenImageUrls.has(imageUrl)) {
+          usePlaceholder = true;
+        }
+      }
+    }
+
+    if (usePlaceholder) {
+      const product = placeholderCard(i);
+      slots.push({
+        key: `placeholder-${i}`,
+        product,
+        imageUrl: undefined,
+        bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
+        isPlaceholder: true,
+      });
+      continue;
+    }
+
+    const sourceProduct = source!;
+    const imageUrl = getProductImageUrl(sourceProduct);
+    seenProductIds.add(sourceProduct.id);
+    if (imageUrl) {
+      seenImageUrls.add(imageUrl);
+    }
+
+    slots.push({
+      key: `${sourceProduct.id}-slot-${i}`,
+      product: sourceProduct,
+      imageUrl,
+      bgClass:
+        sourceProduct.galleryImages?.[0]?.bgClass ??
+        sourceProduct.bgClass ??
+        PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
+      isPlaceholder: !imageUrl,
+    });
+  }
+
+  return slots;
+}
+
 export function HeroProductFan({ products = [] }: HeroProductFanProps) {
   const reduceMotion = useReducedMotion();
-  const cards: FanCard[] =
-    products.length > 0
-      ? products.slice(0, 6)
-      : PLACEHOLDER_BGS.map((bg, i) => ({
-          id: `placeholder-${i}`,
-          title: 'আলমা কালেকশন',
-          price: 0,
-          bgClass: bg,
-          href: '/products',
-        }));
+  const [isMobile, setIsMobile] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const slotCount = isMobile ? 3 : 5;
+  const layouts = isMobile ? FAN_LAYOUT_MOBILE : FAN_LAYOUT_DESKTOP;
+  const slots = useMemo(() => buildFanSlots(products, slotCount), [products, slotCount]);
+
+  const cardW = isMobile ? CARD_W_MOBILE : CARD_W_DESKTOP;
+  const cardH = isMobile ? CARD_H_MOBILE : CARD_H_DESKTOP;
+
+  useEffect(() => {
+    console.log(
+      '[HeroFan] Featured products:',
+      products.length,
+      products.map((p) => p.title)
+    );
+    console.log(
+      '[HeroFan] Slots:',
+      slots.map((s, i) => ({
+        slot: i,
+        title: s.product.title,
+        hasImage: Boolean(s.imageUrl),
+        placeholder: s.isPlaceholder,
+      }))
+    );
+  }, [products, slots]);
+
+  const containerStyle: CSSProperties = isMobile
+    ? {
+        position: 'absolute',
+        bottom: '6%',
+        left: '50%',
+        transform: 'translateX(-50%) scale(0.7)',
+        transformOrigin: 'bottom center',
+        width: 'max-content',
+        maxWidth: '88%',
+        zIndex: 10,
+        pointerEvents: 'none',
+      }
+    : {
+        position: 'absolute',
+        bottom: '8%',
+        right: '4%',
+        maxWidth: '45%',
+        width: 'max-content',
+        zIndex: 10,
+        pointerEvents: 'none',
+      };
 
   return (
-    <div
-      className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
-      aria-hidden={products.length === 0}
-    >
-      <div className="relative h-[min(72vw,420px)] w-[min(92vw,520px)]">
-        {cards.map((product, index) => {
-          const layout = FAN_LAYOUT[index] ?? FAN_LAYOUT[2];
-          const imageUrl = product.galleryImages?.[0]?.url;
-          const bgClass =
-            product.galleryImages?.[0]?.bgClass ?? product.bgClass ?? PLACEHOLDER_BGS[index % 6];
+    <>
+      {/* DEBUG: featured.length={products.length} slots={slots.length} mobile={String(isMobile)} */}
+      <div style={containerStyle} data-hero-fan="root">
+        <div
+          style={{
+            position: 'relative',
+            width: isMobile ? 200 : 380,
+            height: isMobile ? CARD_H_MOBILE + 24 : CARD_H_DESKTOP + 32,
+          }}
+        >
+          {slots.map((slot, index) => {
+            const layout = layouts[index] ?? layouts[Math.floor(layouts.length / 2)];
+            const { product, imageUrl, bgClass, isPlaceholder } = slot;
+            const isHovered = hoveredIndex === index;
+            const zIndex = isHovered ? 50 : layout.zIndex;
 
-          return (
-            <motion.div
-              key={product.id}
-              className="absolute left-1/2 top-1/2 w-[38%] max-w-[140px] -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
-              style={{ zIndex: layout.zIndex }}
-              initial={
-                reduceMotion
-                  ? {
-                      x: layout.x,
-                      y: layout.y,
-                      rotate: layout.rotate,
-                      scale: 1,
-                      opacity: 1,
-                    }
-                  : { x: 0, y: 0, rotate: 0, scale: 0.9, opacity: 0.85 }
-              }
-              animate={
-                reduceMotion
-                  ? { x: layout.x, y: layout.y, rotate: layout.rotate, scale: 1, opacity: 1 }
-                  : {
-                      x: layout.x,
-                      rotate: layout.rotate,
-                      scale: 1,
-                      opacity: 1,
-                      y: [layout.y, layout.y - 5, layout.y],
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : {
-                      x: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
-                      rotate: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
-                      scale: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
-                      opacity: { duration: 0.5, delay: index * 0.1 },
-                      y: {
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                        delay: 1.2 + index * 0.1,
-                      },
-                    }
-              }
-            >
-              <Link
-                href={product.href}
-                className={cn(
-                  'group relative block aspect-[3/4] overflow-hidden rounded-md shadow-lg',
-                  'ring-1 ring-cream/30 will-change-transform',
-                  !imageUrl && bgClass
-                )}
-                tabIndex={products.length === 0 ? -1 : 0}
+            return (
+              <motion.div
+                key={slot.key}
+                className="pointer-events-auto"
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: cardW,
+                  height: cardH,
+                  zIndex,
+                  transformOrigin: 'bottom right',
+                }}
+                initial={
+                  reduceMotion
+                    ? {
+                        x: layout.x,
+                        y: layout.y,
+                        rotate: layout.rotate,
+                        scale: 1,
+                        opacity: 1,
+                      }
+                    : { x: 0, y: 0, rotate: 0, scale: 0.9, opacity: 0.85 }
+                }
+                animate={
+                  reduceMotion
+                    ? { x: layout.x, y: layout.y, rotate: layout.rotate, scale: 1, opacity: 1 }
+                    : {
+                        x: layout.x,
+                        rotate: layout.rotate,
+                        scale: isHovered ? 1.15 : 1,
+                        opacity: 1,
+                        y:
+                          isHovered || hoveredIndex !== null
+                            ? isHovered
+                              ? layout.y - 10
+                              : layout.y
+                            : [layout.y, layout.y - 5, layout.y],
+                      }
+                }
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : {
+                        x: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
+                        rotate: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
+                        scale: { duration: 0.4, ease: 'easeOut' },
+                        opacity: { duration: 0.5, delay: index * 0.1 },
+                        y:
+                          isHovered || hoveredIndex !== null
+                            ? { duration: 0.4, ease: 'easeOut' }
+                            : {
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                                delay: 1.2 + index * 0.1,
+                              },
+                      }
+                }
+                whileHover={
+                  reduceMotion
+                    ? undefined
+                    : { scale: 1.15, y: layout.y - 10, transition: { duration: 0.4, ease: 'easeOut' } }
+                }
+                onHoverStart={() => setHoveredIndex(index)}
+                onHoverEnd={() => setHoveredIndex(null)}
               >
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                    sizes="140px"
-                    priority={index === 2}
-                  />
-                ) : (
-                  <div className="absolute inset-0 pattern-overlay opacity-30" aria-hidden />
-                )}
-                <span className="absolute top-2 right-2 rounded-full bg-charcoal/55 px-2 py-0.5 font-bn-body text-[9px] text-cream backdrop-blur-sm">
-                  @{SITE.brandName}
-                </span>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/80 to-transparent p-2 pt-6">
-                  <p className="font-bn-body text-[10px] sm:text-xs text-cream line-clamp-2 leading-snug">
-                    {product.title}
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
-          );
-        })}
+                <Link
+                  href={product.href}
+                  className={cn(
+                    'group relative block h-full w-full overflow-hidden rounded-md',
+                    'bg-cream border-2 border-cream',
+                    'shadow-[0_8px_24px_rgba(201,125,93,0.45)]',
+                    'ring-1 ring-white/80',
+                    !imageUrl && bgClass
+                  )}
+                  tabIndex={isPlaceholder && products.length === 0 ? -1 : 0}
+                >
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={product.title}
+                      fill
+                      className="object-cover"
+                      sizes={`${cardW}px`}
+                      priority={index === Math.floor(slotCount / 2)}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 pattern-overlay opacity-30" aria-hidden />
+                  )}
+                  <span className="absolute top-2 right-2 rounded-full bg-charcoal/55 px-2 py-0.5 font-bn-body text-[9px] text-cream backdrop-blur-sm">
+                    @{SITE.brandName}
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/80 to-transparent p-2 pt-6">
+                    <p className="font-bn-body text-[10px] text-cream line-clamp-2 leading-snug">
+                      {product.title}
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
