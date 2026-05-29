@@ -191,8 +191,6 @@ export function HeroProductFan({ products = [] }: HeroProductFanProps) {
         height: stageH,
         zIndex: 20,
         pointerEvents: 'auto',
-        border: '2px solid red',
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       }
     : {
         position: 'absolute',
@@ -203,8 +201,6 @@ export function HeroProductFan({ products = [] }: HeroProductFanProps) {
         height: stageH,
         zIndex: 20,
         pointerEvents: 'auto',
-        border: '2px solid red',
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       };
 
   return (
