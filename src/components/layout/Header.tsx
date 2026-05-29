@@ -19,7 +19,12 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background border-b border-border-subtle">
+      <motion.header
+        className="sticky top-0 z-40 bg-background border-b border-border-subtle"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+      >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:h-[4.5rem] md:px-6">
           <Link
             href="/"
@@ -61,7 +66,7 @@ export function Header() {
             </button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <AnimatePresence>
         {menuOpen && (

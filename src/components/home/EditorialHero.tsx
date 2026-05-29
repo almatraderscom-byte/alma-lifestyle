@@ -3,32 +3,38 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
+import type { FeaturedProduct } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { HeroProductFan } from '@/components/home/HeroProductFan';
 import { isUsableImageUrl } from '@/lib/homepage-image';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { HeroSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { EASE_PREMIUM } from '@/lib/animation-variants';
 
 interface EditorialHeroProps {
   data?: HeroSectionData;
+  featuredProducts?: FeaturedProduct[];
 }
 
-export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
+export function EditorialHero({ data: dataProp, featuredProducts = [] }: EditorialHeroProps) {
   const reduceMotion = useReducedMotion();
   const data =
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'hero')!.data;
 
+  const hasBgImage = isUsableImageUrl(data.backgroundImageUrl);
+
   return (
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
       <motion.div
-        className="relative w-full md:w-[60%] min-h-[60vh] md:min-h-screen"
-        initial={{ opacity: 0 }}
+        className="relative w-full md:w-[60%] min-h-[60vh] md:min-h-screen overflow-hidden"
+        initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.6, ease: EASE_PREMIUM }}
       >
-        {isUsableImageUrl(data.backgroundImageUrl) ? (
+        {hasBgImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={data.backgroundImageUrl}
@@ -44,6 +50,12 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
             className="h-full w-full"
           />
         )}
+
+        {hasBgImage && (
+          <div className="absolute inset-0 bg-charcoal/25 pointer-events-none" aria-hidden />
+        )}
+
+        <HeroProductFan products={featuredProducts} />
 
         <motion.div
           className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 drop-shadow-md"
@@ -74,9 +86,9 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
           'rounded-t-2xl md:rounded-none',
           '-mt-8 md:mt-0 shadow-[0_-12px_40px_rgba(42,38,34,0.12)] md:shadow-none'
         )}
-        initial={{ opacity: 0, y: 24 }}
+        initial={reduceMotion ? false : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.55, delay: 0.15, ease: EASE_PREMIUM }}
       >
         <p className="editorial-label text-terracotta mb-6">
           {formatBnText(data.caption)}

@@ -20,9 +20,9 @@ export function WhatsAppButton() {
         'px-4 py-3 md:px-5 md:py-3.5',
         'hover:bg-[#20bd5a] transition-colors'
       )}
-      initial={{ scale: 0.9, opacity: 0 }}
+      initial={{ scale: 0.85, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 0.8, type: 'spring', stiffness: 200 }}
+      transition={{ delay: 1, type: 'spring', stiffness: 260, damping: 18 }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >

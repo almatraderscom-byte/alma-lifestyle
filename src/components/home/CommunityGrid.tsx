@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { CommunitySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { isUsableImageUrl } from '@/lib/homepage-image';
+import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
+import { EASE_PREMIUM, scrollViewport } from '@/lib/animation-variants';
 
 const TILE_GRADIENTS: Record<string, string> = {
   'bg-maroon': 'bg-gradient-to-b from-maroon to-maroon/80',
@@ -22,23 +24,47 @@ interface CommunityGridProps {
 }
 
 export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
+  const reduceMotion = useReducedMotion();
+  const { ref, isInView } = useScrollAnimation();
   const data =
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'community')!.data;
 
   return (
-    <section className="section-padding bg-background">
+    <section ref={ref} className="section-padding bg-background">
       <div className="mx-auto max-w-7xl">
-        <ScrollFadeIn className="text-center mb-10 md:mb-12">
+        <motion.div
+          className="text-center mb-10 md:mb-12"
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.6, ease: EASE_PREMIUM }}
+        >
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal">
             {data.title}
           </h2>
-          <p className="font-bn-body text-base text-text-light mt-3">{data.subtitle}</p>
-        </ScrollFadeIn>
+          <motion.p
+            className="font-bn-body text-base text-text-light mt-3"
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+            animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.6, delay: 0.15, ease: EASE_PREMIUM }}
+          >
+            {data.subtitle}
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
           {data.tiles.map((tile, i) => (
-            <ScrollFadeIn key={tile.id} delay={i * 0.04}>
+            <motion.div
+              key={tile.id}
+              initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+              viewport={scrollViewport}
+              transition={{
+                duration: 0.55,
+                delay: (i % 3) * 0.08 + Math.floor(i / 3) * 0.06,
+                ease: EASE_PREMIUM,
+              }}
+            >
               <Link
                 href={data.instagramUrl}
                 target="_blank"
@@ -69,7 +95,7 @@ export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
                   <InstagramIcon className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white" />
                 </span>
               </Link>
-            </ScrollFadeIn>
+            </motion.div>
           ))}
         </div>
       </div>

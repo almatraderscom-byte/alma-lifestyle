@@ -38,6 +38,10 @@
   --font-bn-body: var(--font-hind-siliguri);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--warm-white);
   color: var(--text-dark);
@@ -45,6 +49,11 @@ body {
   font-size: 16px;
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
+}
+
+section[id],
+.section-anchor {
+  scroll-margin-top: 80px;
 }
 
 .font-bn-body {
@@ -126,18 +135,46 @@ body {
   }
 }
 
-.marquee-strip {
+@keyframes marquee-scroll-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.marquee-dual {
+  overflow: hidden;
+  background-color: var(--color-cream);
+  border-top: 1px solid var(--color-charcoal);
+  border-bottom: 1px solid var(--color-charcoal);
+}
+
+.marquee-row {
   overflow: hidden;
 }
 
-.marquee-strip:hover .marquee-track {
+.marquee-dual:hover .marquee-track {
   animation-play-state: paused;
 }
 
 .marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee-scroll 22s linear infinite;
+  animation: marquee-scroll 25s linear infinite;
+}
+
+.marquee-track-reverse {
+  animation-name: marquee-scroll-reverse;
+}
+
+.marquee-strip {
+  overflow: hidden;
+}
+
+.marquee-strip:hover .marquee-track {
+  animation-play-state: paused;
 }
 
 /* Underline link hover */
@@ -174,5 +211,9 @@ body {
 
   .marquee-track {
     animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }
