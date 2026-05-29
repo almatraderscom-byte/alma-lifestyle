@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   getDraftHomepageConfig,
   getSortedEnabledSections,
@@ -19,11 +19,10 @@ import { CollectionBannerEditorial } from '@/components/home/CollectionBannerEdi
 import { CommunityGrid } from '@/components/home/CommunityGrid';
 import { TrustStrip } from '@/components/home/TrustStrip';
 import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
+import { SectionDivider } from '@/components/ui/SectionDivider';
 
 interface HomePageRendererProps {
-  /** Server-loaded config from database (never localStorage on customer site). */
   initialConfig: HomepageConfig;
-  /** Published products for featured section (resolved on server). */
   featuredProducts?: FeaturedProduct[];
 }
 
@@ -71,53 +70,58 @@ export function HomePageRenderer({
     trust: 'ট্রাস্ট স্ট্রিপ',
   };
 
-  return (
-    <>
-      {sections.map((section) => {
-        const label = sectionLabels[section.id] ?? 'সেকশন';
+  const blocks: ReactNode[] = [];
 
-        const content = (() => {
-          switch (section.id) {
-            case 'hero':
-              return <EditorialHero data={section.data} />;
-            case 'marquee':
-              return <StoryMarquee data={section.data} />;
-            case 'categories':
-              return <CategoryShowcase data={section.data} />;
-            case 'featured':
-              return (
-                <FeaturedProductsSection
-                  data={section.data}
-                  products={
-                    preview
-                      ? resolveFeaturedProducts(section.data)
-                      : featuredProducts
-                  }
-                />
-              );
-            case 'brandStory':
-              return <BrandStory data={section.data} />;
-            case 'reviews':
-              return <ReviewsSection data={section.data} />;
-            case 'collectionBanner':
-              return <CollectionBannerEditorial data={section.data} />;
-            case 'community':
-              return <CommunityGrid data={section.data} />;
-            case 'trust':
-              return <TrustStrip data={section.data} />;
-            default:
-              return null;
-          }
-        })();
+  sections.forEach((section, index) => {
+    const label = sectionLabels[section.id] ?? 'সেকশন';
 
-        if (!content) return null;
+    const content = (() => {
+      switch (section.id) {
+        case 'hero':
+          return (
+            <EditorialHero data={section.data} featuredProducts={featuredProducts} />
+          );
+        case 'marquee':
+          return <StoryMarquee data={section.data} />;
+        case 'categories':
+          return <CategoryShowcase data={section.data} />;
+        case 'featured':
+          return (
+            <FeaturedProductsSection
+              data={section.data}
+              products={
+                preview ? resolveFeaturedProducts(section.data) : featuredProducts
+              }
+            />
+          );
+        case 'brandStory':
+          return <BrandStory data={section.data} />;
+        case 'reviews':
+          return <ReviewsSection data={section.data} />;
+        case 'collectionBanner':
+          return <CollectionBannerEditorial data={section.data} />;
+        case 'community':
+          return <CommunityGrid data={section.data} />;
+        case 'trust':
+          return <TrustStrip data={section.data} />;
+        default:
+          return null;
+      }
+    })();
 
-        return (
-          <CustomerErrorBoundary key={section.id} sectionLabel={label}>
-            {content}
-          </CustomerErrorBoundary>
-        );
-      })}
-    </>
-  );
+    if (!content) return;
+
+    blocks.push(
+      <CustomerErrorBoundary key={section.id} sectionLabel={label}>
+        {content}
+      </CustomerErrorBoundary>
+    );
+
+    const next = sections[index + 1];
+    if (next && section.id !== 'marquee' && next.id !== 'marquee') {
+      blocks.push(<SectionDivider key={`divider-${section.id}`} />);
+    }
+  });
+
+  return <>{blocks}</>;
 }

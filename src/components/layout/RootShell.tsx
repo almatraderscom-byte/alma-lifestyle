@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { ToastProvider } from '@/components/ui/Toast';
 import { CartProvider } from '@/context/CartContext';
 
@@ -21,6 +22,7 @@ export function RootShell({ children }: { children: React.ReactNode }) {
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <ScrollToTop />
         <WhatsAppButton />
       </CartProvider>
     </ToastProvider>

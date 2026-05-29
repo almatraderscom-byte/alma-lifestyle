@@ -86,6 +86,7 @@ export function ProductCard({
   const [wished, setWished] = useState(false);
   const [mobileIndex, setMobileIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const aspectClass =
     product.aspectRatio === '1/1'
@@ -111,11 +112,19 @@ export function ProductCard({
   }, [product.slug, product.href]);
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mq.matches);
-    const fn = () => setReducedMotion(mq.matches);
-    mq.addEventListener('change', fn);
-    return () => mq.removeEventListener('change', fn);
+    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const desktopMq = window.matchMedia('(min-width: 768px)');
+    const update = () => {
+      setReducedMotion(motionMq.matches);
+      setIsDesktop(desktopMq.matches);
+    };
+    update();
+    motionMq.addEventListener('change', update);
+    desktopMq.addEventListener('change', update);
+    return () => {
+      motionMq.removeEventListener('change', update);
+      desktopMq.removeEventListener('change', update);
+    };
   }, []);
 
   const transitionMs = reducedMotion ? 0 : 400;
@@ -132,17 +141,31 @@ export function ProductCard({
     showToast(PDP.toastAdded);
   }
 
+  const hoverLift = !reducedMotion && isDesktop;
+
   return (
-    <article className="group flex flex-col h-full">
+    <motion.article
+      className="group flex flex-col h-full"
+      whileHover={hoverLift ? { y: -8 } : undefined}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <Link
         href={product.href}
         className={cn(
           'block relative overflow-hidden rounded-sm bg-cream pattern-overlay-dark',
+          'shadow-md transition-shadow duration-[400ms] ease-out',
+          'md:group-hover:shadow-xl',
           aspectClass
         )}
       >
         {/* Desktop: crossfade primary → secondary on hover */}
-        <div className="absolute inset-0 hidden md:block">
+        <div className="absolute inset-0 hidden md:block overflow-hidden">
+          <div
+            className={cn(
+              'absolute inset-0 transition-transform duration-[400ms] ease-out',
+              hoverLift && 'md:group-hover:scale-105'
+            )}
+          >
           <div
             className="absolute inset-0"
             style={{ transition: `opacity ${transitionMs}ms cubic-bezier(0.25, 0.1, 0.25, 1)` }}
@@ -157,6 +180,7 @@ export function ProductCard({
               <CardImageLayer image={hoverImage} title={product.title} className="z-0" />
             </div>
           )}
+          </div>
         </div>
 
         {/* Mobile: single image + dots */}
@@ -225,16 +249,34 @@ export function ProductCard({
         >
           <HeartIcon filled={wished} />
         </button>
+
+        {editorial && (
+          <motion.button
+            type="button"
+            className={cn(
+              'hidden md:flex absolute bottom-0 left-0 right-0 z-10',
+              'min-h-12 items-center justify-center px-4',
+              'bg-terracotta/95 text-white font-bn-body text-sm font-semibold',
+              'translate-y-full opacity-0',
+              'group-hover:translate-y-0 group-hover:opacity-100',
+              'transition-all duration-[400ms] ease-out',
+              'focus:translate-y-0 focus:opacity-100'
+            )}
+            onClick={handleAddToBag}
+          >
+            {FEATURED_SECTION.addToBag}
+          </motion.button>
+        )}
       </Link>
 
       <div className="pt-4 flex flex-col flex-1 gap-2">
         <Link href={product.href}>
           <h3
             className={cn(
-              'line-clamp-2 leading-snug',
+              'line-clamp-2 leading-snug transition-colors duration-[400ms] ease-out',
               editorial
-                ? 'font-bn-heading text-lg md:text-xl font-semibold text-charcoal'
-                : 'font-bn-body text-base font-medium text-text-dark'
+                ? 'font-bn-heading text-lg md:text-xl font-semibold text-charcoal md:group-hover:text-terracotta'
+                : 'font-bn-body text-base font-medium text-text-dark md:group-hover:text-terracotta'
             )}
           >
             {product.title}
@@ -290,9 +332,7 @@ export function ProductCard({
           className={cn(
             'w-full min-h-12 font-bn-body text-base font-semibold rounded-sm',
             'bg-terracotta text-white hover:bg-[#b06d4f] transition-colors duration-300',
-            editorial
-              ? 'opacity-100 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:focus:translate-y-0 md:focus:opacity-100'
-              : 'md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100 opacity-100'
+            editorial ? 'md:hidden' : 'md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100 opacity-100'
           )}
           whileTap={{ scale: 0.98 }}
           onClick={handleAddToBag}
@@ -300,7 +340,7 @@ export function ProductCard({
           {FEATURED_SECTION.addToBag}
         </motion.button>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
