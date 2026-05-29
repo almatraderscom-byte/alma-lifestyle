@@ -34,6 +34,10 @@ const CARD_W_DESKTOP = 140;
 const CARD_H_DESKTOP = 180;
 const CARD_W_MOBILE = 100;
 const CARD_H_MOBILE = 130;
+const STAGE_W_DESKTOP = 360;
+const STAGE_H_DESKTOP = 220;
+const STAGE_W_MOBILE = 220;
+const STAGE_H_MOBILE = 160;
 
 type FanCard = FeaturedProduct & {
   galleryImages?: { id: string; bgClass: string; url?: string }[];
@@ -66,7 +70,6 @@ function getProductImageUrl(product: FanCard): string | undefined {
   return url && url.trim().length > 0 ? url : undefined;
 }
 
-/** slot[i] = products[i] or color placeholder; never duplicate the same image across slots */
 function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
   const slots: FanSlot[] = [];
   const seenImageUrls = new Set<string>();
@@ -123,6 +126,21 @@ function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
   return slots;
 }
 
+/** Card top-left from bottom-right stage pivot */
+function cardPosition(
+  stageW: number,
+  stageH: number,
+  cardW: number,
+  cardH: number,
+  offsetX: number,
+  offsetY: number
+) {
+  return {
+    left: stageW - cardW + offsetX,
+    top: stageH - cardH + offsetY,
+  };
+}
+
 export function HeroProductFan({ products = [] }: HeroProductFanProps) {
   const reduceMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
@@ -142,6 +160,8 @@ export function HeroProductFan({ products = [] }: HeroProductFanProps) {
 
   const cardW = isMobile ? CARD_W_MOBILE : CARD_W_DESKTOP;
   const cardH = isMobile ? CARD_H_MOBILE : CARD_H_DESKTOP;
+  const stageW = isMobile ? STAGE_W_MOBILE : STAGE_W_DESKTOP;
+  const stageH = isMobile ? STAGE_H_MOBILE : STAGE_H_DESKTOP;
 
   useEffect(() => {
     console.log(
@@ -160,37 +180,42 @@ export function HeroProductFan({ products = [] }: HeroProductFanProps) {
     );
   }, [products, slots]);
 
-  const containerStyle: CSSProperties = isMobile
+  const wrapperStyle: CSSProperties = isMobile
     ? {
         position: 'absolute',
-        bottom: '6%',
+        bottom: '5%',
         left: '50%',
         transform: 'translateX(-50%) scale(0.7)',
         transformOrigin: 'bottom center',
-        width: 'max-content',
-        maxWidth: '88%',
-        zIndex: 10,
-        pointerEvents: 'none',
+        width: stageW,
+        height: stageH,
+        zIndex: 20,
+        pointerEvents: 'auto',
+        border: '2px solid red',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       }
     : {
         position: 'absolute',
         bottom: '8%',
         right: '4%',
         maxWidth: '45%',
-        width: 'max-content',
-        zIndex: 10,
-        pointerEvents: 'none',
+        width: stageW,
+        height: stageH,
+        zIndex: 20,
+        pointerEvents: 'auto',
+        border: '2px solid red',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       };
 
   return (
     <>
       {/* DEBUG: featured.length={products.length} slots={slots.length} mobile={String(isMobile)} */}
-      <div style={containerStyle} data-hero-fan="root">
+      <div className="absolute" style={wrapperStyle} data-hero-fan="root">
         <div
           style={{
             position: 'relative',
-            width: isMobile ? 200 : 380,
-            height: isMobile ? CARD_H_MOBILE + 24 : CARD_H_DESKTOP + 32,
+            width: stageW,
+            height: stageH,
           }}
         >
           {slots.map((slot, index) => {
@@ -198,70 +223,54 @@ export function HeroProductFan({ products = [] }: HeroProductFanProps) {
             const { product, imageUrl, bgClass, isPlaceholder } = slot;
             const isHovered = hoveredIndex === index;
             const zIndex = isHovered ? 50 : layout.zIndex;
+            const { left, top } = cardPosition(
+              stageW,
+              stageH,
+              cardW,
+              cardH,
+              layout.x,
+              layout.y
+            );
 
             return (
               <motion.div
                 key={slot.key}
-                className="pointer-events-auto"
+                className="absolute"
                 style={{
                   position: 'absolute',
-                  bottom: 0,
-                  right: 0,
+                  left,
+                  top,
                   width: cardW,
                   height: cardH,
                   zIndex,
-                  transformOrigin: 'bottom right',
                 }}
                 initial={
                   reduceMotion
-                    ? {
-                        x: layout.x,
-                        y: layout.y,
-                        rotate: layout.rotate,
-                        scale: 1,
-                        opacity: 1,
-                      }
-                    : { x: 0, y: 0, rotate: 0, scale: 0.9, opacity: 0.85 }
+                    ? { opacity: 1, scale: 1, rotate: layout.rotate }
+                    : { opacity: 0, scale: 0.9, rotate: 0 }
                 }
                 animate={
                   reduceMotion
-                    ? { x: layout.x, y: layout.y, rotate: layout.rotate, scale: 1, opacity: 1 }
+                    ? { opacity: 1, scale: 1, rotate: layout.rotate }
                     : {
-                        x: layout.x,
-                        rotate: layout.rotate,
-                        scale: isHovered ? 1.15 : 1,
                         opacity: 1,
-                        y:
-                          isHovered || hoveredIndex !== null
-                            ? isHovered
-                              ? layout.y - 10
-                              : layout.y
-                            : [layout.y, layout.y - 5, layout.y],
+                        scale: isHovered ? 1.15 : 1,
+                        rotate: layout.rotate,
                       }
                 }
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : {
-                        x: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
-                        rotate: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
-                        scale: { duration: 0.4, ease: 'easeOut' },
-                        opacity: { duration: 0.5, delay: index * 0.1 },
-                        y:
-                          isHovered || hoveredIndex !== null
-                            ? { duration: 0.4, ease: 'easeOut' }
-                            : {
-                                duration: 3,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
-                                delay: 1.2 + index * 0.1,
-                              },
-                      }
-                }
+                transition={{
+                  opacity: { duration: 0.5, delay: index * 0.1 },
+                  scale: { duration: 0.4, ease: 'easeOut' },
+                  rotate: { duration: 1.2, ease: 'easeOut', delay: index * 0.1 },
+                }}
                 whileHover={
                   reduceMotion
                     ? undefined
-                    : { scale: 1.15, y: layout.y - 10, transition: { duration: 0.4, ease: 'easeOut' } }
+                    : {
+                        scale: 1.15,
+                        y: -10,
+                        transition: { duration: 0.4, ease: 'easeOut' },
+                      }
                 }
                 onHoverStart={() => setHoveredIndex(index)}
                 onHoverEnd={() => setHoveredIndex(null)}

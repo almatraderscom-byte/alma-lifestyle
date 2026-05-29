@@ -29,8 +29,7 @@ export function EditorialHero({ data: dataProp, featuredProducts = [] }: Editori
   return (
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
       <motion.div
-        className="relative w-full md:w-[60%] min-h-[60vh] md:min-h-screen overflow-hidden"
-        style={{ position: 'relative' }}
+        className="relative w-full md:w-[60%] min-h-[60vh] h-[600px] md:min-h-screen md:h-[700px] overflow-visible"
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE_PREMIUM }}
@@ -47,8 +46,8 @@ export function EditorialHero({ data: dataProp, featuredProducts = [] }: Editori
         ) : (
           <PlaceholderImage
             hint={data.imageHint || EDITORIAL_HERO.imageHint}
-            bgClass="bg-maroon h-full min-h-[60vh] md:min-h-full"
-            className="h-full w-full"
+            bgClass="bg-maroon h-full min-h-full"
+            className="absolute inset-0 h-full w-full"
           />
         )}
 
