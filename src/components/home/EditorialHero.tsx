@@ -30,6 +30,7 @@ export function EditorialHero({ data: dataProp, featuredProducts = [] }: Editori
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
       <motion.div
         className="relative w-full md:w-[60%] min-h-[60vh] md:min-h-screen overflow-hidden"
+        style={{ position: 'relative' }}
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE_PREMIUM }}
