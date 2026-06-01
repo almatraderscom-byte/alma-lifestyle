@@ -15,8 +15,8 @@ export function Footer() {
   return (
     <footer className="bg-primary text-secondary mt-auto">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
-          <div>
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
+          <div className="sm:col-span-2 md:col-span-1">
             <p className="font-brand text-3xl text-secondary">{settings.storeName}</p>
             <p className="font-bn-body text-base text-secondary/80 mt-3 leading-relaxed">
               {settings.tagline}
@@ -64,10 +64,10 @@ export function Footer() {
 
           <div>
             <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
-              {FOOTER.quickLinksTitle}
+              {FOOTER.shopTitle}
             </h3>
             <ul className="space-y-3">
-              {FOOTER.quickLinks.map((link) => (
+              {FOOTER.shopLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}
@@ -96,6 +96,36 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div>
+            <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
+              {FOOTER.companyTitle}
+            </h3>
+            <ul className="space-y-3">
+              {FOOTER.companyLinks.map((link) => (
+                <li key={link.href + link.label}>
+                  <Link
+                    href={link.href}
+                    className="font-bn-body text-base text-secondary/75 hover:text-secondary transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 space-y-1 font-bn-body text-sm text-secondary/70">
+              <p>
+                <a href="tel:+8801307777733" className="hover:text-secondary">
+                  01307-777733
+                </a>
+              </p>
+              <p>
+                <a href="mailto:admin@almatraders.com" className="hover:text-secondary">
+                  admin@almatraders.com
+                </a>
+              </p>
+            </div>
           </div>
         </div>
 

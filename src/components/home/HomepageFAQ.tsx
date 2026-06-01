@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
@@ -100,6 +101,12 @@ export function HomepageFAQ() {
             );
           })}
         </div>
+
+        <p className="mt-8 text-center font-bn-body text-text-light">
+          <Link href="/faq" className="text-terracotta underline hover:text-maroon">
+            সব প্রশ্নের উত্তর দেখুন →
+          </Link>
+        </p>
       </div>
     </section>
   );
