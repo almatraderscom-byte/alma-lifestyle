@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,23 @@ type OceanSlot = {
 };
 
 const OCEAN_SLOT_COUNT = 12;
+
+const FALL_START_Y = -400;
+const FALL_STAGGER_S = 0.15;
+const FALL_DURATION_S = 1.2;
+const FLOAT_START_BUFFER_MS = 500;
+
+type AnimationPhase = 'hidden' | 'falling' | 'floating';
+
+/** Stable fall rotation per index (-45° to +45°), avoids hydration mismatch. */
+function fallRotationForIndex(idx: number): number {
+  return ((idx * 13) % 91) - 45;
+}
+
+function fallCompleteMs(cardCount: number): number {
+  const lastStagger = Math.max(0, cardCount - 1) * FALL_STAGGER_S * 1000;
+  return lastStagger + FALL_DURATION_S * 1000 + FLOAT_START_BUFFER_MS;
+}
 
 const CARD_CONFIGS: CardConfig[] = [
   { x: 5, y: 10, rotate: -8, duration: 8, delay: 0, scale: 1 },
@@ -144,6 +161,9 @@ function mobileConfigs(configs: CardConfig[]): CardConfig[] {
 
 export function FloatingCollectionOcean({ products }: FloatingCollectionOceanProps) {
   const reduceMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
+  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('hidden');
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -160,8 +180,31 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
     [isMobile]
   );
 
+  useEffect(() => {
+    if (!isInView) return;
+
+    if (reduceMotion) {
+      setAnimationPhase('floating');
+      return;
+    }
+
+    if (animationPhase !== 'hidden') return;
+
+    setAnimationPhase('falling');
+    const timer = window.setTimeout(
+      () => setAnimationPhase('floating'),
+      fallCompleteMs(slots.length)
+    );
+    return () => window.clearTimeout(timer);
+  }, [isInView, reduceMotion, animationPhase, slots.length]);
+
+  const ctaDelay = reduceMotion ? 0.5 : fallCompleteMs(slots.length) / 1000 + 0.3;
+
   return (
-    <section className="relative w-full overflow-hidden bg-cream py-16 md:py-24">
+    <section
+      ref={sectionRef}
+      className="relative w-full overflow-hidden bg-cream py-16 md:py-24"
+    >
       <div className="pointer-events-none absolute inset-0 opacity-[0.05] text-charcoal" aria-hidden>
         <svg className="h-full w-full" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
           <defs>
@@ -198,6 +241,9 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
         {slots.map((slot, idx) => {
           const config = configs[idx % configs.length];
           const { product, imageUrl, bgClass, isPlaceholder } = slot;
+          const fallRotate = fallRotationForIndex(idx);
+          const canFloat = animationPhase === 'floating' || reduceMotion;
+          const isFalling = animationPhase === 'falling' && !reduceMotion;
 
           return (
             <motion.div
@@ -208,25 +254,58 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
                 top: `${config.y}%`,
                 zIndex: 10 + idx,
               }}
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
+              initial={
+                reduceMotion
+                  ? false
+                  : {
+                      y: FALL_START_Y,
+                      opacity: 0,
+                      rotate: fallRotate,
+                      scale: 0.7,
+                      x: 0,
+                    }
+              }
               animate={
                 reduceMotion
-                  ? { opacity: 1, scale: config.scale, rotate: config.rotate }
-                  : {
+                  ? {
                       opacity: 1,
                       scale: config.scale,
                       rotate: config.rotate,
                       y: [0, -30, 0],
                       x: [0, 15, 0],
                     }
+                  : animationPhase === 'hidden'
+                    ? {
+                        y: FALL_START_Y,
+                        opacity: 0,
+                        rotate: fallRotate,
+                        scale: 0.7,
+                        x: 0,
+                      }
+                    : isFalling
+                      ? {
+                          y: [FALL_START_Y, 0, -20, 0],
+                          opacity: 1,
+                          rotate: [
+                            fallRotate,
+                            config.rotate + 5,
+                            config.rotate - 2,
+                            config.rotate,
+                          ],
+                          scale: [0.7, config.scale * 1.05, config.scale * 0.98, config.scale],
+                          x: 0,
+                        }
+                      : {
+                          opacity: 1,
+                          scale: config.scale,
+                          rotate: config.rotate,
+                          y: [0, -30, 0],
+                          x: [0, 15, 0],
+                        }
               }
               transition={
                 reduceMotion
-                  ? { duration: 0.6, delay: config.delay }
-                  : {
-                      opacity: { duration: 0.8, delay: config.delay },
-                      scale: { duration: 0.8, delay: config.delay },
-                      rotate: { duration: 0.8, delay: config.delay },
+                  ? {
                       y: {
                         duration: config.duration,
                         ease: 'easeInOut',
@@ -240,11 +319,34 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
                         delay: config.delay,
                       },
                     }
+                  : isFalling
+                    ? {
+                        duration: FALL_DURATION_S,
+                        delay: idx * FALL_STAGGER_S,
+                        ease: [0.34, 1.56, 0.64, 1],
+                        times: [0, 0.6, 0.8, 1],
+                      }
+                    : canFloat
+                      ? {
+                          y: {
+                            duration: config.duration,
+                            ease: 'easeInOut',
+                            repeat: Infinity,
+                            delay: config.delay,
+                          },
+                          x: {
+                            duration: config.duration,
+                            ease: 'easeInOut',
+                            repeat: Infinity,
+                            delay: config.delay,
+                          },
+                        }
+                      : { duration: 0 }
               }
               whileHover={
-                reduceMotion
-                  ? undefined
-                  : { scale: config.scale * 1.1, zIndex: 50, transition: { duration: 0.35 } }
+                canFloat && !reduceMotion
+                  ? { scale: config.scale * 1.1, zIndex: 50, transition: { duration: 0.35 } }
+                  : undefined
               }
             >
               <Link
@@ -300,7 +402,7 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.5 }}
+        transition={{ duration: 0.8, delay: ctaDelay }}
         viewport={{ once: true }}
         className="relative z-10 mt-12 flex justify-center md:mt-16"
       >
