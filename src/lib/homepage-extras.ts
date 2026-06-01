@@ -6,6 +6,7 @@ import type {
   OurProcessSectionData,
 } from '@/lib/homepage-config-types';
 import { emptyImageSlot } from '@/lib/homepage-image-slots';
+import { migrateFamilyMatchingSection, migrateOurProcessSection } from '@/lib/homepage-migrations';
 
 const FAMILY_CARD_DEFAULTS: Omit<FamilyMatchingCardConfig, 'id'>[] = [
   {
@@ -95,12 +96,13 @@ const PROCESS_STEP_DEFAULTS = [
 export function getDefaultHomepageExtras(): HomepageExtras {
   return {
     familyMatching: {
+      show: true,
       label: 'ফ্যামিলি ম্যাচিং',
       title: 'পরিবার একসাথে সাজুক',
       body:
         'বাবা, মা, ছেলে, মেয়ে — সবার জন্য মিলিয়ে ডিজাইন। একই রঙ, একই প্যাটার্ন, আলাদা কাট ও সাইজ।',
       ctaText: 'ফ্যামিলি সেট দেখুন →',
-      ctaHref: '/products',
+      ctaHref: '/products?type=family-set',
       banner: emptyImageSlot(
         'Image: Family wearing matching ALMA outfits — outdoor golden hour',
         'bg-maroon'
@@ -111,6 +113,7 @@ export function getDefaultHomepageExtras(): HomepageExtras {
       })),
     },
     ourProcess: {
+      show: true,
       label: 'আমাদের প্রক্রিয়া',
       title: 'কাপড় থেকে আপনার দরজায়',
       subtitle: 'ছয়টি ধাপে তৈরি হয় প্রতিটি ALMA পোশাক',
@@ -131,8 +134,8 @@ export function mergeHomepageExtras(
   const savedFm = saved?.familyMatching;
   const savedOp = saved?.ourProcess;
 
-  return {
-    familyMatching: {
+  const familyMatching = migrateFamilyMatchingSection(
+    {
       ...defaults.familyMatching,
       ...savedFm,
       banner: {
@@ -145,7 +148,11 @@ export function mergeHomepageExtras(
         id: savedFm?.cards?.[i]?.id ?? def.id,
       })),
     },
-    ourProcess: {
+    defaults.familyMatching
+  );
+
+  const ourProcess = migrateOurProcessSection(
+    {
       ...defaults.ourProcess,
       ...savedOp,
       steps: defaults.ourProcess.steps.map((def, i) => ({
@@ -153,5 +160,8 @@ export function mergeHomepageExtras(
         ...savedOp?.steps?.[i],
       })),
     },
-  };
+    defaults.ourProcess
+  );
+
+  return { familyMatching, ourProcess };
 }

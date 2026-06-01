@@ -163,7 +163,11 @@ export function HomepageBuilder() {
     }
     requestAnimationFrame(() => {
       const el = document.getElementById(`section-${sectionId}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const editorTop =
+        document.getElementById(`${sectionId}-editor-top`) ??
+        el?.querySelector('[id$="-editor-top"]');
+      editorTop?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       if (el) {
         el.style.background = 'rgba(201, 125, 93, 0.12)';
         if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);

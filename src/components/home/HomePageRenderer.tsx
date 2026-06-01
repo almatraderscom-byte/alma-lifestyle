@@ -63,29 +63,36 @@ type ExtraBlock = {
 function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partial<
   Record<HomepageSectionId, ExtraBlock[]>
 > {
+  const marqueeExtras: ExtraBlock[] = [
+    {
+      key: 'why-choose-alma',
+      sectionId: 'why-choose-alma',
+      sectionName: 'Why Choose ALMA',
+      node: <WhyChooseAlma />,
+    },
+  ];
+  if (extras.familyMatching.show !== false) {
+    marqueeExtras.push({
+      key: 'family-matching',
+      sectionId: 'family-matching',
+      sectionName: 'Family Matching',
+      node: <FamilyMatchingShowcase data={extras.familyMatching} />,
+    });
+  }
+
+  const brandStoryExtras: ExtraBlock[] = [];
+  if (extras.ourProcess.show !== false) {
+    brandStoryExtras.push({
+      key: 'our-process',
+      sectionId: 'our-process',
+      sectionName: 'Our Process',
+      node: <OurProcess data={extras.ourProcess} />,
+    });
+  }
+
   return {
-    marquee: [
-      {
-        key: 'why-choose-alma',
-        sectionId: 'why-choose-alma',
-        sectionName: 'Why Choose ALMA',
-        node: <WhyChooseAlma />,
-      },
-      {
-        key: 'family-matching',
-        sectionId: 'family-matching',
-        sectionName: 'Family Matching',
-        node: <FamilyMatchingShowcase data={extras.familyMatching} />,
-      },
-    ],
-    brandStory: [
-      {
-        key: 'our-process',
-        sectionId: 'our-process',
-        sectionName: 'Our Process',
-        node: <OurProcess data={extras.ourProcess} />,
-      },
-    ],
+    marquee: marqueeExtras,
+    brandStory: brandStoryExtras,
     community: [
       {
         key: 'homepage-faq',

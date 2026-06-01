@@ -155,6 +155,8 @@ export interface FamilyMatchingCardConfig {
 }
 
 export interface FamilyMatchingSectionData {
+  /** When false, section is hidden on the customer homepage */
+  show: boolean;
   label: string;
   title: string;
   body: string;
@@ -176,6 +178,7 @@ export interface OurProcessStepConfig {
 }
 
 export interface OurProcessSectionData {
+  show: boolean;
   label: string;
   title: string;
   subtitle: string;
