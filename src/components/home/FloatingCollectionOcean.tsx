@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useInView, useReducedMotion, type Transition } from 'framer-motion';
 import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -37,22 +37,12 @@ type OceanSlot = {
 
 const OCEAN_SLOT_COUNT = 12;
 
-const FALL_START_Y = -400;
-const FALL_STAGGER_S = 0.15;
-const FALL_DURATION_S = 1.2;
-const FLOAT_START_BUFFER_MS = 500;
+const FALL_START_Y = -600;
+const FALL_STAGGER_S = 0.2;
+const FALL_DURATION_S = 1.5;
+const INTRO_COMPLETE_MS = 4000;
 
-type AnimationPhase = 'hidden' | 'falling' | 'floating';
-
-/** Stable fall rotation per index (-45° to +45°), avoids hydration mismatch. */
-function fallRotationForIndex(idx: number): number {
-  return ((idx * 13) % 91) - 45;
-}
-
-function fallCompleteMs(cardCount: number): number {
-  const lastStagger = Math.max(0, cardCount - 1) * FALL_STAGGER_S * 1000;
-  return lastStagger + FALL_DURATION_S * 1000 + FLOAT_START_BUFFER_MS;
-}
+const FALL_EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 
 const CARD_CONFIGS: CardConfig[] = [
   { x: 5, y: 10, rotate: -8, duration: 8, delay: 0, scale: 1 },
@@ -99,7 +89,6 @@ function placeholderProduct(index: number): OceanProduct {
   };
 }
 
-/** Fill slots with distinct products; pad with color placeholders (no duplicate images). */
 function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
   const slots: OceanSlot[] = [];
   const seenIds = new Set<string>();
@@ -159,11 +148,164 @@ function mobileConfigs(configs: CardConfig[]): CardConfig[] {
   }));
 }
 
+function waveTransition(config: CardConfig): Transition {
+  return {
+    y: {
+      duration: config.duration,
+      delay: config.delay,
+      ease: 'easeInOut',
+      repeat: Infinity,
+      repeatType: 'loop',
+    },
+    x: {
+      duration: config.duration,
+      delay: config.delay,
+      ease: 'easeInOut',
+      repeat: Infinity,
+      repeatType: 'loop',
+    },
+  };
+}
+
+function fallTransition(idx: number): Transition {
+  const stagger = idx * FALL_STAGGER_S;
+  return {
+    y: { duration: FALL_DURATION_S, delay: stagger, ease: FALL_EASE },
+    opacity: { duration: 0.6, delay: stagger },
+    rotate: { duration: FALL_DURATION_S, delay: stagger, ease: 'easeOut' },
+    scale: { duration: FALL_DURATION_S, delay: stagger, ease: 'easeOut' },
+  };
+}
+
+interface OceanCardProps {
+  slot: OceanSlot;
+  config: CardConfig;
+  idx: number;
+  isInView: boolean;
+  introComplete: boolean;
+  reduceMotion: boolean | null;
+}
+
+function OceanCard({
+  slot,
+  config,
+  idx,
+  isInView,
+  introComplete,
+  reduceMotion,
+}: OceanCardProps) {
+  const { product, imageUrl, bgClass, isPlaceholder } = slot;
+  const fallRotateOffset = idx % 2 === 0 ? -15 : 15;
+  const startRotate = config.rotate + fallRotateOffset;
+
+  const showWave = introComplete || Boolean(reduceMotion);
+  const active = isInView || Boolean(reduceMotion);
+
+  return (
+    <motion.div
+      className="absolute w-28 cursor-pointer sm:w-32 md:w-40 lg:w-48"
+      style={{
+        left: `${config.x}%`,
+        top: `${config.y}%`,
+        zIndex: 10 + idx,
+      }}
+      initial={
+        reduceMotion
+          ? false
+          : {
+              y: FALL_START_Y,
+              opacity: 0,
+              rotate: startRotate,
+              scale: config.scale,
+              x: 0,
+            }
+      }
+      animate={
+        !active
+          ? {
+              y: FALL_START_Y,
+              opacity: 0,
+              rotate: startRotate,
+              scale: config.scale,
+              x: 0,
+            }
+          : showWave
+            ? {
+                y: [0, -30, 0],
+                x: [0, 15, 0],
+                opacity: 1,
+                rotate: config.rotate,
+                scale: config.scale,
+              }
+            : {
+                y: 0,
+                x: 0,
+                opacity: 1,
+                rotate: config.rotate,
+                scale: config.scale,
+              }
+      }
+      transition={showWave ? waveTransition(config) : fallTransition(idx)}
+      whileHover={
+        showWave && !reduceMotion
+          ? { scale: config.scale * 1.1, zIndex: 50, transition: { duration: 0.3 } }
+          : undefined
+      }
+    >
+      <Link
+        href={isPlaceholder ? '/products' : product.href}
+        className="group block"
+        tabIndex={isPlaceholder ? -1 : 0}
+      >
+        <div
+          className={cn(
+            'relative h-36 overflow-hidden rounded-2xl border-2 border-cream bg-cream shadow-lg',
+            'transition-shadow duration-500 group-hover:shadow-[0_16px_40px_rgba(201,125,93,0.35)]',
+            'md:h-56 lg:h-72',
+            !imageUrl && bgClass
+          )}
+        >
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={product.title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 120px, 192px"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center p-3 pattern-overlay opacity-20">
+              <span className="text-center font-bn-heading text-sm font-semibold text-cream">
+                {product.title}
+              </span>
+            </div>
+          )}
+
+          {imageUrl && (
+            <div className="absolute inset-0 flex items-end bg-charcoal/0 p-3 transition-colors duration-500 group-hover:bg-charcoal/25">
+              <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                <p className="font-bn-heading text-sm text-cream line-clamp-2">{product.title}</p>
+                <p className="font-bn-body text-xs text-cream/85">{formatBdtPrice(product.price)}</p>
+              </div>
+            </div>
+          )}
+
+          {product.designGroupName && imageUrl && (
+            <span className="absolute top-3 right-3 rounded-full bg-cream/90 px-2 py-1 font-bn-body text-[10px] font-medium text-charcoal backdrop-blur-sm">
+              {product.designGroupName}
+            </span>
+          )}
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 export function FloatingCollectionOcean({ products }: FloatingCollectionOceanProps) {
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
-  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('hidden');
+  const [introComplete, setIntroComplete] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -184,21 +326,15 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
     if (!isInView) return;
 
     if (reduceMotion) {
-      setAnimationPhase('floating');
+      setIntroComplete(true);
       return;
     }
 
-    if (animationPhase !== 'hidden') return;
-
-    setAnimationPhase('falling');
-    const timer = window.setTimeout(
-      () => setAnimationPhase('floating'),
-      fallCompleteMs(slots.length)
-    );
+    const timer = window.setTimeout(() => setIntroComplete(true), INTRO_COMPLETE_MS);
     return () => window.clearTimeout(timer);
-  }, [isInView, reduceMotion, animationPhase, slots.length]);
+  }, [isInView, reduceMotion]);
 
-  const ctaDelay = reduceMotion ? 0.5 : fallCompleteMs(slots.length) / 1000 + 0.3;
+  const ctaDelay = reduceMotion ? 0.5 : 4.5;
 
   return (
     <section
@@ -238,165 +374,17 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
           isMobile ? 'h-[640px]' : 'h-[900px] md:h-[1000px]'
         )}
       >
-        {slots.map((slot, idx) => {
-          const config = configs[idx % configs.length];
-          const { product, imageUrl, bgClass, isPlaceholder } = slot;
-          const fallRotate = fallRotationForIndex(idx);
-          const canFloat = animationPhase === 'floating' || reduceMotion;
-          const isFalling = animationPhase === 'falling' && !reduceMotion;
-
-          return (
-            <motion.div
-              key={slot.key}
-              className="absolute w-28 cursor-pointer sm:w-32 md:w-40 lg:w-48"
-              style={{
-                left: `${config.x}%`,
-                top: `${config.y}%`,
-                zIndex: 10 + idx,
-              }}
-              initial={
-                reduceMotion
-                  ? false
-                  : {
-                      y: FALL_START_Y,
-                      opacity: 0,
-                      rotate: fallRotate,
-                      scale: 0.7,
-                      x: 0,
-                    }
-              }
-              animate={
-                reduceMotion
-                  ? {
-                      opacity: 1,
-                      scale: config.scale,
-                      rotate: config.rotate,
-                      y: [0, -30, 0],
-                      x: [0, 15, 0],
-                    }
-                  : animationPhase === 'hidden'
-                    ? {
-                        y: FALL_START_Y,
-                        opacity: 0,
-                        rotate: fallRotate,
-                        scale: 0.7,
-                        x: 0,
-                      }
-                    : isFalling
-                      ? {
-                          y: [FALL_START_Y, 0, -20, 0],
-                          opacity: 1,
-                          rotate: [
-                            fallRotate,
-                            config.rotate + 5,
-                            config.rotate - 2,
-                            config.rotate,
-                          ],
-                          scale: [0.7, config.scale * 1.05, config.scale * 0.98, config.scale],
-                          x: 0,
-                        }
-                      : {
-                          opacity: 1,
-                          scale: config.scale,
-                          rotate: config.rotate,
-                          y: [0, -30, 0],
-                          x: [0, 15, 0],
-                        }
-              }
-              transition={
-                reduceMotion
-                  ? {
-                      y: {
-                        duration: config.duration,
-                        ease: 'easeInOut',
-                        repeat: Infinity,
-                        delay: config.delay,
-                      },
-                      x: {
-                        duration: config.duration,
-                        ease: 'easeInOut',
-                        repeat: Infinity,
-                        delay: config.delay,
-                      },
-                    }
-                  : isFalling
-                    ? {
-                        duration: FALL_DURATION_S,
-                        delay: idx * FALL_STAGGER_S,
-                        ease: [0.34, 1.56, 0.64, 1],
-                        times: [0, 0.6, 0.8, 1],
-                      }
-                    : canFloat
-                      ? {
-                          y: {
-                            duration: config.duration,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                            delay: config.delay,
-                          },
-                          x: {
-                            duration: config.duration,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                            delay: config.delay,
-                          },
-                        }
-                      : { duration: 0 }
-              }
-              whileHover={
-                canFloat && !reduceMotion
-                  ? { scale: config.scale * 1.1, zIndex: 50, transition: { duration: 0.35 } }
-                  : undefined
-              }
-            >
-              <Link
-                href={isPlaceholder ? '/products' : product.href}
-                className="group block"
-                tabIndex={isPlaceholder ? -1 : 0}
-              >
-                <div
-                  className={cn(
-                    'relative h-36 overflow-hidden rounded-2xl border-2 border-cream bg-cream shadow-lg',
-                    'transition-shadow duration-500 group-hover:shadow-[0_16px_40px_rgba(201,125,93,0.35)]',
-                    'md:h-56 lg:h-72',
-                    !imageUrl && bgClass
-                  )}
-                >
-                  {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      alt={product.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 120px, 192px"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center p-3 pattern-overlay opacity-20">
-                      <span className="text-center font-bn-heading text-sm font-semibold text-cream">
-                        {product.title}
-                      </span>
-                    </div>
-                  )}
-
-                  {imageUrl && (
-                    <div className="absolute inset-0 flex items-end bg-charcoal/0 p-3 transition-colors duration-500 group-hover:bg-charcoal/25">
-                      <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                        <p className="font-bn-heading text-sm text-cream line-clamp-2">{product.title}</p>
-                        <p className="font-bn-body text-xs text-cream/85">{formatBdtPrice(product.price)}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {product.designGroupName && imageUrl && (
-                    <span className="absolute top-3 right-3 rounded-full bg-cream/90 px-2 py-1 font-bn-body text-[10px] font-medium text-charcoal backdrop-blur-sm">
-                      {product.designGroupName}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            </motion.div>
-          );
-        })}
+        {slots.map((slot, idx) => (
+          <OceanCard
+            key={slot.key}
+            slot={slot}
+            config={configs[idx % configs.length]}
+            idx={idx}
+            isInView={isInView}
+            introComplete={introComplete}
+            reduceMotion={reduceMotion}
+          />
+        ))}
       </div>
 
       <motion.div
