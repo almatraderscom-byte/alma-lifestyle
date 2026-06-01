@@ -148,23 +148,23 @@ export async function saveCategoryApi(
   category: AdminCategory,
   isNew: boolean
 ): Promise<AdminCategory> {
+  const body = {
+    name: category.name,
+    slug: category.slug,
+    description: category.description,
+    display_order: category.displayOrder ?? 0,
+    active: category.active ?? true,
+    show_in_menu: category.showInMenu ?? true,
+  };
   if (isNew) {
     return request<AdminCategory>('/api/v1/categories', {
       method: 'POST',
-      body: JSON.stringify({
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-      }),
+      body: JSON.stringify(body),
     });
   }
   return request<AdminCategory>(`/api/v1/categories/${category.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({
-      name: category.name,
-      slug: category.slug,
-      description: category.description,
-    }),
+    body: JSON.stringify(body),
   });
 }
 

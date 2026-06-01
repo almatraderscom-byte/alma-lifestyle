@@ -27,7 +27,10 @@ export async function getCategoryById(id: string): Promise<Category | null> {
 }
 
 export async function createCategory(
-  input: Pick<Category, 'slug' | 'name' | 'description' | 'image_url' | 'display_order' | 'active'>
+  input: Pick<
+    Category,
+    'slug' | 'name' | 'description' | 'image_url' | 'display_order' | 'active' | 'show_in_menu'
+  >
 ): Promise<Category> {
   const brandId = await getBrandId();
   const { data, error } = await getSupabaseAdmin()

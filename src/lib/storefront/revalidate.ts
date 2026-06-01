@@ -23,6 +23,7 @@ export function revalidateProductPages(slug?: string): void {
 }
 
 export function revalidateCategoryPages(): void {
+  revalidatePath('/', 'layout');
   revalidateHomepage();
   revalidatePath('/products');
 }

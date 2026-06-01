@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { CategoryBodySchema } from '@/lib/api-validation';
 import { mapDbCategoryToAdmin } from '@/lib/mappers/admin-product';
 import { getAllCategoriesAdmin, createCategory } from '@/server/db/queries/categories-admin';
-import { getCategories } from '@/server/db/queries/categories';
+import { getCategories, getMenuCategories } from '@/server/db/queries/categories';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
@@ -20,7 +20,10 @@ export async function GET(request: NextRequest) {
 
   return withPublicDb(async () => {
     const brandId = await getBrandId();
-    const rows = await getCategories(brandId);
+    const menuOnly = request.nextUrl.searchParams.get('menu') === 'true';
+    const rows = menuOnly
+      ? await getMenuCategories(brandId, 8)
+      : await getCategories(brandId);
     return apiSuccess(rows.map(mapDbCategoryToAdmin));
   });
 }
@@ -40,6 +43,7 @@ export async function POST(request: NextRequest) {
       image_url: parsed.data.image_url ?? null,
       display_order: parsed.data.display_order ?? 0,
       active: parsed.data.active ?? true,
+      show_in_menu: parsed.data.show_in_menu ?? true,
     });
 
     revalidateCategoryPages();

@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { NAV } from '@/lib/content';
-
-const NAV_ITEMS = [NAV.shop, NAV.newArrivals, NAV.collections, NAV.about];
+import { useHeaderNavItems } from '@/context/NavMenuContext';
 
 export function HeaderNavLinks() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const navItems = useHeaderNavItems();
 
   const currentHref =
     pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
@@ -25,7 +24,7 @@ export function HeaderNavLinks() {
 
   return (
     <nav className="hidden md:flex items-center gap-8" aria-label="প্রধান মেনু">
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const active = isNavActive(item.href);
         return (
           <Link

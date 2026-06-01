@@ -38,6 +38,9 @@ export interface AdminCategory {
   name: string;
   slug: string;
   description?: string;
+  displayOrder?: number;
+  active?: boolean;
+  showInMenu?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -5,15 +5,15 @@ import { useState } from 'react';
 import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { MOBILE_NAV_ICONS } from '@/lib/content';
+import { useHeaderNavItems } from '@/context/NavMenuContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
 import { useCart } from '@/context/CartContext';
 import { toBanglaNumber } from '@/lib/format-bn';
 
-const NAV_ITEMS = [NAV.shop, NAV.newArrivals, NAV.collections, NAV.about];
-
 export function Header() {
+  const navItems = useHeaderNavItems();
   const settings = useStoreSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount, hydrated } = useCart();
@@ -107,7 +107,7 @@ export function Header() {
                 </button>
               </div>
               <ul className="flex-1 overflow-y-auto px-4 py-4">
-                {NAV_ITEMS.map((item, i) => (
+                {navItems.map((item, i) => (
                   <motion.li
                     key={item.href}
                     initial={{ opacity: 0, x: 16 }}

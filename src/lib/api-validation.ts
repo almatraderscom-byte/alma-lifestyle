@@ -83,8 +83,9 @@ export const CategoryBodySchema = z.object({
   slug: z.string().min(1),
   description: z.string().optional(),
   image_url: z.string().optional(),
-  display_order: z.number().optional(),
+  display_order: z.number().int().optional(),
   active: z.boolean().optional(),
+  show_in_menu: z.boolean().optional(),
 });
 
 export const CollectionBodySchema = z.object({

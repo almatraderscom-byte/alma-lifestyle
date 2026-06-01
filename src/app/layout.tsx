@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
-import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -50,7 +50,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await loadPublicSettingsServer();
+  const [settings, navItems] = await Promise.all([
+    loadPublicSettingsServer(),
+    loadHeaderNavItemsServer(),
+  ]);
 
   return (
     <html
@@ -59,7 +62,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
         <StoreSettingsProvider settings={settings}>
-          <RootShell>{children}</RootShell>
+          <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />
         <SpeedInsights />

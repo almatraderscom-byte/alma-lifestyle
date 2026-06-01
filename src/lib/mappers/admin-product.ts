@@ -207,11 +207,15 @@ export function mapAdminProductToDbInsert({
 }
 
 export function mapDbCategoryToAdmin(row: Category): AdminCategory {
+  const ext = row as Category & { show_in_menu?: boolean };
   return {
     id: row.id,
     name: row.name,
     slug: row.slug,
     description: row.description ?? undefined,
+    displayOrder: row.display_order,
+    active: row.active,
+    showInMenu: ext.show_in_menu ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

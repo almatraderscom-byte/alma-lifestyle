@@ -41,6 +41,7 @@ export interface Category {
   parent_id: UUID | null;
   display_order: number;
   active: boolean;
+  show_in_menu?: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 }

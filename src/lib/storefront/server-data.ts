@@ -1,6 +1,12 @@
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { getBrandId } from '@/server/db/brand';
-import { getCategories } from '@/server/db/queries/categories';
+import { getCategories, getMenuCategories } from '@/server/db/queries/categories';
+import {
+  buildHeaderNavItems,
+  categoryToNavItem,
+  getStaticHeaderNavItems,
+  type HeaderNavItem,
+} from '@/lib/nav-menu';
 import { getProducts, getProductBySlug, getFeaturedProducts } from '@/server/db/queries/products';
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
@@ -158,6 +164,23 @@ export async function loadCategoriesServer(): Promise<Category[]> {
     return getCategories(brandId);
   } catch {
     return [];
+  }
+}
+
+/** Header navigation: static links + up to 4 menu categories from DB. */
+export async function loadHeaderNavItemsServer(): Promise<HeaderNavItem[]> {
+  if (!isSupabaseAdminConfigured()) {
+    return getStaticHeaderNavItems();
+  }
+  try {
+    const brandId = await getBrandId();
+    const menuCategories = await getMenuCategories(brandId, 4);
+    if (!menuCategories.length) {
+      return getStaticHeaderNavItems();
+    }
+    return buildHeaderNavItems(menuCategories.map(categoryToNavItem));
+  } catch {
+    return getStaticHeaderNavItems();
   }
 }
 
