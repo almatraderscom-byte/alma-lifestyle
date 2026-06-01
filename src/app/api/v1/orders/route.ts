@@ -4,6 +4,7 @@
  *   Body: checkout payload; assigns order number ALM-YYYYMMDD-####
  */
 import type { NextRequest } from 'next/server';
+import { waitUntil } from '@vercel/functions';
 import { z } from 'zod';
 import { PaginationQuerySchema, CreateOrderBodySchema } from '@/lib/api-validation';
 import type { OrderStatus } from '@/lib/admin-store';
@@ -25,8 +26,7 @@ import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { tryRequireAdmin } from '@/server/api/auth';
 import {
   buildOrderNotificationData,
-  notifyAdminOfNewOrder,
-  sendOrderConfirmationToCustomer,
+  sendOrderCreationNotifications,
 } from '@/server/notifications';
 
 export const runtime = 'nodejs';
@@ -186,34 +186,23 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Must await before response — serverless kills fire-and-forget work after return
-    console.log('[Order API] Triggering notifications (awaiting before response)...');
+    // Serverless: must await emails before response; waitUntil extends lifetime on Vercel
+    console.log('[Order API] Sending notifications (await before response)...');
 
-    try {
-      const adminResult = await notifyAdminOfNewOrder(notificationPayload);
-      console.log('[Order API] Admin notification result:', adminResult);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error('[Order API] Admin notification exception:', message, err);
-    }
+    const notificationsPromise = sendOrderCreationNotifications(notificationPayload);
+    waitUntil(notificationsPromise);
+    const notifications = await notificationsPromise;
 
-    if (notificationPayload.customer_email?.trim()) {
-      try {
-        console.log(
-          '[Order API] Attempting customer email to:',
-          notificationPayload.customer_email
-        );
-        const customerResult = await sendOrderConfirmationToCustomer(notificationPayload);
-        console.log('[Order API] Customer email result:', customerResult);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error('[Order API] Customer email exception:', message, err);
-      }
-    } else {
-      console.warn(
-        '[Order API] No customer_email on order — customer confirmation skipped (admin may still get email)'
-      );
-    }
+    console.log('[Order API] Notification results:', {
+      adminSuccess: notifications.admin.success,
+      adminError: notifications.admin.error,
+      customerSuccess:
+        'skipped' in notifications.customer ? false : notifications.customer.success,
+      customerError:
+        'skipped' in notifications.customer
+          ? notifications.customer.error
+          : notifications.customer.error,
+    });
 
     console.log('[Order API] ========== Order processing complete ==========');
 
@@ -223,7 +212,19 @@ export async function POST(request: NextRequest) {
         orderNumber: created.order_number,
         status: created.status,
         totalBdt: serverTotal,
-        notificationsAttempted: true,
+        notifications: {
+          admin: {
+            success: notifications.admin.success,
+            error: notifications.admin.error,
+          },
+          customer:
+            'skipped' in notifications.customer
+              ? { skipped: true, reason: notifications.customer.error }
+              : {
+                  success: notifications.customer.success,
+                  error: notifications.customer.error,
+                },
+        },
       },
       { status: 201 }
     );

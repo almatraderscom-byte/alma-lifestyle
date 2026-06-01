@@ -410,6 +410,57 @@ export async function notifyCustomerOfStatusChange(
   return result;
 }
 
+export type OrderNotificationResults = {
+  admin: NotificationSendResult;
+  customer: NotificationSendResult | { success: false; error: string; skipped: true };
+};
+
+/** Send admin + customer emails for a new order. Must be awaited before returning on serverless. */
+export async function sendOrderCreationNotifications(
+  order: OrderNotificationData
+): Promise<OrderNotificationResults> {
+  console.log('[Notifications] sendOrderCreationNotifications start:', order.order_number);
+
+  let admin: NotificationSendResult;
+  try {
+    admin = await notifyAdminOfNewOrder(order);
+    console.log('[Notifications] Admin notification complete:', admin);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[Notifications] Admin notification exception:', message, err);
+    admin = { success: false, error: message };
+  }
+
+  if (!order.customer_email?.trim()) {
+    console.warn('[Notifications] No customer_email — skipping customer email');
+    return {
+      admin,
+      customer: {
+        success: false,
+        error: 'No customer email on order',
+        skipped: true as const,
+      },
+    };
+  }
+
+  let customer: NotificationSendResult;
+  try {
+    customer = await sendOrderConfirmationToCustomer(order);
+    console.log('[Notifications] Customer notification complete:', customer);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[Notifications] Customer notification exception:', message, err);
+    customer = { success: false, error: message };
+  }
+
+  console.log('[Notifications] sendOrderCreationNotifications done:', {
+    adminOk: admin.success,
+    customerOk: customer.success,
+  });
+
+  return { admin, customer };
+}
+
 export function buildOrderNotificationData(
   order: {
     id: string;
