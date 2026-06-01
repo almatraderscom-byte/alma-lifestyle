@@ -1,93 +1,133 @@
 import Link from 'next/link';
-import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
-import { isDataImageUrl } from '@/lib/image-url-display';
+import { buildFaviconHref } from '@/lib/favicon-url';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
-import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DiagnosticsPage() {
   const settings = await loadPublicSettingsServer();
   const faviconHref = buildFaviconHref(settings.faviconUrl, settings.updatedAt);
-  const valid = isValidStoredFaviconUrl(settings.faviconUrl);
-  const isData = isDataImageUrl(settings.faviconUrl);
 
-  const report = {
-    supabaseConfigured: isSupabaseAdminConfigured(),
-    storeName: settings.storeName,
-    faviconUrl: settings.faviconUrl || null,
-    faviconUrlValid: valid,
-    faviconIsInlineDataUrl: isData,
-    faviconMetadataHref: faviconHref,
-    faviconIcoProxy: '/favicon.ico → /api/favicon (rewrite)',
-    logoUrl: settings.logoUrl || null,
-    seoDefaultOgImageUrl: settings.seoDefaultOgImageUrl || null,
-    settingsUpdatedAt: settings.updatedAt,
-    staticAppFaviconRemoved:
-      'src/app/favicon.ico deleted — Vercel default triangle should no longer override DB favicon',
-  };
+  const faviconUrl = settings.faviconUrl || '';
+  const isValid = faviconUrl.startsWith('https://');
+  const isBase64 = faviconUrl.startsWith('data:');
+  const isEmpty = !faviconUrl.trim();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <Link href="/admin/settings" className="text-sm text-[#C97D5D] hover:underline">
-          ← Settings
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-900">Favicon diagnostics</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Server-side values used by <code className="text-xs">generateMetadata</code> and{' '}
-          <code className="text-xs">/api/favicon</code>.
-        </p>
+    <div className="max-w-4xl p-8">
+      <Link href="/admin/settings" className="text-sm text-[#C97D5D] hover:underline">
+        ← Settings
+      </Link>
+      <h1 className="mb-6 mt-2 text-3xl font-bold">Favicon Diagnostics</h1>
+
+      <div className="mb-6 rounded border border-blue-200 bg-blue-50 p-6">
+        <h2 className="mb-4 text-lg font-bold">Current Status</h2>
+        <table className="w-full text-sm">
+          <tbody>
+            <tr>
+              <td className="py-1 pr-4 font-medium align-top">Favicon URL:</td>
+              <td className="break-all">
+                <code className="rounded bg-white px-2 py-1 text-xs">
+                  {faviconUrl || '(empty)'}
+                </code>
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium">URL Valid:</td>
+              <td className={isValid ? 'text-green-600' : 'text-red-600'}>
+                {isValid ? '✅ true' : '❌ false'}
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium">Is Base64:</td>
+              <td className={isBase64 ? 'text-red-600' : 'text-green-600'}>
+                {isBase64 ? '❌ true (BAD — re-upload)' : '✅ false'}
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium">Is Empty:</td>
+              <td className={isEmpty ? 'text-red-600' : 'text-green-600'}>
+                {isEmpty ? '❌ true (need upload)' : '✅ false'}
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium">Updated At:</td>
+              <td>
+                <code>{settings.updatedAt || 'unknown'}</code>
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium align-top">Metadata icon href:</td>
+              <td className="break-all">
+                <code className="rounded bg-white px-2 py-1 text-xs">
+                  {faviconHref || '(null — no icon will be set)'}
+                </code>
+              </td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-4 font-medium">Static override:</td>
+              <td className="text-green-600">
+                ✅ src/app/favicon.ico removed (must not exist in repo)
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <pre className="overflow-x-auto rounded-lg bg-neutral-100 p-4 text-xs text-neutral-800">
-        {JSON.stringify(report, null, 2)}
-      </pre>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-900">Favicon preview</h2>
-        {valid && faviconHref ? (
-          <div className="flex items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={faviconHref}
-              alt="Configured favicon"
-              className="h-16 w-16 rounded border border-neutral-200 bg-white object-contain"
-            />
+      {isValid && (
+        <div className="mb-6 rounded bg-gray-50 p-6">
+          <h2 className="mb-4 font-bold">Preview</h2>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={faviconUrl}
+            alt="favicon"
+            className="h-16 w-16 rounded border-2 border-gray-300"
+          />
+          <p className="mt-3 text-sm">
             <a
-              href={faviconHref}
+              href={faviconUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#C97D5D] hover:underline break-all"
+              className="break-all text-blue-600 underline"
             >
-              Open favicon URL
+              Open favicon URL in new tab →
             </a>
-          </div>
-        ) : (
-          <p className="text-sm text-amber-800 rounded-lg border border-amber-200 bg-amber-50 p-3">
-            No valid favicon URL in settings. Upload a PNG in Settings → Store (must be a Supabase
-            Storage https URL, not base64).
           </p>
-        )}
-      </section>
+        </div>
+      )}
 
-      <section className="space-y-2 text-sm text-neutral-700">
-        <h2 className="text-lg font-semibold text-neutral-900">Verify after deploy</h2>
-        <ol className="list-decimal list-inside space-y-1">
-          <li>
-            View source on the storefront — search for <code>rel=&quot;icon&quot;</code> — href
-            should be your Supabase URL, not <code>/favicon.ico</code> alone.
-          </li>
+      <div className="rounded bg-yellow-50 p-6">
+        <h2 className="mb-4 font-bold">Manual Tests</h2>
+        <ol className="list-inside list-decimal space-y-2 text-sm">
           <li>
             Open{' '}
-            <a href="/favicon.ico" className="text-[#C97D5D] hover:underline">
+            <a href="/favicon.ico" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
               /favicon.ico
             </a>{' '}
-            — should show your uploaded image (proxied from settings).
+            in a new tab (proxied from settings when configured)
           </li>
-          <li>Hard refresh or incognito if the tab icon is still cached.</li>
+          <li>View page source (Ctrl+U) and search for rel=&quot;icon&quot; — should show Supabase URL</li>
+          <li>Hard refresh customer site: Ctrl+Shift+R</li>
+          <li>Open in incognito to bypass cache</li>
         </ol>
-      </section>
+      </div>
+
+      <div className="mt-6 rounded bg-gray-100 p-6">
+        <h2 className="mb-4 font-bold">Raw Settings</h2>
+        <pre className="overflow-x-auto rounded bg-white p-4 text-xs">
+          {JSON.stringify(
+            {
+              faviconUrl: settings.faviconUrl,
+              logoUrl: settings.logoUrl,
+              storeName: settings.storeName,
+              updatedAt: settings.updatedAt,
+              seoDefaultOgImageUrl: settings.seoDefaultOgImageUrl,
+            },
+            null,
+            2
+          )}
+        </pre>
+      </div>
     </div>
   );
 }

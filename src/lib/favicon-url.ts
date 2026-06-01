@@ -5,7 +5,7 @@ export function isValidStoredFaviconUrl(url: string | undefined | null): url is 
   if (!url?.trim()) return false;
   const trimmed = url.trim();
   if (isDataImageUrl(trimmed)) return false;
-  return trimmed.startsWith('https://') || trimmed.startsWith('http://');
+  return trimmed.startsWith('https://');
 }
 
 /** Cache-busted favicon URL for metadata and client sync. Returns null if no valid URL. */

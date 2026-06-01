@@ -37,22 +37,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (process.env.NODE_ENV === 'development') {
     console.log('[layout] faviconUrl:', settings.faviconUrl || '(empty)');
-    console.log('[layout] favicon metadata href:', faviconHref || '(none)');
+    console.log('[layout] favicon metadata href:', faviconHref || '(null — no icon tag)');
     console.log('[layout] settings.updatedAt:', settings.updatedAt);
   }
 
-  const iconMetadata = faviconHref
-    ? {
-        icon: [{ url: faviconHref, type: 'image/png' as const }],
-        apple: [{ url: faviconHref }],
-        shortcut: faviconHref,
-      }
-    : undefined;
-
-  return {
+  const metadata: Metadata = {
     title,
     description: settings.seoSiteDescription,
-    ...(iconMetadata ? { icons: iconMetadata } : {}),
     openGraph: {
       title,
       description: settings.seoSiteDescription,
@@ -62,6 +53,16 @@ export async function generateMetadata(): Promise<Metadata> {
         : {}),
     },
   };
+
+  if (faviconHref) {
+    metadata.icons = {
+      icon: [{ url: faviconHref, type: 'image/png' }],
+      apple: [{ url: faviconHref }],
+      shortcut: [{ url: faviconHref }],
+    };
+  }
+
+  return metadata;
 }
 
 export default async function RootLayout({
