@@ -14,7 +14,7 @@ export default async function HomePage() {
     featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
       ? resolveFeaturedProductsServer(featuredSection.data)
       : Promise.resolve([]),
-    loadOceanProductsServer(7),
+    loadOceanProductsServer(12),
   ]);
 
   const hero = config.sections.find((s) => s.id === 'hero');

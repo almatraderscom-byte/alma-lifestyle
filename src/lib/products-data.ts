@@ -26,6 +26,7 @@ export type CatalogProduct = FeaturedProduct & {
   galleryImages?: { id: string; bgClass: string; url?: string }[];
   popularScore: number;
   createdAt: number;
+  tags?: string[];
   productType?: ProductType;
   designGroupId?: string;
   designGroupName?: string;

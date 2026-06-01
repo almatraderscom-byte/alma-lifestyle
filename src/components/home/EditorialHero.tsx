@@ -3,9 +3,7 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
-import type { FeaturedProduct } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
-import { HeroProductFan } from '@/components/home/HeroProductFan';
 import { isUsableImageUrl } from '@/lib/homepage-image';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -15,10 +13,9 @@ import { EASE_PREMIUM } from '@/lib/animation-variants';
 
 interface EditorialHeroProps {
   data?: HeroSectionData;
-  featuredProducts?: FeaturedProduct[];
 }
 
-export function EditorialHero({ data: dataProp, featuredProducts = [] }: EditorialHeroProps) {
+export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
   const reduceMotion = useReducedMotion();
   const data =
     dataProp ??
@@ -29,7 +26,7 @@ export function EditorialHero({ data: dataProp, featuredProducts = [] }: Editori
   return (
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
       <motion.div
-        className="relative w-full md:w-[60%] min-h-[60vh] h-[600px] md:min-h-screen md:h-[700px] overflow-visible"
+        className="relative w-full md:w-[60%] min-h-[60vh] h-[600px] md:min-h-screen md:h-[700px] overflow-hidden"
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE_PREMIUM }}
@@ -54,8 +51,6 @@ export function EditorialHero({ data: dataProp, featuredProducts = [] }: Editori
         {hasBgImage && (
           <div className="absolute inset-0 bg-charcoal/25 pointer-events-none" aria-hidden />
         )}
-
-        <HeroProductFan products={featuredProducts} />
 
         <motion.div
           className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 drop-shadow-md"

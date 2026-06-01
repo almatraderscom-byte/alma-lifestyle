@@ -258,10 +258,22 @@ export type OceanCardProduct = ReturnType<typeof toCardProduct> & {
   designGroupName?: string;
 };
 
-/** Distinct published products for the floating ocean (not limited to featured section). */
-export async function loadOceanProductsServer(limit = 7): Promise<OceanCardProduct[]> {
-  const { products } = await loadCatalogProductsServer({ limit: 80, page: 1 });
-  const sorted = [...products].sort((a, b) => b.createdAt - a.createdAt);
+const BESTSELLER_TAGS = new Set(['bestseller', 'জনপ্রিয়', 'popular']);
+
+function isBestsellerProduct(product: CatalogProduct): boolean {
+  const tags = product.tags ?? [];
+  return tags.some((t) => BESTSELLER_TAGS.has(t.toLowerCase()));
+}
+
+/** Distinct published products for the floating ocean (bestseller-tagged or top popular). */
+export async function loadOceanProductsServer(limit = 12): Promise<OceanCardProduct[]> {
+  const { products } = await loadCatalogProductsServer({ limit: 120, page: 1 });
+  const sorted = [...products].sort((a, b) => {
+    const aBest = isBestsellerProduct(a) ? 1 : 0;
+    const bBest = isBestsellerProduct(b) ? 1 : 0;
+    if (bBest !== aBest) return bBest - aBest;
+    return b.popularScore - a.popularScore;
+  });
 
   const seenIds = new Set<string>();
   const seenImageUrls = new Set<string>();

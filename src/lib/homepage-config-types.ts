@@ -76,6 +76,9 @@ export interface ReviewItemConfig {
   text: string;
   name: string;
   city: string;
+  title?: string;
+  productName?: string;
+  date?: string;
 }
 
 export interface ReviewsSectionData {

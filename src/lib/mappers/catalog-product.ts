@@ -107,6 +107,7 @@ export function mapDbProductToCatalog(
         isFamilyGroup: img.alt_text === 'family-group',
       })),
     popularScore: 50 + index,
+    tags: product.tags ?? [],
     createdAt: new Date(product.created_at).getTime(),
     productType: (product.product_type ?? 'simple') as ProductType,
     designGroupId: product.design_group_id ?? undefined,

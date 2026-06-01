@@ -35,7 +35,7 @@ type OceanSlot = {
   isPlaceholder: boolean;
 };
 
-const OCEAN_SLOT_COUNT = 7;
+const OCEAN_SLOT_COUNT = 12;
 
 const CARD_CONFIGS: CardConfig[] = [
   { x: 5, y: 10, rotate: -8, duration: 8, delay: 0, scale: 1 },
@@ -45,6 +45,11 @@ const CARD_CONFIGS: CardConfig[] = [
   { x: 80, y: -8, rotate: -7, duration: 8.5, delay: 0.8, scale: 1 },
   { x: 15, y: 35, rotate: 3, duration: 12, delay: 0.2, scale: 0.98 },
   { x: 60, y: 30, rotate: -5, duration: 9.5, delay: 1.2, scale: 1.02 },
+  { x: 35, y: 50, rotate: -3, duration: 10.5, delay: 0.7, scale: 0.93 },
+  { x: 75, y: 50, rotate: 6, duration: 11.5, delay: 0.4, scale: 1.03 },
+  { x: 8, y: 60, rotate: -4, duration: 9, delay: 1.5, scale: 0.97 },
+  { x: 50, y: 65, rotate: 2, duration: 12.5, delay: 0.6, scale: 1.04 },
+  { x: 85, y: 70, rotate: -6, duration: 10, delay: 0.9, scale: 0.95 },
 ];
 
 const PLACEHOLDER_BGS = [
@@ -77,7 +82,7 @@ function placeholderProduct(index: number): OceanProduct {
   };
 }
 
-/** Fill 7 slots with distinct products; pad with color placeholders (no duplicate images). */
+/** Fill slots with distinct products; pad with color placeholders (no duplicate images). */
 function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
   const slots: OceanSlot[] = [];
   const seenIds = new Set<string>();
@@ -155,25 +160,8 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
     [isMobile]
   );
 
-  useEffect(() => {
-    console.log(
-      '[Ocean] Source products:',
-      products.length,
-      products.map((p) => p.title)
-    );
-    console.log(
-      '[Ocean] Slots:',
-      slots.map((s) => ({
-        title: s.product.title,
-        hasImage: Boolean(s.imageUrl),
-        placeholder: s.isPlaceholder,
-      }))
-    );
-  }, [products, slots]);
-
   return (
-    <section className="relative w-full overflow-hidden bg-cream py-20 md:py-32">
-      {/* DEBUG: ocean.sourceCount={products.length} ocean.slots={slots.length} */}
+    <section className="relative w-full overflow-hidden bg-cream py-16 md:py-24">
       <div className="pointer-events-none absolute inset-0 opacity-[0.05] text-charcoal" aria-hidden>
         <svg className="h-full w-full" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
           <defs>
@@ -192,19 +180,19 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
         viewport={{ once: true, margin: '-80px' }}
         className="relative z-10 mb-12 px-4 text-center md:mb-16"
       >
-        <p className="editorial-label mx-auto mb-3 w-fit text-terracotta">নতুন সংগ্রহ</p>
+        <p className="editorial-label mx-auto mb-3 w-fit text-terracotta">জনপ্রিয় সংগ্রহ</p>
         <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-5xl lg:text-6xl">
-          আমাদের নতুন ডিজাইন
+          সবচেয়ে জনপ্রিয় ডিজাইন
         </h2>
         <p className="mx-auto mt-4 max-w-xl font-bn-body text-base text-text-light md:text-lg">
-          হাতে বোনা প্রিমিয়াম পাঞ্জাবি এবং ঐতিহ্যবাহী পোশাক সংগ্রহ
+          আমাদের ক্রেতাদের সবচেয়ে পছন্দের পাঞ্জাবি এবং পরিবার সেট সংগ্রহ
         </p>
       </motion.div>
 
       <div
         className={cn(
           'relative z-10 mx-auto max-w-7xl px-4',
-          isMobile ? 'h-[520px]' : 'h-[500px] md:h-[600px] lg:h-[700px]'
+          isMobile ? 'h-[640px]' : 'h-[900px] md:h-[1000px]'
         )}
       >
         {slots.map((slot, idx) => {

@@ -420,6 +420,27 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
             />
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-800">Tags / keywords</p>
+              <label className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={(form.tags ?? []).includes('bestseller')}
+                  onChange={(e) => {
+                    const tags = form.tags ?? [];
+                    if (e.target.checked) {
+                      if (!tags.includes('bestseller')) update('tags', [...tags, 'bestseller']);
+                    } else {
+                      update(
+                        'tags',
+                        tags.filter((t) => t !== 'bestseller' && t !== 'জনপ্রিয়')
+                      );
+                    }
+                  }}
+                  className="rounded border-neutral-300"
+                />
+                <span className="text-sm text-neutral-800">
+                  জনপ্রিয় (হোমপেজে ফ্লোটিং সংগ্রহে দেখাবে)
+                </span>
+              </label>
               <div className="flex flex-wrap gap-2">
                 {(form.tags ?? []).map((tag) => (
                   <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-3 py-1 text-sm">
