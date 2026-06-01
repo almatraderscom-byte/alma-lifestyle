@@ -198,6 +198,7 @@ export interface Customer {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  default_shipping_address?: Json | null;
   preferred_currency: string;
   preferred_language: string;
   marketing_opted_in: boolean;

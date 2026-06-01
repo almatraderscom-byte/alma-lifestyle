@@ -63,6 +63,32 @@ export async function getOrders(
   };
 }
 
+export async function getOrderByNumberAndPhone(
+  orderNumber: string,
+  phone: string
+): Promise<OrderWithItems | null> {
+  const normalizedPhone = phone.replace(/\D/g, '');
+  const brandId = await getBrandId();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('orders')
+    .select('*, order_items (*)')
+    .eq('brand_id', brandId)
+    .eq('order_number', orderNumber.trim())
+    .maybeSingle();
+
+  assertNoError(error, 'getOrderByNumberAndPhone');
+
+  if (!data) return null;
+
+  const orderPhone = (data as Order).customer_phone.replace(/\D/g, '');
+  if (orderPhone !== normalizedPhone && !orderPhone.endsWith(normalizedPhone.slice(-10))) {
+    return null;
+  }
+
+  return data as OrderWithItems;
+}
+
 export async function getOrderById(id: string): Promise<OrderWithItems | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('orders')

@@ -23,6 +23,11 @@ import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess, apiUnauthorized } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { tryRequireAdmin } from '@/server/api/auth';
+import {
+  buildOrderNotificationData,
+  notifyAdminOfNewOrder,
+  sendOrderConfirmationToCustomer,
+} from '@/server/notifications';
 
 const OrdersListQuerySchema = PaginationQuerySchema.extend({
   status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
@@ -140,6 +145,34 @@ export async function POST(request: NextRequest) {
     });
 
     const created = await createOrder({ order, items });
+
+    const notificationPayload = buildOrderNotificationData(
+      {
+        id: created.id,
+        order_number: created.order_number,
+        customer_name: created.customer_name,
+        customer_phone: created.customer_phone,
+        customer_email: created.customer_email,
+        shipping_address: created.shipping_address,
+        payment_method: created.payment_method,
+        created_at: created.created_at,
+      },
+      pricedItems.map((i) => ({
+        product_title: i.productTitle,
+        quantity: i.quantity,
+        unit_price_bdt: i.unitPriceBdt,
+      })),
+      {
+        subtotal: serverSubtotal,
+        delivery_cost: parsed.data.shippingCostBdt,
+        total: serverTotal,
+      }
+    );
+
+    void Promise.all([
+      notifyAdminOfNewOrder(notificationPayload),
+      sendOrderConfirmationToCustomer(notificationPayload),
+    ]).catch((err) => console.error('[orders] notifications failed:', err));
 
     return apiSuccess(
       {
