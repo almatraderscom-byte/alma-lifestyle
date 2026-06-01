@@ -172,6 +172,19 @@ export interface Order {
   updated_at: Timestamp;
   shipped_at: Timestamp | null;
   delivered_at: Timestamp | null;
+  archived_at: Timestamp | null;
+  archived_by: string | null;
+}
+
+export interface AdminAuditLog {
+  id: UUID;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  entity_data: Json | null;
+  performed_by: string | null;
+  performed_at: Timestamp;
+  notes: string | null;
 }
 
 export interface OrderItem {

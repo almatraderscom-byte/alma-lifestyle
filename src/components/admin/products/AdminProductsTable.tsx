@@ -14,6 +14,7 @@ interface AdminProductsTableProps {
   selected: Set<string>;
   onToggleRow: (id: string) => void;
   onDelete: (id: string) => void;
+  onDeleteGroup?: (group: { id: string; name: string; count: number }) => void;
   onDuplicate: (id: string) => void;
   onTogglePublish: (id: string, status: AdminProduct['status']) => void;
 }
@@ -41,6 +42,7 @@ export function AdminProductsTable({
   selected,
   onToggleRow,
   onDelete,
+  onDeleteGroup,
   onDuplicate,
   onTogglePublish,
 }: AdminProductsTableProps) {
@@ -204,14 +206,32 @@ export function AdminProductsTable({
                 ৳ {min.toLocaleString('en-US')}
                 {max !== min && ` — ৳ ${max.toLocaleString('en-US')}`}
               </span>
-              {men && (
-                <Link
-                  href={`/admin/products/${men.id}/edit`}
-                  className="text-sm text-[#C97D5D] hover:underline ml-auto"
-                >
-                  Edit men&apos;s (primary) →
-                </Link>
-              )}
+              <div className="ml-auto flex items-center gap-2">
+                {men && (
+                  <Link
+                    href={`/admin/products/${men.id}/edit`}
+                    className="text-sm text-[#C97D5D] hover:underline"
+                  >
+                    Edit men&apos;s (primary) →
+                  </Link>
+                )}
+                {onDeleteGroup && (
+                  <button
+                    type="button"
+                    className="rounded p-1 text-red-600 hover:bg-red-50"
+                    title="Delete design group"
+                    onClick={() =>
+                      onDeleteGroup({
+                        id: row.designGroupId,
+                        name: row.designName,
+                        count: row.products.length,
+                      })
+                    }
+                  >
+                    🗑
+                  </button>
+                )}
+              </div>
             </div>
           </td>
         </tr>

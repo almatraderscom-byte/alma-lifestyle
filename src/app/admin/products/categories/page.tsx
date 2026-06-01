@@ -11,6 +11,7 @@ import {
   uid,
   type AdminCategory,
 } from '@/lib/admin-store';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { useAdminToast } from '@/context/AdminToastContext';
@@ -31,6 +32,7 @@ export default function AdminCategoriesPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
 
   async function refresh() {
     setItems(await getCategories());
@@ -245,10 +247,38 @@ export default function AdminCategoriesPage() {
                 >
                   Hide
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600"
+                  onClick={() => setDeleteTarget(cat)}
+                >
+                  Delete
+                </Button>
               </div>
             </li>
           ))}
       </ul>
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          title={`Delete category "${deleteTarget.name}"?`}
+          description="This permanently removes the category. It only works if no products are assigned to this category."
+          confirmText="DELETE"
+          warningPoints={['Category record removed from database']}
+          onConfirm={async () => {
+            try {
+              await deleteCategory(deleteTarget.id);
+              toast('Category deleted', 'success');
+              setDeleteTarget(null);
+              await refresh();
+            } catch (err) {
+              toast(err instanceof Error ? err.message : 'Delete failed', 'error');
+            }
+          }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }

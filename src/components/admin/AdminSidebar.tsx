@@ -22,6 +22,7 @@ const NAV = [
     ],
   },
   { href: '/admin/orders', label: 'Orders', icon: CartIcon, badge: true },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: BellIcon },
   {
     href: '/admin/notifications',
     label: 'Notifications',

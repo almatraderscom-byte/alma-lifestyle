@@ -8,6 +8,8 @@ export interface GetOrdersOptions {
   limit: number;
   status?: string;
   customerId?: string;
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
 }
 
 export interface OrderWithItems extends Order {
@@ -35,7 +37,7 @@ export async function generateOrderNumber(): Promise<string> {
 export async function getOrders(
   options: GetOrdersOptions
 ): Promise<{ data: OrderWithItems[]; total: number; page: number; limit: number; totalPages: number }> {
-  const { page, limit, status, customerId } = options;
+  const { page, limit, status, customerId, includeArchived, archivedOnly } = options;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
   const brandId = await getBrandId();
@@ -46,6 +48,12 @@ export async function getOrders(
     .eq('brand_id', brandId)
     .order('created_at', { ascending: false })
     .range(from, to);
+
+  if (archivedOnly) {
+    query = query.not('archived_at', 'is', null);
+  } else if (!includeArchived) {
+    query = query.is('archived_at', null);
+  }
 
   if (status) query = query.eq('status', status);
   if (customerId) query = query.eq('customer_id', customerId);
@@ -158,4 +166,70 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderWithIte
     ...order,
     order_items: (itemRows ?? []) as OrderItem[],
   };
+}
+
+const DELETABLE_ORDER_STATUSES = new Set(['cancelled', 'refunded']);
+
+export function canPermanentlyDeleteOrder(order: Order): boolean {
+  if (order.archived_at) return true;
+  return DELETABLE_ORDER_STATUSES.has(order.status);
+}
+
+export async function archiveOrder(
+  id: string,
+  archivedBy: string
+): Promise<Order | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('orders')
+    .update({
+      archived_at: new Date().toISOString(),
+      archived_by: archivedBy,
+    } as never)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  assertNoError(error, 'archiveOrder');
+  return data as Order | null;
+}
+
+export async function restoreOrder(id: string): Promise<Order | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('orders')
+    .update({
+      archived_at: null,
+      archived_by: null,
+    } as never)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  assertNoError(error, 'restoreOrder');
+  return data as Order | null;
+}
+
+export async function deleteOrderPermanently(id: string): Promise<void> {
+  const { error: itemsError } = await getSupabaseAdmin()
+    .from('order_items')
+    .delete()
+    .eq('order_id', id);
+
+  assertNoError(itemsError, 'deleteOrderPermanently.items');
+
+  const { error } = await getSupabaseAdmin().from('orders').delete().eq('id', id);
+  assertNoError(error, 'deleteOrderPermanently.order');
+}
+
+export async function deleteOrdersPermanently(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+
+  const { error: itemsError } = await getSupabaseAdmin()
+    .from('order_items')
+    .delete()
+    .in('order_id', ids);
+
+  assertNoError(itemsError, 'deleteOrdersPermanently.items');
+
+  const { error } = await getSupabaseAdmin().from('orders').delete().in('id', ids);
+  assertNoError(error, 'deleteOrdersPermanently.orders');
 }

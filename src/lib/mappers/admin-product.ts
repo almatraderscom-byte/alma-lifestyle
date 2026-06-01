@@ -266,6 +266,8 @@ export function mapDbOrderToAdmin(row: Order, itemsCount: number): AdminOrder {
     city: row.shipping_city ?? '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    archivedAt: row.archived_at ?? null,
+    archivedBy: row.archived_by ?? null,
   };
 }
 
@@ -345,6 +347,8 @@ export function mapCreateOrderToDb(
     currency: payload.currency ?? 'BDT',
     shipped_at: null,
     delivered_at: null,
+    archived_at: null,
+    archived_by: null,
   };
 
   const items = payload.items.map((item) => ({

@@ -58,12 +58,38 @@ export async function updateCategory(
   return data;
 }
 
-export async function deleteCategory(id: string): Promise<boolean> {
+export async function countProductsInCategory(categoryId: string): Promise<number> {
+  const brandId = await getBrandId();
+  const { count, error } = await getSupabaseAdmin()
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('brand_id', brandId)
+    .eq('category_id', categoryId);
+
+  assertNoError(error, 'countProductsInCategory');
+  return count ?? 0;
+}
+
+/** Soft-deactivate category (legacy hide). */
+export async function deactivateCategory(id: string): Promise<boolean> {
   const { error } = await getSupabaseAdmin()
     .from('categories')
     .update({ active: false } as never)
     .eq('id', id);
 
+  assertNoError(error, 'deactivateCategory');
+  return true;
+}
+
+export async function deleteCategory(id: string): Promise<boolean> {
+  const productCount = await countProductsInCategory(id);
+  if (productCount > 0) {
+    throw new Error(
+      `Cannot delete category with ${productCount} products. Move products to another category first.`
+    );
+  }
+
+  const { error } = await getSupabaseAdmin().from('categories').delete().eq('id', id);
   assertNoError(error, 'deleteCategory');
   return true;
 }
