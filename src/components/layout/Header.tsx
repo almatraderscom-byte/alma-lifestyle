@@ -9,6 +9,7 @@ import { MOBILE_NAV_ICONS } from '@/lib/content';
 import { useHeaderNavItems } from '@/context/NavMenuContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
+import { HeaderAuthLinks } from '@/components/layout/HeaderAuthLinks';
 import { useCart } from '@/context/CartContext';
 import { toBanglaNumber } from '@/lib/format-bn';
 
@@ -40,7 +41,8 @@ export function Header() {
             <HeaderNavLinks />
           </Suspense>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <HeaderAuthLinks className="hidden md:flex items-center gap-3 mr-1" />
             <IconLink
               href={MOBILE_NAV_ICONS.search.href}
               label={MOBILE_NAV_ICONS.search.label}
@@ -107,6 +109,9 @@ export function Header() {
                 </button>
               </div>
               <ul className="flex-1 overflow-y-auto px-4 py-4">
+                <li className="px-2 pb-3 mb-2 border-b border-border-subtle/60 flex gap-4">
+                  <HeaderAuthLinks className="flex gap-4" />
+                </li>
                 {navItems.map((item, i) => (
                   <motion.li
                     key={item.href}

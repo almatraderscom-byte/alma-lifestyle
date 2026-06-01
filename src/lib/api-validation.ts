@@ -99,6 +99,7 @@ export const CollectionBodySchema = z.object({
 });
 
 export const CreateOrderBodySchema = z.object({
+  customerId: z.string().uuid().optional().nullable(),
   customerName: z.string().min(2),
   customerPhone: z.string().min(6),
   customerEmail: z.string().email().optional(),

@@ -286,6 +286,7 @@ export function parseAppSettings(value: unknown): AppSettings {
 }
 
 export interface CreateOrderPayload {
+  customerId?: string | null;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -323,7 +324,7 @@ export function mapCreateOrderToDb(
   const order = {
     brand_id: brandId,
     order_number: orderNumber,
-    customer_id: null,
+    customer_id: payload.customerId ?? null,
     customer_name: payload.customerName,
     customer_email: payload.customerEmail ?? null,
     customer_phone: payload.customerPhone,

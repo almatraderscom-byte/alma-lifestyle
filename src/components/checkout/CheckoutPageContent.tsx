@@ -13,6 +13,7 @@ import { getDeliveryCharge } from '@/lib/delivery';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
 import { shouldUseApi } from '@/lib/data-source';
 import { createOrderApi } from '@/lib/admin-api';
+import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 
 export function CheckoutPageContent() {
@@ -88,10 +89,19 @@ export function CheckoutPageContent() {
     const cityLabel = getCityLabel(data.city);
 
     let orderNumber: string | undefined;
+    let customerId: string | null = null;
+    const supabase = getSupabaseBrowser();
+    if (supabase) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      customerId = session?.user?.id ?? null;
+    }
 
     if (shouldUseApi()) {
       try {
         const created = await createOrderApi({
+          customerId,
           customerName,
           customerPhone,
           customerEmail,

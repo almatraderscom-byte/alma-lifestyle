@@ -63,11 +63,19 @@ export async function getOrders(
   };
 }
 
+function normalizeBdPhoneDigits(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 11 && digits.startsWith('880')) {
+    return digits.slice(-11);
+  }
+  return digits.slice(-11);
+}
+
 export async function getOrderByNumberAndPhone(
   orderNumber: string,
   phone: string
 ): Promise<OrderWithItems | null> {
-  const normalizedPhone = phone.replace(/\D/g, '');
+  const normalizedPhone = normalizeBdPhoneDigits(phone);
   const brandId = await getBrandId();
 
   const { data, error } = await getSupabaseAdmin()
@@ -81,8 +89,8 @@ export async function getOrderByNumberAndPhone(
 
   if (!data) return null;
 
-  const orderPhone = (data as Order).customer_phone.replace(/\D/g, '');
-  if (orderPhone !== normalizedPhone && !orderPhone.endsWith(normalizedPhone.slice(-10))) {
+  const orderPhone = normalizeBdPhoneDigits((data as Order).customer_phone);
+  if (orderPhone !== normalizedPhone) {
     return null;
   }
 

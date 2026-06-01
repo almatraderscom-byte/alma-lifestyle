@@ -61,3 +61,23 @@ export async function tryRequireAdmin(
     return null;
   }
 }
+
+export interface CustomerAuthContext {
+  userId: string;
+  email: string;
+}
+
+export async function tryRequireCustomer(
+  request: NextRequest
+): Promise<CustomerAuthContext | null> {
+  if (!isSupabaseAdminConfigured()) return null;
+
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  const token = authHeader.slice(7);
+  const { data, error } = await getSupabaseAdmin().auth.getUser(token);
+  if (error || !data.user?.id || !data.user.email) return null;
+
+  return { userId: data.user.id, email: data.user.email };
+}
