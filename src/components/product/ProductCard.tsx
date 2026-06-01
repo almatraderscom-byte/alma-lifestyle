@@ -15,6 +15,7 @@ import {
   type ProductType,
 } from '@/lib/product-design-types';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/components/ui/Toast';
 import { getProductBySlug } from '@/lib/products-data';
 import { catalogToCartItem } from '@/lib/cart-helpers';
@@ -84,7 +85,8 @@ export function ProductCard({
 }: ProductCardProps) {
   const { addItem } = useCart();
   const { showToast } = useToast();
-  const [wished, setWished] = useState(false);
+  const { has: isWished, toggle: toggleWishlist } = useWishlist();
+  const wished = isWished(product.id);
   const [mobileIndex, setMobileIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -245,7 +247,7 @@ export function ProductCard({
           aria-label={wished ? UI.removeFromWishlist : UI.addToWishlist}
           onClick={(e) => {
             e.preventDefault();
-            setWished(!wished);
+            toggleWishlist(product.id);
           }}
         >
           <HeartIcon filled={wished} />

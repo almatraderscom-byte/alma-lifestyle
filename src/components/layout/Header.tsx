@@ -1,226 +1,456 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  Heart,
+  Menu,
+  Search,
+  ShoppingBag,
+  User,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { HEADER, MOBILE_NAV_ICONS } from '@/lib/content';
-import { useHeaderNavItems } from '@/context/NavMenuContext';
-import { useStoreSettings } from '@/context/StoreSettingsContext';
-import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
-import { HeaderAuthLinks } from '@/components/layout/HeaderAuthLinks';
+import { ACCOUNT, AUTH, HEADER, MOBILE_NAV_ICONS, NAV, UI } from '@/lib/content';
+import { useHeaderCategoryItems } from '@/context/NavMenuContext';
 import { useCart } from '@/context/CartContext';
-import { toBanglaNumber } from '@/lib/format-bn';
+import { useWishlist } from '@/context/WishlistContext';
+import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
-export function Header() {
-  const navItems = useHeaderNavItems();
-  const settings = useStoreSettings();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { itemCount, hydrated } = useCart();
-  const bagCount = hydrated ? itemCount : 0;
-
+function CountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
   return (
-    <>
-      <motion.header
-        className="sticky top-0 z-40 bg-background border-b border-border-subtle"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-      >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:h-[4.5rem] md:px-6">
-          <Link
-            href="/"
-            className="font-brand text-2xl font-semibold tracking-wide text-primary md:text-[1.75rem]"
-            onClick={() => setMenuOpen(false)}
-          >
-            {settings.storeName}
-          </Link>
+    <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-terracotta px-1 text-[10px] font-semibold text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
-          <Suspense fallback={<div className="hidden md:block w-48 h-6 bg-secondary/50 rounded" aria-hidden />}>
-            <HeaderNavLinks />
-          </Suspense>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <HeaderAuthLinks className="hidden md:flex items-center gap-3 mr-1" />
-            <IconLink
-              href={MOBILE_NAV_ICONS.search.href}
-              label={MOBILE_NAV_ICONS.search.label}
-              icon={<SearchIcon />}
-            />
-            <IconLink
-              href={MOBILE_NAV_ICONS.wishlist.href}
-              label={MOBILE_NAV_ICONS.wishlist.label}
-              icon={<HeartIcon />}
-              className="hidden sm:flex"
-            />
-            <IconLink
-              href={MOBILE_NAV_ICONS.bag.href}
-              label={MOBILE_NAV_ICONS.bag.label}
-              icon={<BagIcon count={bagCount} />}
-            />
-
-            <button
-              type="button"
-              className="md:hidden ml-1 p-2 -mr-2 text-primary"
-              aria-label={menuOpen ? HEADER.closeMenu : HEADER.openMenu}
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <CloseIcon /> : <MenuIcon />}
-            </button>
-          </div>
-        </div>
-      </motion.header>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.button
-              type="button"
-              className="absolute inset-0 bg-primary/50"
-              aria-label={HEADER.closeMenu}
-              onClick={() => setMenuOpen(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
-            <motion.nav
-              className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-background shadow-xl flex flex-col"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              aria-label={HEADER.mobileMenu}
-            >
-              <div className="flex items-center justify-between border-b border-border-subtle px-5 h-16">
-                <span className="font-brand text-xl text-primary">{settings.storeName}</span>
-                <button
-                  type="button"
-                  className="p-2 text-primary"
-                  onClick={() => setMenuOpen(false)}
-                  aria-label={HEADER.closeMenu}
-                >
-                  <CloseIcon />
-                </button>
-              </div>
-              <ul className="flex-1 overflow-y-auto px-4 py-4">
-                <li className="px-2 pb-3 mb-2 border-b border-border-subtle/60 flex gap-4">
-                  <HeaderAuthLinks className="flex gap-4" />
-                </li>
-                {navItems.map((item, i) => (
-                  <motion.li
-                    key={item.href}
-                    initial={{ opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 + i * 0.06 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="flex items-center min-h-12 py-3 px-2 font-bn-heading text-xl text-primary border-b border-border-subtle/60"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  </motion.li>
-                ))}
-              </ul>
-              <div className="grid grid-cols-3 gap-2 p-4 border-t border-border-subtle bg-warm-white">
-                {Object.values(MOBILE_NAV_ICONS).map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="flex flex-col items-center justify-center min-h-12 py-2 text-center"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <span className="text-xs font-bn-body text-text-light">{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </motion.nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+function IconButton({
+  className,
+  title,
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { title: string }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      className={cn(
+        'relative rounded-full p-2 text-charcoal transition-colors hover:bg-cream',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
   );
 }
 
 function IconLink({
   href,
-  label,
-  icon,
+  title,
   className,
+  children,
+  onClick,
 }: {
   href: string;
-  label: string;
-  icon: React.ReactNode;
+  title: string;
   className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
+      title={title}
+      aria-label={title}
+      onClick={onClick}
       className={cn(
-        'flex flex-col items-center justify-center min-w-[52px] py-1 px-1 text-primary hover:text-accent transition-colors',
+        'relative rounded-full p-2 text-charcoal transition-colors hover:bg-cream',
         className
       )}
     >
-      {icon}
-      <span className="font-bn-body text-[10px] md:text-xs text-text-light mt-0.5 leading-tight">
-        {label}
-      </span>
+      {children}
     </Link>
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-3-3" />
-    </svg>
-  );
-}
+export function Header() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const categories = useHeaderCategoryItems();
+  const { itemCount, hydrated: cartHydrated } = useCart();
+  const { count: wishlistCount, hydrated: wishHydrated } = useWishlist();
+  const cartCount = cartHydrated ? itemCount : 0;
+  const wishCount = wishHydrated ? wishlistCount : 0;
 
-function HeartIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-    </svg>
-  );
-}
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
 
-function BagIcon({ count }: { count: number }) {
-  return (
-    <span className="relative inline-flex">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M6 6h15l-1.5 9h-12z" />
-        <path d="M6 6L5 3H2" />
-      </svg>
-      {count > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white px-1">
-          {toBanglaNumber(count)}
-        </span>
-      )}
-    </span>
-  );
-}
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-function MenuIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
-  );
-}
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
 
-function CloseIcon() {
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => setLoggedIn(!!session));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setMobileCategoriesOpen(false);
+  }, [pathname]);
+
+  async function handleLogout() {
+    const supabase = getSupabaseBrowser();
+    await supabase?.auth.signOut();
+    setMenuOpen(false);
+    router.push('/');
+    router.refresh();
+  }
+
+  function navLinkClass(active: boolean) {
+    return cn(
+      'whitespace-nowrap px-3 py-2 text-sm font-medium text-charcoal transition-colors hover:text-terracotta',
+      active && 'text-terracotta'
+    );
+  }
+
+  const shopActive =
+    pathname === '/products' && searchParams.get('sort') !== 'newest' && !searchParams.get('category');
+  const newActive = pathname === '/products' && searchParams.get('sort') === 'newest';
+
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <path d="M6 6l12 12M18 6L6 18" />
-    </svg>
+    <>
+      <header
+        className={cn(
+          'sticky top-0 z-40 border-b bg-white transition-shadow duration-300',
+          scrolled ? 'border-gray-100 shadow-md' : 'border-border-subtle shadow-none'
+        )}
+      >
+        <div className="mx-auto max-w-7xl px-4 lg:px-6">
+          {/* Mobile bar */}
+          <div className="flex h-16 items-center justify-between lg:hidden">
+            <button
+              type="button"
+              className="rounded-full p-2 text-charcoal hover:bg-cream"
+              aria-label={HEADER.openMenu}
+              onClick={() => setMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6" aria-hidden />
+            </button>
+
+            <Link href="/" className="font-brand text-xl text-charcoal whitespace-nowrap">
+              ALMA
+            </Link>
+
+            <div className="flex items-center gap-1">
+              <IconLink href={MOBILE_NAV_ICONS.search.href} title={UI.search}>
+                <Search className="h-5 w-5" aria-hidden />
+              </IconLink>
+              <IconLink href={MOBILE_NAV_ICONS.bag.href} title={UI.cart}>
+                <ShoppingBag className="h-5 w-5" aria-hidden />
+                <CountBadge count={cartCount} />
+              </IconLink>
+            </div>
+          </div>
+
+          {/* Desktop bar */}
+          <div className="hidden h-20 items-center justify-between lg:flex">
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+                <span className="font-brand text-2xl tracking-wider text-charcoal whitespace-nowrap">
+                  ALMA
+                </span>
+                <span className="font-brand mt-1 hidden text-xs text-text-light xl:inline whitespace-nowrap">
+                  Lifestyle
+                </span>
+              </Link>
+            </div>
+
+            <nav
+              className="mx-auto flex items-center gap-6 xl:gap-8"
+              aria-label={HEADER.mainNav}
+            >
+              <Link href={NAV.shop.href} className={navLinkClass(shopActive)}>
+                {NAV.shop.label}
+              </Link>
+              <Link href={NAV.newArrivals.href} className={navLinkClass(newActive)}>
+                {NAV.newArrivals.label}
+              </Link>
+
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 text-sm font-medium text-charcoal transition-colors hover:text-terracotta"
+                  aria-haspopup="true"
+                >
+                  {NAV.categoriesLabel}
+                  <ChevronDown className="h-4 w-4" aria-hidden />
+                </button>
+                <div
+                  className={cn(
+                    'absolute left-0 top-full z-50 mt-2 w-52 rounded-md bg-white py-1 shadow-xl',
+                    'invisible opacity-0 transition-all duration-200',
+                    'group-hover:visible group-hover:opacity-100',
+                    'group-focus-within:visible group-focus-within:opacity-100'
+                  )}
+                >
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.href}
+                      href={cat.href}
+                      className="block px-4 py-3 text-sm text-charcoal transition-colors hover:bg-cream"
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <Link href={NAV.about.href} className={navLinkClass(pathname === NAV.about.href)}>
+                {NAV.about.label}
+              </Link>
+            </nav>
+
+            <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
+              <IconLink href={MOBILE_NAV_ICONS.search.href} title={UI.search}>
+                <Search className="h-5 w-5" aria-hidden />
+              </IconLink>
+
+              <IconLink href={MOBILE_NAV_ICONS.wishlist.href} title={UI.wishlist}>
+                <Heart className="h-5 w-5" aria-hidden />
+                <CountBadge count={wishCount} />
+              </IconLink>
+
+              <IconLink href={MOBILE_NAV_ICONS.bag.href} title={UI.cart}>
+                <ShoppingBag className="h-5 w-5" aria-hidden />
+                <CountBadge count={cartCount} />
+              </IconLink>
+
+              <div className="relative group">
+                <IconButton title={UI.myAccount} aria-label={UI.myAccount}>
+                  <User className="h-5 w-5" aria-hidden />
+                </IconButton>
+                <div
+                  className={cn(
+                    'absolute right-0 top-full z-50 mt-2 w-48 rounded-md bg-white py-1 shadow-xl',
+                    'invisible opacity-0 transition-all duration-200',
+                    'group-hover:visible group-hover:opacity-100',
+                    'group-focus-within:visible group-focus-within:opacity-100'
+                  )}
+                >
+                  {loggedIn ? (
+                    <>
+                      <Link
+                        href="/account"
+                        className="block px-4 py-3 text-sm text-charcoal hover:bg-cream"
+                      >
+                        {AUTH.account}
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="block px-4 py-3 text-sm text-charcoal hover:bg-cream"
+                      >
+                        My Orders
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleLogout()}
+                        className="block w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-cream"
+                      >
+                        {ACCOUNT.logout}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="block px-4 py-3 text-sm text-charcoal hover:bg-cream"
+                      >
+                        {AUTH.loginButton}
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="block px-4 py-3 text-sm text-charcoal hover:bg-cream"
+                      >
+                        {AUTH.signUpButton}
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/50"
+              aria-label={HEADER.closeMenu}
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.aside
+              className="absolute left-0 top-0 bottom-0 flex w-[min(20rem,85vw)] flex-col bg-white shadow-xl"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              aria-label={HEADER.mobileMenu}
+            >
+              <div className="flex items-center justify-between border-b border-border-subtle p-4">
+                <span className="font-brand text-2xl text-charcoal">ALMA</span>
+                <button
+                  type="button"
+                  className="rounded-full p-2 hover:bg-cream"
+                  aria-label={HEADER.closeMenu}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <X className="h-6 w-6" aria-hidden />
+                </button>
+              </div>
+
+              <nav className="flex-1 overflow-y-auto p-4">
+                <Link
+                  href={NAV.shop.href}
+                  className="block py-3 text-lg font-bn-heading text-charcoal"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {NAV.shop.label}
+                </Link>
+                <Link
+                  href={NAV.newArrivals.href}
+                  className="block py-3 text-lg font-bn-heading text-charcoal"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {NAV.newArrivals.label}
+                </Link>
+
+                <div className="mt-2 border-t border-border-subtle pt-2">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between py-2 text-sm font-medium text-text-light"
+                    onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+                    aria-expanded={mobileCategoriesOpen}
+                  >
+                    {NAV.categoriesLabel}
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        mobileCategoriesOpen && 'rotate-180'
+                      )}
+                      aria-hidden
+                    />
+                  </button>
+                  {mobileCategoriesOpen && (
+                    <ul className="pb-2 pl-2">
+                      {categories.map((cat) => (
+                        <li key={cat.href}>
+                          <Link
+                            href={cat.href}
+                            className="block py-2 pl-2 text-base text-charcoal"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            {cat.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="mt-2 border-t border-border-subtle pt-2">
+                  <Link
+                    href={NAV.about.href}
+                    className="block py-3 text-lg font-bn-heading text-charcoal"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {NAV.about.label}
+                  </Link>
+                  <Link
+                    href="/track"
+                    className="block py-3 font-bn-body text-charcoal"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {UI.trackOrder}
+                  </Link>
+                  {loggedIn ? (
+                    <>
+                      <Link
+                        href="/account"
+                        className="block py-3 font-bn-body text-charcoal"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {AUTH.account}
+                      </Link>
+                      <button
+                        type="button"
+                        className="block py-3 text-left font-bn-body text-red-600"
+                        onClick={() => void handleLogout()}
+                      >
+                        {ACCOUNT.logout}
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="block py-3 font-bn-body text-charcoal"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {AUTH.loginButton}
+                    </Link>
+                  )}
+                </div>
+
+                <div className="mt-4 flex gap-2 border-t border-border-subtle pt-4">
+                  <IconLink
+                    href={MOBILE_NAV_ICONS.wishlist.href}
+                    title={UI.wishlist}
+                    className="flex-1 justify-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Heart className="h-5 w-5" aria-hidden />
+                    <CountBadge count={wishCount} />
+                  </IconLink>
+                  <IconLink
+                    href={MOBILE_NAV_ICONS.search.href}
+                    title={UI.search}
+                    className="flex-1 justify-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Search className="h-5 w-5" aria-hidden />
+                  </IconLink>
+                </div>
+              </nav>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

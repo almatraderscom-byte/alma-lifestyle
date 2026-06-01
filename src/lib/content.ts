@@ -15,9 +15,10 @@ export const SITE = {
 
 export const NAV = {
   shop: { label: 'দোকান', href: '/products' },
-  newArrivals: { label: 'নতুন এসেছে', href: '/products?sort=newest' },
+  newArrivals: { label: 'নতুন', href: '/new' },
   collections: { label: 'কালেকশন', href: '/collections' },
   about: { label: 'আমাদের সম্পর্কে', href: '/products' },
+  categoriesLabel: 'Categories',
 } as const;
 
 export const MOBILE_NAV_ICONS = {
@@ -332,6 +333,7 @@ export const FOOTER = {
   ],
   helpTitle: 'সাহায্য',
   helpLinks: [
+    { label: UI.trackOrder, href: '/track' },
     { label: 'যোগাযোগ', href: '/products' },
     { label: 'ডেলিভারি তথ্য', href: '/products' },
     { label: 'রিটার্ন পলিসি', href: '/products' },
