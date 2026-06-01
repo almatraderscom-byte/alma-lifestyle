@@ -4,11 +4,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import type { FeaturedProduct } from '@/lib/content';
+import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 
-export type OceanProduct = FeaturedProduct & {
+export type OceanProduct = {
+  id: string;
+  title: string;
+  price: number;
+  href: string;
+  bgClass: string;
   galleryImages?: { id: string; bgClass: string; url?: string }[];
   designGroupName?: string;
 };
@@ -22,6 +27,16 @@ interface CardConfig {
   scale: number;
 }
 
+type OceanSlot = {
+  key: string;
+  product: OceanProduct;
+  imageUrl?: string;
+  bgClass: string;
+  isPlaceholder: boolean;
+};
+
+const OCEAN_SLOT_COUNT = 7;
+
 const CARD_CONFIGS: CardConfig[] = [
   { x: 5, y: 10, rotate: -8, duration: 8, delay: 0, scale: 1 },
   { x: 25, y: -5, rotate: 4, duration: 10, delay: 0.5, scale: 0.95 },
@@ -32,6 +47,16 @@ const CARD_CONFIGS: CardConfig[] = [
   { x: 60, y: 30, rotate: -5, duration: 9.5, delay: 1.2, scale: 1.02 },
 ];
 
+const PLACEHOLDER_BGS = [
+  'bg-terracotta',
+  'bg-maroon',
+  'bg-mustard',
+  'bg-emerald',
+  'bg-charcoal',
+  'bg-[#92400e]',
+  'bg-teal-700',
+] as const;
+
 interface FloatingCollectionOceanProps {
   products: OceanProduct[];
 }
@@ -39,6 +64,69 @@ interface FloatingCollectionOceanProps {
 function getImageUrl(product: OceanProduct): string | undefined {
   const url = product.galleryImages?.[0]?.url;
   return url && url.trim().length > 0 ? url : undefined;
+}
+
+function placeholderProduct(index: number): OceanProduct {
+  const seed = HOME_FEATURED_PRODUCTS[index % HOME_FEATURED_PRODUCTS.length];
+  return {
+    id: `ocean-placeholder-${index}`,
+    title: seed?.title ?? `প্রিমিয়াম সংগ্রহ ${index + 1}`,
+    price: seed?.price ?? 2500,
+    href: seed?.href ?? '/products',
+    bgClass: PLACEHOLDER_BGS[index % PLACEHOLDER_BGS.length],
+  };
+}
+
+/** Fill 7 slots with distinct products; pad with color placeholders (no duplicate images). */
+function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
+  const slots: OceanSlot[] = [];
+  const seenIds = new Set<string>();
+  const seenImageUrls = new Set<string>();
+  let productIndex = 0;
+
+  for (let i = 0; i < OCEAN_SLOT_COUNT; i++) {
+    let assigned: OceanSlot | null = null;
+
+    while (productIndex < products.length) {
+      const candidate = products[productIndex];
+      productIndex += 1;
+
+      if (seenIds.has(candidate.id)) continue;
+
+      const imageUrl = getImageUrl(candidate);
+      if (imageUrl && seenImageUrls.has(imageUrl)) continue;
+
+      seenIds.add(candidate.id);
+      if (imageUrl) seenImageUrls.add(imageUrl);
+
+      assigned = {
+        key: `${candidate.id}-ocean-${i}`,
+        product: candidate,
+        imageUrl,
+        bgClass:
+          candidate.galleryImages?.[0]?.bgClass ??
+          candidate.bgClass ??
+          PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
+        isPlaceholder: !imageUrl,
+      };
+      break;
+    }
+
+    if (!assigned) {
+      const product = placeholderProduct(i);
+      assigned = {
+        key: product.id,
+        product,
+        imageUrl: undefined,
+        bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
+        isPlaceholder: true,
+      };
+    }
+
+    slots.push(assigned);
+  }
+
+  return slots;
 }
 
 function mobileConfigs(configs: CardConfig[]): CardConfig[] {
@@ -61,18 +149,31 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  const floatingProducts = products.slice(0, 7);
+  const slots = useMemo(() => buildOceanSlots(products), [products]);
   const configs = useMemo(
     () => (isMobile ? mobileConfigs(CARD_CONFIGS) : CARD_CONFIGS),
     [isMobile]
   );
 
-  if (floatingProducts.length === 0) {
-    return null;
-  }
+  useEffect(() => {
+    console.log(
+      '[Ocean] Source products:',
+      products.length,
+      products.map((p) => p.title)
+    );
+    console.log(
+      '[Ocean] Slots:',
+      slots.map((s) => ({
+        title: s.product.title,
+        hasImage: Boolean(s.imageUrl),
+        placeholder: s.isPlaceholder,
+      }))
+    );
+  }, [products, slots]);
 
   return (
     <section className="relative w-full overflow-hidden bg-cream py-20 md:py-32">
+      {/* DEBUG: ocean.sourceCount={products.length} ocean.slots={slots.length} */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.05] text-charcoal" aria-hidden>
         <svg className="h-full w-full" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
           <defs>
@@ -106,14 +207,13 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
           isMobile ? 'h-[520px]' : 'h-[500px] md:h-[600px] lg:h-[700px]'
         )}
       >
-        {floatingProducts.map((product, idx) => {
+        {slots.map((slot, idx) => {
           const config = configs[idx % configs.length];
-          const imageUrl = getImageUrl(product);
-          const bgClass = product.galleryImages?.[0]?.bgClass ?? product.bgClass;
+          const { product, imageUrl, bgClass, isPlaceholder } = slot;
 
           return (
             <motion.div
-              key={`${product.id}-${idx}`}
+              key={slot.key}
               className="absolute w-28 cursor-pointer sm:w-32 md:w-40 lg:w-48"
               style={{
                 left: `${config.x}%`,
@@ -159,7 +259,11 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
                   : { scale: config.scale * 1.1, zIndex: 50, transition: { duration: 0.35 } }
               }
             >
-              <Link href={product.href} className="group block">
+              <Link
+                href={isPlaceholder ? '/products' : product.href}
+                className="group block"
+                tabIndex={isPlaceholder ? -1 : 0}
+              >
                 <div
                   className={cn(
                     'relative h-36 overflow-hidden rounded-2xl border-2 border-cream bg-cream shadow-lg',
@@ -177,17 +281,23 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
                       sizes="(max-width: 640px) 120px, 192px"
                     />
                   ) : (
-                    <div className="absolute inset-0 pattern-overlay opacity-25" aria-hidden />
+                    <div className="absolute inset-0 flex items-center justify-center p-3 pattern-overlay opacity-20">
+                      <span className="text-center font-bn-heading text-sm font-semibold text-cream">
+                        {product.title}
+                      </span>
+                    </div>
                   )}
 
-                  <div className="absolute inset-0 flex items-end bg-charcoal/0 p-3 transition-colors duration-500 group-hover:bg-charcoal/25">
-                    <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                      <p className="font-bn-heading text-sm text-cream line-clamp-2">{product.title}</p>
-                      <p className="font-bn-body text-xs text-cream/85">{formatBdtPrice(product.price)}</p>
+                  {imageUrl && (
+                    <div className="absolute inset-0 flex items-end bg-charcoal/0 p-3 transition-colors duration-500 group-hover:bg-charcoal/25">
+                      <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                        <p className="font-bn-heading text-sm text-cream line-clamp-2">{product.title}</p>
+                        <p className="font-bn-body text-xs text-cream/85">{formatBdtPrice(product.price)}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {product.designGroupName && (
+                  {product.designGroupName && imageUrl && (
                     <span className="absolute top-3 right-3 rounded-full bg-cream/90 px-2 py-1 font-bn-body text-[10px] font-medium text-charcoal backdrop-blur-sm">
                       {product.designGroupName}
                     </span>

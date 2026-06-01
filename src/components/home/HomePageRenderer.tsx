@@ -10,7 +10,10 @@ import {
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
 import { EditorialHero } from '@/components/home/EditorialHero';
-import { FloatingCollectionOcean } from '@/components/home/FloatingCollectionOcean';
+import {
+  FloatingCollectionOcean,
+  type OceanProduct,
+} from '@/components/home/FloatingCollectionOcean';
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
@@ -25,11 +28,13 @@ import { SectionDivider } from '@/components/ui/SectionDivider';
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
   featuredProducts?: FeaturedProduct[];
+  oceanProducts?: OceanProduct[];
 }
 
 export function HomePageRenderer({
   initialConfig,
   featuredProducts = [],
+  oceanProducts = [],
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
 
@@ -82,7 +87,7 @@ export function HomePageRenderer({
           return (
             <>
               <EditorialHero data={section.data} featuredProducts={featuredProducts} />
-              <FloatingCollectionOcean products={featuredProducts} />
+              <FloatingCollectionOcean products={oceanProducts} />
             </>
           );
         case 'marquee':

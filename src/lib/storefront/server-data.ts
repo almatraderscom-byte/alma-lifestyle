@@ -253,3 +253,35 @@ export async function loadFeaturedProductsServer(limit: number): Promise<Catalog
     return CATALOG_PRODUCTS.slice(0, limit);
   }
 }
+
+export type OceanCardProduct = ReturnType<typeof toCardProduct> & {
+  designGroupName?: string;
+};
+
+/** Distinct published products for the floating ocean (not limited to featured section). */
+export async function loadOceanProductsServer(limit = 7): Promise<OceanCardProduct[]> {
+  const { products } = await loadCatalogProductsServer({ limit: 80, page: 1 });
+  const sorted = [...products].sort((a, b) => b.createdAt - a.createdAt);
+
+  const seenIds = new Set<string>();
+  const seenImageUrls = new Set<string>();
+  const out: OceanCardProduct[] = [];
+
+  for (const catalog of sorted) {
+    if (seenIds.has(catalog.id)) continue;
+    const card = toCardProduct(catalog);
+    const imageUrl = card.galleryImages?.[0]?.url?.trim();
+    if (imageUrl && seenImageUrls.has(imageUrl)) continue;
+
+    seenIds.add(catalog.id);
+    if (imageUrl) seenImageUrls.add(imageUrl);
+
+    out.push({
+      ...card,
+      designGroupName: catalog.designGroupName,
+    });
+    if (out.length >= limit) break;
+  }
+
+  return out;
+}
