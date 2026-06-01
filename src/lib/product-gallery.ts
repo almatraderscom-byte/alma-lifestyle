@@ -80,34 +80,37 @@ export function buildMatchingSetGallery(
   return out.length ? out : [{ id: 'placeholder', bgClass: activeMember.bgClass }];
 }
 
-/** Listing card: family group or men's featured, plus second image for hover. */
+/** Listing card: all unique member images for auto-rotation (family hero first). */
 export function buildListingCardGallery(product: CatalogProduct): StorefrontGalleryImage[] {
   if (product.designGroupMembers && product.designGroupMembers.length > 1) {
     const members = product.designGroupMembers;
     const men = members.find((m) => m.productType === 'men_panjabi') ?? members[0];
+    const seen = new Set<string>();
+    const out: StorefrontGalleryImage[] = [];
+
+    function pushUnique(images: StorefrontGalleryImage[]) {
+      for (const img of images) {
+        const key = img.url ?? img.id;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(img);
+      }
+    }
+
     const family = members.flatMap((m) =>
       mapProductImages(m).filter((i) => i.isFamilyGroup)
     );
-    const menMember = mapProductImages(men).filter((i) => !i.isFamilyGroup);
-    const boy = members.find((m) => m.productType === 'boy_panjabi');
-    const boyImg = boy
-      ? mapProductImages(boy).filter((i) => !i.isFamilyGroup)
-      : [];
+    if (family.length) pushUnique(family);
 
-    const primary = family[0] ?? menMember[0];
-    const secondary =
-      family[0] && menMember[0]
-        ? menMember[0]
-        : boyImg[0] ?? menMember[1] ?? members[1]
-          ? mapProductImages(members[1]).find((i) => !i.isFamilyGroup)
-          : undefined;
+    pushUnique(mapProductImages(men).filter((i) => !i.isFamilyGroup));
 
-    const list: StorefrontGalleryImage[] = [];
-    if (primary) list.push(primary);
-    if (secondary && (secondary.url ?? secondary.id) !== (primary?.url ?? primary?.id)) {
-      list.push(secondary);
+    for (const type of TAB_ORDER) {
+      const member = members.find((m) => m.productType === type);
+      if (!member || member.id === men.id) continue;
+      pushUnique(mapProductImages(member).filter((i) => !i.isFamilyGroup));
     }
-    return list.length ? list : [{ id: '1', bgClass: product.bgClass }];
+
+    return out.length ? out : [{ id: '1', bgClass: product.bgClass }];
   }
 
   const imgs = mapProductImages(product);

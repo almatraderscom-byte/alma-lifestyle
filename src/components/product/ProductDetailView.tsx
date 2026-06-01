@@ -56,8 +56,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               </h2>
             </ScrollFadeIn>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-              {related.map((p) => (
-                <ProductCard key={p.id} product={toCardProduct(p)} />
+              {related.map((p, idx) => (
+                <ProductCard key={p.id} product={toCardProduct(p)} index={idx} />
               ))}
             </div>
           </section>
@@ -70,8 +70,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             </h2>
           </ScrollFadeIn>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-            {recent.map((p) => (
-              <ProductCard key={p.id} product={toCardProduct(p)} />
+            {recent.map((p, idx) => (
+              <ProductCard key={p.id} product={toCardProduct(p)} index={idx} />
             ))}
           </div>
         </section>

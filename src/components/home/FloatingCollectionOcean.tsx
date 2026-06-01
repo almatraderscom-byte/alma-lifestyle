@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion, type Transition } from 'framer-motion';
+import { AutoRotateProductImage } from '@/components/product/AutoRotateProductImage';
 import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ interface CardConfig {
 type OceanSlot = {
   key: string;
   product: OceanProduct;
+  galleryImages: { id: string; bgClass: string; url?: string }[];
   imageUrl?: string;
   bgClass: string;
   isPlaceholder: boolean;
@@ -110,9 +111,15 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
       seenIds.add(candidate.id);
       if (imageUrl) seenImageUrls.add(imageUrl);
 
+      const galleryImages =
+        candidate.galleryImages?.length
+          ? candidate.galleryImages
+          : [{ id: candidate.id, bgClass: candidate.bgClass, url: imageUrl }];
+
       assigned = {
         key: `${candidate.id}-ocean-${i}`,
         product: candidate,
+        galleryImages,
         imageUrl,
         bgClass:
           candidate.galleryImages?.[0]?.bgClass ??
@@ -128,6 +135,7 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
       assigned = {
         key: product.id,
         product,
+        galleryImages: [{ id: product.id, bgClass: product.bgClass }],
         imageUrl: undefined,
         bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
         isPlaceholder: true,
@@ -194,7 +202,8 @@ function OceanCard({
   introComplete,
   reduceMotion,
 }: OceanCardProps) {
-  const { product, imageUrl, bgClass, isPlaceholder } = slot;
+  const { product, galleryImages, imageUrl, bgClass, isPlaceholder } = slot;
+  const staggerOffset = (idx * 420) % 2500;
   const fallRotateOffset = idx % 2 === 0 ? -15 : 15;
   const startRotate = config.rotate + fallRotateOffset;
 
@@ -265,13 +274,13 @@ function OceanCard({
             !imageUrl && bgClass
           )}
         >
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
+          {imageUrl || galleryImages.length > 1 ? (
+            <AutoRotateProductImage
+              images={galleryImages}
               alt={product.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 640px) 120px, 192px"
+              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+              rotationInterval={3000}
+              staggerOffset={staggerOffset}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center p-3 pattern-overlay opacity-20">
