@@ -22,57 +22,180 @@ export interface OrderNotificationData {
   items: OrderNotificationItem[];
 }
 
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key?.trim()) return null;
-  return new Resend(key);
+export type NotificationSendResult = {
+  success: boolean;
+  error?: string;
+  data?: unknown;
+};
+
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) {
+    console.error('[Notifications] RESEND_API_KEY missing from environment');
+    return null;
+  }
+
+  if (!resendClient) {
+    try {
+      resendClient = new Resend(key);
+      console.log('[Notifications] Resend client initialized successfully');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error('[Notifications] Failed to initialize Resend:', message);
+      return null;
+    }
+  }
+
+  return resendClient;
 }
 
-export async function sendWhatsAppToAdmin(message: string): Promise<boolean> {
-  const phone = process.env.ADMIN_WHATSAPP_NUMBER;
-  const apikey = process.env.CALLMEBOT_API_KEY;
-  if (!phone?.trim() || !apikey?.trim()) {
-    console.warn('[notifications] WhatsApp credentials not configured');
-    return false;
+function resolveFromEmail(): string {
+  const raw = process.env.FROM_EMAIL?.trim();
+  if (!raw) {
+    return 'onboarding@resend.dev';
   }
-
-  const text = encodeURIComponent(message);
-  try {
-    const response = await fetch(
-      `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${text}&apikey=${apikey}`,
-      { cache: 'no-store' }
-    );
-    console.log('[notifications] WhatsApp response status:', response.status);
-    return response.ok;
-  } catch (error) {
-    console.error('[notifications] WhatsApp send failed:', error);
-    return false;
+  if (raw.includes('<') && raw.includes('>')) {
+    return raw;
   }
+  if (raw.includes('@')) {
+    return `ALMA <${raw}>`;
+  }
+  return raw;
 }
 
 export async function sendEmailToCustomer(
   to: string,
   subject: string,
   html: string
-): Promise<boolean> {
-  const resend = getResend();
-  if (!resend) {
-    console.warn('[notifications] Resend not configured');
-    return false;
+): Promise<NotificationSendResult> {
+  console.log('[Email] Send attempt started:', {
+    to,
+    subject: subject.substring(0, 50),
+    hasApiKey: !!process.env.RESEND_API_KEY,
+    apiKeyPrefix: process.env.RESEND_API_KEY
+      ? `${process.env.RESEND_API_KEY.substring(0, 6)}...`
+      : 'NOT_SET',
+    fromEmail: process.env.FROM_EMAIL ?? 'NOT_SET',
+    adminEmail: process.env.ADMIN_EMAIL ? 'SET' : 'NOT_SET',
+    nodeEnv: process.env.NODE_ENV,
+  });
+
+  if (!to?.includes('@')) {
+    const error = `Invalid recipient email: ${to}`;
+    console.error('[Email]', error);
+    return { success: false, error };
   }
 
-  const from = process.env.FROM_EMAIL?.trim() || 'onboarding@resend.dev';
+  if (!subject?.trim()) {
+    const error = 'Subject is required';
+    console.error('[Email]', error);
+    return { success: false, error };
+  }
+
+  if (!html?.trim()) {
+    const error = 'HTML content is required';
+    console.error('[Email]', error);
+    return { success: false, error };
+  }
+
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    const error = 'RESEND_API_KEY not set in environment variables';
+    console.error('[Email]', error);
+    return { success: false, error };
+  }
+
+  const fromEmail = resolveFromEmail();
+
+  if (fromEmail.includes('@almatraders.com') || fromEmail.includes('@alma')) {
+    console.warn('[Email] Using custom domain — ensure DNS is verified in Resend dashboard');
+  }
+
+  console.log('[Email] Sending from:', fromEmail, 'to:', to);
+
+  const client = getResendClient();
+  if (!client) {
+    const error = 'Failed to initialize Resend client';
+    console.error('[Email]', error);
+    return { success: false, error };
+  }
 
   try {
-    const { error } = await resend.emails.send({ from, to, subject, html });
-    if (error) {
-      console.error('[notifications] Email send error:', error);
-      return false;
+    const response = await client.emails.send({
+      from: fromEmail,
+      to: [to],
+      subject,
+      html,
+    });
+
+    console.log('[Email] Resend API response:', JSON.stringify(response, null, 2));
+
+    if (response.error) {
+      const errObj = response.error as { message?: string };
+      const errorMsg = `Resend API error: ${errObj.message ?? JSON.stringify(response.error)}`;
+      console.error('[Email]', errorMsg);
+      return { success: false, error: errorMsg };
     }
-    return true;
+
+    if (response.data?.id) {
+      console.log('[Email] ✅ Sent successfully. Message ID:', response.data.id);
+      return { success: true, data: response.data };
+    }
+
+    console.warn('[Email] No data or error in response:', response);
+    return { success: false, error: 'No response data from Resend' };
   } catch (error) {
-    console.error('[notifications] Email send failed:', error);
-    return false;
+    const message = error instanceof Error ? error.message : JSON.stringify(error);
+    const errorMsg = `Exception during send: ${message}`;
+    console.error('[Email]', errorMsg, error);
+    return { success: false, error: errorMsg };
+  }
+}
+
+export async function sendWhatsAppToAdmin(
+  message: string
+): Promise<NotificationSendResult> {
+  console.log('[WhatsApp] Send attempt:', {
+    messagePreview: message.substring(0, 50),
+    hasApiKey: !!process.env.CALLMEBOT_API_KEY,
+    hasNumber: !!process.env.ADMIN_WHATSAPP_NUMBER,
+  });
+
+  if (!process.env.CALLMEBOT_API_KEY?.trim()) {
+    return { success: false, error: 'CALLMEBOT_API_KEY not set' };
+  }
+
+  if (!process.env.ADMIN_WHATSAPP_NUMBER?.trim()) {
+    return { success: false, error: 'ADMIN_WHATSAPP_NUMBER not set' };
+  }
+
+  const phone = process.env.ADMIN_WHATSAPP_NUMBER.trim();
+  const apikey = process.env.CALLMEBOT_API_KEY.trim();
+  const text = encodeURIComponent(message);
+
+  try {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${text}&apikey=${apikey}`;
+    console.log('[WhatsApp] Calling:', `${url.substring(0, 80)}...`);
+
+    const response = await fetch(url, { cache: 'no-store' });
+    const responseText = await response.text();
+
+    console.log('[WhatsApp] Response status:', response.status);
+    console.log('[WhatsApp] Response body:', responseText.substring(0, 200));
+
+    if (response.ok) {
+      return { success: true };
+    }
+
+    return {
+      success: false,
+      error: `HTTP ${response.status}: ${responseText.substring(0, 100)}`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[WhatsApp] Exception:', error);
+    return { success: false, error: message };
   }
 }
 
@@ -81,7 +204,8 @@ function formatOrderItemsList(items: OrderNotificationItem[]): string {
 }
 
 function adminPanelUrl(orderId: string): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://almatraders.com';
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://almatraders.com';
   return `${base}/admin/orders`;
 }
 
@@ -100,11 +224,14 @@ ${formatOrderItemsList(order.items)}
 
 Admin: ${adminPanelUrl(order.id)}`;
 
-  await sendWhatsAppToAdmin(message);
+  const wa = await sendWhatsAppToAdmin(message);
+  if (!wa.success) {
+    console.error('[notifications] Admin WhatsApp failed:', wa.error);
+  }
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim();
   if (adminEmail) {
-    await sendEmailToCustomer(
+    const email = await sendEmailToCustomer(
       adminEmail,
       `নতুন অর্ডার #${order.order_number}`,
       `<h2>নতুন অর্ডার এসেছে</h2>
@@ -114,6 +241,9 @@ Admin: ${adminPanelUrl(order.id)}`;
       <p>পরিমাণ: ৳${order.total}</p>
       <p><a href="${adminPanelUrl(order.id)}">অর্ডার দেখুন</a></p>`
     );
+    if (!email.success) {
+      console.error('[notifications] Admin email failed:', email.error);
+    }
   }
 }
 
@@ -172,11 +302,14 @@ export async function sendOrderConfirmationToCustomer(
 </body>
 </html>`;
 
-  await sendEmailToCustomer(
+  const result = await sendEmailToCustomer(
     order.customer_email.trim(),
     `অর্ডার নিশ্চিত — #${order.order_number}`,
     html
   );
+  if (!result.success) {
+    console.error('[notifications] Customer confirmation email failed:', result.error);
+  }
 }
 
 export async function notifyCustomerOfStatusChange(
@@ -213,11 +346,14 @@ export async function notifyCustomerOfStatusChange(
   </div>
 </div>`;
 
-  await sendEmailToCustomer(
+  const result = await sendEmailToCustomer(
     order.customer_email.trim(),
     `অর্ডার আপডেট — #${order.order_number}`,
     html
   );
+  if (!result.success) {
+    console.error('[notifications] Status change email failed:', result.error);
+  }
 }
 
 export function buildOrderNotificationData(
@@ -253,5 +389,21 @@ export function buildOrderNotificationData(
       quantity: i.quantity,
       price: i.unit_price_bdt,
     })),
+  };
+}
+
+/** Safe env diagnostics for admin test page (no secret values). */
+export function getNotificationEnvDiagnostics() {
+  return {
+    hasResendKey: !!process.env.RESEND_API_KEY?.trim(),
+    resendKeyPrefix: process.env.RESEND_API_KEY
+      ? `${process.env.RESEND_API_KEY.substring(0, 6)}...`
+      : 'NOT_SET',
+    fromEmail: process.env.FROM_EMAIL?.trim() || 'NOT_SET',
+    resolvedFrom: resolveFromEmail(),
+    adminEmail: process.env.ADMIN_EMAIL?.trim() ? 'SET' : 'NOT_SET',
+    hasCallmebotKey: !!process.env.CALLMEBOT_API_KEY?.trim(),
+    hasWhatsappNumber: !!process.env.ADMIN_WHATSAPP_NUMBER?.trim(),
+    nodeEnv: process.env.NODE_ENV,
   };
 }
