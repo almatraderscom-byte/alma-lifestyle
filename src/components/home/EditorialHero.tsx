@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { EDITORIAL_HERO } from '@/lib/content';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
 import { isUsableImageUrl } from '@/lib/homepage-image';
@@ -15,13 +16,39 @@ interface EditorialHeroProps {
   data?: HeroSectionData;
 }
 
+/** Stable particle layout (avoids hydration mismatch from Math.random). */
+const HERO_PARTICLES = Array.from({ length: 10 }, (_, i) => ({
+  left: `${((i * 11.3 + 8) % 92) + 4}%`,
+  top: `${((i * 19.7 + 12) % 88) + 6}%`,
+  delay: `${((i * 0.53) % 5).toFixed(2)}s`,
+  duration: `${(15 + (i % 6) * 2.5).toFixed(1)}s`,
+}));
+
 export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
   const reduceMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+
   const data =
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'hero')!.data;
 
   const hasBgImage = isUsableImageUrl(data.backgroundImageUrl);
+
+  const { scrollY } = useScroll();
+  /** Image column moves at ~0.6× scroll speed (480px over 800px scroll). */
+  const yImage = useTransform(scrollY, [0, 800], [0, -480]);
+  const scrollOpacity = useTransform(scrollY, [0, 600], [1, 0.7]);
+  const enableParallax = !reduceMotion && !isMobile;
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const showFxLayers = hasBgImage && !reduceMotion;
 
   return (
     <section className="min-h-[100dvh] md:min-h-screen flex flex-col md:flex-row">
@@ -31,25 +58,61 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE_PREMIUM }}
       >
-        {hasBgImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={data.backgroundImageUrl}
-            alt={data.title}
-            className="absolute inset-0 h-full w-full object-cover"
-            onLoad={() => console.log('[Homepage] Hero image loaded:', data.backgroundImageUrl)}
-            onError={() => console.error('[Homepage] Hero image failed:', data.backgroundImageUrl)}
-          />
-        ) : (
-          <PlaceholderImage
-            hint={data.imageHint || EDITORIAL_HERO.imageHint}
-            bgClass="bg-maroon h-full min-h-full"
-            className="absolute inset-0 h-full w-full"
-          />
-        )}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            y: enableParallax ? yImage : 0,
+            opacity: enableParallax ? scrollOpacity : 1,
+          }}
+        >
+          <div className="hero-image-container">
+            <div className="hero-image-kenburns">
+              {hasBgImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={data.backgroundImageUrl}
+                  alt={data.title}
+                  onLoad={() =>
+                    console.log('[Homepage] Hero image loaded:', data.backgroundImageUrl)
+                  }
+                  onError={() =>
+                    console.error('[Homepage] Hero image failed:', data.backgroundImageUrl)
+                  }
+                />
+              ) : (
+                <PlaceholderImage
+                  hint={data.imageHint || EDITORIAL_HERO.imageHint}
+                  bgClass="bg-maroon h-full min-h-full hero-image-kenburns__placeholder"
+                  className="absolute inset-0 h-full w-full"
+                />
+              )}
+            </div>
+
+            {showFxLayers && (
+              <>
+                <div className="hero-particles" aria-hidden>
+                  {HERO_PARTICLES.map((p, i) => (
+                    <span
+                      key={i}
+                      className="hero-particle"
+                      style={{
+                        left: p.left,
+                        top: p.top,
+                        ['--hero-particle-delay' as string]: p.delay,
+                        ['--hero-particle-duration' as string]: p.duration,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="hero-gradient-overlay" aria-hidden />
+                <div className="hero-vignette" aria-hidden />
+              </>
+            )}
+          </div>
+        </motion.div>
 
         {hasBgImage && (
-          <div className="absolute inset-0 bg-charcoal/25 pointer-events-none" aria-hidden />
+          <div className="absolute inset-0 bg-charcoal/25 pointer-events-none z-[5]" aria-hidden />
         )}
 
         <motion.div
