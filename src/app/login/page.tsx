@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
 export default function LoginPage() {
@@ -19,14 +20,14 @@ export default function LoginPage() {
 
     const supabase = getSupabaseBrowser();
     if (!supabase) {
-      setError('অ্যাকাউন্ট সিস্টেম এখনো সেটআপ হয়নি');
+      setError(AUTH.errors.systemNotReady);
       setLoading(false);
       return;
     }
 
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
-      setError('ইমেইল বা পাসওয়ার্ড ভুল');
+      setError(AUTH.errors.invalidCredentials);
       setLoading(false);
       return;
     }
@@ -38,11 +39,11 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        লগইন করুন
+        {AUTH.loginTitle}
       </h1>
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">ইমেইল</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
           <input
             type="email"
             value={email}
@@ -53,7 +54,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">পাসওয়ার্ড</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.password}</label>
           <input
             type="password"
             value={password}
@@ -69,22 +70,22 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white hover:bg-[#7a6549] disabled:opacity-60"
         >
-          {loading ? 'অপেক্ষা করুন…' : 'লগইন'}
+          {loading ? AUTH.loading : AUTH.loginButton}
         </button>
         <p className="text-center font-bn-body text-sm">
-          নতুন?{' '}
+          {AUTH.signUpPrompt}{' '}
           <Link href="/signup" className="text-accent font-medium hover:underline">
-            অ্যাকাউন্ট তৈরি করুন
+            {AUTH.signUpLink}
           </Link>
         </p>
         <p className="text-center font-bn-body text-sm">
           <Link href="/forgot-password" className="text-text-light hover:text-accent">
-            পাসওয়ার্ড ভুলে গেছেন?
+            {AUTH.forgotPassword}
           </Link>
         </p>
         <p className="text-center font-bn-body text-sm pt-2">
           <Link href="/track" className="text-accent hover:underline">
-            অর্ডার ট্র্যাক করুন (অতিথি)
+            {AUTH.trackGuest}
           </Link>
         </p>
       </form>

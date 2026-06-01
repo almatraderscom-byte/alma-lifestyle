@@ -1,6 +1,6 @@
 'use client';
 
-import { CHECKOUT } from '@/lib/content';
+import { CART, CHECKOUT } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
@@ -51,7 +51,7 @@ export function OrderSummary({ items, subtotal, cityValue, className }: OrderSum
                   </p>
                 )}
                 {isLineUnavailable(item) && (
-                  <p className="font-bn-body text-[10px] text-red-700 mt-0.5">স্টকে নেই</p>
+                  <p className="font-bn-body text-[10px] text-red-700 mt-0.5">{CART.stockOut}</p>
                 )}
               </div>
             </li>

@@ -64,7 +64,7 @@ export function CheckoutPageContent() {
 
     const unavailable = items.filter((i) => livePrices[i.productId] && !livePrices[i.productId].isAvailable);
     if (unavailable.length > 0) {
-      setPriceWarning('কিছু পণ্য স্টকে নেই। কার্ট থেকে সরিয়ে আবার চেষ্টা করুন।');
+      setPriceWarning(CHECKOUT.priceWarning);
       setIsSubmitting(false);
       return;
     }
@@ -199,7 +199,7 @@ export function CheckoutPageContent() {
       )}
       {hasUnavailableItems && !priceWarning && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-bn-body text-sm text-red-800">
-          কার্টে স্টকে নেই এমন পণ্য আছে — চেকআউটের আগে সরিয়ে ফেলুন।
+          {CHECKOUT.stockBlockCheckout}
         </p>
       )}
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TRACK } from '@/lib/content';
 import {
   OrderTrackingDisplay,
   type TrackedOrder,
@@ -28,12 +29,12 @@ export default function TrackOrderPage() {
       const json = (await res.json()) as { data?: { order?: TrackedOrder | null } };
       const found = json.data?.order ?? null;
       if (!found) {
-        setError('অর্ডার পাওয়া যায়নি। নম্বর ও ফোন চেক করুন।');
+        setError(TRACK.notFound);
       } else {
         setOrder(found);
       }
     } catch {
-      setError('ট্র্যাক করা যায়নি — আবার চেষ্টা করুন');
+      setError(TRACK.failed);
     } finally {
       setLoading(false);
     }
@@ -42,13 +43,15 @@ export default function TrackOrderPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        অর্ডার ট্র্যাক করুন
+        {TRACK.title}
       </h1>
 
       {!order ? (
         <form onSubmit={handleTrack} className="space-y-4">
           <div>
-            <label className="font-bn-body text-sm font-medium text-primary">অর্ডার নম্বর</label>
+            <label className="font-bn-body text-sm font-medium text-primary">
+              {TRACK.orderNumber}
+            </label>
             <input
               type="text"
               value={orderNumber}
@@ -59,12 +62,13 @@ export default function TrackOrderPage() {
             />
           </div>
           <div>
-            <label className="font-bn-body text-sm font-medium text-primary">মোবাইল নম্বর</label>
+            <label className="font-bn-body text-sm font-medium text-primary">{TRACK.phone}</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
+              placeholder="01XXXXXXXXX"
               className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
             />
           </div>
@@ -74,7 +78,7 @@ export default function TrackOrderPage() {
             disabled={loading}
             className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white"
           >
-            {loading ? 'খুঁজছি…' : 'ট্র্যাক করুন'}
+            {loading ? TRACK.loading : TRACK.submit}
           </button>
         </form>
       ) : (
@@ -85,7 +89,7 @@ export default function TrackOrderPage() {
             className="font-bn-body text-sm text-accent underline"
             onClick={() => setOrder(null)}
           >
-            অন্য অর্ডার খুঁজুন
+            {TRACK.searchAnother}
           </button>
         </div>
       )}

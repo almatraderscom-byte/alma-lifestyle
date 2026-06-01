@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MOBILE_NAV_ICONS } from '@/lib/content';
+import { HEADER, MOBILE_NAV_ICONS } from '@/lib/content';
 import { useHeaderNavItems } from '@/context/NavMenuContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
@@ -63,7 +63,7 @@ export function Header() {
             <button
               type="button"
               className="md:hidden ml-1 p-2 -mr-2 text-primary"
-              aria-label={menuOpen ? 'মেনু বন্ধ করুন' : 'মেনু খুলুন'}
+              aria-label={menuOpen ? HEADER.closeMenu : HEADER.openMenu}
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -83,7 +83,7 @@ export function Header() {
             <motion.button
               type="button"
               className="absolute inset-0 bg-primary/50"
-              aria-label="মেনু বন্ধ করুন"
+              aria-label={HEADER.closeMenu}
               onClick={() => setMenuOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -95,7 +95,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              aria-label="মোবাইল মেনু"
+              aria-label={HEADER.mobileMenu}
             >
               <div className="flex items-center justify-between border-b border-border-subtle px-5 h-16">
                 <span className="font-brand text-xl text-primary">{settings.storeName}</span>
@@ -103,7 +103,7 @@ export function Header() {
                   type="button"
                   className="p-2 text-primary"
                   onClick={() => setMenuOpen(false)}
-                  aria-label="বন্ধ করুন"
+                  aria-label={HEADER.closeMenu}
                 >
                   <CloseIcon />
                 </button>

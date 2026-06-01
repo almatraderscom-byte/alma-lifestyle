@@ -142,7 +142,7 @@ export function CartPageContent() {
                       )}
                       {unavailable && (
                         <p className="font-bn-body text-xs text-red-700 mt-1 bg-red-50 rounded px-2 py-1">
-                          ⚠️ এই পণ্যটি এখন স্টকে নেই
+                          ⚠️ {CART.stockOutLine}
                         </p>
                       )}
                     </div>
@@ -231,7 +231,7 @@ export function CartPageContent() {
 
             {hasUnavailableItems && (
               <p className="font-bn-body text-sm text-red-700 text-center">
-                স্টকে নেই এমন পণ্য সরিয়ে চেকআউট করুন
+                {CART.stockOutCheckout}
               </p>
             )}
             <Link

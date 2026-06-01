@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
 export default function ForgotPasswordPage() {
@@ -18,7 +19,7 @@ export default function ForgotPasswordPage() {
 
     const supabase = getSupabaseBrowser();
     if (!supabase) {
-      setError('সিস্টেম উপলব্ধ নয়');
+      setError(AUTH.errors.systemUnavailable);
       setLoading(false);
       return;
     }
@@ -29,9 +30,9 @@ export default function ForgotPasswordPage() {
     });
 
     if (resetError) {
-      setError('ইমেইল পাঠানো যায়নি — ঠিকানা যাচাই করুন');
+      setError(AUTH.resetEmailError);
     } else {
-      setMessage('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে');
+      setMessage(AUTH.resetSent);
     }
     setLoading(false);
   }
@@ -39,11 +40,11 @@ export default function ForgotPasswordPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        পাসওয়ার্ড রিসেট
+        {AUTH.resetTitle}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">ইমেইল</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
           <input
             type="email"
             value={email}
@@ -59,11 +60,11 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white"
         >
-          লিংক পাঠান
+          {loading ? AUTH.loading : AUTH.sendResetLink}
         </button>
         <p className="text-center font-bn-body text-sm">
           <Link href="/login" className="text-accent hover:underline">
-            ← লগইন
+            {AUTH.backToLogin}
           </Link>
         </p>
       </form>

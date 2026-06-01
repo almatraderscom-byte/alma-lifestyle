@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { HEADER } from '@/lib/content';
 import { cn } from '@/lib/utils';
 import { useHeaderNavItems } from '@/context/NavMenuContext';
 
@@ -23,7 +24,7 @@ export function HeaderNavLinks() {
   }
 
   return (
-    <nav className="hidden md:flex items-center gap-8" aria-label="প্রধান মেনু">
+    <nav className="hidden md:flex items-center gap-8" aria-label={HEADER.mainNav}>
       {navItems.map((item) => {
         const active = isNavActive(item.href);
         return (

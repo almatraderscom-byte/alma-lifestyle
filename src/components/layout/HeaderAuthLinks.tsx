@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
 export function HeaderAuthLinks({ className }: { className?: string }) {
@@ -32,15 +33,15 @@ export function HeaderAuthLinks({ className }: { className?: string }) {
         href="/track"
         className="font-bn-body text-xs text-text-light hover:text-accent hidden sm:inline"
       >
-        ট্র্যাক
+        {AUTH.trackShort}
       </Link>
       {loggedIn ? (
         <Link href="/account" className="font-bn-body text-xs text-text-light hover:text-accent">
-          অ্যাকাউন্ট
+          {AUTH.account}
         </Link>
       ) : (
         <Link href="/login" className="font-bn-body text-xs text-text-light hover:text-accent">
-          লগইন
+          {AUTH.loginButton}
         </Link>
       )}
     </div>

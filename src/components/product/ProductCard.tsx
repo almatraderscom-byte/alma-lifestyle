@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatBdtPrice, formatBdtRange } from '@/lib/format-bn';
 import { FEATURED_SECTION, PDP } from '@/lib/content';
+import { UI } from '@/lib/ui-terms';
 import type { FeaturedProduct } from '@/lib/content';
 import {
   PRODUCT_TYPE_BADGE_BN,
@@ -241,7 +242,7 @@ export function ProductCard({
             'absolute top-3 right-3 z-10 flex h-10 w-10 items-center justify-center',
             'bg-cream/90 border border-border-subtle transition-transform active:scale-95'
           )}
-          aria-label={wished ? 'পছন্দ তালিকা থেকে সরান' : 'পছন্দ তালিকায় যোগ করুন'}
+          aria-label={wished ? UI.removeFromWishlist : UI.addToWishlist}
           onClick={(e) => {
             e.preventDefault();
             setWished(!wished);

@@ -103,7 +103,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
         familySetLabel: product.designGroupName ?? product.title,
       });
     }
-    showToast(`ফ্যামিলি সেট ব্যাগে যোগ হয়েছে`);
+    showToast(PDP.toastAdded);
     router.push('/cart');
   }
 
@@ -241,7 +241,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
               onClick={handleFamilyAdd}
               className="w-full min-h-14 rounded-lg bg-primary text-secondary font-bn-body text-lg font-semibold"
             >
-              পুরো সেট ব্যাগে যোগ করুন
+              {PDP.addFullSetToCart}
             </button>
           </div>
         )}

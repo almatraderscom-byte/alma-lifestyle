@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ACCOUNT } from '@/lib/content';
+import { ORDER_STATUS_LABELS } from '@/lib/order-status-labels';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { formatBdtPrice } from '@/lib/format-bn';
 
@@ -48,7 +50,7 @@ export default function AccountPage() {
 
       if (profile) {
         const row = profile as { first_name: string | null; last_name: string | null };
-        setName([row.first_name, row.last_name].filter(Boolean).join(' ') || 'গ্রাহক');
+        setName([row.first_name, row.last_name].filter(Boolean).join(' ') || ACCOUNT.defaultName);
       }
 
       const { data: ordersData } = await supabase
@@ -74,7 +76,7 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-12">
-        <p className="font-bn-body text-text-light">লোড হচ্ছে…</p>
+        <p className="font-bn-body text-text-light">{ACCOUNT.loading}</p>
       </div>
     );
   }
@@ -89,22 +91,22 @@ export default function AccountPage() {
           </div>
           <nav className="space-y-1 font-bn-body text-sm">
             <Link href="/track" className="block rounded-lg px-4 py-2 hover:bg-cream">
-              অর্ডার ট্র্যাক (অতিথি)
+              {ACCOUNT.trackGuest}
             </Link>
             <button
               type="button"
               onClick={handleSignOut}
               className="block w-full text-left rounded-lg px-4 py-2 text-red-600 hover:bg-red-50"
             >
-              লগআউট
+              {ACCOUNT.logout}
             </button>
           </nav>
         </aside>
 
         <main className="md:col-span-2">
-          <h1 className="font-bn-heading text-3xl font-bold text-primary mb-6">আমার অর্ডার</h1>
+          <h1 className="font-bn-heading text-3xl font-bold text-primary mb-6">{ACCOUNT.title}</h1>
           {orders.length === 0 ? (
-            <p className="font-bn-body text-text-light">এখনো কোনো অর্ডার নেই</p>
+            <p className="font-bn-body text-text-light">{ACCOUNT.noOrders}</p>
           ) : (
             <ul className="space-y-4">
               {orders.map((order) => {
@@ -122,7 +124,9 @@ export default function AccountPage() {
                         {new Date(order.created_at).toLocaleDateString('bn-BD')}
                       </p>
                     </div>
-                    <p className="font-bn-body text-sm text-accent mt-1">{order.status}</p>
+                    <p className="font-bn-body text-sm text-accent mt-1">
+                      {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                    </p>
                     <p className="font-bn-body text-sm mt-2">
                       {(order.order_items ?? [])
                         .map((i) => `${i.product_title} ×${i.quantity}`)

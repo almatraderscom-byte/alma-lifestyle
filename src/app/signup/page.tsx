@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
 export default function SignupPage() {
@@ -21,14 +22,14 @@ export default function SignupPage() {
 
     const supabase = getSupabaseBrowser();
     if (!supabase) {
-      setError('অ্যাকাউন্ট সিস্টেম এখনো সেটআপ হয়নি');
+      setError(AUTH.errors.systemNotReady);
       setLoading(false);
       return;
     }
 
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
     if (signUpError || !data.session) {
-      setError(signUpError?.message ?? 'সাইন আপ ব্যর্থ — ইমেইল যাচাই করুন');
+      setError(signUpError?.message ?? AUTH.errors.signUpFailed);
       setLoading(false);
       return;
     }
@@ -56,11 +57,11 @@ export default function SignupPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        অ্যাকাউন্ট তৈরি করুন
+        {AUTH.signUpTitle}
       </h1>
       <form onSubmit={handleSignup} className="space-y-4">
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">পুরো নাম</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.fullName}</label>
           <input
             type="text"
             value={fullName}
@@ -70,7 +71,7 @@ export default function SignupPage() {
           />
         </div>
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">ইমেইল</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
           <input
             type="email"
             value={email}
@@ -81,16 +82,17 @@ export default function SignupPage() {
           />
         </div>
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">মোবাইল</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.mobile}</label>
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            placeholder="01XXXXXXXXX"
             className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
           />
         </div>
         <div>
-          <label className="font-bn-body text-sm font-medium text-primary">পাসওয়ার্ড</label>
+          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.password}</label>
           <input
             type="password"
             value={password}
@@ -107,12 +109,12 @@ export default function SignupPage() {
           disabled={loading}
           className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white hover:bg-[#7a6549] disabled:opacity-60"
         >
-          {loading ? 'তৈরি হচ্ছে…' : 'সাইন আপ'}
+          {loading ? AUTH.signUpCreating : AUTH.signUpButton}
         </button>
         <p className="text-center font-bn-body text-sm">
-          আগে থেকে অ্যাকাউন্ট আছে?{' '}
+          {AUTH.hasAccount}{' '}
           <Link href="/login" className="text-accent font-medium hover:underline">
-            লগইন
+            {AUTH.loginButton}
           </Link>
         </p>
       </form>
