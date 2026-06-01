@@ -35,14 +35,14 @@ function publicSettings(settings: AppSettings) {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const defaults = getDefaultAppSettings();
 
   if (!isSupabaseAdminConfigured()) {
     return apiSuccess(publicSettings(defaults));
   }
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const settings = (await getAppSettings()) ?? defaults;
     return apiSuccess(publicSettings(settings));
   });

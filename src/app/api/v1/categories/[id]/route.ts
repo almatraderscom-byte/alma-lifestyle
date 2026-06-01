@@ -13,9 +13,9 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const row = await getCategoryById(id);
     if (!row) return apiNotFound('Category');
     return apiSuccess(mapDbCategoryToAdmin(row));

@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const parsed = ProductsListQuerySchema.safeParse(params);
     if (!parsed.success) {

@@ -18,6 +18,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.53.1",
     "@supabase/supabase-js": "^2.39.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",

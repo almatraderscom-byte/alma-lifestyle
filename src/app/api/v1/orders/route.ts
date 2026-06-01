@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   const admin = await tryRequireAdmin(request);
   if (!admin) return apiUnauthorized();
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const parsed = OrdersListQuerySchema.safeParse(params);
     if (!parsed.success) {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const body = await request.json();
     const parsed = CreateOrderBodySchema.safeParse(body);
     if (!parsed.success) {

@@ -3,6 +3,7 @@
  * Rate limiting is applied in `src/middleware.ts` for `/api/v1/*`.
  */
 import type { NextRequest } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { apiError, apiNotConfigured, apiUnauthorized } from './response';
 import { requireAdmin } from './auth';
@@ -15,6 +16,13 @@ export function ensureSupabase() {
     return apiNotConfigured();
   }
   return null;
+}
+
+function captureUncaughtApiError(err: unknown, request: NextRequest): void {
+  const error = err instanceof Error ? err : new Error(String(err));
+  Sentry.captureException(error, {
+    extra: { route: request.nextUrl.pathname, method: request.method },
+  });
 }
 
 export async function withAdmin(
@@ -33,12 +41,14 @@ export async function withAdmin(
   try {
     return await handler();
   } catch (err) {
+    captureUncaughtApiError(err, request);
     const message = err instanceof Error ? err.message : 'Internal server error';
     return apiError(message, 500, 'INTERNAL_ERROR');
   }
 }
 
 export async function withPublicDb(
+  request: NextRequest,
   handler: () => Promise<Response>
 ): Promise<Response> {
   const notConfigured = ensureSupabase();
@@ -47,6 +57,7 @@ export async function withPublicDb(
   try {
     return await handler();
   } catch (err) {
+    captureUncaughtApiError(err, request);
     const message = err instanceof Error ? err.message : 'Internal server error';
     return apiError(message, 500, 'INTERNAL_ERROR');
   }

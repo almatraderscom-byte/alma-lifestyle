@@ -11,12 +11,12 @@ import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (!isSupabaseAdminConfigured()) {
     return apiSuccess(getDefaultHomepageConfig());
   }
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const config = ensureHomepageConfig(await getHomepageConfigOrDefault());
     return apiSuccess(config);
   });

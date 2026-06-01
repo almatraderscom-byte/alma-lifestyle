@@ -15,9 +15,9 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const row = await getCollectionById(id);
     if (!row) return apiNotFound('Collection');
     const productIds = await getCollectionProductIds(id);

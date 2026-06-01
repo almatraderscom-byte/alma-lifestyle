@@ -37,14 +37,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   const admin = await tryRequireAdmin(request);
   if (admin) {
-    return withPublicDb(async () => {
+    return withPublicDb(request, async () => {
       const product = await getAdminProductById(id);
       if (!product) return apiNotFound('Product');
       return apiSuccess(product);
     });
   }
 
-  return withPublicDb(async () => {
+  return withPublicDb(request, async () => {
     const row = await getProductById(id);
     if (!row || !isProductVisibleOnStorefront(row)) {
       return apiNotFound('Product');
