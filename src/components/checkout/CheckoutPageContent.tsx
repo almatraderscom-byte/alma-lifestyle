@@ -12,8 +12,10 @@ import { getDeliveryCharge } from '@/lib/delivery';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
 import { shouldUseApi } from '@/lib/data-source';
 import { createOrderApi } from '@/lib/admin-api';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 
 export function CheckoutPageContent() {
+  const settings = useStoreSettings();
   const router = useRouter();
   const { items, subtotal, hydrated, clearCart } = useCart();
   const [cityValue, setCityValue] = useState('dhaka');
@@ -44,7 +46,7 @@ export function CheckoutPageContent() {
 
   async function handleSubmit(data: CheckoutFormData) {
     setIsSubmitting(true);
-    const deliveryCharge = getDeliveryCharge(data.city);
+    const deliveryCharge = getDeliveryCharge(data.city, settings);
     const total = subtotal + deliveryCharge;
     const paymentMethod = getPaymentLabel(data.paymentMethod);
     const customerName = data.name.trim();

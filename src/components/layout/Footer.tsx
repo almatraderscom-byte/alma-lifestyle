@@ -1,19 +1,32 @@
+'use client';
+
 import Link from 'next/link';
-import { SITE, FOOTER } from '@/lib/content';
+import { FOOTER } from '@/lib/content';
+import { useStoreSettings, whatsappE164 } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
 export function Footer() {
-  const whatsappHref = `https://wa.me/${SITE.whatsappNumber}`;
+  const settings = useStoreSettings();
+  const whatsappHref = `https://wa.me/${whatsappE164(settings)}`;
+  const phoneDisplay = settings.contactPhone
+    ? `+${settings.contactPhone.replace(/\D/g, '')}`
+    : FOOTER.phoneDisplay;
 
   return (
     <footer className="bg-primary text-secondary mt-auto">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
           <div>
-            <p className="font-brand text-3xl text-secondary">{SITE.brandName}</p>
+            <p className="font-brand text-3xl text-secondary">{settings.storeName}</p>
             <p className="font-bn-body text-base text-secondary/80 mt-3 leading-relaxed">
-              {SITE.tagline}
+              {settings.tagline}
             </p>
+            {settings.contactEmail && (
+              <p className="font-bn-body text-sm text-secondary/70 mt-2">{settings.contactEmail}</p>
+            )}
+            {settings.physicalAddress && (
+              <p className="font-bn-body text-sm text-secondary/70 mt-1">{settings.physicalAddress}</p>
+            )}
             <a
               href={whatsappHref}
               className="inline-flex items-center gap-2 mt-4 font-bn-body text-base text-[#25D366] hover:underline"
@@ -21,11 +34,31 @@ export function Footer() {
               rel="noopener noreferrer"
             >
               <span aria-hidden>📱</span>
-              {FOOTER.phoneDisplay}
+              {phoneDisplay}
             </a>
             <div className="flex gap-4 mt-5" aria-label="সোশ্যাল মিডিয়া">
-              <SocialDot label="Facebook" />
-              <SocialDot label="Instagram" />
+              {settings.facebookUrl && (
+                <a
+                  href={settings.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary/80 text-xs font-bn-body hover:bg-secondary/20"
+                  aria-label="Facebook"
+                >
+                  f
+                </a>
+              )}
+              {settings.instagramUrl && (
+                <a
+                  href={settings.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary/80 text-xs font-bn-body hover:bg-secondary/20"
+                  aria-label="Instagram"
+                >
+                  ig
+                </a>
+              )}
             </div>
           </div>
 
@@ -68,7 +101,7 @@ export function Footer() {
 
         <div className="mt-10 pt-8 border-t border-secondary/15">
           <p className="font-bn-body text-sm text-secondary/60 text-center md:text-left">
-            {FOOTER.bottomLine}
+            {FOOTER.bottomLine.replace('ALMA Lifestyle', settings.storeName)}
           </p>
           <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
             {FOOTER.payments.map((method) => (
@@ -86,16 +119,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  );
-}
-
-function SocialDot({ label }: { label: string }) {
-  return (
-    <span
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary/80 text-xs font-bn-body"
-      aria-label={label}
-    >
-      {label.charAt(0)}
-    </span>
   );
 }

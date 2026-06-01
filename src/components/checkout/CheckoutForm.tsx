@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CHECKOUT } from '@/lib/content';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
 export type PaymentMethod = 'cod' | 'bkash' | 'nagad';
@@ -56,9 +57,20 @@ export function CheckoutForm({
   onSubmit,
   isSubmitting = false,
 }: CheckoutFormProps) {
+  const settings = useStoreSettings();
   const [form, setForm] = useState<CheckoutFormData>({ ...initialForm, city: cityValue });
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    const allowed: PaymentMethod[] = [];
+    if (settings.codEnabled) allowed.push('cod');
+    if (settings.bkashEnabled) allowed.push('bkash');
+    if (settings.nagadEnabled) allowed.push('nagad');
+    if (allowed.length > 0 && !allowed.includes(form.paymentMethod)) {
+      setForm((prev) => ({ ...prev, paymentMethod: allowed[0] }));
+    }
+  }, [settings, form.paymentMethod]);
 
   function updateField<K extends keyof CheckoutFormData>(key: K, value: CheckoutFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -94,9 +106,9 @@ export function CheckoutForm({
   const showErrors = touched;
   const paymentNumber =
     form.paymentMethod === 'bkash'
-      ? CHECKOUT.bkashNumber
+      ? settings.bkashMerchantNumber || CHECKOUT.bkashNumber
       : form.paymentMethod === 'nagad'
-        ? CHECKOUT.nagadNumber
+        ? settings.nagadMerchantNumber || CHECKOUT.nagadNumber
         : '';
 
   return (
@@ -202,24 +214,30 @@ export function CheckoutForm({
           {CHECKOUT.paymentSection}
         </legend>
 
-        <PaymentOption
-          id="pay-cod"
-          checked={form.paymentMethod === 'cod'}
-          onChange={() => updateField('paymentMethod', 'cod')}
-          label={`💵 ${CHECKOUT.paymentCod}`}
-        />
-        <PaymentOption
-          id="pay-bkash"
-          checked={form.paymentMethod === 'bkash'}
-          onChange={() => updateField('paymentMethod', 'bkash')}
-          label={`📱 ${CHECKOUT.paymentBkash}`}
-        />
-        <PaymentOption
-          id="pay-nagad"
-          checked={form.paymentMethod === 'nagad'}
-          onChange={() => updateField('paymentMethod', 'nagad')}
-          label={`📱 ${CHECKOUT.paymentNagad}`}
-        />
+        {settings.codEnabled && (
+          <PaymentOption
+            id="pay-cod"
+            checked={form.paymentMethod === 'cod'}
+            onChange={() => updateField('paymentMethod', 'cod')}
+            label={`💵 ${CHECKOUT.paymentCod}`}
+          />
+        )}
+        {settings.bkashEnabled && (
+          <PaymentOption
+            id="pay-bkash"
+            checked={form.paymentMethod === 'bkash'}
+            onChange={() => updateField('paymentMethod', 'bkash')}
+            label={`📱 ${CHECKOUT.paymentBkash}`}
+          />
+        )}
+        {settings.nagadEnabled && (
+          <PaymentOption
+            id="pay-nagad"
+            checked={form.paymentMethod === 'nagad'}
+            onChange={() => updateField('paymentMethod', 'nagad')}
+            label={`📱 ${CHECKOUT.paymentNagad}`}
+          />
+        )}
 
         {(form.paymentMethod === 'bkash' || form.paymentMethod === 'nagad') && (
           <div className="rounded-lg bg-secondary/80 p-4 space-y-3">

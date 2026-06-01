@@ -14,6 +14,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import type { AdminOrder } from '@/lib/admin-store';
 import { shouldUseApi } from '@/lib/data-source';
+import { SyncStatusWidget } from '@/components/admin/SyncStatusWidget';
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
@@ -214,6 +215,8 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      <SyncStatusWidget />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatsCard title="Total Products" value={String(products.length)} href="/admin/products" change={{ value: '5%', positive: true }} />

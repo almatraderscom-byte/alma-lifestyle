@@ -232,7 +232,7 @@ export function HomepageBuilder() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => window.open('/?preview=true', '_blank')}
+            onClick={() => window.open(`/?preview=true&_=${Date.now()}`, '_blank')}
           >
             Preview in New Tab
           </Button>

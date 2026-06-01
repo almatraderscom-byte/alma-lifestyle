@@ -6,6 +6,7 @@ import { isDatabaseUuid, isLegacyLocalId } from '@/lib/admin-ids';
 import { shouldUseApi } from '@/lib/data-source';
 import { getProductById, type AdminProduct } from '@/lib/admin-store';
 import { ProductForm } from '@/components/admin/products/ProductForm';
+import { AdminCustomerLink } from '@/components/admin/AdminCustomerLink';
 
 export default function EditProductPage({
   params,
@@ -68,7 +69,12 @@ export default function EditProductPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-neutral-900">Edit Product</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-neutral-900">Edit Product</h1>
+        {product.slug && (
+          <AdminCustomerLink href={`/products/${product.slug}`} />
+        )}
+      </div>
       <ProductForm initial={product} isEdit />
     </div>
   );

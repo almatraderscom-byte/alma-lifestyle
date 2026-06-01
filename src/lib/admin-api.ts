@@ -15,8 +15,14 @@ async function request<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
-  const res = await fetch(path, {
+  const isGet = !init?.method || init.method === 'GET';
+  const url = isGet
+    ? `${path}${path.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    : path;
+
+  const res = await fetch(url, {
     ...init,
+    cache: 'no-store',
     headers: {
       'Content-Type': 'application/json',
       ...init?.headers,

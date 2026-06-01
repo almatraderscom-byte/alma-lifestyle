@@ -3,6 +3,7 @@
 import { CHECKOUT } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { getDeliveryCharge } from '@/lib/delivery';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import type { CartItem } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
@@ -14,7 +15,8 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ items, subtotal, cityValue, className }: OrderSummaryProps) {
-  const deliveryCharge = getDeliveryCharge(cityValue);
+  const settings = useStoreSettings();
+  const deliveryCharge = getDeliveryCharge(cityValue, settings);
   const total = subtotal + deliveryCharge;
 
   return (
@@ -71,6 +73,7 @@ export function OrderSummary({ items, subtotal, cityValue, className }: OrderSum
 }
 
 export function useOrderTotals(subtotal: number, cityValue: string) {
-  const deliveryCharge = getDeliveryCharge(cityValue);
+  const settings = useStoreSettings();
+  const deliveryCharge = getDeliveryCharge(cityValue, settings);
   return { deliveryCharge, total: subtotal + deliveryCharge };
 }

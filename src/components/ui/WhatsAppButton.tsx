@@ -2,11 +2,13 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { SITE, WHATSAPP } from '@/lib/content';
+import { useStoreSettings, whatsappE164 } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
 export function WhatsAppButton() {
   const reduceMotion = useReducedMotion();
-  const href = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(SITE.whatsappPrefill)}`;
+  const settings = useStoreSettings();
+  const href = `https://wa.me/${whatsappE164(settings)}?text=${encodeURIComponent(SITE.whatsappPrefill)}`;
 
   return (
     <motion.a

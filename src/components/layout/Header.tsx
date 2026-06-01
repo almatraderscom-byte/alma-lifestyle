@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { SITE, NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { NAV, MOBILE_NAV_ICONS } from '@/lib/content';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks';
 import { useCart } from '@/context/CartContext';
 import { toBanglaNumber } from '@/lib/format-bn';
@@ -13,6 +14,7 @@ import { toBanglaNumber } from '@/lib/format-bn';
 const NAV_ITEMS = [NAV.shop, NAV.newArrivals, NAV.collections, NAV.about];
 
 export function Header() {
+  const settings = useStoreSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount, hydrated } = useCart();
   const bagCount = hydrated ? itemCount : 0;
@@ -31,7 +33,7 @@ export function Header() {
             className="font-brand text-2xl font-semibold tracking-wide text-primary md:text-[1.75rem]"
             onClick={() => setMenuOpen(false)}
           >
-            {SITE.brandName}
+            {settings.storeName}
           </Link>
 
           <Suspense fallback={<div className="hidden md:block w-48 h-6 bg-secondary/50 rounded" aria-hidden />}>
@@ -94,7 +96,7 @@ export function Header() {
               aria-label="মোবাইল মেনু"
             >
               <div className="flex items-center justify-between border-b border-border-subtle px-5 h-16">
-                <span className="font-brand text-xl text-primary">{SITE.brandName}</span>
+                <span className="font-brand text-xl text-primary">{settings.storeName}</span>
                 <button
                   type="button"
                   className="p-2 text-primary"

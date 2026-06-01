@@ -7,6 +7,7 @@ import { getCategories, saveCategory, deleteCategory, uid } from '@/lib/admin-st
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { useAdminToast } from '@/context/AdminToastContext';
+import { AdminCustomerLink } from '@/components/admin/AdminCustomerLink';
 
 export default function AdminCategoriesPage() {
   const { toast } = useAdminToast();
@@ -63,6 +64,11 @@ export default function AdminCategoriesPage() {
             <div>
               <p className="font-medium">{cat.name}</p>
               <p className="text-xs text-neutral-500">{cat.slug}</p>
+              <AdminCustomerLink
+                href={`/products?category=${cat.slug}`}
+                label="View on customer site →"
+                className="text-xs font-medium text-[#C97D5D] hover:underline mt-1 inline-block"
+              />
             </div>
             <Button
               variant="ghost"

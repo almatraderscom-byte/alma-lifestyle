@@ -10,6 +10,7 @@ import { SingleImageUploader } from '@/components/admin/ui/SingleImageUploader';
 import { AdminTestUpload } from '@/components/admin/settings/AdminTestUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { cn } from '@/lib/utils';
+import { AdminCustomerLink } from '@/components/admin/AdminCustomerLink';
 
 const TABS = [
   'Store Information',
@@ -67,7 +68,10 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
+        <AdminCustomerLink href="/" label="View header & footer on site →" />
+      </div>
 
       <AdminTestUpload />
 
