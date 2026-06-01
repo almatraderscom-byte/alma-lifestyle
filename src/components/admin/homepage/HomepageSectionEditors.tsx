@@ -250,7 +250,7 @@ export function FeaturedEditor({ data, onChange }: EditorProps<FeaturedSectionDa
 }
 
 const BRAND_STORY_SLOT_LABELS = [
-  { label: 'Image 1 — Main (large left)', description: 'Weaver at loom — Sirajganj' },
+  { label: 'Image 1 — Main (large left)', description: 'Premium fabric — verified quality' },
   { label: 'Image 2 — Top right (small)', description: 'Fabric close-up — cotton texture' },
   { label: 'Image 3 — Bottom right (small)', description: 'Family in ALMA outfits' },
 ] as const;

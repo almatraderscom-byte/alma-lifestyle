@@ -104,9 +104,9 @@ export function migrateOurProcessSection(
 }
 
 const BRAND_STORY_IMAGE_HINTS = [
-  'Image: Weaver at loom — Sirajganj, warm documentary style',
-  'Image: Fabric close-up — cotton texture',
-  'Image: Family in ALMA outfits — candid smile',
+  'Image: Premium fabric close-up — verified quality',
+  'Image: Family matching collection — coordinated outfits',
+  'Image: ALMA team — trusted lifestyle partner',
 ] as const;
 
 const BRAND_STORY_BG: Array<'bg-mustard' | 'bg-terracotta' | 'bg-maroon'> = [

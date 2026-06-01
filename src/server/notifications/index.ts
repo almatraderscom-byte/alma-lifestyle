@@ -539,7 +539,7 @@ export async function sendOrderConfirmationToCustomer(
     <p>ALMA পরিবারের পক্ষ থেকে ধন্যবাদ! 🙏</p>
   </div>
   <div class="footer">
-    <p>ALMA — বাংলাদেশের ঐতিহ্যবাহী পোশাকের প্রিমিয়াম ব্র্যান্ড</p>
+    <p>ALMA Lifestyle — প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা</p>
     <p>almatraders.com</p>
   </div>
 </body>

@@ -49,47 +49,47 @@ const FAMILY_CARD_DEFAULTS: Omit<FamilyMatchingCardConfig, 'id'>[] = [
 
 const PROCESS_STEP_DEFAULTS = [
   {
-    icon: '🧶',
-    title: 'কাপড় নির্বাচন',
+    icon: '🔎',
+    title: 'বাছাই',
     description:
-      'সিরাজগঞ্জ, নরসিংদী ও কুমিল্লার তাঁতিদের কাছ থেকে সরাসরি কটন ও সিল্ক বাছাই করি।',
+      'আমরা trusted manufacturer ও vendor দের থেকে best products বাছাই করি',
     bgClass: 'bg-terracotta' as CategoryColorClass,
-    imageHint: 'Image: Fabric selection — cotton rolls',
+    imageHint: 'Image: Product curation — premium selection',
   },
   {
-    icon: '✏️',
-    title: 'ডিজাইন',
-    description: 'ঐতিহ্যবাহী মোটিফ ও আধুনিক কাটের সমন্বয়ে স্কেচ তৈরি হয়।',
+    icon: '✅',
+    title: 'যাচাই',
+    description: 'প্রতিটি পণ্যের কোয়ালিটি, fabric, finishing যাচাই করি stocking এর আগে',
     bgClass: 'bg-maroon' as const,
-    imageHint: 'Image: Design sketch — panjabi pattern',
+    imageHint: 'Image: Quality check — fabric inspection',
   },
   {
-    icon: '🪡',
-    title: 'হাতে বুনন',
-    description: '৭০+ পরিবারের তাঁতিদের হাতে বোনা হয় প্রতিটি কাপড়।',
+    icon: '📷',
+    title: 'ছবি তোলা',
+    description: 'Professional photography দিয়ে আসল রঙ ও design তুলে ধরি',
     bgClass: 'bg-mustard' as CategoryColorClass,
-    imageHint: 'Image: Hand weaving at loom',
+    imageHint: 'Image: Product photography studio',
   },
   {
-    icon: '🧵',
-    title: 'সেলাই',
-    description: 'অভিজ্ঞ দর্জিরা প্রতিটি সীম সেলাই করেন।',
+    icon: '📝',
+    title: 'লিস্টিং',
+    description: 'Detailed description, accurate pricing দিয়ে website এ list করি',
     bgClass: 'bg-emerald' as CategoryColorClass,
-    imageHint: 'Image: Tailor stitching panjabi',
-  },
-  {
-    icon: '🔍',
-    title: 'কোয়ালিটি চেক',
-    description: 'প্রতিটি পিস তিন ধাপে পরীক্ষা করা হয়।',
-    bgClass: 'bg-charcoal' as CategoryColorClass,
-    imageHint: 'Image: Quality inspection',
+    imageHint: 'Image: Product listing on website',
   },
   {
     icon: '📦',
-    title: 'প্যাকেজিং ও ডেলিভারি',
-    description: 'প্রিমিয়াম বক্সে মোড়ানো হয়, ৬৪ জেলায় পৌঁছে দেওয়া হয়।',
+    title: 'প্যাকেজিং',
+    description: 'Premium packaging — যাতে আপনার কাছে perfect condition এ পৌঁছায়',
+    bgClass: 'bg-charcoal' as CategoryColorClass,
+    imageHint: 'Image: Premium gift packaging',
+  },
+  {
+    icon: '🚚',
+    title: 'ডেলিভারি',
+    description: '৬৪ জেলায় দ্রুত ও নিরাপদ ডেলিভারি — tracking সহ',
     bgClass: 'bg-maroon' as CategoryColorClass,
-    imageHint: 'Image: Packaged order delivery',
+    imageHint: 'Image: Nationwide delivery courier',
   },
 ];
 
@@ -100,7 +100,7 @@ export function getDefaultHomepageExtras(): HomepageExtras {
       label: 'ফ্যামিলি ম্যাচিং',
       title: 'পরিবার একসাথে সাজুক',
       body:
-        'বাবা, মা, ছেলে, মেয়ে — সবার জন্য মিলিয়ে ডিজাইন। একই রঙ, একই প্যাটার্ন, আলাদা কাট ও সাইজ।',
+        'বাবা, মা, ছেলে, মেয়ে — সবার জন্য carefully matched design। একই রঙ, একই pattern, আলাদা cut এবং size — পুরো পরিবারের জন্য বিশেষ collection।',
       ctaText: 'ফ্যামিলি সেট দেখুন →',
       ctaHref: '/products?type=family-set',
       banner: emptyImageSlot(
@@ -115,8 +115,8 @@ export function getDefaultHomepageExtras(): HomepageExtras {
     ourProcess: {
       show: true,
       label: 'আমাদের প্রক্রিয়া',
-      title: 'কাপড় থেকে আপনার দরজায়',
-      subtitle: 'ছয়টি ধাপে তৈরি হয় প্রতিটি ALMA পোশাক',
+      title: 'আমরা কীভাবে কাজ করি',
+      subtitle: 'যত্নে বাছাই থেকে আপনার দরজায় — ছয়টি ধাপ',
       steps: PROCESS_STEP_DEFAULTS.map((s) => ({
         ...s,
         imageUrl: '',

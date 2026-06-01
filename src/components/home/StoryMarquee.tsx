@@ -4,8 +4,8 @@ import { STORY_MARQUEE } from '@/lib/content';
 import type { MarqueeSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 
-const ROW_ONE = 'হাতে তৈরি · বাংলাদেশের গর্ব · প্রিমিয়াম মান ·';
-const ROW_TWO = '১০,০০০+ ক্রেতা · ৪.৮ ⭐ রেটিং · দ্রুত ডেলিভারি ·';
+const ROW_ONE = STORY_MARQUEE.rowOne;
+const ROW_TWO = STORY_MARQUEE.rowTwo;
 
 interface StoryMarqueeProps {
   data?: MarqueeSectionData;

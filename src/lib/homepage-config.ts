@@ -143,9 +143,9 @@ export function getDefaultHomepageConfig(): HomepageConfig {
           undefined,
           3,
           [
-            'Image: Weaver at loom — Sirajganj, warm documentary style',
-            'Image: Fabric close-up — cotton texture',
-            'Image: Family in ALMA outfits — candid smile',
+            'Image: Premium fabric close-up — verified quality',
+            'Image: Family matching collection — coordinated outfits',
+            'Image: ALMA team — trusted lifestyle partner',
           ],
           ['bg-mustard', 'bg-terracotta', 'bg-maroon']
         ),
