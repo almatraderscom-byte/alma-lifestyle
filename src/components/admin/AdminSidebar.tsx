@@ -29,6 +29,7 @@ const NAV = [
     children: [
       { href: '/admin/notifications/logs', label: 'Notification Logs' },
       { href: '/admin/notifications/test', label: 'Test Notifications' },
+      { href: '/admin/diagnostics', label: 'Favicon diagnostics' },
     ],
   },
   { href: '/admin/customers', label: 'Customers', icon: UsersIcon },

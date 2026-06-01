@@ -40,6 +40,7 @@ export function revalidateSettingsPages(): void {
   revalidatePath('/', 'layout');
   revalidatePath('/checkout');
   revalidatePath('/cart');
+  revalidatePath('/api/favicon');
 }
 
 export function revalidateAfterUpload(bucket: string): void {

@@ -5,7 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import { FaviconSync } from '@/components/layout/FaviconSync';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
-import { buildFaviconHref } from '@/lib/favicon-url';
+import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
 import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import './globals.css';
 
@@ -35,13 +35,24 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const faviconHref = buildFaviconHref(settings.faviconUrl, settings.updatedAt);
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[layout] faviconUrl:', settings.faviconUrl || '(empty)');
+    console.log('[layout] favicon metadata href:', faviconHref || '(none)');
+    console.log('[layout] settings.updatedAt:', settings.updatedAt);
+  }
+
+  const iconMetadata = faviconHref
+    ? {
+        icon: [{ url: faviconHref, type: 'image/png' as const }],
+        apple: [{ url: faviconHref }],
+        shortcut: faviconHref,
+      }
+    : undefined;
+
   return {
     title,
     description: settings.seoSiteDescription,
-    icons: {
-      icon: [{ url: faviconHref }],
-      apple: [{ url: faviconHref }],
-    },
+    ...(iconMetadata ? { icons: iconMetadata } : {}),
     openGraph: {
       title,
       description: settings.seoSiteDescription,
@@ -63,6 +74,8 @@ export default async function RootLayout({
     loadHeaderNavItemsServer(),
   ]);
 
+  const hasFavicon = isValidStoredFaviconUrl(settings.faviconUrl);
+
   return (
     <html
       lang="bn"
@@ -70,7 +83,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
         <StoreSettingsProvider settings={settings}>
-          <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
+          {hasFavicon ? (
+            <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
+          ) : null}
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />
