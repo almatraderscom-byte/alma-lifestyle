@@ -7,7 +7,14 @@ import {
 
 export const revalidate = 60;
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string; edit?: string }>;
+}) {
+  const params = await searchParams;
+  const isEditMode = params.preview === 'true' && params.edit === 'true';
+
   const config = await loadHomepageConfigServer();
   const featuredSection = config.sections.find((s) => s.id === 'featured');
   const [featuredProducts, oceanProducts] = await Promise.all([
@@ -27,6 +34,7 @@ export default async function HomePage() {
       initialConfig={config}
       featuredProducts={featuredProducts}
       oceanProducts={oceanProducts}
+      editMode={isEditMode}
     />
   );
 }

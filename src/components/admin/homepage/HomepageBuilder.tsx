@@ -34,6 +34,10 @@ import {
 } from '@/components/admin/homepage/homepage-builder-utils';
 import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/HomepageSectionErrorBoundary';
 import { HomepageUploadDiagnostics } from '@/components/admin/homepage/HomepageUploadDiagnostics';
+import {
+  isConfigSectionId,
+  isHomepageEditMessage,
+} from '@/lib/homepage-edit-messages';
 
 type MobileTab = 'editor' | 'preview';
 
@@ -46,6 +50,14 @@ export function HomepageBuilder() {
   const [saving, setSaving] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopIframeRef = useRef<HTMLIFrameElement>(null);
+  const mobileIframeRef = useRef<HTMLIFrameElement>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function postToPreview(data: unknown) {
+    desktopIframeRef.current?.contentWindow?.postMessage(data, '*');
+    mobileIframeRef.current?.contentWindow?.postMessage(data, '*');
+  }
 
   useEffect(() => {
     getHomepageConfig()
@@ -91,8 +103,70 @@ export function HomepageBuilder() {
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
     };
   }, []);
+
+  const highlightPreviewSection = useCallback((sectionId: string) => {
+    postToPreview({ type: 'HIGHLIGHT_SECTION', sectionId });
+  }, []);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (!isHomepageEditMessage(event.data)) return;
+
+      if (event.data.type === 'EDIT_SECTION') {
+        const { sectionId } = event.data;
+
+        if (isConfigSectionId(sectionId)) {
+          setOpenSection(sectionId);
+          requestAnimationFrame(() => {
+            const el = document.getElementById(`section-${sectionId}`);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (el) {
+              el.style.background = 'rgba(201, 125, 93, 0.12)';
+              if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+              highlightTimerRef.current = setTimeout(() => {
+                el.style.background = '';
+              }, 1000);
+            }
+          });
+          return;
+        }
+
+        if (sectionId === 'bestSelling') {
+          toast(
+            'Best selling cards use products tagged bestseller in Admin → Products. Featured section controls the grid below.',
+            'info'
+          );
+          setOpenSection('featured');
+          highlightPreviewSection('featured');
+          return;
+        }
+
+        toast('This section is static content and is not editable in the builder yet.', 'info');
+        return;
+      }
+
+      if (event.data.type === 'CLEAR_SECTION_EDIT') {
+        setOpenSection(null);
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [toast, highlightPreviewSection]);
+
+  function openSectionPanel(sectionId: HomepageSectionId) {
+    setOpenSection(sectionId);
+    highlightPreviewSection(sectionId);
+    requestAnimationFrame(() => {
+      document.getElementById(`section-${sectionId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+  }
 
   async function handleResetToDefaults() {
     if (
@@ -209,7 +283,7 @@ export function HomepageBuilder() {
     }
   }
 
-  const previewSrc = `/?preview=true&_=${previewKey}`;
+  const previewSrc = `/?preview=true&edit=true&_=${previewKey}`;
 
   return (
     <div className="-m-4 lg:-m-6 flex flex-col min-h-[calc(100vh-4rem)]">
@@ -273,9 +347,16 @@ export function HomepageBuilder() {
             mobileTab === 'preview' && 'hidden lg:block'
           )}
         >
-          <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-neutral-900 mb-3">Section Order</h2>
-            <p className="text-xs text-neutral-500 mb-3">Drag rows to reorder. Use the eye to show or hide.</p>
+          <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
+            <span className="font-semibold text-[#C97D5D]">Visual editor:</span> click any block in the
+            preview (desktop) or use the panels below.
+          </div>
+
+          <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+            <h2 className="text-xs font-semibold text-neutral-900 mb-2 uppercase tracking-wide">
+              Section order
+            </h2>
+            <p className="text-[11px] text-neutral-500 mb-2">Drag to reorder · eye toggles visibility</p>
             <ul className="space-y-1">
               {sortedSections.map((section, index) => (
                 <li
@@ -312,17 +393,34 @@ export function HomepageBuilder() {
           </div>
 
           {sortedSections.map((section) => (
-            <div key={section.id} className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+            <div
+              key={section.id}
+              id={`section-${section.id}`}
+              className={cn(
+                'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
+                openSection === section.id
+                  ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                  : 'border-neutral-200'
+              )}
+            >
               <button
                 type="button"
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-50"
-                onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-neutral-50"
+                onClick={() => {
+                  if (openSection === section.id) {
+                    setOpenSection(null);
+                  } else {
+                    openSectionPanel(section.id);
+                  }
+                }}
               >
-                <span className="font-semibold text-neutral-900">{HOMEPAGE_SECTION_LABELS[section.id]}</span>
-                <span className="text-neutral-400">{openSection === section.id ? '▾' : '▸'}</span>
+                <span className="text-sm font-semibold text-neutral-900">
+                  {HOMEPAGE_SECTION_LABELS[section.id]}
+                </span>
+                <span className="text-neutral-400 text-sm">{openSection === section.id ? '▾' : '▸'}</span>
               </button>
               {openSection === section.id && (
-                <div className="px-4 pb-4 space-y-4 border-t border-neutral-100 pt-4">
+                <div className="px-3 pb-3 space-y-3 border-t border-neutral-100 pt-3">
                   <ToggleRow
                     enabled={section.enabled}
                     onToggle={() => updateConfig((c) => toggleSectionEnabled(c, section.id))}
@@ -339,10 +437,19 @@ export function HomepageBuilder() {
         </div>
 
         <div className="hidden lg:flex flex-col w-[60%] bg-neutral-100">
-          <div className="px-4 py-2 text-xs text-neutral-500 border-b border-neutral-200 bg-white">
-            Live preview
+          <div className="flex items-center gap-3 border-b border-[#C97D5D]/40 bg-cream px-4 py-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C97D5D] text-white text-xs">
+              💡
+            </span>
+            <div>
+              <p className="text-sm font-medium text-neutral-900">Visual Editor Mode</p>
+              <p className="text-xs text-neutral-600">
+                Click any section in the preview to edit · Hover for options
+              </p>
+            </div>
           </div>
           <iframe
+            ref={desktopIframeRef}
             key={previewSrc}
             title="Homepage preview"
             src={previewSrc}
@@ -357,6 +464,7 @@ export function HomepageBuilder() {
           )}
         >
           <iframe
+            ref={mobileIframeRef}
             key={`m-${previewSrc}`}
             title="Homepage preview"
             src={previewSrc}

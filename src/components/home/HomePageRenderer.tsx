@@ -29,11 +29,15 @@ import { TrustStrip } from '@/components/home/TrustStrip';
 import { HomepageCTA } from '@/components/home/HomepageCTA';
 import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
 import { SectionDivider } from '@/components/ui/SectionDivider';
+import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
+import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
+import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
   featuredProducts?: FeaturedProduct[];
   oceanProducts?: OceanProduct[];
+  editMode?: boolean;
 }
 
 const sectionLabels: Record<HomepageSectionId, string> = {
@@ -48,21 +52,59 @@ const sectionLabels: Record<HomepageSectionId, string> = {
   trust: 'ট্রাস্ট স্ট্রিপ',
 };
 
-/** Extra homepage blocks inserted after config-driven sections */
-const INSERT_AFTER: Partial<Record<HomepageSectionId, ReactNode[]>> = {
+type ExtraBlock = {
+  key: string;
+  sectionId: string;
+  sectionName: string;
+  node: ReactNode;
+};
+
+const INSERT_AFTER: Partial<Record<HomepageSectionId, ExtraBlock[]>> = {
   marquee: [
-    <WhyChooseAlma key="why-choose-alma" />,
-    <FamilyMatchingShowcase key="family-matching" />,
+    {
+      key: 'why-choose-alma',
+      sectionId: 'why-choose-alma',
+      sectionName: 'Why Choose ALMA',
+      node: <WhyChooseAlma />,
+    },
+    {
+      key: 'family-matching',
+      sectionId: 'family-matching',
+      sectionName: 'Family Matching',
+      node: <FamilyMatchingShowcase />,
+    },
   ],
-  brandStory: [<OurProcess key="our-process" />],
-  community: [<HomepageFAQ key="homepage-faq" />],
-  trust: [<HomepageCTA key="homepage-cta" />],
+  brandStory: [
+    {
+      key: 'our-process',
+      sectionId: 'our-process',
+      sectionName: 'Our Process',
+      node: <OurProcess />,
+    },
+  ],
+  community: [
+    {
+      key: 'homepage-faq',
+      sectionId: 'homepage-faq',
+      sectionName: 'FAQ',
+      node: <HomepageFAQ />,
+    },
+  ],
+  trust: [
+    {
+      key: 'homepage-cta',
+      sectionId: 'homepage-cta',
+      sectionName: 'Final CTA',
+      node: <HomepageCTA />,
+    },
+  ],
 };
 
 export function HomePageRenderer({
   initialConfig,
   featuredProducts = [],
   oceanProducts = [],
+  editMode = false,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
 
@@ -116,33 +158,71 @@ export function HomePageRenderer({
         case 'hero':
           return (
             <>
-              <EditorialHero data={section.data} />
-              <FloatingCollectionOcean products={oceanProducts} />
+              <EditableHomeBlock editMode={editMode} sectionId="hero" sectionName="Hero Section">
+                <EditorialHero data={section.data} />
+              </EditableHomeBlock>
+              <EditableHomeBlock editMode={editMode} sectionId="bestSelling" sectionName="Best Selling">
+                <FloatingCollectionOcean products={oceanProducts} />
+              </EditableHomeBlock>
             </>
           );
         case 'marquee':
-          return <StoryMarquee data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="marquee" sectionName="Story Marquee">
+              <StoryMarquee data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'categories':
-          return <CategoryShowcase data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="categories" sectionName="Categories">
+              <CategoryShowcase data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'featured':
           return (
-            <FeaturedProductsSection
-              data={section.data}
-              products={
-                preview ? resolveFeaturedProducts(section.data) : featuredProducts
-              }
-            />
+            <EditableHomeBlock editMode={editMode} sectionId="featured" sectionName="Featured Products">
+              <FeaturedProductsSection
+                data={section.data}
+                products={
+                  preview ? resolveFeaturedProducts(section.data) : featuredProducts
+                }
+              />
+            </EditableHomeBlock>
           );
         case 'brandStory':
-          return <BrandStory data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="brandStory" sectionName="Brand Story">
+              <BrandStory data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'reviews':
-          return <ReviewsSection data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="reviews" sectionName="Reviews">
+              <ReviewsSection data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'collectionBanner':
-          return <CollectionBannerEditorial data={section.data} />;
+          return (
+            <EditableHomeBlock
+              editMode={editMode}
+              sectionId="collectionBanner"
+              sectionName="Collection Banner"
+            >
+              <CollectionBannerEditorial data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'community':
-          return <CommunityGrid data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="community" sectionName="Community Grid">
+              <CommunityGrid data={section.data} />
+            </EditableHomeBlock>
+          );
         case 'trust':
-          return <TrustStrip data={section.data} />;
+          return (
+            <EditableHomeBlock editMode={editMode} sectionId="trust" sectionName="Trust Strip">
+              <TrustStrip data={section.data} />
+            </EditableHomeBlock>
+          );
         default:
           return null;
       }
@@ -154,9 +234,19 @@ export function HomePageRenderer({
 
     const extras = INSERT_AFTER[section.id];
     if (extras?.length) {
-      extras.forEach((extra, i) => {
-        pushBlock(`${section.id}-extra-${i}`, 'সেকশন', extra);
-      });
+      for (const extra of extras) {
+        pushBlock(
+          extra.key,
+          extra.sectionName,
+          <EditableHomeBlock
+            editMode={editMode}
+            sectionId={extra.sectionId}
+            sectionName={extra.sectionName}
+          >
+            {extra.node}
+          </EditableHomeBlock>
+        );
+      }
     }
 
     if (next) {
@@ -164,5 +254,10 @@ export function HomePageRenderer({
     }
   });
 
-  return <>{blocks}</>;
+  return (
+    <HomepageEditModeProvider editMode={editMode}>
+      {editMode && <HomepageEditBanner />}
+      {blocks}
+    </HomepageEditModeProvider>
+  );
 }
