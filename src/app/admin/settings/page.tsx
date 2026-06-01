@@ -6,7 +6,7 @@ import type { AppSettings } from '@/lib/admin-settings-types';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
-import { SingleImageUploader } from '@/components/admin/ui/SingleImageUploader';
+import { SmartImageUpload } from '@/components/admin/SmartImageUpload';
 import { AdminTestUpload } from '@/components/admin/settings/AdminTestUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { cn } from '@/lib/utils';
@@ -96,8 +96,19 @@ export default function AdminSettingsPage() {
           <>
             <Input label="Store Name" value={form.storeName} onChange={(e) => patch('storeName', e.target.value)} />
             <Input label="Tagline" value={form.tagline} onChange={(e) => patch('tagline', e.target.value)} />
-            <SingleImageUploader label="Logo" value={form.logoUrl} onChange={(v) => patch('logoUrl', v)} />
-            <SingleImageUploader label="Favicon" value={form.faviconUrl} onChange={(v) => patch('faviconUrl', v)} />
+            <SmartImageUpload
+              specKey="logo"
+              value={form.logoUrl}
+              onChange={(v) => patch('logoUrl', v)}
+              upload={{ mode: 'api', folder: 'branding', bucket: 'homepage-images' }}
+            />
+            <SmartImageUpload
+              specKey="favicon"
+              value={form.faviconUrl}
+              onChange={(v) => patch('faviconUrl', v)}
+              upload={{ mode: 'api', folder: 'branding', bucket: 'homepage-images' }}
+              showFaviconCacheHint
+            />
             <Input label="Contact Email" type="email" value={form.contactEmail} onChange={(e) => patch('contactEmail', e.target.value)} />
             <Input label="Contact Phone" value={form.contactPhone} onChange={(e) => patch('contactPhone', e.target.value)} />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -181,7 +192,12 @@ export default function AdminSettingsPage() {
           <>
             <Input label="Site title template" value={form.seoSiteTitleTemplate} onChange={(e) => patch('seoSiteTitleTemplate', e.target.value)} />
             <Textarea label="Site description" rows={3} value={form.seoSiteDescription} onChange={(e) => patch('seoSiteDescription', e.target.value)} />
-            <SingleImageUploader label="Default OG image" value={form.seoDefaultOgImageUrl} onChange={(v) => patch('seoDefaultOgImageUrl', v)} />
+            <SmartImageUpload
+              specKey="ogImage"
+              value={form.seoDefaultOgImageUrl}
+              onChange={(v) => patch('seoDefaultOgImageUrl', v)}
+              upload={{ mode: 'api', folder: 'branding', bucket: 'homepage-images' }}
+            />
             <Input label="Google Analytics ID" value={form.googleAnalyticsId} onChange={(e) => patch('googleAnalyticsId', e.target.value)} />
             <Input label="Facebook Pixel ID" value={form.facebookPixelId} onChange={(e) => patch('facebookPixelId', e.target.value)} />
           </>

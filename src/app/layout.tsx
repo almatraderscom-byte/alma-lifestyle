@@ -3,7 +3,9 @@ import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/g
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
+import { FaviconSync } from '@/components/layout/FaviconSync';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
+import { buildFaviconHref } from '@/lib/favicon-url';
 import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import './globals.css';
 
@@ -31,9 +33,15 @@ export async function generateMetadata(): Promise<Metadata> {
     ? settings.seoSiteTitleTemplate.replace('%s', settings.storeName)
     : `${settings.storeName} | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল`;
 
+  const faviconHref = buildFaviconHref(settings.faviconUrl, settings.updatedAt);
+
   return {
     title,
     description: settings.seoSiteDescription,
+    icons: {
+      icon: [{ url: faviconHref }],
+      apple: [{ url: faviconHref }],
+    },
     openGraph: {
       title,
       description: settings.seoSiteDescription,
@@ -62,6 +70,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
         <StoreSettingsProvider settings={settings}>
+          <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />

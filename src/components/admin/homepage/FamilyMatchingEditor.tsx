@@ -79,6 +79,7 @@ export function FamilyMatchingEditor({ data, onChange }: FamilyMatchingEditorPro
       <ImageSlotFields
         label="Banner image"
         description="Family wearing matching ALMA outfits — outdoor golden hour"
+        specKey="familyMatchingMain"
         folder="family-matching/banner"
         slot={data.banner}
         onChange={(banner) => onChange({ ...data, banner })}
@@ -115,6 +116,7 @@ export function FamilyMatchingEditor({ data, onChange }: FamilyMatchingEditorPro
             }
           />
           <HomepageImageUpload
+            specKey="familyMatchingCard"
             label="Card image"
             folder={`family-matching/${card.id}`}
             value={card.imageUrl}

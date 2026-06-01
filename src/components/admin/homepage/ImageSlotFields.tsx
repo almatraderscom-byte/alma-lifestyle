@@ -1,6 +1,7 @@
 'use client';
 
 import type { HomepageImageSlot } from '@/lib/homepage-config-types';
+import type { ImageSpecKey } from '@/lib/image-specs';
 import { Input } from '@/components/admin/ui/Input';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
@@ -10,6 +11,7 @@ interface ImageSlotFieldsProps {
   label: string;
   description?: string;
   folder: string;
+  specKey: ImageSpecKey;
   slot: HomepageImageSlot;
   onChange: (slot: HomepageImageSlot) => void;
 }
@@ -18,19 +20,20 @@ export function ImageSlotFields({
   label,
   description,
   folder,
+  specKey,
   slot,
   onChange,
 }: ImageSlotFieldsProps) {
   const { toast } = useAdminToast();
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50/80 p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-4">
       <div>
         <p className="text-sm font-semibold text-neutral-900">{label}</p>
-        {description && <p className="text-xs text-neutral-500 mt-0.5">{description}</p>}
+        {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
       </div>
       <HomepageImageUpload
-        label="Image"
+        specKey={specKey}
         folder={folder}
         value={slot.url}
         onChange={(url) => onChange({ ...slot, url })}
