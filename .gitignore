@@ -59,6 +59,7 @@ Thumbs.db
 
 # Logs
 logs/
+!src/app/admin/notifications/logs/
 *.log
 
 # Temporary files
