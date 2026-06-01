@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getImageSpec, getAspectRatioDecimal, type ImageSpecKey } from '@/lib/image-specs';
 import {
   getImageDimensionWarnings,
@@ -10,6 +10,7 @@ import { uploadPreparedHomepageImage } from '@/lib/homepage-upload';
 import { uploadImageApi } from '@/lib/admin-api';
 import { prepareImageForUpload } from '@/lib/prepare-image-upload';
 import { shouldUseApi } from '@/lib/data-source';
+import { isDataImageUrl } from '@/lib/image-url-display';
 import { cn } from '@/lib/utils';
 
 export type SmartImageUploadTarget =
@@ -100,6 +101,27 @@ function FaviconCacheHint() {
   );
 }
 
+function DataUrlStoredWarning({ onClear }: { onClear?: () => void }) {
+  return (
+    <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+      <p className="font-medium">Legacy inline image detected</p>
+      <p className="mt-1">
+        This image was saved as embedded data instead of a storage URL. Upload the file again to
+        store it in cloud storage. Preview still works below.
+      </p>
+      {onClear && (
+        <button
+          type="button"
+          className="mt-2 text-sm font-medium text-amber-800 underline hover:text-amber-950"
+          onClick={onClear}
+        >
+          Clear and re-upload
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function SmartImageUpload({
   specKey,
   value,
@@ -113,8 +135,8 @@ export function SmartImageUpload({
   className,
 }: SmartImageUploadProps) {
   const spec = getImageSpec(specKey);
-  const aspectRatioDecimal = getAspectRatioDecimal(spec);
   const displayUrl = value ?? currentUrl ?? '';
+  const isDataUrl = isDataImageUrl(displayUrl);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -122,13 +144,13 @@ export function SmartImageUpload({
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
 
-  const emitUrl = useCallback(
-    (url: string) => {
-      onUpload?.(url);
-      onChange?.(url);
-    },
-    [onChange, onUpload]
-  );
+  useEffect(() => {
+    if (isDataUrl) {
+      console.warn(
+        '[SmartImageUpload] Base64/data URL in settings — upload to storage instead of saving inline data.'
+      );
+    }
+  }, [isDataUrl]);
 
   const reportError = useCallback(
     (message: string) => {
@@ -136,6 +158,20 @@ export function SmartImageUpload({
       onError?.(message);
     },
     [onError]
+  );
+
+  const emitUrl = useCallback(
+    (url: string) => {
+      if (isDataImageUrl(url)) {
+        reportError(
+          'Image must be uploaded to storage (Supabase). Configure Supabase env vars, then upload again.'
+        );
+        return;
+      }
+      onUpload?.(url);
+      onChange?.(url);
+    },
+    [onChange, onUpload, reportError]
   );
 
   const uploadFile = useCallback(
@@ -152,16 +188,15 @@ export function SmartImageUpload({
         const prepared = await prepareImageForUpload(file);
         return uploadPreparedHomepageImage(prepared, upload.folder);
       }
-      if (shouldUseApi()) {
-        const prepared = await prepareImageForUpload(file);
-        return uploadImageApi(prepared, upload.folder, upload.bucket ?? 'homepage-images');
+
+      if (!shouldUseApi()) {
+        throw new Error(
+          'Cloud storage is not configured. Set Supabase env vars and enable API mode — images cannot be saved as inline base64.'
+        );
       }
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Could not read file'));
-        reader.readAsDataURL(file);
-      });
+
+      const prepared = await prepareImageForUpload(file);
+      return uploadImageApi(prepared, upload.folder, upload.bucket ?? 'homepage-images');
     },
     [upload]
   );
@@ -197,10 +232,16 @@ export function SmartImageUpload({
 
   const acceptList = spec.acceptedFormats.map((f) => `.${f}`).join(',');
 
+  const handleClearDataUrl = useCallback(() => {
+    emitUrl('');
+    onRemove?.();
+  }, [emitUrl, onRemove]);
+
   return (
     <div className={cn('space-y-2', className)}>
       <ImageSpecGuidance specKey={specKey} />
       {showFaviconCacheHint || specKey === 'favicon' ? <FaviconCacheHint /> : null}
+      {isDataUrl ? <DataUrlStoredWarning onClear={handleClearDataUrl} /> : null}
 
       <div
         role="button"
@@ -254,14 +295,13 @@ export function SmartImageUpload({
               <img src={displayUrl} alt="" className="h-full w-full object-cover" />
             </div>
             <p className="text-sm text-gray-600">Click to replace image</p>
-            {onRemove && (
+            {(onRemove || isDataUrl) && (
               <button
                 type="button"
                 className="text-sm text-red-600 hover:text-red-800"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemove();
-                  emitUrl('');
+                  handleClearDataUrl();
                 }}
               >
                 Remove image
@@ -291,10 +331,6 @@ export function SmartImageUpload({
         <div className="rounded border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
           ⚠️ {warning}
         </div>
-      )}
-
-      {displayUrl && (
-        <p className="break-all text-xs text-neutral-500">{displayUrl}</p>
       )}
     </div>
   );
