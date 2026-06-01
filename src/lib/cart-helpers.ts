@@ -1,4 +1,5 @@
 import type { AddToCartInput } from '@/context/CartContext';
+import { getDefaultProductImage } from '@/lib/default-images';
 import type { CatalogProduct } from '@/lib/products-data';
 
 export function getDefaultSize(product: CatalogProduct): string {
@@ -29,7 +30,9 @@ export function catalogToCartItem(
     quantity: options?.quantity ?? 1,
     color,
     size: options?.size ?? getDefaultSize(product),
-    image: product.bgClass,
+    image:
+      product.images[0]?.url ??
+      getDefaultProductImage(product.slug, product.categorySlug),
     slug: product.slug,
   };
 }

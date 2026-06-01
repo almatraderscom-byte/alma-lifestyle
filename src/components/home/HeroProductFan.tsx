@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { FeaturedProduct } from '@/lib/content';
 import { SITE } from '@/lib/content';
+import { getDefaultProductImage, resolveProductImageUrl } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 
 const FAN_LAYOUT_DESKTOP = [
@@ -55,19 +56,31 @@ interface HeroProductFanProps {
   products?: FanCard[];
 }
 
+function fanSlug(product: FanCard): string {
+  return (
+    product.slug ??
+    (product.href.replace(/^\/products\//, '').replace(/\/$/, '') || 'product')
+  );
+}
+
 function placeholderCard(index: number): FanCard {
+  const slug = 'premium-cotton-panjabi';
+  const defaultUrl = getDefaultProductImage(slug, 'panjabi');
   return {
     id: `fan-placeholder-${index}`,
+    slug,
     title: 'আলমা কালেকশন',
     price: 0,
     bgClass: PLACEHOLDER_BGS[index % PLACEHOLDER_BGS.length],
-    href: '/products',
+    href: `/products/${slug}`,
+    galleryImages: [{ id: `fan-ph-${index}`, bgClass: 'bg-cream', url: defaultUrl }],
   };
 }
 
-function getProductImageUrl(product: FanCard): string | undefined {
+function getProductImageUrl(product: FanCard): string {
+  const slug = fanSlug(product);
   const url = product.galleryImages?.[0]?.url;
-  return url && url.trim().length > 0 ? url : undefined;
+  return resolveProductImageUrl(url, slug);
 }
 
 function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
@@ -94,12 +107,13 @@ function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
 
     if (usePlaceholder) {
       const product = placeholderCard(i);
+      const imageUrl = getProductImageUrl(product);
       slots.push({
         key: `placeholder-${i}`,
         product,
-        imageUrl: undefined,
+        imageUrl,
         bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
-        isPlaceholder: true,
+        isPlaceholder: false,
       });
       continue;
     }
@@ -119,7 +133,7 @@ function buildFanSlots(products: FanCard[], slotCount: number): FanSlot[] {
         sourceProduct.galleryImages?.[0]?.bgClass ??
         sourceProduct.bgClass ??
         PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
-      isPlaceholder: !imageUrl,
+      isPlaceholder: false,
     });
   }
 

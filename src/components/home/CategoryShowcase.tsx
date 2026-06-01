@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
-import { isUsableImageUrl } from '@/lib/homepage-image';
+import { getDefaultImageForHint } from '@/lib/default-images';
 import type { CategoriesSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
@@ -93,7 +93,6 @@ function CategoryCard({
   href,
   name,
   subtitle,
-  bg,
   hint,
   imageUrl,
   large = false,
@@ -112,16 +111,18 @@ function CategoryCard({
       className={cn(
         'group relative flex flex-col justify-end overflow-hidden rounded text-white',
         'transition-transform duration-500 ease-out md:hover:scale-[1.02]',
-        !imageUrl && bg,
         large ? 'min-h-[280px] md:min-h-full md:h-full aspect-[4/5] md:aspect-auto' : 'min-h-[100px] md:min-h-0 md:h-full aspect-square md:aspect-auto'
       )}
     >
       <span className="sr-only">{hint}</span>
-      {isUsableImageUrl(imageUrl) ? (
-        <HomepageSectionImage src={imageUrl} alt={name} sizes="(max-width: 768px) 50vw, 33vw" />
-      ) : null}
+      <HomepageSectionImage
+        src={imageUrl}
+        fallbackSrc={getDefaultImageForHint(hint)}
+        alt={name}
+        sizes="(max-width: 768px) 50vw, 33vw"
+      />
       <div
-        className="absolute inset-0 pattern-overlay transition-transform duration-500 ease-out md:group-hover:scale-110"
+        className="absolute inset-0 bg-charcoal/35 transition-transform duration-500 ease-out md:group-hover:scale-110"
         aria-hidden
       />
       <div className="relative z-10 p-4 md:p-6">

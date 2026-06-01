@@ -1,3 +1,4 @@
+import { getDefaultProductImage, resolveProductImageUrl } from '@/lib/default-images';
 import type { ProductType } from '@/lib/product-design-types';
 import type { CatalogProduct, CategorySlug } from '@/lib/products-data';
 import type { Category, ProductWithRelations } from '@/server/db/schema';
@@ -98,14 +99,20 @@ export function mapDbProductToCatalog(
     materialCare: product.care_instructions ?? '',
     deliveryInfo: '',
     returnPolicy: '',
-    images: [...(product.product_images ?? [])]
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((img, i) => ({
+    images: (() => {
+      const sorted = [...(product.product_images ?? [])].sort(
+        (a, b) => a.sort_order - b.sort_order
+      );
+      const mapped = sorted.map((img, i) => ({
         id: img.id,
-        url: img.url || undefined,
-        bgClass: img.url ? 'bg-cream' : pickBg(i),
+        url: resolveProductImageUrl(img.url, product.slug, categorySlug),
+        bgClass: 'bg-cream',
         isFamilyGroup: img.alt_text === 'family-group',
-      })),
+      }));
+      if (mapped.length > 0) return mapped;
+      const fallback = getDefaultProductImage(product.slug, categorySlug);
+      return [{ id: 'default', url: fallback, bgClass: 'bg-cream' }];
+    })(),
     popularScore: 50 + index,
     tags: product.tags ?? [],
     createdAt: new Date(product.created_at).getTime(),
