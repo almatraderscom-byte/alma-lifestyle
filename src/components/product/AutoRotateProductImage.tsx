@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
+import { DEFAULT_IMAGES, resolveProductImageUrl } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 
 export type ProductCardGalleryImage = {
@@ -18,30 +19,39 @@ export interface AutoRotateProductImageProps {
   rotationInterval?: number;
   staggerOffset?: number;
   priority?: boolean;
+  productSlug?: string;
+  categorySlug?: string;
 }
 
 function GalleryImageLayer({
   image,
   alt,
   priority,
+  productSlug,
+  categorySlug,
 }: {
   image: ProductCardGalleryImage;
   alt: string;
   priority?: boolean;
+  productSlug?: string;
+  categorySlug?: string;
 }) {
   const [broken, setBroken] = useState(false);
+  const src = productSlug
+    ? resolveProductImageUrl(image.url, productSlug, categorySlug)
+    : image.url;
 
   useEffect(() => {
     setBroken(false);
   }, [image.id, image.url]);
 
-  if (!image.url || broken) {
+  if (!src || broken) {
     return <div className={cn('absolute inset-0', image.bgClass)} aria-hidden />;
   }
 
   return (
     <Image
-      src={image.url}
+      src={src}
       alt={alt}
       fill
       className="object-cover"
@@ -60,6 +70,8 @@ export function AutoRotateProductImage({
   rotationInterval = 3000,
   staggerOffset = 0,
   priority = false,
+  productSlug,
+  categorySlug,
 }: AutoRotateProductImageProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -73,7 +85,9 @@ export function AutoRotateProductImage({
 
   const validImages = images?.filter(Boolean) ?? [];
   const hasMultiple = validImages.length > 1;
-  const hasRealUrls = validImages.some((g) => g.url);
+  const hasRealUrls = Boolean(
+    productSlug || validImages.some((g) => g.url?.trim())
+  );
 
   useEffect(() => {
     setCurrentIndex((i) => (i >= validImages.length ? 0 : i));
@@ -146,11 +160,19 @@ export function AutoRotateProductImage({
   }
 
   if (validImages.length === 0) {
+    const fallback = productSlug
+      ? resolveProductImageUrl(undefined, productSlug, categorySlug)
+      : DEFAULT_IMAGES.productGeneric;
     return (
-      <div ref={containerRef} className={cn('bg-gray-200', className)}>
-        <div className="flex h-full w-full items-center justify-center text-gray-400">
-          No image
-        </div>
+      <div ref={containerRef} className={cn('relative overflow-hidden', className)}>
+        <Image
+          src={fallback}
+          alt={alt}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 50vw, 25vw"
+          priority={priority}
+        />
       </div>
     );
   }
@@ -178,6 +200,8 @@ export function AutoRotateProductImage({
             image={active}
             alt={alt}
             priority={priority && currentIndex === 0}
+            productSlug={productSlug}
+            categorySlug={categorySlug}
           />
         ) : (
           <AnimatePresence mode="sync">
@@ -193,6 +217,8 @@ export function AutoRotateProductImage({
                 image={active}
                 alt={`${alt} - image ${currentIndex + 1}`}
                 priority={priority && currentIndex === 0}
+                productSlug={productSlug}
+                categorySlug={categorySlug}
               />
             </motion.div>
           </AnimatePresence>

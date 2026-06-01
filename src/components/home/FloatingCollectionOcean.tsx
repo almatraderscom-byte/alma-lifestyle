@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion, type Transition } from 'framer-motion';
 import { AutoRotateProductImage } from '@/components/product/AutoRotateProductImage';
+import { getDefaultProductImage, resolveProductImageUrl } from '@/lib/default-images';
 import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 
 export type OceanProduct = {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   href: string;
@@ -74,19 +76,37 @@ interface FloatingCollectionOceanProps {
   products: OceanProduct[];
 }
 
-function getImageUrl(product: OceanProduct): string | undefined {
-  const url = product.galleryImages?.[0]?.url;
-  return url && url.trim().length > 0 ? url : undefined;
+function oceanSlugFromHref(href: string): string {
+  return href.replace(/^\/products\//, '').replace(/\/$/, '') || 'product';
+}
+
+function resolveOceanGallery(product: OceanProduct) {
+  const slug = product.slug ?? oceanSlugFromHref(product.href);
+  const imgs = product.galleryImages?.length
+    ? product.galleryImages
+    : [{ id: product.id, bgClass: product.bgClass }];
+  return imgs.map((img) => ({
+    ...img,
+    url: resolveProductImageUrl(img.url, slug),
+  }));
+}
+
+function getImageUrl(product: OceanProduct): string {
+  return resolveOceanGallery(product)[0]?.url ?? getDefaultProductImage(oceanSlugFromHref(product.href));
 }
 
 function placeholderProduct(index: number): OceanProduct {
   const seed = HOME_FEATURED_PRODUCTS[index % HOME_FEATURED_PRODUCTS.length];
+  const slug = seed?.slug ?? oceanSlugFromHref(seed?.href ?? '/products');
+  const defaultUrl = getDefaultProductImage(slug, 'panjabi');
   return {
     id: `ocean-placeholder-${index}`,
+    slug,
     title: seed?.title ?? `প্রিমিয়াম সংগ্রহ ${index + 1}`,
     price: seed?.price ?? 2500,
     href: seed?.href ?? '/products',
     bgClass: PLACEHOLDER_BGS[index % PLACEHOLDER_BGS.length],
+    galleryImages: [{ id: seed?.id ?? `ph-${index}`, bgClass: seed?.bgClass ?? 'bg-cream', url: defaultUrl }],
   };
 }
 
@@ -111,10 +131,7 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
       seenIds.add(candidate.id);
       if (imageUrl) seenImageUrls.add(imageUrl);
 
-      const galleryImages =
-        candidate.galleryImages?.length
-          ? candidate.galleryImages
-          : [{ id: candidate.id, bgClass: candidate.bgClass, url: imageUrl }];
+      const galleryImages = resolveOceanGallery(candidate);
 
       assigned = {
         key: `${candidate.id}-ocean-${i}`,
@@ -125,20 +142,21 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
           candidate.galleryImages?.[0]?.bgClass ??
           candidate.bgClass ??
           PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
-        isPlaceholder: !imageUrl,
+        isPlaceholder: false,
       };
       break;
     }
 
     if (!assigned) {
       const product = placeholderProduct(i);
+      const imageUrl = getImageUrl(product);
       assigned = {
         key: product.id,
         product,
-        galleryImages: [{ id: product.id, bgClass: product.bgClass }],
-        imageUrl: undefined,
+        galleryImages: product.galleryImages ?? [{ id: product.id, bgClass: product.bgClass, url: imageUrl }],
+        imageUrl,
         bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
-        isPlaceholder: true,
+        isPlaceholder: false,
       };
     }
 
@@ -274,21 +292,14 @@ function OceanCard({
             !imageUrl && bgClass
           )}
         >
-          {imageUrl || galleryImages.length > 1 ? (
-            <AutoRotateProductImage
-              images={galleryImages}
-              alt={product.title}
-              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
-              rotationInterval={3000}
-              staggerOffset={staggerOffset}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center p-3 pattern-overlay opacity-20">
-              <span className="text-center font-bn-heading text-sm font-semibold text-cream">
-                {product.title}
-              </span>
-            </div>
-          )}
+          <AutoRotateProductImage
+            images={galleryImages}
+            alt={product.title}
+            className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+            rotationInterval={3000}
+            staggerOffset={staggerOffset}
+            productSlug={product.slug ?? oceanSlugFromHref(product.href)}
+          />
 
           {imageUrl && (
             <div className="absolute inset-0 flex items-end bg-charcoal/0 p-3 transition-colors duration-500 group-hover:bg-charcoal/25">

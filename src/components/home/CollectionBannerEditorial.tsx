@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { CollectionBannerSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
-import { isUsableImageUrl } from '@/lib/homepage-image';
+import { getDefaultImageForHint } from '@/lib/default-images';
 import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
 import { EASE_PREMIUM } from '@/lib/animation-variants';
 
@@ -52,7 +52,9 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'collectionBanner')!.data;
 
-  const hasBgImage = isUsableImageUrl(data.backgroundImageUrl);
+  const bannerFallback = getDefaultImageForHint(
+    data.imageHint || 'Eid collection banner'
+  );
   const charCount = Array.from(data.title).length;
   const subtitleDelay = charCount * 0.03 + 0.2;
   const ctaDelay = subtitleDelay + 0.25;
@@ -60,25 +62,16 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
   return (
     <section
       ref={ref}
-      className={cn(
-        'relative min-h-[70vh] flex items-center justify-center pattern-overlay',
-        !hasBgImage && data.bgClass
-      )}
+      className="relative min-h-[70vh] flex items-center justify-center pattern-overlay"
     >
-      {hasBgImage && (
-        <HomepageSectionImage
-          src={data.backgroundImageUrl}
-          alt={data.title}
-          sizes="100vw"
-        />
-      )}
-      <div
-        className={cn(
-          'absolute inset-0',
-          hasBgImage ? 'bg-charcoal/50' : 'bg-maroon/95'
-        )}
-        aria-hidden
+      <HomepageSectionImage
+        src={data.backgroundImageUrl}
+        fallbackSrc={bannerFallback}
+        alt={data.title}
+        sizes="100vw"
+        priority
       />
+      <div className="absolute inset-0 bg-charcoal/50" aria-hidden />
       <div className="relative z-10 text-center px-6 md:px-12 max-w-3xl">
         <motion.p
           className="editorial-label text-mustard mb-6 mx-auto w-fit"

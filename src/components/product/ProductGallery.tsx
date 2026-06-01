@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
+import { resolveProductImageUrl } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 import type { StorefrontGalleryImage } from '@/lib/product-gallery';
 
@@ -16,6 +17,8 @@ interface ProductGalleryProps {
   designGroupName?: string;
   /** Reset autoplay when tab/member changes */
   resetKey?: string;
+  productSlug?: string;
+  categorySlug?: string;
 }
 
 const EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
@@ -26,9 +29,26 @@ export function ProductGallery({
   aspectRatio = '3/4',
   designGroupName,
   resetKey,
+  productSlug,
+  categorySlug,
 }: ProductGalleryProps) {
-  const displayImages =
-    images.length > 0 ? images : [{ id: 'placeholder', bgClass: 'bg-secondary' }];
+  const displayImages: StorefrontGalleryImage[] =
+    images.length > 0
+      ? images.map((img) => ({
+          ...img,
+          url: productSlug
+            ? resolveProductImageUrl(img.url, productSlug, categorySlug)
+            : img.url,
+        }))
+      : productSlug
+        ? [
+            {
+              id: 'default',
+              bgClass: 'bg-cream',
+              url: resolveProductImageUrl(undefined, productSlug, categorySlug),
+            },
+          ]
+        : [{ id: 'placeholder', bgClass: 'bg-secondary' }];
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -119,9 +139,7 @@ export function ProductGallery({
                 priority={activeIndex === 0}
                 loading={activeIndex === 0 ? 'eager' : 'lazy'}
               />
-            ) : (
-              <div className={cn('absolute inset-0', active.bgClass)} aria-hidden />
-            )}
+            ) : null}
 
             {showFamilyOverlay && (
               <div

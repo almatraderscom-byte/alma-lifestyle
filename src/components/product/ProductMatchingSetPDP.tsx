@@ -115,6 +115,8 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
         aspectRatio={active.aspectRatio}
         designGroupName={product.designGroupName}
         resetKey={activeId}
+        productSlug={active.slug}
+        categorySlug={active.categorySlug}
       />
 
       <div className="space-y-6">

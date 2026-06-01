@@ -1,6 +1,7 @@
 import type { FeaturedProduct } from '@/lib/content';
 import type { ProductType } from '@/lib/product-design-types';
 import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
+import { getDefaultProductImage } from '@/lib/default-images';
 import { buildListingCardGallery } from '@/lib/product-gallery';
 
 export type CategorySlug = 'panjabi' | 'electronics' | 'accessories' | 'home-decor';
@@ -102,15 +103,14 @@ function mk(
         ? []
         : ['S', 'M', 'L', 'XL'];
 
+  const defaultImageUrl = getDefaultProductImage(slug, categorySlug);
+
   const images = [
-    { id: '1', bgClass },
-    { id: '2', bgClass: bgClass.replace('bg-', 'bg-') },
-    { id: '3', bgClass },
-    { id: '4', bgClass },
-  ].map((img, i) => ({
-    ...img,
-    bgClass: i % 2 === 0 ? bgClass : adjustBg(bgClass, i),
-  }));
+    { id: '1', bgClass, url: defaultImageUrl },
+    { id: '2', bgClass: adjustBg(bgClass, 1), url: defaultImageUrl },
+    { id: '3', bgClass, url: defaultImageUrl },
+    { id: '4', bgClass: adjustBg(bgClass, 3), url: defaultImageUrl },
+  ];
 
   return {
     id: slug,

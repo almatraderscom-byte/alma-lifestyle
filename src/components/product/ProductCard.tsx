@@ -16,6 +16,7 @@ import {
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/components/ui/Toast';
+import { resolveProductImageUrl } from '@/lib/default-images';
 import { getProductBySlug } from '@/lib/products-data';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
@@ -69,21 +70,29 @@ export function ProductCard({
         ? 'aspect-[3/5]'
         : 'aspect-[3/4]';
 
+  const productSlug = product.slug ?? product.href.replace('/products/', '');
+
   const gallery = useMemo(() => {
+    const catalog = getProductBySlug(productSlug);
+    const categorySlug = catalog?.categorySlug;
     const imgs = product.galleryImages;
-    if (imgs && imgs.length > 0) return imgs;
-    return [{ id: product.id, bgClass: product.bgClass }];
-  }, [product.galleryImages, product.id, product.bgClass]);
+    const base =
+      imgs && imgs.length > 0
+        ? imgs
+        : [{ id: product.id, bgClass: product.bgClass }];
+    return base.map((img) => ({
+      ...img,
+      url: resolveProductImageUrl(img.url, productSlug, categorySlug),
+    }));
+  }, [product.galleryImages, product.id, product.bgClass, productSlug]);
+
+  const catalogProduct = useMemo(
+    () => getProductBySlug(productSlug),
+    [productSlug]
+  );
 
   const staggerOffset = (index * 350) % 2500;
-  const imageHint = product.imageHint ?? 'Product photo';
-  const captionHint = imageHint.replace(/^Image:\s*/i, '');
   const isDesignGroup = Boolean(product.isDesignGroup && product.priceRange);
-
-  const categoryLabel = useMemo(() => {
-    const slug = product.slug ?? product.href.replace('/products/', '');
-    return getProductBySlug(slug)?.categoryName ?? 'পণ্য';
-  }, [product.slug, product.href]);
 
   useEffect(() => {
     const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -141,22 +150,10 @@ export function ProductCard({
             rotationInterval={3000}
             staggerOffset={staggerOffset}
             priority={index < 4}
+            productSlug={productSlug}
+            categorySlug={catalogProduct?.categorySlug}
           />
         </div>
-
-        {!gallery.some((g) => g.url) && (
-          <div className="absolute inset-0 z-[1] flex flex-col pointer-events-none">
-            <span className="font-bn-body text-[10px] sm:text-xs text-charcoal/50 text-center pt-3 px-2">
-              {categoryLabel}
-            </span>
-            <div className="flex-1 flex items-center justify-center">
-              <HangerIcon className="text-charcoal opacity-[0.15]" />
-            </div>
-            <p className="font-bn-body text-[9px] sm:text-[10px] text-charcoal/55 text-center px-3 pb-3 leading-snug line-clamp-2">
-              {captionHint}
-            </p>
-          </div>
-        )}
 
         {product.isNew && editorial && (
           <span className="absolute top-3 left-3 z-10 bg-terracotta text-white font-bn-body text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -270,24 +267,6 @@ export function ProductCard({
         </motion.button>
       </div>
     </motion.article>
-  );
-}
-
-function HangerIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="48"
-      height="48"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      aria-hidden
-    >
-      <path d="M6 4a3 3 0 016 0c0 1.5-1 2.5-2 3.5L20 12H4l12-4.5C15 7 14 6 14 4a3 3 0 00-6 0" />
-      <path d="M4 12v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-    </svg>
   );
 }
 
