@@ -7,18 +7,21 @@ import { ProductDetails } from '@/components/product/ProductDetails';
 import { ProductMatchingSetPDP } from '@/components/product/ProductMatchingSetPDP';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { BREADCRUMB, PDP } from '@/lib/content';
-import { CATALOG_PRODUCTS, toCardProduct, type CatalogProduct } from '@/lib/products-data';
+import { toCardProduct, type CatalogProduct } from '@/lib/products-data';
 
 interface ProductDetailViewProps {
   product: CatalogProduct;
+  relatedProducts?: CatalogProduct[];
+  recentProducts?: CatalogProduct[];
 }
 
-export function ProductDetailView({ product }: ProductDetailViewProps) {
-  const related = CATALOG_PRODUCTS.filter(
-    (p) => p.categorySlug === product.categorySlug && p.slug !== product.slug
-  ).slice(0, 4);
-
-  const recent = CATALOG_PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 4);
+export function ProductDetailView({
+  product,
+  relatedProducts = [],
+  recentProducts = [],
+}: ProductDetailViewProps) {
+  const related = relatedProducts;
+  const recent = recentProducts;
 
   return (
     <div className="bg-warm-white">

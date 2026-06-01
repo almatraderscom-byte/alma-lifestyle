@@ -3,6 +3,7 @@ import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/g
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
+import { productionRobots, SEO_SITE_NAME } from '@/lib/seo/metadata-helpers';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -24,14 +25,25 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 export const metadata: Metadata = {
-  title: 'ALMA Lifestyle | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://almatraders.com'),
+  title: `${SEO_SITE_NAME} | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল`,
   description:
     'প্রিমিয়াম পাঞ্জাবি, ইলেকট্রনিক্স, এক্সেসরিজ ও হোম ডেকর — সারা বাংলাদেশে ডেলিভারি। ALMA Lifestyle।',
+  alternates: { canonical: '/' },
+  robots: productionRobots(),
   openGraph: {
-    title: 'ALMA Lifestyle | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল',
+    title: `${SEO_SITE_NAME} | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল`,
     description:
       'Premium fashion and lifestyle for Bangladesh — Panjabi, electronics, accessories, home decor.',
     locale: 'bn_BD',
+    type: 'website',
+    siteName: SEO_SITE_NAME,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SEO_SITE_NAME} | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল`,
+    description:
+      'Premium fashion and lifestyle for Bangladesh — Panjabi, electronics, accessories, home decor.',
   },
 };
 

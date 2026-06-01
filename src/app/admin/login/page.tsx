@@ -4,17 +4,17 @@ import { useState } from 'react';
 import { login } from '@/lib/admin-auth';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@alma.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const success = login(email, password);
+    const success = await login(email, password);
 
     if (success) {
       window.location.href = '/admin';
@@ -62,10 +62,6 @@ export default function AdminLoginPage() {
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
-
-          <p className="text-center text-gray-400 text-sm mt-4">
-            Default: admin@alma.com / admin123
-          </p>
         </form>
       </div>
     </div>

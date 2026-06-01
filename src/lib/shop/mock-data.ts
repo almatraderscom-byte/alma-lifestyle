@@ -1,3 +1,10 @@
+// DEPRECATED: only used for shop category navigation placeholders until storefront
+// categories load from Supabase. Remaining imports:
+// - src/components/shared/Header.tsx (CATEGORIES)
+// - src/components/shared/Footer.tsx (CATEGORIES)
+// - src/components/shop/ProductFilters.tsx (CATEGORIES)
+// - src/components/shop/CategoryBar.tsx (CATEGORIES)
+// Replace and delete in follow-up PR.
 import type {
   ShopCategory,
   ShopCollection,
