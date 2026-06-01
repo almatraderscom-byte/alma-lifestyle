@@ -203,13 +203,53 @@ export async function deleteCollectionApi(id: string): Promise<void> {
   await request(`/api/v1/collections/${id}`, { method: 'DELETE' });
 }
 
-export async function fetchOrders(): Promise<AdminOrder[]> {
+export async function fetchOrders(options?: {
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
+}): Promise<AdminOrder[]> {
+  const q = new URLSearchParams();
+  q.set('limit', '500');
+  if (options?.includeArchived) q.set('includeArchived', 'true');
+  if (options?.archivedOnly) q.set('archivedOnly', 'true');
+
   const payload = await request<AdminOrder[] | { data: AdminOrder[] }>(
-    '/api/v1/orders?limit=500'
+    `/api/v1/orders?${q}`
   );
   if (Array.isArray(payload)) return payload;
   if (payload && Array.isArray(payload.data)) return payload.data;
   return [];
+}
+
+export async function cancelOrderApi(id: string): Promise<void> {
+  await request(`/api/v1/admin/orders/${id}/cancel`, { method: 'POST' });
+}
+
+export async function archiveOrderApi(id: string): Promise<void> {
+  await request(`/api/v1/admin/orders/${id}/archive`, { method: 'POST' });
+}
+
+export async function restoreOrderApi(id: string): Promise<void> {
+  await request(`/api/v1/admin/orders/${id}/restore`, { method: 'POST' });
+}
+
+export async function deleteOrderPermanentlyApi(id: string): Promise<void> {
+  await request(`/api/v1/admin/orders/${id}/archive`, { method: 'DELETE' });
+}
+
+export async function bulkOrderActionApi(
+  orderIds: string[],
+  action: 'archive' | 'cancel' | 'delete'
+): Promise<{ success: boolean; count: number }> {
+  return request<{ success: boolean; count: number }>('/api/v1/admin/orders/bulk-action', {
+    method: 'POST',
+    body: JSON.stringify({ orderIds, action }),
+  });
+}
+
+export async function deleteDesignGroupApi(id: string): Promise<{ unlinkedCount: number }> {
+  return request<{ unlinkedCount: number }>(`/api/v1/admin/design-groups/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 export async function updateOrderStatusApi(

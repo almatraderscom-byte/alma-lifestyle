@@ -1,0 +1,79 @@
+import type { NextRequest } from 'next/server';
+import { revalidatePath } from 'next/cache';
+import { mapDbOrderToAdmin } from '@/lib/mappers/admin-product';
+import { insertAuditLog } from '@/server/db/queries/audit-log';
+import {
+  archiveOrder,
+  canPermanentlyDeleteOrder,
+  deleteOrderPermanently,
+  getOrderById,
+} from '@/server/db/queries/orders';
+import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
+import { requireAdmin } from '@/server/api/auth';
+import { withAdmin } from '@/server/api/handler';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+  return withAdmin(request, async () => {
+    const admin = await requireAdmin(request);
+    const existing = await getOrderById(id);
+    if (!existing) return apiNotFound('Order');
+
+    const updated = await archiveOrder(id, admin.email);
+    if (!updated) return apiNotFound('Order');
+
+    await insertAuditLog({
+      action: 'archive_order',
+      entity_type: 'order',
+      entity_id: id,
+      performed_by: admin.email,
+    });
+
+    revalidatePath('/admin/orders');
+
+    const full = await getOrderById(id);
+    return apiSuccess(
+      mapDbOrderToAdmin(full ?? updated, full?.order_items?.length ?? 0)
+    );
+  });
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+  return withAdmin(request, async () => {
+    const admin = await requireAdmin(request);
+    const order = await getOrderById(id);
+    if (!order) return apiNotFound('Order');
+
+    if (!canPermanentlyDeleteOrder(order)) {
+      return apiError(
+        'Order must be archived or in cancelled/refunded status before deletion',
+        400,
+        'DELETE_NOT_ALLOWED'
+      );
+    }
+
+    await insertAuditLog({
+      action: 'delete_order',
+      entity_type: 'order',
+      entity_id: id,
+      entity_data: order as unknown as Record<string, unknown>,
+      performed_by: admin.email,
+      notes: 'Permanent deletion',
+    });
+
+    await deleteOrderPermanently(id);
+    revalidatePath('/admin/orders');
+
+    return apiSuccess({ id, deleted: true });
+  });
+}
+
+export const GET = () => apiError('Method not allowed', 405, 'METHOD_NOT_ALLOWED');

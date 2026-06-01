@@ -9,10 +9,12 @@ import {
   getCategories,
   updateProduct,
   deleteProduct,
+  deleteDesignGroup,
   duplicateProduct,
   getTotalStock,
   type AdminProduct,
 } from '@/lib/admin-store';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { groupAdminProductsForList } from '@/lib/family-set-admin';
 import { AdminProductsTable } from '@/components/admin/products/AdminProductsTable';
 import { Button } from '@/components/admin/ui/Button';
@@ -32,6 +34,11 @@ export default function AdminProductsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const perPage = 10;
+  const [deleteGroup, setDeleteGroup] = useState<{
+    id: string;
+    name: string;
+    count: number;
+  } | null>(null);
 
   const filtered = useMemo(() => {
     const list = products.filter((p) => {
@@ -224,7 +231,33 @@ export default function AdminProductsPage() {
         onTogglePublish={(id, status) => {
           void updateProduct(id, { status }).then(refresh);
         }}
+        onDeleteGroup={(group) => setDeleteGroup(group)}
       />
+
+      {deleteGroup && (
+        <DeleteConfirmModal
+          title={`Delete design group "${deleteGroup.name}"?`}
+          description={`This will unlink ${deleteGroup.count} products from this group. The products themselves will remain in the database and can be edited individually.`}
+          confirmText="DELETE"
+          warningPoints={[
+            `The "${deleteGroup.name}" group will be removed`,
+            `${deleteGroup.count} products will be unlinked from this group`,
+            'Products will appear as individual items, not as a matching set',
+            'Products themselves will NOT be deleted',
+          ]}
+          onConfirm={async () => {
+            try {
+              const count = await deleteDesignGroup(deleteGroup.id);
+              toast(`Unlinked ${count} product(s) from design group`, 'success');
+              setDeleteGroup(null);
+              refresh();
+            } catch (err) {
+              toast(err instanceof Error ? err.message : 'Delete failed', 'error');
+            }
+          }}
+          onCancel={() => setDeleteGroup(null)}
+        />
+      )}
 
       {totalPages > 1 && (
         <div className="flex justify-center gap-2">

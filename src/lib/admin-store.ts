@@ -120,6 +120,8 @@ export interface AdminOrder {
   city: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
 }
 
 export type { AppSettings } from '@/lib/admin-settings-types';
@@ -542,16 +544,102 @@ function getOrdersLocal(): AdminOrder[] {
   return readJson<AdminOrder[]>(KEYS.orders, []);
 }
 
-export async function getOrders(): Promise<AdminOrder[]> {
+export async function getOrders(options?: {
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
+}): Promise<AdminOrder[]> {
   if (shouldUseApi()) {
     try {
-      return await adminApi.fetchOrders();
+      return await adminApi.fetchOrders(options);
     } catch (error) {
       console.error('[admin-store] API fetchOrders failed:', error);
       throw error;
     }
   }
-  return getOrdersLocal();
+  const orders = getOrdersLocal();
+  if (options?.archivedOnly) {
+    return orders.filter((o) => o.archivedAt);
+  }
+  if (!options?.includeArchived) {
+    return orders.filter((o) => !o.archivedAt);
+  }
+  return orders;
+}
+
+export async function cancelOrder(id: string): Promise<void> {
+  if (shouldUseApi()) return adminApi.cancelOrderApi(id);
+  await updateOrderStatus(id, 'cancelled');
+}
+
+export async function archiveOrder(id: string): Promise<void> {
+  if (shouldUseApi()) return adminApi.archiveOrderApi(id);
+  const orders = getOrdersLocal();
+  const index = orders.findIndex((o) => o.id === id);
+  if (index < 0) return;
+  orders[index] = {
+    ...orders[index],
+    archivedAt: new Date().toISOString(),
+    archivedBy: 'admin',
+    updatedAt: new Date().toISOString(),
+  };
+  writeJson(KEYS.orders, orders);
+}
+
+export async function restoreOrder(id: string): Promise<void> {
+  if (shouldUseApi()) return adminApi.restoreOrderApi(id);
+  const orders = getOrdersLocal();
+  const index = orders.findIndex((o) => o.id === id);
+  if (index < 0) return;
+  orders[index] = {
+    ...orders[index],
+    archivedAt: null,
+    archivedBy: null,
+    updatedAt: new Date().toISOString(),
+  };
+  writeJson(KEYS.orders, orders);
+}
+
+export async function deleteOrderPermanently(id: string): Promise<void> {
+  if (shouldUseApi()) return adminApi.deleteOrderPermanentlyApi(id);
+  const orders = getOrdersLocal().filter((o) => o.id !== id);
+  writeJson(KEYS.orders, orders);
+}
+
+export async function bulkOrderAction(
+  orderIds: string[],
+  action: 'archive' | 'cancel' | 'delete'
+): Promise<void> {
+  if (shouldUseApi()) {
+    await adminApi.bulkOrderActionApi(orderIds, action);
+    return;
+  }
+  if (action === 'delete') {
+    const remaining = getOrdersLocal().filter((o) => !orderIds.includes(o.id));
+    writeJson(KEYS.orders, remaining);
+    return;
+  }
+  for (const id of orderIds) {
+    if (action === 'archive') await archiveOrder(id);
+    if (action === 'cancel') await cancelOrder(id);
+  }
+}
+
+export async function deleteDesignGroup(designGroupId: string): Promise<number> {
+  if (shouldUseApi()) {
+    const result = await adminApi.deleteDesignGroupApi(designGroupId);
+    return result.unlinkedCount;
+  }
+  const products = getProductsLocal();
+  let count = 0;
+  for (const p of products) {
+    if (p.designGroupId === designGroupId) {
+      p.designGroupId = undefined;
+      p.designGroupName = undefined;
+      count += 1;
+    }
+  }
+  writeJson(KEYS.products, products);
+  return count;
 }
 
 export async function updateOrderStatus(

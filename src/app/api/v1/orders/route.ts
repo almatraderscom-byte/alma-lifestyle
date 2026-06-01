@@ -35,6 +35,14 @@ export const maxDuration = 60;
 
 const OrdersListQuerySchema = PaginationQuerySchema.extend({
   status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
+  includeArchived: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v === 'true'),
+  archivedOnly: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v === 'true'),
 });
 
 export async function GET(request: NextRequest) {
@@ -56,6 +64,8 @@ export async function GET(request: NextRequest) {
       page: parsed.data.page,
       limit: parsed.data.limit,
       status: dbStatus,
+      includeArchived: parsed.data.includeArchived,
+      archivedOnly: parsed.data.archivedOnly,
     });
 
     const data = result.data.map((row) =>
