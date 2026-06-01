@@ -48,7 +48,7 @@ export function getDefaultAppSettings(): AppSettings {
   const now = new Date().toISOString();
   return {
     storeName: 'ALMA Lifestyle',
-    tagline: 'Premium fashion crafted in Bangladesh',
+    tagline: 'Premium style and quality without luxury-level prices',
     logoUrl: '',
     faviconUrl: '',
     contactEmail: 'support@alma.com',

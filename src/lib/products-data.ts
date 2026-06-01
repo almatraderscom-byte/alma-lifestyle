@@ -71,7 +71,7 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
   mk('usb-led-desk-lamp', 'ইউএসবি এলইডি ডেস্ক ল্যাম্প', 1250, undefined, 'electronics', 'bg-[#5c6570]', 4.2, 22, ['white', 'black'], 65, '1/1'),
   mk('leather-belt-classic', 'লেদার বেল্ট ক্লাসিক', 850, 990, 'accessories', 'bg-[#6b4f3a]', 4.5, 14, ['black', 'maroon'], 72),
   mk('leather-wallet', 'লেদার ওয়ালেট', 950, undefined, 'accessories', 'bg-[#5d4e37]', 4.4, 19, ['black', 'maroon'], 68),
-  mk('handmade-jute-bag', 'হ্যান্ডমেড জুট ব্যাগ', 750, 890, 'accessories', 'bg-[#c4a574]', 4.6, 27, ['cream', 'green'], 74),
+  mk('handmade-jute-bag', 'প্রিমিয়াম জুট ব্যাগ', 750, 890, 'accessories', 'bg-[#c4a574]', 4.6, 27, ['cream', 'green'], 74),
   mk('sunglasses-classic', 'সানগ্লাস ক্লাসিক', 1100, 1350, 'accessories', 'bg-[#333]', 4.3, 11, ['black'], 60),
   mk('ceramic-flower-vase', 'সিরামিক ফ্লাওয়ার ভাস', 1200, undefined, 'home-decor', 'bg-[#9cb5a0]', 4.8, 8, ['green', 'cream'], 55, '1/1'),
   mk('cotton-cushion-set', 'কটন কুশন সেট', 1450, 1690, 'home-decor', 'bg-[#d4c4b0]', 4.5, 15, ['cream', 'maroon'], 58, '1/1'),
@@ -127,7 +127,7 @@ function mk(
     rating,
     reviewCount,
     aspectRatio,
-    description: `${title} — ALMA Lifestyle-এর প্রিমিয়াম মানের পণ্য। উচ্চমানের উপাদান ও সাবধানে তৈরি। বাংলাদেশে দ্রুত ডেলিভারি ও ক্যাশ অন ডেলিভারি সুবিধা।`,
+    description: `${title} — ALMA Lifestyle-এর প্রিমিয়াম মানের পণ্য। উচ্চমানের উপাদান, যত্নে বাছাই ও যাচাইকৃত। বাংলাদেশে দ্রুত ডেলিভারি ও ক্যাশ অন ডেলিভারি সুবিধা।`,
     materialCare:
       'উচ্চমানের কাপড়। হালকা ঠান্ডা পানিতে হাতে ধোয়া বা ড্রাই ক্লিন করুন। সরাসরি রোদে শুকাবেন না।',
     deliveryInfo:

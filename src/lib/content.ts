@@ -6,7 +6,7 @@ import { UI } from './ui-terms';
 
 export const SITE = {
   brandName: 'ALMA',
-  tagline: 'প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল',
+  tagline: 'প্রিমিয়াম স্টাইল ও মান — চড়া দাম ছাড়াই',
   whatsappNumber: '8801000000000',
   whatsappPrefill:
     'আসসালামু আলাইকুম, আমি ALMA Lifestyle থেকে পণ্য সম্পর্কে জানতে চাই।',
@@ -30,8 +30,8 @@ export const MOBILE_NAV_ICONS = {
 /** Editorial split hero — Section 1 */
 export const EDITORIAL_HERO = {
   caption: 'নতুন কালেকশন · ২০২৬',
-  title: 'ঐতিহ্যের নতুন রূপ',
-  subtitle: 'হাতে বোনা প্রতিটি সুতায়, লুকিয়ে আছে বাংলার গল্প',
+  title: 'আধুনিক পরিবারের প্রিমিয়াম পার্টনার',
+  subtitle: 'প্রিমিয়াম মানে আপনার পরিবারের জন্য — এলিগেন্ট স্টাইল, সাশ্রয়ী দামে',
   ctaPrimary: 'View Collection',
   ctaPrimaryHref: '/collections',
   ctaSecondary: 'গল্পটা জানুন →',
@@ -42,7 +42,10 @@ export const EDITORIAL_HERO = {
 
 /** Story marquee — Section 2 */
 export const STORY_MARQUEE = {
-  text: 'হাতে তৈরি · বাংলাদেশের গর্ব · প্রিমিয়াম মানের · ১০০% অরিজিনাল · ক্যাশ অন ডেলিভারি · ',
+  rowOne: 'প্রিমিয়াম কোয়ালিটি · দ্রুত ডেলিভারি · সাশ্রয়ী দাম · বিশ্বস্ত সেবা · ',
+  rowTwo: '৬৪ জেলায় ডেলিভারি · COD সুবিধা · ১০০% অরিজিনাল · ২৪/৭ সাপোর্ট · ',
+  /** @deprecated Use rowOne — kept for CMS legacy */
+  text: 'প্রিমিয়াম কোয়ালিটি · দ্রুত ডেলিভারি · সাশ্রয়ী দাম · বিশ্বস্ত সেবা · ',
 } as const;
 
 /** Category showcase — Section 3 */
@@ -178,11 +181,11 @@ export const FEATURED_PRODUCTS: FeaturedProduct[] = [
   {
     id: '7',
     slug: 'handmade-jute-bag',
-    title: 'হ্যান্ডমেড জুট ব্যাগ',
+    title: 'প্রিমিয়াম জুট ব্যাগ',
     price: 750,
     bgClass: 'bg-[#c4a574]',
     href: '/products/handmade-jute-bag',
-    imageHint: 'Image: Handmade jute bag lifestyle',
+    imageHint: 'Image: Premium jute bag lifestyle',
   },
   {
     id: '8',
@@ -198,12 +201,24 @@ export const FEATURED_PRODUCTS: FeaturedProduct[] = [
 /** Brand story — Section 5 */
 export const BRAND_STORY = {
   label: 'আমাদের গল্প',
-  title: 'প্রতিটি পাঞ্জাবি, একটি যাত্রা',
-  body: 'ALMA তৈরি হয় বাংলাদেশের ৭০+ পরিবারের তাঁতিদের হাতে। আমরা শুধু পোশাক বিক্রি করি না — আমরা ঐতিহ্য বহন করি, কারিগরদের জীবিকা নিশ্চিত করি।',
+  title: 'ALMA Lifestyle এর গল্প',
+  body: 'ALMA Lifestyle তৈরি হয়েছে এক বিশ্বাস থেকে — সবারই প্রিমিয়াম স্টাইল ও মান পাওয়ার অধিকার আছে, চড়া luxury দাম না দিয়েও।',
+  paragraphs: [
+    'ALMA Lifestyle তৈরি হয়েছে এক বিশ্বাস থেকে — সবারই প্রিমিয়াম স্টাইল ও মান পাওয়ার অধিকার আছে, চড়া luxury দাম না দিয়েও।',
+    'আমরা বাংলাদেশের সেরা manufacturer, factory এবং trusted vendor দের সাথে কাজ করে এনে দিই যত্নে বাছাই করা প্রিমিয়াম পণ্য — পরিবার ম্যাচিং পাঞ্জাবি থেকে শুরু করে latest electronics, accessories এবং home decor।',
+    'আমাদের লক্ষ্য একটাই: আপনার আধুনিক জীবনযাত্রায় এনে দেওয়া elegance, comfort এবং quality — সাশ্রয়ী দামে।',
+    'আমরা চাই আমাদের পরিবার আপনার পরিবারের মতো একসাথে সাজুক — ঈদ, বিবাহ, বা শুধু একসাথে কাটানো একটি সুন্দর দিনের জন্য।',
+  ],
+  blockquote: 'প্রিমিয়াম স্টাইল, সাশ্রয়ী দামে',
   cta: 'আমাদের সম্পর্কে জানুন →',
   ctaHref: '/products',
-  imageCaption: 'তাঁতিদের সাথে — সিরাজগঞ্জ',
-  imageHint: 'Image: Weavers at loom — Sirajganj, warm documentary style',
+  imageCaption: 'প্রিমিয়াম কাপড় — যাচাইকৃত মান',
+  imageCaptions: [
+    'প্রিমিয়াম কাপড় — যাচাইকৃত মান',
+    'পরিবার ম্যাচিং কালেকশন',
+    'ALMA পরিবার — আপনার বিশ্বস্ত পার্টনার',
+  ],
+  imageHint: 'Image: Premium fabric close-up — verified quality',
 } as const;
 
 /** Reviews — Section 6 */
@@ -241,7 +256,7 @@ export const REVIEWS_SECTION = {
     {
       id: '4',
       title: 'রাজশাহীতে ALMA',
-      text: 'রাজশাহীতে এমন প্রিমিয়াম শপ খুব কম। কাপড় হাতে বোনার গুণমান স্পর্শ করলেই বোঝা যায়। ক্যাশ অন ডেলিভারি সুবিধা পেয়ে ভালো লাগলো।',
+      text: 'রাজশাহীতে এমন প্রিমিয়াম শপ খুব কম। কাপড়ের গুণমান স্পর্শ করলেই বোঝা যায় — যত্নে বাছাই করা মান। ক্যাশ অন ডেলিভারি সুবিধা পেয়ে ভালো লাগলো।',
       name: 'নাসির উদ্দিন',
       city: 'রাজশাহী',
       productName: 'প্রিমিয়াম কটন পাঞ্জাবি',
@@ -287,7 +302,7 @@ export const COMMUNITY_SECTION = {
   tiles: [
     { id: '1', bg: 'bg-maroon', hint: 'Image: Customer OOTD — navy panjabi' },
     { id: '2', bg: 'bg-terracotta', hint: 'Image: Flat lay — accessories' },
-    { id: '3', bg: 'bg-mustard', hint: 'Image: Weaver workshop' },
+    { id: '3', bg: 'bg-mustard', hint: 'Image: Premium lifestyle collection flat lay' },
     { id: '4', bg: 'bg-emerald', hint: 'Image: Home decor styling' },
     { id: '5', bg: 'bg-cream', hint: 'Image: Eid family portrait' },
     { id: '6', bg: 'bg-charcoal', hint: 'Image: Product detail macro' },
@@ -297,24 +312,24 @@ export const COMMUNITY_SECTION = {
 /** Trust strip — Section 9 */
 export const TRUST_STRIP = [
   {
+    icon: '🛡️',
+    title: '১০০% অরিজিনাল',
+    text: 'যাচাইকৃত পণ্য',
+  },
+  {
     icon: '🚚',
-    title: 'ফ্রি ডেলিভারি',
-    text: '১৫০০ টাকার বেশি অর্ডারে',
+    title: '৬৪ জেলায় ডেলিভারি',
+    text: '৩–৫ কার্যদিবসে',
   },
   {
-    icon: '💵',
-    title: 'ক্যাশ অন ডেলিভারি',
-    text: 'সারা দেশে',
+    icon: '💳',
+    title: 'COD সুবিধা',
+    text: 'ক্যাশ অন ডেলিভারি',
   },
   {
-    icon: '🔄',
-    title: '৭ দিনের রিটার্ন',
-    text: 'কোনো প্রশ্ন ছাড়াই',
-  },
-  {
-    icon: '📞',
-    title: '২৪/৭ সাপোর্ট',
-    text: '০১XXXXXXXXX',
+    icon: '⭐',
+    title: '৪.৮ রেটিং',
+    text: '১০,০০০+ ক্রেতা',
   },
 ] as const;
 
@@ -340,7 +355,7 @@ export const FOOTER = {
     { label: 'সচরাচর জিজ্ঞাসা', href: '/products' },
   ],
   payments: ['bKash', 'Nagad', UI.cashOnDelivery] as const,
-  bottomLine: `© ${SITE.copyrightYear} ALMA Lifestyle | 🇧🇩 বাংলাদেশে তৈরি`,
+  bottomLine: `© ${SITE.copyrightYear} ALMA Lifestyle | প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা`,
   phoneDisplay: '+৮৮০ ১০০০-০০০০০০',
 } as const;
 

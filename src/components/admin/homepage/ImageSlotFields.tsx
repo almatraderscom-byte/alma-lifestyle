@@ -40,7 +40,7 @@ export function ImageSlotFields({
         label="Caption (shown below image)"
         value={slot.caption}
         onChange={(e) => onChange({ ...slot, caption: e.target.value })}
-        placeholder="e.g. তাঁতিদের সাথে — সিরাজগঞ্জ"
+        placeholder="e.g. প্রিমিয়াম কাপড় — যাচাইকৃত মান"
       />
       <Input
         label="Alt text (accessibility)"

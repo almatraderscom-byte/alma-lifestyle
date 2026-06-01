@@ -205,7 +205,7 @@ export function ensureAdminSeed(): void {
     mkProduct('Wireless Earbuds Pro', 'wireless-earbuds-pro', 3500, undefined, 'cat_electronics', 25, 'published'),
     mkProduct('Smart Watch Elite', 'smart-watch-elite', 4200, 4800, 'cat_electronics', 5, 'published'),
     mkProduct('Leather Wallet', 'leather-wallet', 950, 1100, 'cat_accessories', 3, 'published'),
-    mkProduct('Handmade Jute Bag', 'handmade-jute-bag', 750, undefined, 'cat_accessories', 20, 'published'),
+    mkProduct('Premium Jute Bag', 'handmade-jute-bag', 750, undefined, 'cat_accessories', 20, 'published'),
     mkProduct('Ceramic Flower Vase', 'ceramic-flower-vase', 1200, undefined, 'cat_home', 15, 'published'),
     mkProduct('USB LED Desk Lamp', 'usb-led-desk-lamp', 1250, undefined, 'cat_electronics', 18, 'draft'),
   ];
@@ -246,7 +246,7 @@ function mkProduct(
     title,
     slug,
     shortDescription: `Premium ${title} from ALMA Lifestyle.`,
-    description: `Detailed description for ${title}. High quality materials and careful craftsmanship.`,
+    description: `Detailed description for ${title}. Premium quality materials, carefully curated and quality-checked.`,
     priceBdt: price,
     compareAtPriceBdt: compare,
     categoryId,
