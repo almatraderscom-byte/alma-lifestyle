@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 import { tryGetSupabaseAdmin } from '@/server/db/client';
 import type { Json, NotificationLogInsert } from '@/server/db/schema';
+import {
+  estimateDeliveryText,
+  getEmailBrandingContext,
+} from '@/server/notifications/email-brand';
+import { buildAdminOrderEmail } from '@/server/notifications/templates/admin-order';
+import { buildCustomerOrderEmail } from '@/server/notifications/templates/order-confirmation';
+import { buildOrderStatusEmail } from '@/server/notifications/templates/order-status';
 
 export interface NotificationSendContext {
   notificationType?: string;
@@ -116,16 +123,25 @@ function getResendClient(): Resend | null {
 
 function resolveFromEmail(): string {
   const raw = process.env.FROM_EMAIL?.trim();
+  const displayName = process.env.FROM_NAME?.trim() || 'ALMA Lifestyle';
   if (!raw) {
-    return 'onboarding@resend.dev';
+    return `${displayName} <onboarding@resend.dev>`;
   }
   if (raw.includes('<') && raw.includes('>')) {
     return raw;
   }
   if (raw.includes('@')) {
-    return `ALMA <${raw}>`;
+    return `${displayName} <${raw}>`;
   }
   return raw;
+}
+
+function resolveReplyToEmail(): string | undefined {
+  const reply = process.env.REPLY_TO_EMAIL?.trim();
+  if (reply?.includes('@')) return reply;
+  const admin = process.env.ADMIN_EMAIL?.trim();
+  if (admin?.includes('@')) return admin;
+  return 'admin@almatraders.com';
 }
 
 export async function sendEmailToCustomer(
@@ -227,9 +243,11 @@ export async function sendEmailToCustomer(
   }
 
   try {
+    const replyTo = resolveReplyToEmail();
     const response = await client.emails.send({
       from: fromEmail,
       to: [to],
+      replyTo: replyTo ? [replyTo] : undefined,
       subject,
       html,
     });
@@ -435,35 +453,23 @@ Admin: ${adminPanelUrl(order.id)}`;
 
   console.log('[Notifications] Sending admin email to:', adminEmail);
 
-  const itemsRows = order.items
-    .map(
-      (i) =>
-        `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${i.title}</td><td style="padding:8px;">${i.quantity}</td><td style="padding:8px;">৳${i.price * i.quantity}</td></tr>`
-    )
-    .join('');
-
-  const adminHtml = `<!DOCTYPE html>
-<html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-  <div style="background:#C97D5D;color:white;padding:24px;text-align:center;border-radius:8px 8px 0 0;">
-    <h1 style="margin:0;">🎉 নতুন অর্ডার এসেছে!</h1>
-  </div>
-  <div style="background:#f5f5f5;padding:24px;border-radius:0 0 8px 8px;">
-    <p><strong>অর্ডার নম্বর:</strong> ${order.order_number}</p>
-    <p><strong>গ্রাহক:</strong> ${order.customer_name}</p>
-    <p><strong>ফোন:</strong> ${order.customer_phone}</p>
-    <p><strong>ইমেইল:</strong> ${order.customer_email || 'নেই'}</p>
-    <p><strong>ঠিকানা:</strong> ${order.shipping_address}</p>
-    <p><strong>পেমেন্ট:</strong> ${order.payment_method}</p>
-    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <thead><tr style="background:#C89B3C;color:white;">
-        <th style="padding:8px;text-align:left;">পণ্য</th><th>পরিমাণ</th><th>মূল্য</th>
-      </tr></thead>
-      <tbody>${itemsRows}</tbody>
-    </table>
-    <p style="font-size:20px;color:#6B2737;"><strong>মোট: ৳${order.total}</strong></p>
-    <p><a href="${adminPanelUrl(order.id)}" style="background:#C97D5D;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;">অর্ডার দেখুন</a></p>
-  </div>
-</body></html>`;
+  const brand = await getEmailBrandingContext();
+  const adminHtml = buildAdminOrderEmail(
+    {
+      orderNumber: order.order_number,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      customerEmail: order.customer_email,
+      shippingAddress: order.shipping_address,
+      paymentMethod: order.payment_method,
+      items: order.items,
+      subtotal: order.subtotal,
+      deliveryCharge: order.delivery_cost,
+      total: order.total,
+      adminPanelUrl: adminPanelUrl(order.id),
+    },
+    brand
+  );
 
   const email = await sendEmailToCustomer(
     adminEmail,
@@ -495,55 +501,28 @@ export async function sendOrderConfirmationToCustomer(
     return { success: false, error: 'No customer email on order' };
   }
 
-  const dateStr = new Date(order.created_at).toLocaleDateString('bn-BD');
-  const rows = order.items
-    .map(
-      (i) =>
-        `<tr><td>${i.title}</td><td>${i.quantity}</td><td>৳${i.price * i.quantity}</td></tr>`
-    )
-    .join('');
+  const brand = await getEmailBrandingContext();
+  const dateStr = new Date(order.created_at).toLocaleDateString('bn-BD', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <style>
-    body { font-family: 'Hind Siliguri', sans-serif; max-width: 600px; margin: 0 auto; color: #2A2622; }
-    .header { background: #C97D5D; color: white; padding: 24px; text-align: center; }
-    .content { padding: 24px; }
-    .order-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-    .order-table th { background: #F5EBDD; padding: 12px; text-align: left; }
-    .order-table td { padding: 12px; border-bottom: 1px solid #eee; }
-    .total { font-weight: bold; color: #6B2737; }
-    .footer { background: #2A2622; color: white; padding: 24px; text-align: center; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <div class="header"><h1>ALMA — আপনার অর্ডার নিশ্চিত!</h1></div>
-  <div class="content">
-    <p>প্রিয় ${order.customer_name},</p>
-    <p>আপনার অর্ডার সফলভাবে পেয়েছি।</p>
-    <p><strong>অর্ডার নম্বর:</strong> ${order.order_number}</p>
-    <p><strong>তারিখ:</strong> ${dateStr}</p>
-    <table class="order-table">
-      <thead><tr><th>পণ্য</th><th>পরিমাণ</th><th>মূল্য</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <p>সাবটোটাল: ৳${order.subtotal}</p>
-    <p>ডেলিভারি: ৳${order.delivery_cost}</p>
-    <p class="total">মোট: ৳${order.total}</p>
-    <p><strong>পেমেন্ট:</strong> ${order.payment_method}</p>
-    <p><strong>ঠিকানা:</strong> ${order.shipping_address}</p>
-    <p>আনুমানিক ডেলিভারি: ৩–৫ কার্যদিবস</p>
-    <p>প্রশ্ন: 01307-777733</p>
-    <p>ALMA পরিবারের পক্ষ থেকে ধন্যবাদ! 🙏</p>
-  </div>
-  <div class="footer">
-    <p>ALMA Lifestyle — প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা</p>
-    <p>almatraders.com</p>
-  </div>
-</body>
-</html>`;
+  const html = buildCustomerOrderEmail(
+    {
+      customerName: order.customer_name,
+      orderNumber: order.order_number,
+      items: order.items,
+      subtotal: order.subtotal,
+      deliveryCharge: order.delivery_cost,
+      total: order.total,
+      shippingAddress: order.shipping_address,
+      paymentMethod: order.payment_method,
+      estimatedDelivery: estimateDeliveryText(),
+      orderDate: dateStr,
+    },
+    brand
+  );
 
   const result = await sendEmailToCustomer(
     order.customer_email.trim(),
@@ -580,23 +559,21 @@ export async function notifyCustomerOfStatusChange(
   };
 
   const bnStatus = statusMessages[newStatus] ?? newStatus;
-  const tracking =
+  const brand = await getEmailBrandingContext();
+  const trackingHtml =
     newStatus === 'shipped'
-      ? `<p>কুরিয়ার ট্র্যাকিং: ${order.tracking_number || 'শীঘ্রই দেওয়া হবে'}</p>`
-      : '';
+      ? `<strong>কুরিয়ার ট্র্যাকিং:</strong> ${order.tracking_number || 'শীঘ্রই দেওয়া হবে'}`
+      : undefined;
 
-  const html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background: #C97D5D; color: white; padding: 24px; text-align: center;">
-    <h1>অর্ডার আপডেট</h1>
-  </div>
-  <div style="padding: 24px;">
-    <p>প্রিয় ${order.customer_name},</p>
-    <p>আপনার অর্ডার #${order.order_number} এর স্ট্যাটাস:</p>
-    <h2 style="color: #6B2737;">${bnStatus}</h2>
-    ${tracking}
-    <p>প্রশ্ন: 01307-777733</p>
-  </div>
-</div>`;
+  const html = buildOrderStatusEmail(
+    {
+      customerName: order.customer_name,
+      orderNumber: order.order_number,
+      statusLabelBn: bnStatus,
+      trackingHtml,
+    },
+    brand
+  );
 
   const result = await sendEmailToCustomer(
     order.customer_email.trim(),
@@ -710,6 +687,8 @@ export function getNotificationEnvDiagnostics() {
       : 'NOT_SET',
     fromEmail: process.env.FROM_EMAIL?.trim() || 'NOT_SET',
     resolvedFrom: resolveFromEmail(),
+    replyTo: resolveReplyToEmail() ?? 'NOT_SET',
+    fromName: process.env.FROM_NAME?.trim() || 'ALMA Lifestyle (default)',
     adminEmail: process.env.ADMIN_EMAIL?.trim() ? 'SET' : 'NOT_SET',
     hasCallmebotKey: !!process.env.CALLMEBOT_API_KEY?.trim(),
     hasWhatsappNumber: !!process.env.ADMIN_WHATSAPP_NUMBER?.trim(),

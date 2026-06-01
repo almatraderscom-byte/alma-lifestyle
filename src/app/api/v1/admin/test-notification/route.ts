@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getEmailBrandingContext } from '@/server/notifications/email-brand';
+import { buildTestEmail } from '@/server/notifications/templates/test-email';
 import {
   getNotificationEnvDiagnostics,
   sendEmailToCustomer,
