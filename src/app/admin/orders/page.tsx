@@ -70,10 +70,10 @@ export default function AdminOrdersPage() {
     }
   }
 
-  async function handleArchive(order: AdminOrder) {
+  async function handleArchive(order: AdminOrder, skipWarning = false) {
     if (
-      (order.status === 'delivered' || order.status === 'shipped') &&
-      !archiveWarning
+      !skipWarning &&
+      (order.status === 'delivered' || order.status === 'shipped')
     ) {
       setArchiveWarning(order);
       return;
