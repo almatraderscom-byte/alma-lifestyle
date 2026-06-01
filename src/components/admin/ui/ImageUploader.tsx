@@ -51,16 +51,14 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
           if (dimWarning) warnings.push(dimWarning);
 
           let url: string;
-          if (shouldUseApi()) {
-            const prepared = await prepareImageForUpload(file);
-            url = await uploadImageApi(prepared, 'products');
-          } else {
-            url = await new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.readAsDataURL(file);
-            });
+          if (!shouldUseApi()) {
+            setError(
+              'Cloud storage is not configured. Enable Supabase — product images cannot be saved as inline base64.'
+            );
+            return;
           }
+          const prepared = await prepareImageForUpload(file);
+          url = await uploadImageApi(prepared, 'products');
 
           newImages.push({
             id: uid('img'),
