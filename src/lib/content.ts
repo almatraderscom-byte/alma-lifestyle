@@ -17,7 +17,7 @@ export const NAV = {
   shop: { label: 'দোকান', href: '/products' },
   newArrivals: { label: 'নতুন', href: '/new' },
   collections: { label: 'কালেকশন', href: '/collections' },
-  about: { label: 'আমাদের সম্পর্কে', href: '/products' },
+  about: { label: 'আমাদের সম্পর্কে', href: '/about' },
   categoriesLabel: 'Categories',
 } as const;
 
@@ -35,7 +35,7 @@ export const EDITORIAL_HERO = {
   ctaPrimary: 'View Collection',
   ctaPrimaryHref: '/collections',
   ctaSecondary: 'গল্পটা জানুন →',
-  ctaSecondaryHref: '/products',
+  ctaSecondaryHref: '/about',
   imageHint: 'Image: Editorial hero — model in maroon panjabi, soft natural light, full body',
   badges: ['১০,০০০+ ক্রেতা', '৪.৮ ★', '৬৪ জেলা', '৩ দিনে ডেলিভারি'] as const,
 } as const;
@@ -338,21 +338,28 @@ export const WHATSAPP = {
 } as const;
 
 export const FOOTER = {
-  quickLinksTitle: 'দ্রুত লিংক',
-  quickLinks: [
+  shopTitle: 'দোকান',
+  shopLinks: [
     { label: 'সব পণ্য', href: '/products' },
-    { label: UI.cart, href: '/cart' },
-    { label: 'নতুন এসেছে', href: '/products?sort=newest' },
-    { label: 'বেস্ট সেলার', href: '/collections/best-sellers' },
-    { label: 'আমাদের সম্পর্কে', href: '/products' },
+    { label: 'পাঞ্জাবি', href: '/products?category=panjabi' },
+    { label: 'ইলেকট্রনিক্স', href: '/products?category=electronics' },
+    { label: 'এক্সেসরিজ', href: '/products?category=accessories' },
+    { label: 'হোম ও ডেকর', href: '/products?category=home-decor' },
   ],
   helpTitle: 'সাহায্য',
   helpLinks: [
     { label: UI.trackOrder, href: '/track' },
-    { label: 'যোগাযোগ', href: '/products' },
-    { label: 'ডেলিভারি তথ্য', href: '/products' },
-    { label: 'রিটার্ন পলিসি', href: '/products' },
-    { label: 'সচরাচর জিজ্ঞাসা', href: '/products' },
+    { label: 'ডেলিভারি', href: '/delivery' },
+    { label: 'ফেরত নীতি', href: '/refund' },
+    { label: 'সাইজ গাইড', href: '/size-guide' },
+    { label: 'FAQ', href: '/faq' },
+  ],
+  companyTitle: 'কোম্পানি',
+  companyLinks: [
+    { label: 'আমাদের সম্পর্কে', href: '/about' },
+    { label: 'যোগাযোগ', href: '/contact' },
+    { label: 'শর্তাবলী', href: '/terms' },
+    { label: 'গোপনীয়তা', href: '/privacy' },
   ],
   payments: ['bKash', 'Nagad', UI.cashOnDelivery] as const,
   bottomLine: `© ${SITE.copyrightYear} ALMA Lifestyle | প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা`,
