@@ -102,7 +102,10 @@ export const CreateOrderBodySchema = z.object({
   customerId: z.string().uuid().optional().nullable(),
   customerName: z.string().min(2),
   customerPhone: z.string().min(6),
-  customerEmail: z.string().email().optional(),
+  customerEmail: z
+    .union([z.string().email(), z.literal('')])
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
   shippingAddress: z.string().min(3),
   shippingCity: z.string().min(1),
   paymentMethod: z.string().min(1),

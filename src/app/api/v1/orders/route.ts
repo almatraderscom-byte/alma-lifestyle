@@ -29,6 +29,10 @@ import {
   sendOrderConfirmationToCustomer,
 } from '@/server/notifications';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 const OrdersListQuerySchema = PaginationQuerySchema.extend({
   status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
 });
@@ -72,11 +76,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return withPublicDb(async () => {
+    console.log('[Order API] ========== New order received ==========');
+
     const body = await request.json();
     const parsed = CreateOrderBodySchema.safeParse(body);
     if (!parsed.success) {
+      console.error('[Order API] Validation failed:', parsed.error.message);
       return apiError(parsed.error.message, 400, 'VALIDATION_ERROR');
     }
+
+    console.log('[Order API] Order data:', {
+      customer_name: parsed.data.customerName,
+      customer_email: parsed.data.customerEmail ?? '(none)',
+      customer_phone: parsed.data.customerPhone,
+      items_count: parsed.data.items.length,
+      totalBdt: parsed.data.totalBdt,
+      paymentMethod: parsed.data.paymentMethod,
+    });
 
     const brandId = await getBrandId();
     const orderNumber = await generateOrderNumber();
@@ -134,8 +150,7 @@ export async function POST(request: NextRequest) {
       (sum, i) => sum + i.unitPriceBdt * i.quantity,
       0
     );
-    const serverTotal =
-      serverSubtotal + parsed.data.shippingCostBdt;
+    const serverTotal = serverSubtotal + parsed.data.shippingCostBdt;
 
     const { order, items } = mapCreateOrderToDb(brandId, orderNumber, {
       ...parsed.data,
@@ -145,6 +160,8 @@ export async function POST(request: NextRequest) {
     });
 
     const created = await createOrder({ order, items });
+    console.log('[Order API] Order saved to DB:', created.id, created.order_number);
+    console.log('[Order API] customer_email in DB:', created.customer_email ?? '(null)');
 
     const notificationPayload = buildOrderNotificationData(
       {
@@ -169,17 +186,44 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    void Promise.all([
-      notifyAdminOfNewOrder(notificationPayload),
-      sendOrderConfirmationToCustomer(notificationPayload),
-    ]).catch((err) => console.error('[orders] notifications failed:', err));
+    // Must await before response — serverless kills fire-and-forget work after return
+    console.log('[Order API] Triggering notifications (awaiting before response)...');
+
+    try {
+      const adminResult = await notifyAdminOfNewOrder(notificationPayload);
+      console.log('[Order API] Admin notification result:', adminResult);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[Order API] Admin notification exception:', message, err);
+    }
+
+    if (notificationPayload.customer_email?.trim()) {
+      try {
+        console.log(
+          '[Order API] Attempting customer email to:',
+          notificationPayload.customer_email
+        );
+        const customerResult = await sendOrderConfirmationToCustomer(notificationPayload);
+        console.log('[Order API] Customer email result:', customerResult);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('[Order API] Customer email exception:', message, err);
+      }
+    } else {
+      console.warn(
+        '[Order API] No customer_email on order — customer confirmation skipped (admin may still get email)'
+      );
+    }
+
+    console.log('[Order API] ========== Order processing complete ==========');
 
     return apiSuccess(
       {
         id: created.id,
         orderNumber: created.order_number,
         status: created.status,
-        totalBdt: parsed.data.totalBdt,
+        totalBdt: serverTotal,
+        notificationsAttempted: true,
       },
       { status: 201 }
     );

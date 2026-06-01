@@ -99,13 +99,18 @@ export function CheckoutPageContent() {
     }
 
     if (shouldUseApi()) {
+      console.log('[Checkout] Submitting order via API', {
+        customerEmail: customerEmail ?? '(none)',
+        itemCount: pricedItems.length,
+        total,
+      });
       try {
         const created = await createOrderApi({
           customerId,
           customerName,
           customerPhone,
           customerEmail,
-          shippingAddress: `${cityLabel}, Bangladesh`,
+          shippingAddress: `${data.address.trim() ? `${data.address.trim()}, ` : ''}${cityLabel}, Bangladesh`,
           shippingCity: cityLabel,
           paymentMethod,
           items: pricedItems.map((item) => ({
@@ -121,9 +126,17 @@ export function CheckoutPageContent() {
           totalBdt: total,
         });
         orderNumber = created.orderNumber;
-      } catch {
-        /* fall back to local order record */
+        console.log('[Checkout] API order created:', orderNumber);
+      } catch (apiErr) {
+        console.error(
+          '[Checkout] API order failed — order saved locally only, no server emails:',
+          apiErr
+        );
       }
+    } else {
+      console.warn(
+        '[Checkout] API mode off — order will NOT trigger server emails. Set Supabase env + NEXT_PUBLIC_USE_API.'
+      );
     }
 
     const order = createPlacedOrder({

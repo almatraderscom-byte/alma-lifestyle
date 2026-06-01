@@ -90,9 +90,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         }
       );
 
-      void notifyCustomerOfStatusChange(notification, parsed.data.status).catch((err) =>
-        console.error('[orders] status notification failed:', err)
-      );
+      try {
+        const statusResult = await notifyCustomerOfStatusChange(
+          notification,
+          parsed.data.status
+        );
+        console.log('[Order API] Status change email result:', statusResult);
+      } catch (err) {
+        console.error('[orders] status notification failed:', err);
+      }
     }
 
     return apiSuccess(

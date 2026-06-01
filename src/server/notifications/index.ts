@@ -209,7 +209,11 @@ function adminPanelUrl(orderId: string): string {
   return `${base}/admin/orders`;
 }
 
-export async function notifyAdminOfNewOrder(order: OrderNotificationData): Promise<void> {
+export async function notifyAdminOfNewOrder(
+  order: OrderNotificationData
+): Promise<NotificationSendResult> {
+  console.log('[Notifications] notifyAdminOfNewOrder called for order:', order.id, order.order_number);
+
   const message = `🎉 নতুন অর্ডার পেলেন!
 
 অর্ডার #${order.order_number}
@@ -226,31 +230,76 @@ Admin: ${adminPanelUrl(order.id)}`;
 
   const wa = await sendWhatsAppToAdmin(message);
   if (!wa.success) {
-    console.error('[notifications] Admin WhatsApp failed:', wa.error);
+    console.error('[Notifications] Admin WhatsApp failed:', wa.error);
+  } else {
+    console.log('[Notifications] Admin WhatsApp sent');
   }
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim();
-  if (adminEmail) {
-    const email = await sendEmailToCustomer(
-      adminEmail,
-      `নতুন অর্ডার #${order.order_number}`,
-      `<h2>নতুন অর্ডার এসেছে</h2>
-      <p>অর্ডার নম্বর: ${order.order_number}</p>
-      <p>গ্রাহক: ${order.customer_name}</p>
-      <p>ফোন: ${order.customer_phone}</p>
-      <p>পরিমাণ: ৳${order.total}</p>
-      <p><a href="${adminPanelUrl(order.id)}">অর্ডার দেখুন</a></p>`
-    );
-    if (!email.success) {
-      console.error('[notifications] Admin email failed:', email.error);
-    }
+  if (!adminEmail) {
+    console.error('[Notifications] ADMIN_EMAIL not set — skipping admin email');
+    return {
+      success: wa.success,
+      error: wa.success ? undefined : wa.error ?? 'ADMIN_EMAIL not configured',
+    };
   }
+
+  console.log('[Notifications] Sending admin email to:', adminEmail);
+
+  const itemsRows = order.items
+    .map(
+      (i) =>
+        `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${i.title}</td><td style="padding:8px;">${i.quantity}</td><td style="padding:8px;">৳${i.price * i.quantity}</td></tr>`
+    )
+    .join('');
+
+  const adminHtml = `<!DOCTYPE html>
+<html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+  <div style="background:#C97D5D;color:white;padding:24px;text-align:center;border-radius:8px 8px 0 0;">
+    <h1 style="margin:0;">🎉 নতুন অর্ডার এসেছে!</h1>
+  </div>
+  <div style="background:#f5f5f5;padding:24px;border-radius:0 0 8px 8px;">
+    <p><strong>অর্ডার নম্বর:</strong> ${order.order_number}</p>
+    <p><strong>গ্রাহক:</strong> ${order.customer_name}</p>
+    <p><strong>ফোন:</strong> ${order.customer_phone}</p>
+    <p><strong>ইমেইল:</strong> ${order.customer_email || 'নেই'}</p>
+    <p><strong>ঠিকানা:</strong> ${order.shipping_address}</p>
+    <p><strong>পেমেন্ট:</strong> ${order.payment_method}</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <thead><tr style="background:#C89B3C;color:white;">
+        <th style="padding:8px;text-align:left;">পণ্য</th><th>পরিমাণ</th><th>মূল্য</th>
+      </tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <p style="font-size:20px;color:#6B2737;"><strong>মোট: ৳${order.total}</strong></p>
+    <p><a href="${adminPanelUrl(order.id)}" style="background:#C97D5D;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;">অর্ডার দেখুন</a></p>
+  </div>
+</body></html>`;
+
+  const email = await sendEmailToCustomer(
+    adminEmail,
+    `🎉 নতুন অর্ডার — #${order.order_number}`,
+    adminHtml
+  );
+  console.log('[Notifications] Admin email result:', email);
+
+  return {
+    success: email.success || wa.success,
+    error: !email.success ? email.error : !wa.success ? wa.error : undefined,
+    data: { email, whatsapp: wa },
+  };
 }
 
 export async function sendOrderConfirmationToCustomer(
   order: OrderNotificationData
-): Promise<void> {
-  if (!order.customer_email?.trim()) return;
+): Promise<NotificationSendResult> {
+  console.log('[Notifications] sendOrderConfirmationToCustomer called');
+  console.log('[Notifications] Customer email:', order.customer_email ?? '(none)');
+
+  if (!order.customer_email?.trim()) {
+    console.warn('[Notifications] No customer email — skipping customer notification');
+    return { success: false, error: 'No customer email on order' };
+  }
 
   const dateStr = new Date(order.created_at).toLocaleDateString('bn-BD');
   const rows = order.items
@@ -307,16 +356,20 @@ export async function sendOrderConfirmationToCustomer(
     `অর্ডার নিশ্চিত — #${order.order_number}`,
     html
   );
+  console.log('[Notifications] Customer confirmation email result:', result);
   if (!result.success) {
-    console.error('[notifications] Customer confirmation email failed:', result.error);
+    console.error('[Notifications] Customer confirmation email failed:', result.error);
   }
+  return result;
 }
 
 export async function notifyCustomerOfStatusChange(
   order: OrderNotificationData,
   newStatus: string
-): Promise<void> {
-  if (!order.customer_email?.trim()) return;
+): Promise<NotificationSendResult> {
+  if (!order.customer_email?.trim()) {
+    return { success: false, error: 'No customer email on order' };
+  }
 
   const statusMessages: Record<string, string> = {
     pending: 'অপেক্ষমান',
@@ -352,8 +405,9 @@ export async function notifyCustomerOfStatusChange(
     html
   );
   if (!result.success) {
-    console.error('[notifications] Status change email failed:', result.error);
+    console.error('[Notifications] Status change email failed:', result.error);
   }
+  return result;
 }
 
 export function buildOrderNotificationData(
