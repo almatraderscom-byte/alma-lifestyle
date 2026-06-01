@@ -145,8 +145,10 @@ export default function AdminSettingsPage() {
         {tab === 'Delivery & Shipping' && (
           <>
             <Input label="Free delivery threshold (BDT)" type="number" value={form.freeDeliveryThresholdBdt} onChange={(e) => patch('freeDeliveryThresholdBdt', Number(e.target.value))} />
+            <Input label="Dhaka city delivery (BDT)" type="number" value={form.dhakaCityDeliveryChargeBdt} onChange={(e) => patch('dhakaCityDeliveryChargeBdt', Number(e.target.value))} />
+            <Input label="Dhaka district delivery (BDT)" type="number" value={form.dhakaDistrictDeliveryChargeBdt} onChange={(e) => patch('dhakaDistrictDeliveryChargeBdt', Number(e.target.value))} />
+            <Input label="Outside Dhaka delivery (BDT)" type="number" value={form.outsideCityDeliveryChargeBdt} onChange={(e) => patch('outsideCityDeliveryChargeBdt', Number(e.target.value))} />
             <Input label="Default delivery charge (BDT)" type="number" value={form.defaultDeliveryChargeBdt} onChange={(e) => patch('defaultDeliveryChargeBdt', Number(e.target.value))} />
-            <Input label="Outside city delivery charge (BDT)" type="number" value={form.outsideCityDeliveryChargeBdt} onChange={(e) => patch('outsideCityDeliveryChargeBdt', Number(e.target.value))} />
             <Input label="Estimated delivery time" value={form.estimatedDeliveryTime} onChange={(e) => patch('estimatedDeliveryTime', e.target.value)} />
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-800">Free delivery cities</p>

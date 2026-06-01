@@ -27,6 +27,8 @@ function publicSettings(settings: AppSettings) {
     tiktokUrl: settings.tiktokUrl,
     freeDeliveryThresholdBdt: settings.freeDeliveryThresholdBdt,
     defaultDeliveryChargeBdt: settings.defaultDeliveryChargeBdt,
+    dhakaCityDeliveryChargeBdt: settings.dhakaCityDeliveryChargeBdt,
+    dhakaDistrictDeliveryChargeBdt: settings.dhakaDistrictDeliveryChargeBdt,
     freeDeliveryCities: settings.freeDeliveryCities,
     outsideCityDeliveryChargeBdt: settings.outsideCityDeliveryChargeBdt,
     estimatedDeliveryTime: settings.estimatedDeliveryTime,

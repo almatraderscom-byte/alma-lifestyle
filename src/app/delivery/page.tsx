@@ -42,7 +42,7 @@ export default function DeliveryPage() {
           <strong>সময়:</strong> ৩-৫ কার্যদিবস
         </li>
         <li>
-          <strong>ডেলিভারি চার্জ:</strong> ৳১৫০
+          <strong>ডেলিভারি চার্জ:</strong> ৳১২০
         </li>
         <li>
           <strong>সার্ভিস:</strong> কুরিয়ার (Sundarban, Steadfast, RedX)
@@ -95,9 +95,9 @@ export default function DeliveryPage() {
             <td>৳১০০</td>
           </tr>
           <tr>
-            <td>অন্য জেলা</td>
+            <td>ঢাকার বাইরে</td>
             <td>৩-৫ দিন</td>
-            <td>৳১৫০</td>
+            <td>৳১২০</td>
           </tr>
           <tr>
             <td>চর/দ্বীপ এলাকা</td>

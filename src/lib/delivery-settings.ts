@@ -1,37 +1,51 @@
 import type { AppSettings } from '@/lib/admin-settings-types';
+import {
+  DELIVERY_CHARGES,
+  FREE_DELIVERY_THRESHOLD,
+  findDistrict,
+  getDeliveryChargeForDistrict,
+  normalizeDistrictKey,
+} from '@/lib/bangladesh-districts';
 import { CHECKOUT } from '@/lib/content';
 
-const DEFAULT_FREE_CITY_VALUES = new Set(['dhaka', 'gazipur', 'narayanganj', 'chattogram']);
+export function getFreeDeliveryThreshold(settings?: AppSettings): number {
+  return settings?.freeDeliveryThresholdBdt ?? FREE_DELIVERY_THRESHOLD;
+}
 
-function freeCityValues(settings?: AppSettings): Set<string> {
-  const values = new Set(DEFAULT_FREE_CITY_VALUES);
-  if (!settings?.freeDeliveryCities?.length) return values;
-
-  for (const label of settings.freeDeliveryCities) {
-    const normalized = label
-      .toLowerCase()
-      .replace(/\s+/g, '')
-      .replace('chattogram', 'chattogram')
-      .replace('chittagong', 'chattogram');
-    if (normalized.includes('dhaka')) values.add('dhaka');
-    if (normalized.includes('chattogram') || normalized.includes('chittagong')) {
-      values.add('chattogram');
-    }
-    if (normalized.includes('gazipur')) values.add('gazipur');
-    if (normalized.includes('narayanganj')) values.add('narayanganj');
-  }
-  return values;
+export function getZoneCharges(settings?: AppSettings) {
+  return {
+    dhaka_city: settings?.dhakaCityDeliveryChargeBdt ?? DELIVERY_CHARGES.dhaka_city,
+    dhaka_district: settings?.dhakaDistrictDeliveryChargeBdt ?? DELIVERY_CHARGES.dhaka_district,
+    outside_dhaka: settings?.outsideCityDeliveryChargeBdt ?? DELIVERY_CHARGES.outside_dhaka,
+  };
 }
 
 export function getDeliveryChargeFromSettings(
+  districtOrLegacyCity: string,
+  settings?: AppSettings,
+  subtotal = 0
+): number {
+  const threshold = getFreeDeliveryThreshold(settings);
+  if (subtotal >= threshold) return 0;
+
+  const district = normalizeDistrictKey(districtOrLegacyCity);
+  if (!district) {
+    return settings?.outsideCityDeliveryChargeBdt ?? CHECKOUT.deliveryChargeOutside;
+  }
+
+  const found = findDistrict(district);
+  if (!found) {
+    return settings?.outsideCityDeliveryChargeBdt ?? DELIVERY_CHARGES.outside_dhaka;
+  }
+
+  const charges = getZoneCharges(settings);
+  return charges[found.zone];
+}
+
+/** @deprecated Use district-based lookup; kept for callers passing subtotal. */
+export function getDeliveryChargeFromSettingsLegacy(
   cityValue: string,
   settings?: AppSettings
 ): number {
-  if (!cityValue) {
-    return settings?.outsideCityDeliveryChargeBdt ?? CHECKOUT.deliveryChargeOutside;
-  }
-  if (freeCityValues(settings).has(cityValue)) {
-    return 0;
-  }
-  return settings?.outsideCityDeliveryChargeBdt ?? CHECKOUT.deliveryChargeOutside;
+  return getDeliveryChargeFromSettings(cityValue, settings, 0);
 }
