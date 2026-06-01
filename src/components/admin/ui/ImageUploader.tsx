@@ -167,6 +167,11 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         />
       </div>
 
+      <p className="text-xs text-neutral-500">
+        প্রথম ছবিটি মূল ছবি। ৩–৫টি ছবি যোগ করলে পণ্য কার্ডে স্বয়ংক্রিয়ভাবে ঘুরে দেখাবে — ক্রেতাদের
+        জন্য ভালো অভিজ্ঞতা।
+      </p>
+
       {images.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {images

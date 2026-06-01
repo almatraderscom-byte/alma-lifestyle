@@ -71,7 +71,12 @@ export function FeaturedProductsSection({
               viewport={cardRevealViewport}
               transition={{ duration: 0.6, delay: i * 0.08, ease: EASE_PREMIUM }}
             >
-              <ProductCard product={product} layout={product.layout ?? 'normal'} editorial />
+              <ProductCard
+                product={product}
+                layout={product.layout ?? 'normal'}
+                editorial
+                index={i}
+              />
             </motion.div>
           ))}
         </div>

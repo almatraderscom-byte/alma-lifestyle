@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -19,12 +18,12 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/components/ui/Toast';
 import { getProductBySlug } from '@/lib/products-data';
 import { catalogToCartItem } from '@/lib/cart-helpers';
+import {
+  AutoRotateProductImage,
+  type ProductCardGalleryImage,
+} from '@/components/product/AutoRotateProductImage';
 
-export type ProductCardGalleryImage = {
-  id: string;
-  bgClass: string;
-  url?: string;
-};
+export type { ProductCardGalleryImage };
 
 export type ProductCardExtras = {
   isDesignGroup?: boolean;
@@ -39,6 +38,8 @@ interface ProductCardProps {
   layout?: 'normal' | 'tall';
   /** Editorial homepage styling */
   editorial?: boolean;
+  /** Stagger auto-rotation start across a grid */
+  index?: number;
 }
 
 const BADGE_BY_LABEL: Record<string, { type: Exclude<ProductType, 'simple'> }> = {
@@ -48,46 +49,16 @@ const BADGE_BY_LABEL: Record<string, { type: Exclude<ProductType, 'simple'> }> =
   [PRODUCT_TYPE_BADGE_BN.girl_two_piece]: { type: 'girl_two_piece' },
 };
 
-function CardImageLayer({
-  image,
-  title,
-  priority,
-  className,
-}: {
-  image: ProductCardGalleryImage;
-  title: string;
-  priority?: boolean;
-  className?: string;
-}) {
-  return (
-    <div className={cn('absolute inset-0', className)}>
-      {image.url ? (
-        <Image
-          src={image.url}
-          alt={title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 50vw, 25vw"
-          priority={priority}
-          loading={priority ? 'eager' : 'lazy'}
-        />
-      ) : (
-        <div className={cn('absolute inset-0', image.bgClass)} aria-hidden />
-      )}
-    </div>
-  );
-}
-
 export function ProductCard({
   product,
   layout = 'normal',
   editorial = false,
+  index = 0,
 }: ProductCardProps) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const { has: isWished, toggle: toggleWishlist } = useWishlist();
   const wished = isWished(product.id);
-  const [mobileIndex, setMobileIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -104,7 +75,7 @@ export function ProductCard({
     return [{ id: product.id, bgClass: product.bgClass }];
   }, [product.galleryImages, product.id, product.bgClass]);
 
-  const hasHoverPair = gallery.length > 1;
+  const staggerOffset = (index * 350) % 2500;
   const imageHint = product.imageHint ?? 'Product photo';
   const captionHint = imageHint.replace(/^Image:\s*/i, '');
   const isDesignGroup = Boolean(product.isDesignGroup && product.priceRange);
@@ -129,10 +100,6 @@ export function ProductCard({
       desktopMq.removeEventListener('change', update);
     };
   }, []);
-
-  const transitionMs = reducedMotion ? 0 : 400;
-  const primary = gallery[mobileIndex] ?? gallery[0];
-  const hoverImage = gallery[1] ?? gallery[0];
 
   function handleAddToBag(e: React.MouseEvent) {
     e.preventDefault();
@@ -161,63 +128,22 @@ export function ProductCard({
           aspectClass
         )}
       >
-        {/* Desktop: crossfade primary → secondary on hover */}
-        <div className="absolute inset-0 hidden md:block overflow-hidden">
-          <div
-            className={cn(
-              'absolute inset-0 transition-transform duration-[400ms] ease-out',
-              hoverLift && 'md:group-hover:scale-105'
-            )}
-          >
-          <div
-            className="absolute inset-0"
-            style={{ transition: `opacity ${transitionMs}ms cubic-bezier(0.25, 0.1, 0.25, 1)` }}
-          >
-            <CardImageLayer image={gallery[0]} title={product.title} priority className="z-0" />
-          </div>
-          {hasHoverPair && (
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100"
-              style={{ transition: `opacity ${transitionMs}ms cubic-bezier(0.25, 0.1, 0.25, 1)` }}
-            >
-              <CardImageLayer image={hoverImage} title={product.title} className="z-0" />
-            </div>
+        <div
+          className={cn(
+            'absolute inset-0 transition-transform duration-[400ms] ease-out',
+            hoverLift && 'md:group-hover:scale-105'
           )}
-          </div>
-        </div>
-
-        {/* Mobile: single image + dots */}
-        <div className="absolute inset-0 md:hidden">
-          <CardImageLayer
-            image={primary}
-            title={product.title}
-            priority={mobileIndex === 0}
+        >
+          <AutoRotateProductImage
+            images={gallery}
+            alt={product.title}
+            className="h-full w-full"
+            rotationInterval={3000}
+            staggerOffset={staggerOffset}
+            priority={index < 4}
           />
-          {gallery.length > 1 && (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
-              {gallery.map((img, index) => (
-                <button
-                  key={img.id}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setMobileIndex(index);
-                  }}
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full border transition-all',
-                    index === mobileIndex
-                      ? 'bg-terracotta border-terracotta'
-                      : 'bg-cream/40 border-cream/80'
-                  )}
-                  aria-label={`ছবি ${index + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Placeholder overlay when no real URLs */}
         {!gallery.some((g) => g.url) && (
           <div className="absolute inset-0 z-[1] flex flex-col pointer-events-none">
             <span className="font-bn-body text-[10px] sm:text-xs text-charcoal/50 text-center pt-3 px-2">

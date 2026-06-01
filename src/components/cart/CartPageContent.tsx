@@ -306,8 +306,8 @@ export function CartPageContent() {
               {CART.recommendationsTitle}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {recommendations.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {recommendations.map((product, idx) => (
+                <ProductCard key={product.id} product={product} index={idx} />
               ))}
             </div>
           </section>
