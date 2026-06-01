@@ -10,6 +10,7 @@ import {
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
 import { EditorialHero } from '@/components/home/EditorialHero';
+import { FloatingCollectionOcean } from '@/components/home/FloatingCollectionOcean';
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
@@ -79,7 +80,10 @@ export function HomePageRenderer({
       switch (section.id) {
         case 'hero':
           return (
-            <EditorialHero data={section.data} featuredProducts={featuredProducts} />
+            <>
+              <EditorialHero data={section.data} featuredProducts={featuredProducts} />
+              <FloatingCollectionOcean products={featuredProducts} />
+            </>
           );
         case 'marquee':
           return <StoryMarquee data={section.data} />;
