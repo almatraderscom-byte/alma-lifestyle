@@ -32,6 +32,7 @@ import { SectionDivider } from '@/components/ui/SectionDivider';
 import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
 import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
 import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
+import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -59,46 +60,50 @@ type ExtraBlock = {
   node: ReactNode;
 };
 
-const INSERT_AFTER: Partial<Record<HomepageSectionId, ExtraBlock[]>> = {
-  marquee: [
-    {
-      key: 'why-choose-alma',
-      sectionId: 'why-choose-alma',
-      sectionName: 'Why Choose ALMA',
-      node: <WhyChooseAlma />,
-    },
-    {
-      key: 'family-matching',
-      sectionId: 'family-matching',
-      sectionName: 'Family Matching',
-      node: <FamilyMatchingShowcase />,
-    },
-  ],
-  brandStory: [
-    {
-      key: 'our-process',
-      sectionId: 'our-process',
-      sectionName: 'Our Process',
-      node: <OurProcess />,
-    },
-  ],
-  community: [
-    {
-      key: 'homepage-faq',
-      sectionId: 'homepage-faq',
-      sectionName: 'FAQ',
-      node: <HomepageFAQ />,
-    },
-  ],
-  trust: [
-    {
-      key: 'homepage-cta',
-      sectionId: 'homepage-cta',
-      sectionName: 'Final CTA',
-      node: <HomepageCTA />,
-    },
-  ],
-};
+function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partial<
+  Record<HomepageSectionId, ExtraBlock[]>
+> {
+  return {
+    marquee: [
+      {
+        key: 'why-choose-alma',
+        sectionId: 'why-choose-alma',
+        sectionName: 'Why Choose ALMA',
+        node: <WhyChooseAlma />,
+      },
+      {
+        key: 'family-matching',
+        sectionId: 'family-matching',
+        sectionName: 'Family Matching',
+        node: <FamilyMatchingShowcase data={extras.familyMatching} />,
+      },
+    ],
+    brandStory: [
+      {
+        key: 'our-process',
+        sectionId: 'our-process',
+        sectionName: 'Our Process',
+        node: <OurProcess data={extras.ourProcess} />,
+      },
+    ],
+    community: [
+      {
+        key: 'homepage-faq',
+        sectionId: 'homepage-faq',
+        sectionName: 'FAQ',
+        node: <HomepageFAQ />,
+      },
+    ],
+    trust: [
+      {
+        key: 'homepage-cta',
+        sectionId: 'homepage-cta',
+        sectionName: 'Final CTA',
+        node: <HomepageCTA />,
+      },
+    ],
+  };
+}
 
 export function HomePageRenderer({
   initialConfig,
@@ -133,6 +138,8 @@ export function HomePageRenderer({
 
   const sections = getSortedEnabledSections(config);
   const preview = isPreviewMode();
+  const extras = config.extras ?? getDefaultHomepageExtras();
+  const insertAfter = buildInsertAfter(extras);
 
   const blocks: ReactNode[] = [];
 
@@ -232,9 +239,9 @@ export function HomePageRenderer({
 
     pushBlock(section.id, label, content);
 
-    const extras = INSERT_AFTER[section.id];
-    if (extras?.length) {
-      for (const extra of extras) {
+    const extrasBlocks = insertAfter[section.id];
+    if (extrasBlocks?.length) {
+      for (const extra of extrasBlocks) {
         pushBlock(
           extra.key,
           extra.sectionName,

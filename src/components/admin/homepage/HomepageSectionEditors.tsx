@@ -9,13 +9,20 @@ import type {
   CategoryColorClass,
   CollectionBannerSectionData,
   CommunitySectionData,
+  CommunityTileConfig,
+  FamilyMatchingSectionData,
   FeaturedSectionData,
   HeroSectionData,
+  HomepageImageSlot,
   HomepageSectionConfig,
   MarqueeSectionData,
+  OurProcessSectionData,
   ReviewsSectionData,
   TrustSectionData,
 } from '@/lib/homepage-config-types';
+import { patchImageSlot } from '@/lib/homepage-image-slots';
+import { normalizeCommunityTiles } from '@/lib/homepage-migrations';
+import { ImageSlotFields } from '@/components/admin/homepage/ImageSlotFields';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
 import { Select } from '@/components/admin/ui/Select';
@@ -243,8 +250,26 @@ export function FeaturedEditor({ data, onChange }: EditorProps<FeaturedSectionDa
   );
 }
 
+const BRAND_STORY_SLOT_LABELS = [
+  { label: 'Image 1 — Main (large left)', description: 'Weaver at loom — Sirajganj' },
+  { label: 'Image 2 — Top right (small)', description: 'Fabric close-up — cotton texture' },
+  { label: 'Image 3 — Bottom right (small)', description: 'Family in ALMA outfits' },
+] as const;
+
 export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySectionData>) {
-  const { toast } = useAdminToast();
+  const images = data.images ?? [];
+
+  function updateImage(index: number, patch: Partial<HomepageImageSlot>) {
+    const next = patchImageSlot(images, index, patch);
+    onChange({
+      ...data,
+      images: next,
+      imageUrl: next[0]?.url ?? '',
+      imageCaption: next[0]?.caption ?? '',
+      imageHint: next[0]?.imageHint ?? data.imageHint,
+    });
+  }
+
   return (
     <div className="space-y-4">
       <Input label="Section label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
@@ -254,15 +279,17 @@ export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySecti
         <Input label="CTA text" value={data.cta} onChange={(e) => onChange({ ...data, cta: e.target.value })} />
         <Input label="CTA link" value={data.ctaHref} onChange={(e) => onChange({ ...data, ctaHref: e.target.value })} />
       </div>
-      <HomepageImageUpload
-        label="Image"
-        folder="brand-story"
-        value={data.imageUrl}
-        onChange={(url) => onChange({ ...data, imageUrl: url })}
-        onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
-      />
-      <Input label="Image caption" value={data.imageCaption} onChange={(e) => onChange({ ...data, imageCaption: e.target.value })} />
-      <Input label="Image hint" value={data.imageHint} onChange={(e) => onChange({ ...data, imageHint: e.target.value })} />
+      <p className="text-sm font-medium text-neutral-800">Collage images (3 slots — same order as preview)</p>
+      {BRAND_STORY_SLOT_LABELS.map((meta, index) => (
+        <ImageSlotFields
+          key={index}
+          label={meta.label}
+          description={meta.description}
+          folder={`brand-story/slot-${index + 1}`}
+          slot={images[index] ?? { url: '', caption: '', alt: '', imageHint: meta.description }}
+          onChange={(slot) => updateImage(index, slot)}
+        />
+      ))}
     </div>
   );
 }
@@ -337,33 +364,249 @@ export function CollectionBannerEditor({ data, onChange }: EditorProps<Collectio
 
 export function CommunityEditor({ data, onChange }: EditorProps<CommunitySectionData>) {
   const { toast } = useAdminToast();
+  const tiles = normalizeCommunityTiles(data.tiles);
+
+  function setTiles(next: CommunityTileConfig[]) {
+    onChange({ ...data, tiles: next });
+  }
+
+  function updateTile(id: string, patch: Partial<CommunityTileConfig>) {
+    setTiles(tiles.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  }
+
   return (
     <div className="space-y-4">
       <Input label="Section title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
       <Input label="Subtitle" value={data.subtitle} onChange={(e) => onChange({ ...data, subtitle: e.target.value })} />
       <Input label="Instagram URL" value={data.instagramUrl} onChange={(e) => onChange({ ...data, instagramUrl: e.target.value })} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {data.tiles.map((tile, i) => (
-          <div key={tile.id} className="space-y-2 rounded-lg border border-neutral-200 p-3">
-            <p className="text-xs font-medium text-neutral-500">Tile {i + 1}</p>
-            <HomepageImageUpload
-              folder={`community/${tile.id}`}
-              value={tile.imageUrl}
-              onChange={(url) =>
-                onChange({
-                  ...data,
-                  tiles: data.tiles.map((t) =>
-                    t.id === tile.id ? { ...t, imageUrl: url } : t
-                  ),
-                })
-              }
-              onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
-            />
-            <ColorSwatchPicker value={tile.bgClass} onChange={(bgClass) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, bgClass } : t)) })} />
-            <Input label="Hint" value={tile.hint} onChange={(e) => onChange({ ...data, tiles: data.tiles.map((t) => (t.id === tile.id ? { ...t, hint: e.target.value } : t)) })} />
+      <p className="text-sm font-medium text-neutral-800">
+        Community photos ({tiles.length} slots — grid order left-to-right)
+      </p>
+      {tiles.map((tile, i) => (
+        <div key={tile.id} className="space-y-2 rounded-lg border border-neutral-200 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-neutral-700">Photo {i + 1}</p>
+            {tiles.length > 1 && (
+              <button
+                type="button"
+                className="text-xs text-red-600"
+                onClick={() => setTiles(tiles.filter((t) => t.id !== tile.id))}
+              >
+                × Remove
+              </button>
+            )}
           </div>
-        ))}
+          <HomepageImageUpload
+            folder={`community/${tile.id}`}
+            value={tile.imageUrl}
+            onChange={(url) => updateTile(tile.id, { imageUrl: url })}
+            onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
+          />
+          <ColorSwatchPicker
+            value={tile.bgClass}
+            onChange={(bgClass) => updateTile(tile.id, { bgClass })}
+          />
+          <Input
+            label="Caption"
+            value={tile.caption}
+            onChange={(e) => updateTile(tile.id, { caption: e.target.value })}
+          />
+          <Input
+            label="Alt text"
+            value={tile.alt}
+            onChange={(e) => updateTile(tile.id, { alt: e.target.value })}
+          />
+          <Input
+            label="Placeholder hint"
+            value={tile.hint}
+            onChange={(e) => updateTile(tile.id, { hint: e.target.value })}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        className="text-sm font-medium text-[#C97D5D]"
+        onClick={() =>
+          setTiles([
+            ...tiles,
+            {
+              id: uid('comm'),
+              bgClass: 'bg-maroon',
+              hint: 'Image: New community photo',
+              imageUrl: '',
+              caption: '',
+              alt: '',
+            },
+          ])
+        }
+      >
+        + Add photo slot
+      </button>
+    </div>
+  );
+}
+
+export function FamilyMatchingEditor({
+  data,
+  onChange,
+}: {
+  data: FamilyMatchingSectionData;
+  onChange: (data: FamilyMatchingSectionData) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <Input label="Section label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
+      <Input label="Title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
+      <Textarea label="Body" rows={3} value={data.body} onChange={(e) => onChange({ ...data, body: e.target.value })} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Input label="CTA text" value={data.ctaText} onChange={(e) => onChange({ ...data, ctaText: e.target.value })} />
+        <Input label="CTA link" value={data.ctaHref} onChange={(e) => onChange({ ...data, ctaHref: e.target.value })} />
       </div>
+      <ImageSlotFields
+        label="Banner image (large right)"
+        description="Family wearing matching outfits"
+        folder="family-matching/banner"
+        slot={data.banner}
+        onChange={(banner) => onChange({ ...data, banner })}
+      />
+      <p className="text-sm font-medium text-neutral-800">Type cards (4 — Men, Women, Boy, Girl)</p>
+      {data.cards.map((card, i) => (
+        <div key={card.id} className="space-y-3 rounded-lg border border-neutral-200 p-3">
+          <Input
+            label={`Card ${i + 1} label`}
+            value={card.label}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                cards: data.cards.map((c) =>
+                  c.id === card.id ? { ...c, label: e.target.value } : c
+                ),
+              })
+            }
+          />
+          <HomepageImageUpload
+            label="Card image"
+            folder={`family-matching/${card.id}`}
+            value={card.imageUrl}
+            onChange={(url) =>
+              onChange({
+                ...data,
+                cards: data.cards.map((c) => (c.id === card.id ? { ...c, imageUrl: url } : c)),
+              })
+            }
+          />
+          <Input
+            label="Caption"
+            value={card.caption}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                cards: data.cards.map((c) =>
+                  c.id === card.id ? { ...c, caption: e.target.value } : c
+                ),
+              })
+            }
+          />
+          <Input
+            label="Alt text"
+            value={card.alt}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                cards: data.cards.map((c) =>
+                  c.id === card.id ? { ...c, alt: e.target.value } : c
+                ),
+              })
+            }
+          />
+          <ColorSwatchPicker
+            label="Placeholder color"
+            value={card.bgClass}
+            onChange={(bgClass) =>
+              onChange({
+                ...data,
+                cards: data.cards.map((c) => (c.id === card.id ? { ...c, bgClass } : c)),
+              })
+            }
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function OurProcessEditor({
+  data,
+  onChange,
+}: {
+  data: OurProcessSectionData;
+  onChange: (data: OurProcessSectionData) => void;
+}) {
+  const { toast } = useAdminToast();
+  return (
+    <div className="space-y-4">
+      <Input label="Section label" value={data.label} onChange={(e) => onChange({ ...data, label: e.target.value })} />
+      <Input label="Title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
+      <Textarea label="Subtitle" rows={2} value={data.subtitle} onChange={(e) => onChange({ ...data, subtitle: e.target.value })} />
+      {data.steps.map((step, i) => (
+        <div key={step.title} className="space-y-3 rounded-lg border border-neutral-200 p-3">
+          <p className="text-sm font-semibold text-neutral-800">
+            Step {i + 1}: {step.title}
+          </p>
+          <Input
+            label="Icon (emoji)"
+            value={step.icon}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                steps: data.steps.map((s, j) => (j === i ? { ...s, icon: e.target.value } : s)),
+              })
+            }
+          />
+          <HomepageImageUpload
+            label="Step image"
+            folder={`our-process/step-${i + 1}`}
+            value={step.imageUrl}
+            onChange={(url) =>
+              onChange({
+                ...data,
+                steps: data.steps.map((s, j) => (j === i ? { ...s, imageUrl: url } : s)),
+              })
+            }
+            onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
+          />
+          <Input
+            label="Caption"
+            value={step.caption}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                steps: data.steps.map((s, j) => (j === i ? { ...s, caption: e.target.value } : s)),
+              })
+            }
+          />
+          <Input
+            label="Alt text"
+            value={step.alt}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                steps: data.steps.map((s, j) => (j === i ? { ...s, alt: e.target.value } : s)),
+              })
+            }
+          />
+          <ColorSwatchPicker
+            label="Placeholder color"
+            value={step.bgClass}
+            onChange={(bgClass) =>
+              onChange({
+                ...data,
+                steps: data.steps.map((s, j) => (j === i ? { ...s, bgClass } : s)),
+              })
+            }
+          />
+        </div>
+      ))}
     </div>
   );
 }

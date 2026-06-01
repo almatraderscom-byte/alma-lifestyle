@@ -74,7 +74,7 @@ export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
                 {isUsableImageUrl(tile.imageUrl) ? (
                   <HomepageSectionImage
                     src={tile.imageUrl}
-                    alt={tile.hint}
+                    alt={tile.alt || tile.hint}
                     className="transition-transform duration-500 group-hover:scale-105"
                     sizes="120px"
                   />

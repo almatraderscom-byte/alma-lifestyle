@@ -11,7 +11,13 @@ export type HomepageSectionId =
   | 'community'
   | 'trust';
 
-export type CategoryColorClass = 'bg-maroon' | 'bg-terracotta' | 'bg-emerald' | 'bg-mustard';
+export type CategoryColorClass =
+  | 'bg-maroon'
+  | 'bg-terracotta'
+  | 'bg-emerald'
+  | 'bg-mustard'
+  | 'bg-charcoal'
+  | 'bg-cream';
 
 export interface HeroSectionData {
   caption: string;
@@ -59,15 +65,26 @@ export interface FeaturedSectionData {
   productCount: 4 | 8 | 12;
 }
 
+export interface HomepageImageSlot {
+  url: string;
+  caption: string;
+  alt: string;
+  imageHint: string;
+  bgClass?: CategoryColorClass;
+}
+
 export interface BrandStorySectionData {
   label: string;
   title: string;
   body: string;
   cta: string;
   ctaHref: string;
+  /** @deprecated use images[0] — kept for migration */
   imageCaption: string;
   imageHint: string;
   imageUrl: string;
+  /** [0] large left, [1] top-right, [2] bottom-right */
+  images: HomepageImageSlot[];
 }
 
 export interface ReviewItemConfig {
@@ -104,6 +121,8 @@ export interface CommunityTileConfig {
   bgClass: CategoryColorClass;
   hint: string;
   imageUrl: string;
+  caption: string;
+  alt: string;
 }
 
 export interface CommunitySectionData {
@@ -122,6 +141,50 @@ export interface TrustItemConfig {
 
 export interface TrustSectionData {
   items: TrustItemConfig[];
+}
+
+export interface FamilyMatchingCardConfig {
+  id: string;
+  label: string;
+  href: string;
+  imageHint: string;
+  bgClass: CategoryColorClass;
+  imageUrl: string;
+  caption: string;
+  alt: string;
+}
+
+export interface FamilyMatchingSectionData {
+  label: string;
+  title: string;
+  body: string;
+  ctaText: string;
+  ctaHref: string;
+  banner: HomepageImageSlot;
+  cards: FamilyMatchingCardConfig[];
+}
+
+export interface OurProcessStepConfig {
+  icon: string;
+  title: string;
+  description: string;
+  bgClass: CategoryColorClass;
+  imageUrl: string;
+  caption: string;
+  alt: string;
+  imageHint: string;
+}
+
+export interface OurProcessSectionData {
+  label: string;
+  title: string;
+  subtitle: string;
+  steps: OurProcessStepConfig[];
+}
+
+export interface HomepageExtras {
+  familyMatching: FamilyMatchingSectionData;
+  ourProcess: OurProcessSectionData;
 }
 
 export interface SectionDataMap {
@@ -147,8 +210,20 @@ export type HomepageSectionConfig = {
 
 export interface HomepageConfig {
   sections: HomepageSectionConfig[];
+  extras?: HomepageExtras;
   lastSaved: string;
 }
+
+/** Accordion / visual-editor ids for blocks outside `sections` */
+export type HomepageExtraSectionId =
+  | 'family-matching'
+  | 'our-process'
+  | 'why-choose-alma'
+  | 'homepage-faq'
+  | 'homepage-cta'
+  | 'bestSelling';
+
+export type HomepageEditorSectionId = HomepageSectionId | HomepageExtraSectionId;
 
 export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionId, string> = {
   hero: 'Editorial Hero',

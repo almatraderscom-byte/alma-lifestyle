@@ -7,7 +7,14 @@ import {
   saveDraftHomepageConfig,
 } from '@/lib/homepage-config';
 import { getHomepageConfig, saveHomepageConfig } from '@/lib/admin-store';
-import type { HomepageConfig, HomepageSectionConfig, HomepageSectionId } from '@/lib/homepage-config-types';
+import type {
+  HomepageConfig,
+  HomepageEditorSectionId,
+  HomepageSectionConfig,
+  HomepageSectionId,
+} from '@/lib/homepage-config-types';
+import { isConfigSectionId } from '@/lib/homepage-edit-messages';
+import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
 import { HOMEPAGE_SECTION_LABELS } from '@/lib/homepage-config-types';
 import { Button } from '@/components/admin/ui/Button';
 import { useAdminToast } from '@/context/AdminToastContext';
@@ -22,6 +29,8 @@ import {
   MarqueeEditor,
   ReviewsEditor,
   TrustEditor,
+  FamilyMatchingEditor,
+  OurProcessEditor,
   ToggleRow,
 } from '@/components/admin/homepage/HomepageSectionEditors';
 import {
@@ -34,17 +43,14 @@ import {
 } from '@/components/admin/homepage/homepage-builder-utils';
 import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/HomepageSectionErrorBoundary';
 import { HomepageUploadDiagnostics } from '@/components/admin/homepage/HomepageUploadDiagnostics';
-import {
-  isConfigSectionId,
-  isHomepageEditMessage,
-} from '@/lib/homepage-edit-messages';
+import { isHomepageEditMessage } from '@/lib/homepage-edit-messages';
 
 type MobileTab = 'editor' | 'preview';
 
 export function HomepageBuilder() {
   const { toast } = useAdminToast();
   const [config, setConfig] = useState<HomepageConfig>(() => getDefaultHomepageConfig());
-  const [openSection, setOpenSection] = useState<HomepageSectionId | null>('hero');
+  const [openSection, setOpenSection] = useState<HomepageEditorSectionId | null>('hero');
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
   const [previewKey, setPreviewKey] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -118,33 +124,21 @@ export function HomepageBuilder() {
       if (event.data.type === 'EDIT_SECTION') {
         const { sectionId } = event.data;
 
-        if (isConfigSectionId(sectionId)) {
-          setOpenSection(sectionId);
-          requestAnimationFrame(() => {
-            const el = document.getElementById(`section-${sectionId}`);
-            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (el) {
-              el.style.background = 'rgba(201, 125, 93, 0.12)';
-              if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-              highlightTimerRef.current = setTimeout(() => {
-                el.style.background = '';
-              }, 1000);
-            }
-          });
-          return;
-        }
-
         if (sectionId === 'bestSelling') {
           toast(
             'Best selling cards use products tagged bestseller in Admin → Products. Featured section controls the grid below.',
             'info'
           );
-          setOpenSection('featured');
-          highlightPreviewSection('featured');
+          openSectionPanel('featured');
           return;
         }
 
-        toast('This section is static content and is not editable in the builder yet.', 'info');
+        if (sectionId === 'why-choose-alma' || sectionId === 'homepage-faq' || sectionId === 'homepage-cta') {
+          toast('This section uses fixed content (no image uploads in builder yet).', 'info');
+          return;
+        }
+
+        openSectionPanel(sectionId as HomepageEditorSectionId);
         return;
       }
 
@@ -157,15 +151,34 @@ export function HomepageBuilder() {
     return () => window.removeEventListener('message', onMessage);
   }, [toast, highlightPreviewSection]);
 
-  function openSectionPanel(sectionId: HomepageSectionId) {
+  function openSectionPanel(sectionId: HomepageEditorSectionId) {
     setOpenSection(sectionId);
-    highlightPreviewSection(sectionId);
+    if (
+      sectionId !== 'why-choose-alma' &&
+      sectionId !== 'homepage-faq' &&
+      sectionId !== 'homepage-cta' &&
+      sectionId !== 'bestSelling'
+    ) {
+      highlightPreviewSection(sectionId);
+    }
     requestAnimationFrame(() => {
-      document.getElementById(`section-${sectionId}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+      const el = document.getElementById(`section-${sectionId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (el) {
+        el.style.background = 'rgba(201, 125, 93, 0.12)';
+        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => {
+          el.style.background = '';
+        }, 1000);
+      }
     });
+  }
+
+  function updateExtras(updater: (extras: NonNullable<HomepageConfig['extras']>) => NonNullable<HomepageConfig['extras']>) {
+    updateConfig((c) => ({
+      ...c,
+      extras: updater(c.extras ?? getDefaultHomepageExtras()),
+    }));
   }
 
   async function handleResetToDefaults() {
@@ -409,7 +422,7 @@ export function HomepageBuilder() {
                 onClick={() => {
                   if (openSection === section.id) {
                     setOpenSection(null);
-                  } else {
+                  } else if (isConfigSectionId(section.id)) {
                     openSectionPanel(section.id);
                   }
                 }}
@@ -432,6 +445,66 @@ export function HomepageBuilder() {
               )}
             </div>
           ))}
+
+          <div
+            id="section-family-matching"
+            className={cn(
+              'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
+              openSection === 'family-matching'
+                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                : 'border-neutral-200'
+            )}
+          >
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-neutral-50"
+              onClick={() =>
+                openSection === 'family-matching'
+                  ? setOpenSection(null)
+                  : openSectionPanel('family-matching')
+              }
+            >
+              <span className="text-sm font-semibold text-neutral-900">Family Matching</span>
+              <span className="text-neutral-400 text-sm">{openSection === 'family-matching' ? '▾' : '▸'}</span>
+            </button>
+            {openSection === 'family-matching' && (
+              <div className="px-3 pb-3 border-t border-neutral-100 pt-3">
+                <FamilyMatchingEditor
+                  data={config.extras?.familyMatching ?? getDefaultHomepageExtras().familyMatching}
+                  onChange={(familyMatching) => updateExtras((e) => ({ ...e, familyMatching }))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
+            id="section-our-process"
+            className={cn(
+              'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
+              openSection === 'our-process'
+                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                : 'border-neutral-200'
+            )}
+          >
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-neutral-50"
+              onClick={() =>
+                openSection === 'our-process' ? setOpenSection(null) : openSectionPanel('our-process')
+              }
+            >
+              <span className="text-sm font-semibold text-neutral-900">Our Process</span>
+              <span className="text-neutral-400 text-sm">{openSection === 'our-process' ? '▾' : '▸'}</span>
+            </button>
+            {openSection === 'our-process' && (
+              <div className="px-3 pb-3 border-t border-neutral-100 pt-3">
+                <OurProcessEditor
+                  data={config.extras?.ourProcess ?? getDefaultHomepageExtras().ourProcess}
+                  onChange={(ourProcess) => updateExtras((e) => ({ ...e, ourProcess }))}
+                />
+              </div>
+            )}
+          </div>
 
           <HomepageUploadDiagnostics />
         </div>

@@ -3,38 +3,20 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
+import type { FamilyMatchingSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
 import { scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
 
-const familyTypes = [
-  {
-    label: 'পুরুষ',
-    hint: 'Image: Man in matching panjabi',
-    bgClass: 'bg-maroon',
-    href: '/products?type=men_panjabi',
-  },
-  {
-    label: 'মহিলা',
-    hint: 'Image: Woman in three-piece',
-    bgClass: 'bg-terracotta',
-    href: '/products?type=women_three_piece',
-  },
-  {
-    label: 'ছেলে',
-    hint: 'Image: Boy in panjabi',
-    bgClass: 'bg-mustard',
-    href: '/products?type=boy_panjabi',
-  },
-  {
-    label: 'মেয়ে',
-    hint: 'Image: Girl in two-piece',
-    bgClass: 'bg-emerald',
-    href: '/products?type=girl_two_piece',
-  },
-];
+interface FamilyMatchingShowcaseProps {
+  data?: FamilyMatchingSectionData;
+}
 
-export function FamilyMatchingShowcase() {
+export function FamilyMatchingShowcase({ data: dataProp }: FamilyMatchingShowcaseProps) {
   const reduceMotion = useReducedMotion();
+  const data = dataProp ?? getDefaultHomepageExtras().familyMatching;
 
   return (
     <section className="section-padding bg-cream">
@@ -46,19 +28,18 @@ export function FamilyMatchingShowcase() {
             transition={{ duration: 0.65 }}
             viewport={scrollViewport}
           >
-            <p className="editorial-label mb-3 text-terracotta">ফ্যামিলি ম্যাচিং</p>
+            <p className="editorial-label mb-3 text-terracotta">{data.label}</p>
             <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-5xl leading-[1.35]">
-              পরিবার একসাথে সাজুক
+              {data.title}
             </h2>
             <p className="font-bn-body mt-5 text-base text-text-light md:text-lg leading-relaxed">
-              বাবা, মা, ছেলে, মেয়ে — সবার জন্য মিলিয়ে ডিজাইন। একই রঙ, একই প্যাটার্ন, আলাদা
-              কাট ও সাইজ — ঈদ, বিবাহ বা পারিবারিক অনুষ্ঠানে সবাই একসাথে সাজুন।
+              {data.body}
             </p>
             <Link
-              href="/products"
+              href={data.ctaHref}
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded bg-terracotta px-8 font-bn-body text-base font-semibold text-white transition-colors hover:bg-[#b06d4f]"
             >
-              ফ্যামিলি সেট দেখুন →
+              {data.ctaText}
             </Link>
           </motion.div>
 
@@ -69,10 +50,23 @@ export function FamilyMatchingShowcase() {
             viewport={scrollViewport}
             className="relative"
           >
-            <PlaceholderImage
-              hint="Image: Family wearing matching ALMA outfits — outdoor golden hour"
-              bgClass="bg-maroon aspect-[4/3] w-full rounded-xl"
-            />
+            {isUsableImageUrl(data.banner.url) ? (
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+                <HomepageSectionImage
+                  src={data.banner.url}
+                  alt={data.banner.alt || data.banner.caption}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
+            ) : (
+              <PlaceholderImage
+                hint={data.banner.imageHint}
+                bgClass={cn(data.banner.bgClass ?? 'bg-maroon', 'aspect-[4/3] w-full rounded-xl')}
+              />
+            )}
+            {data.banner.caption && (
+              <p className="font-bn-body text-sm text-text-light mt-2">{data.banner.caption}</p>
+            )}
           </motion.div>
         </div>
 
@@ -83,19 +77,36 @@ export function FamilyMatchingShowcase() {
           transition={{ duration: 0.6, delay: 0.15 }}
           viewport={scrollViewport}
         >
-          {familyTypes.map((item) => (
+          {data.cards.map((item) => (
             <Link
-              key={item.label}
+              key={item.id}
               href={item.href}
               className="group block overflow-hidden rounded-lg"
             >
-              <PlaceholderImage
-                hint={item.hint}
-                bgClass={cn(item.bgClass, 'aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.02]')}
-              />
+              {isUsableImageUrl(item.imageUrl) ? (
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg">
+                  <HomepageSectionImage
+                    src={item.imageUrl}
+                    alt={item.alt || item.label}
+                    className="transition-transform duration-500 group-hover:scale-[1.02]"
+                    sizes="25vw"
+                  />
+                </div>
+              ) : (
+                <PlaceholderImage
+                  hint={item.imageHint}
+                  bgClass={cn(
+                    item.bgClass,
+                    'aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.02]'
+                  )}
+                />
+              )}
               <p className="font-bn-heading mt-3 text-center text-lg font-semibold text-charcoal">
                 {item.label}
               </p>
+              {item.caption && (
+                <p className="font-bn-body text-center text-xs text-text-light mt-1">{item.caption}</p>
+              )}
             </Link>
           ))}
         </motion.div>

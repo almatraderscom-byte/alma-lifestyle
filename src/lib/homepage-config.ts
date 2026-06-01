@@ -26,6 +26,9 @@ import type {
   SectionDataMap,
 } from '@/lib/homepage-config-types';
 import { DEFAULT_SECTION_ORDER } from '@/lib/homepage-config-types';
+import { getDefaultHomepageExtras, mergeHomepageExtras } from '@/lib/homepage-extras';
+import { migrateBrandStorySection, migrateCommunitySection } from '@/lib/homepage-migrations';
+import { ensureImageSlots } from '@/lib/homepage-image-slots';
 
 export const HOMEPAGE_CONFIG_KEY = 'alma-homepage-config';
 export const HOMEPAGE_DRAFT_KEY = 'alma-homepage-draft';
@@ -136,6 +139,16 @@ export function getDefaultHomepageConfig(): HomepageConfig {
         imageCaption: BRAND_STORY.imageCaption,
         imageHint: BRAND_STORY.imageHint,
         imageUrl: '',
+        images: ensureImageSlots(
+          undefined,
+          3,
+          [
+            'Image: Weaver at loom — Sirajganj, warm documentary style',
+            'Image: Fabric close-up — cotton texture',
+            'Image: Family in ALMA outfits — candid smile',
+          ],
+          ['bg-mustard', 'bg-terracotta', 'bg-maroon']
+        ),
       },
     },
     {
@@ -186,6 +199,8 @@ export function getDefaultHomepageConfig(): HomepageConfig {
           bgClass: t.bg as CategoryColorClass,
           hint: t.hint,
           imageUrl: '',
+          caption: '',
+          alt: t.hint,
         })),
       },
     },
@@ -206,6 +221,7 @@ export function getDefaultHomepageConfig(): HomepageConfig {
 
   return {
     sections,
+    extras: getDefaultHomepageExtras(),
     lastSaved: new Date().toISOString(),
   };
 }
@@ -239,6 +255,12 @@ export function mergeHomepageConfig(
       }
       mergedData = hero as typeof defaultSection.data;
     }
+    if (defaultSection.id === 'brandStory') {
+      mergedData = migrateBrandStorySection(mergedData as import('@/lib/homepage-config-types').BrandStorySectionData) as typeof defaultSection.data;
+    }
+    if (defaultSection.id === 'community') {
+      mergedData = migrateCommunitySection(mergedData as import('@/lib/homepage-config-types').CommunitySectionData) as typeof defaultSection.data;
+    }
     return {
       ...defaultSection,
       enabled: savedSection.enabled,
@@ -251,6 +273,7 @@ export function mergeHomepageConfig(
     ...defaults,
     ...saved,
     sections: sections.sort((a, b) => a.order - b.order) as HomepageSectionConfig[],
+    extras: mergeHomepageExtras(saved.extras, defaults.extras ?? getDefaultHomepageExtras()),
     lastSaved: saved.lastSaved || defaults.lastSaved,
   };
 }

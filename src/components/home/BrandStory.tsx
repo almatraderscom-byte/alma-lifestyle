@@ -7,6 +7,7 @@ import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { isUsableImageUrl } from '@/lib/homepage-image';
 import type { BrandStorySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { migrateBrandStorySection } from '@/lib/homepage-migrations';
 import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
 import { EASE_PREMIUM, scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
@@ -22,21 +23,40 @@ const STORY_PARAGRAPHS = [
   'আমরা চাই আমাদের পরিবার আপনার পরিবারের মতো একসাথে সাজুক — ঈদ, বিবাহ, বা শুধু একসাথে কাটানো একটি সুন্দর দিনের জন্য।',
 ];
 
-const COLLAGE_HINTS = [
-  { hint: 'Image: Weaver at loom — Sirajganj', bgClass: 'bg-mustard' },
-  { hint: 'Image: Fabric close-up — cotton texture', bgClass: 'bg-terracotta' },
-  { hint: 'Image: Family in ALMA outfits — candid smile', bgClass: 'bg-maroon' },
-];
+function CollageSlot({
+  slot,
+  className,
+  sizes,
+}: {
+  slot: BrandStorySectionData['images'][0];
+  className?: string;
+  sizes: string;
+}) {
+  const bg = slot.bgClass ?? 'bg-maroon';
+  if (isUsableImageUrl(slot.url)) {
+    return (
+      <div className={cn('relative overflow-hidden rounded-lg', className)}>
+        <HomepageSectionImage src={slot.url} alt={slot.alt || slot.caption} sizes={sizes} />
+      </div>
+    );
+  }
+  return (
+    <PlaceholderImage
+      hint={slot.imageHint}
+      bgClass={cn(bg, 'w-full rounded-lg', className)}
+    />
+  );
+}
 
 export function BrandStory({ data: dataProp }: BrandStoryProps) {
   const reduceMotion = useReducedMotion();
   const { ref: sectionRef } = useScrollAnimation();
 
-  const data =
+  const raw =
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'brandStory')!.data;
-
-  const mainImage = isUsableImageUrl(data.imageUrl);
+  const data = migrateBrandStorySection(raw);
+  const images = data.images;
 
   return (
     <section ref={sectionRef} className="section-padding bg-warm-white">
@@ -47,32 +67,28 @@ export function BrandStory({ data: dataProp }: BrandStoryProps) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={scrollViewport}
             transition={{ duration: 0.7, ease: EASE_PREMIUM }}
-            className="space-y-4"
+            className="space-y-3"
           >
-            {mainImage ? (
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg">
-                <HomepageSectionImage
-                  src={data.imageUrl}
-                  alt={data.title}
-                  sizes="(max-width: 768px) 100vw, 45vw"
-                />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <CollageSlot slot={images[0]} className="aspect-[16/10]" sizes="(max-width: 768px) 100vw, 45vw" />
+                {images[0]?.caption && (
+                  <p className="font-bn-body text-sm text-text-light mt-2">{images[0].caption}</p>
+                )}
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <PlaceholderImage
-                  hint={COLLAGE_HINTS[0].hint}
-                  bgClass={cn(COLLAGE_HINTS[0].bgClass, 'col-span-2 aspect-[16/10] w-full rounded-lg')}
-                />
-                {COLLAGE_HINTS.slice(1).map((item) => (
-                  <PlaceholderImage
-                    key={item.hint}
-                    hint={item.hint}
-                    bgClass={cn(item.bgClass, 'aspect-square w-full rounded-lg')}
-                  />
-                ))}
+              <div>
+                <CollageSlot slot={images[1]} className="aspect-square" sizes="25vw" />
+                {images[1]?.caption && (
+                  <p className="font-bn-body text-sm text-text-light mt-2">{images[1].caption}</p>
+                )}
               </div>
-            )}
-            <p className="font-bn-body text-sm text-text-light">{data.imageCaption}</p>
+              <div>
+                <CollageSlot slot={images[2]} className="aspect-square" sizes="25vw" />
+                {images[2]?.caption && (
+                  <p className="font-bn-body text-sm text-text-light mt-2">{images[2].caption}</p>
+                )}
+              </div>
+            </div>
           </motion.div>
 
           <motion.div

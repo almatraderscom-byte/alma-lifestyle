@@ -2,56 +2,21 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
+import { isUsableImageUrl } from '@/lib/homepage-image';
+import type { OurProcessSectionData } from '@/lib/homepage-config-types';
+import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
 import { scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
 
-const steps = [
-  {
-    icon: '🧶',
-    title: 'কাপড় নির্বাচন',
-    description:
-      'সিরাজগঞ্জ, নরসিংদী ও কুমিল্লার তাঁতিদের কাছ থেকে সরাসরি কটন ও সিল্ক বাছাই করি। প্রতিটি রোলের গুণমান হাতে যাচাই করা হয়।',
-    bgClass: 'bg-terracotta',
-  },
-  {
-    icon: '✏️',
-    title: 'ডিজাইন',
-    description:
-      'ঐতিহ্যবাহী মোটিফ ও আধুনিক কাটের সমন্বয়ে স্কেচ তৈরি হয়। পরিবার সেটের জন্য রঙ ও প্যাটার্ন একসাথে মিলিয়ে নেওয়া হয়।',
-    bgClass: 'bg-maroon',
-  },
-  {
-    icon: '🪡',
-    title: 'হাতে বুনন',
-    description:
-      '৭০+ পরিবারের তাঁতিদের হাতে বোনা হয় প্রতিটি কাপড়। মেশিনের ব্যবহার শুধুমাত্র কাঠামোর জন্য, বুনন পুরোটাই হাতে।',
-    bgClass: 'bg-mustard',
-  },
-  {
-    icon: '🧵',
-    title: 'সেলাই',
-    description:
-      'অভিজ্ঞ দর্জিরা প্রতিটি সীম সেলাই করেন। ফিটিং, কলার ও কাফের কাজে বিশেষ যত্ন নেওয়া হয় যাতে ঈদ বা অনুষ্ঠানে আরামদায়ক থাকে।',
-    bgClass: 'bg-emerald',
-  },
-  {
-    icon: '🔍',
-    title: 'কোয়ালিটি চেক',
-    description:
-      'প্রতিটি পিস তিন ধাপে পরীক্ষা — কাপড়, সেলাই ও ফিনিশিং। কোনো ত্রুটি থাকলে পুনরায় কাজ করা হয়, গ্রাহকের কাছে যায় না।',
-    bgClass: 'bg-charcoal',
-  },
-  {
-    icon: '📦',
-    title: 'প্যাকেজিং ও ডেলিভারি',
-    description:
-      'প্রিমিয়াম বক্সে মোড়ানো হয়, ৬৪ জেলায় ১–৫ দিনে পৌঁছে দেওয়া হয়। ঢাকায় ১–২ দিন, বাইরে কুরিয়ার সেবা।',
-    bgClass: 'bg-[#92400e]',
-  },
-];
+interface OurProcessProps {
+  data?: OurProcessSectionData;
+}
 
-export function OurProcess() {
+export function OurProcess({ data: dataProp }: OurProcessProps) {
   const reduceMotion = useReducedMotion();
+  const data = dataProp ?? getDefaultHomepageExtras().ourProcess;
+  const steps = data.steps;
 
   return (
     <section className="section-padding bg-warm-white">
@@ -63,13 +28,11 @@ export function OurProcess() {
           viewport={scrollViewport}
           className="mb-12 text-center md:mb-16"
         >
-          <p className="editorial-label mb-3 text-terracotta">আমাদের প্রক্রিয়া</p>
+          <p className="editorial-label mb-3 text-terracotta">{data.label}</p>
           <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-4xl">
-            কাপড় থেকে আপনার দরজায়
+            {data.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl font-bn-body text-text-light">
-            ছয়টি ধাপে তৈরি হয় প্রতিটি ALMA পোশাক — স্বচ্ছতা ও মানের প্রতিশ্রুতি
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl font-bn-body text-text-light">{data.subtitle}</p>
         </motion.div>
 
         <div className="relative md:px-4">
@@ -83,7 +46,7 @@ export function OurProcess() {
               const isEven = idx % 2 === 0;
               return (
                 <motion.li
-                  key={step.title}
+                  key={`${step.title}-${idx}`}
                   initial={reduceMotion ? false : { opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06, duration: 0.55 }}
@@ -111,10 +74,23 @@ export function OurProcess() {
                   </div>
 
                   <div className={cn('pl-10 md:pl-0', !isEven && 'md:order-1')}>
-                    <PlaceholderImage
-                      hint={`Image: ${step.title}`}
-                      bgClass={cn(step.bgClass, 'aspect-[4/3] w-full rounded-lg')}
-                    />
+                    {isUsableImageUrl(step.imageUrl) ? (
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
+                        <HomepageSectionImage
+                          src={step.imageUrl}
+                          alt={step.alt || step.title}
+                          sizes="(max-width: 768px) 100vw, 40vw"
+                        />
+                      </div>
+                    ) : (
+                      <PlaceholderImage
+                        hint={step.imageHint || `Image: ${step.title}`}
+                        bgClass={cn(step.bgClass, 'aspect-[4/3] w-full rounded-lg')}
+                      />
+                    )}
+                    {step.caption && (
+                      <p className="font-bn-body text-sm text-text-light mt-2">{step.caption}</p>
+                    )}
                   </div>
 
                   <span
