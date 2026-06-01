@@ -283,6 +283,24 @@ export interface ImportLog {
   created_at: Timestamp;
 }
 
+export interface NotificationLog {
+  id: UUID;
+  channel: 'email' | 'whatsapp';
+  notification_type: string;
+  recipient: string;
+  subject: string | null;
+  success: boolean;
+  error_message: string | null;
+  provider_response: Json | null;
+  provider_message_id: string | null;
+  order_id: UUID | null;
+  triggered_by: string | null;
+  from_email: string | null;
+  has_api_key: boolean | null;
+  created_at: Timestamp;
+  attempted_at_date: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Insert / Update helpers
 // ---------------------------------------------------------------------------
@@ -356,6 +374,12 @@ export type AuditLogUpdate = Partial<Omit<AuditLog, 'id' | 'created_at'>>;
 
 export type ImportLogInsert = Omit<ImportLog, 'id' | 'created_at'> &
   Partial<Pick<ImportLog, 'id' | 'created_at'>>;
+
+export type NotificationLogInsert = Omit<
+  NotificationLog,
+  'id' | 'created_at' | 'attempted_at_date'
+> &
+  Partial<Pick<NotificationLog, 'id' | 'created_at'>>;
 
 export type ImportLogUpdate = Partial<Omit<ImportLog, 'id' | 'created_at'>>;
 
@@ -585,6 +609,19 @@ export interface Database {
             foreignKeyName: 'import_logs_brand_id_fkey';
             columns: ['brand_id'];
             referencedRelation: 'brands';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notification_logs: {
+        Row: NotificationLog;
+        Insert: NotificationLogInsert;
+        Update: Partial<NotificationLogInsert>;
+        Relationships: [
+          {
+            foreignKeyName: 'notification_logs_order_id_fkey';
+            columns: ['order_id'];
+            referencedRelation: 'orders';
             referencedColumns: ['id'];
           },
         ];

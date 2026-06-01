@@ -22,6 +22,15 @@ const NAV = [
     ],
   },
   { href: '/admin/orders', label: 'Orders', icon: CartIcon, badge: true },
+  {
+    href: '/admin/notifications',
+    label: 'Notifications',
+    icon: BellIcon,
+    children: [
+      { href: '/admin/notifications/logs', label: 'Notification Logs' },
+      { href: '/admin/notifications/test', label: 'Test Notifications' },
+    ],
+  },
   { href: '/admin/customers', label: 'Customers', icon: UsersIcon },
   { href: '/admin/homepage', label: 'Homepage Builder', icon: LayoutIcon },
   { href: '/admin/settings', label: 'Settings', icon: GearIcon },
@@ -52,6 +61,9 @@ export function AdminSidebar({
     );
   }, []);
   const [productsOpen, setProductsOpen] = useState(pathname.startsWith('/admin/products'));
+  const [notificationsOpen, setNotificationsOpen] = useState(
+    pathname.startsWith('/admin/notifications')
+  );
 
   function handleImport(file: File) {
     const reader = new FileReader();
@@ -105,12 +117,19 @@ export function AdminSidebar({
         <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
           {NAV.map((item) => {
             if (item.children) {
-              const active = pathname.startsWith('/admin/products');
+              const isProducts = item.href === '/admin/products';
+              const isNotifications = item.href === '/admin/notifications';
+              const active = isProducts
+                ? pathname.startsWith('/admin/products')
+                : pathname.startsWith('/admin/notifications');
+              const open = isProducts ? productsOpen : notificationsOpen;
+              const setOpen = isProducts ? setProductsOpen : setNotificationsOpen;
+
               return (
                 <div key={item.label}>
                   <button
                     type="button"
-                    onClick={() => setProductsOpen(!productsOpen)}
+                    onClick={() => setOpen(!open)}
                     className={cn(
                       'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                       active && 'border-l-4 border-[#C97D5D] bg-white/10',
@@ -122,11 +141,11 @@ export function AdminSidebar({
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-left">{item.label}</span>
-                        <span className="text-white/50">{productsOpen ? '▾' : '▸'}</span>
+                        <span className="text-white/50">{open ? '▾' : '▸'}</span>
                       </>
                     )}
                   </button>
-                  {!collapsed && productsOpen && (
+                  {!collapsed && open && (
                     <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
                       {item.children.map((child) => (
                         <Link
@@ -135,7 +154,12 @@ export function AdminSidebar({
                           onClick={onCloseMobile}
                           className={cn(
                             'block rounded-lg px-3 py-2 text-sm transition-colors',
-                            isActive(child.href, child.href === '/admin/products' && pathname === '/admin/products')
+                            isActive(
+                              child.href,
+                              isProducts &&
+                                child.href === '/admin/products' &&
+                                pathname === '/admin/products'
+                            )
                               ? 'text-[#C97D5D] font-medium'
                               : 'text-white/70 hover:text-white'
                           )}
@@ -286,6 +310,14 @@ function GearIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
       <circle cx="12" cy="12" r="3" />
       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+function BellIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
     </svg>
   );
 }

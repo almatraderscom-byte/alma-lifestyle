@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface EnvDiagnostics {
@@ -125,7 +126,15 @@ export default function NotificationTestPage() {
 
   return (
     <div className="p-8 max-w-3xl">
-      <h1 className="text-2xl font-semibold text-neutral-900 mb-6">Notification test</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-semibold text-neutral-900">Notification test</h1>
+        <Link
+          href="/admin/notifications/logs"
+          className="text-sm font-medium text-[#C97D5D] hover:underline"
+        >
+          View notification logs →
+        </Link>
+      </div>
 
       {envLoadError && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-sm text-amber-900">

@@ -65,7 +65,11 @@ export async function POST(request: NextRequest) {
     <p style="color: #666; font-size: 12px;">This is a test email from the ALMA admin panel.</p>
   </div>
 </body>
-</html>`
+</html>`,
+          {
+            notificationType: 'admin_test_email',
+            triggeredBy: 'admin_test',
+          }
         );
 
         return NextResponse.json(result, {
@@ -75,7 +79,11 @@ export async function POST(request: NextRequest) {
 
       if (body.type === 'whatsapp') {
         const result = await sendWhatsAppToAdmin(
-          `🧪 *ALMA Notification Test*\n\nIf you receive this, WhatsApp notifications are working! ✅\n\nTime: ${new Date().toLocaleString()}`
+          `🧪 *ALMA Notification Test*\n\nIf you receive this, WhatsApp notifications are working! ✅\n\nTime: ${new Date().toLocaleString()}`,
+          {
+            notificationType: 'admin_test_whatsapp',
+            triggeredBy: 'admin_test',
+          }
         );
 
         return NextResponse.json(result, {
