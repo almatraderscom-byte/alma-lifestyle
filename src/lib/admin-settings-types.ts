@@ -15,6 +15,8 @@ export interface AppSettings {
   tiktokUrl: string;
   freeDeliveryThresholdBdt: number;
   defaultDeliveryChargeBdt: number;
+  dhakaCityDeliveryChargeBdt: number;
+  dhakaDistrictDeliveryChargeBdt: number;
   freeDeliveryCities: string[];
   outsideCityDeliveryChargeBdt: number;
   estimatedDeliveryTime: string;
@@ -61,10 +63,12 @@ export function getDefaultAppSettings(): AppSettings {
     instagramUrl: '',
     youtubeUrl: '',
     tiktokUrl: '',
-    freeDeliveryThresholdBdt: 3000,
-    defaultDeliveryChargeBdt: 120,
-    freeDeliveryCities: ['Dhaka', 'Chattogram'],
-    outsideCityDeliveryChargeBdt: 200,
+    freeDeliveryThresholdBdt: 2000,
+    defaultDeliveryChargeBdt: 80,
+    dhakaCityDeliveryChargeBdt: 80,
+    dhakaDistrictDeliveryChargeBdt: 100,
+    freeDeliveryCities: ['Dhaka'],
+    outsideCityDeliveryChargeBdt: 120,
     estimatedDeliveryTime: '২–৪ কর্মদিবস',
     codEnabled: true,
     codInstructions: 'Pay cash when your order arrives.',

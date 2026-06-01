@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { DistrictSelector } from '@/components/checkout/DistrictSelector';
 import { CHECKOUT } from '@/lib/content';
+import { getZoneLabel } from '@/lib/delivery';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
@@ -11,9 +13,9 @@ export interface CheckoutFormData {
   name: string;
   phone: string;
   email: string;
+  district: string;
+  thana: string;
   address: string;
-  city: string;
-  postcode: string;
   note: string;
   paymentMethod: PaymentMethod;
   transactionId: string;
@@ -22,25 +24,27 @@ export interface CheckoutFormData {
 export interface CheckoutFormErrors {
   name?: string;
   phone?: string;
+  district?: string;
+  thana?: string;
   address?: string;
-  city?: string;
   transactionId?: string;
 }
 
 interface CheckoutFormProps {
-  cityValue: string;
-  onCityChange: (city: string) => void;
+  districtValue: string;
+  onDistrictChange: (district: string) => void;
   onSubmit: (data: CheckoutFormData) => void;
   isSubmitting?: boolean;
+  hideSubmitButton?: boolean;
 }
 
 const initialForm: CheckoutFormData = {
   name: '',
   phone: '',
   email: '',
+  district: '',
+  thana: '',
   address: '',
-  city: '',
-  postcode: '',
   note: '',
   paymentMethod: 'cod',
   transactionId: '',
@@ -52,15 +56,23 @@ function isValidBdPhone(phone: string): boolean {
 }
 
 export function CheckoutForm({
-  cityValue,
-  onCityChange,
+  districtValue,
+  onDistrictChange,
   onSubmit,
   isSubmitting = false,
+  hideSubmitButton = false,
 }: CheckoutFormProps) {
   const settings = useStoreSettings();
-  const [form, setForm] = useState<CheckoutFormData>({ ...initialForm, city: cityValue });
+  const [form, setForm] = useState<CheckoutFormData>({
+    ...initialForm,
+    district: districtValue,
+  });
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, district: districtValue }));
+  }, [districtValue]);
 
   useEffect(() => {
     const allowed: PaymentMethod[] = [];
@@ -74,8 +86,8 @@ export function CheckoutForm({
 
   function updateField<K extends keyof CheckoutFormData>(key: K, value: CheckoutFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (key === 'city') {
-      onCityChange(value as string);
+    if (key === 'district') {
+      onDistrictChange(value as string);
     }
   }
 
@@ -83,8 +95,9 @@ export function CheckoutForm({
     const next: CheckoutFormErrors = {};
     if (!form.name.trim()) next.name = CHECKOUT.errors.name;
     if (!isValidBdPhone(form.phone)) next.phone = CHECKOUT.errors.phone;
+    if (!form.district) next.district = CHECKOUT.errors.district;
+    if (!form.thana.trim()) next.thana = CHECKOUT.errors.thana;
     if (!form.address.trim()) next.address = CHECKOUT.errors.address;
-    if (!form.city) next.city = CHECKOUT.errors.city;
     if (
       (form.paymentMethod === 'bkash' || form.paymentMethod === 'nagad') &&
       !form.transactionId.trim()
@@ -106,40 +119,44 @@ export function CheckoutForm({
   const showErrors = touched;
   const paymentNumber =
     form.paymentMethod === 'bkash'
-      ? settings.bkashMerchantNumber || CHECKOUT.bkashNumber
+      ? settings.bkashMerchantNumber || '01307777733'
       : form.paymentMethod === 'nagad'
-        ? settings.nagadMerchantNumber || CHECKOUT.nagadNumber
+        ? settings.nagadMerchantNumber || '01307777733'
         : '';
 
+  const zoneLabel = districtValue ? getZoneLabel(districtValue) : '';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+    <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8" noValidate>
       <fieldset className="space-y-4">
-        <legend className="font-bn-heading text-xl font-bold text-primary mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
           {CHECKOUT.customerSection}
         </legend>
 
-        <Field label={CHECKOUT.nameLabel} error={showErrors ? errors.name : undefined} required>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => updateField('name', e.target.value)}
-            placeholder={CHECKOUT.namePlaceholder}
-            className={inputClass(showErrors && !!errors.name)}
-            autoComplete="name"
-          />
-        </Field>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label={CHECKOUT.nameLabel} error={showErrors ? errors.name : undefined} required>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => updateField('name', e.target.value)}
+              placeholder={CHECKOUT.namePlaceholder}
+              className={inputClass(showErrors && !!errors.name)}
+              autoComplete="name"
+            />
+          </Field>
 
-        <Field label={CHECKOUT.phoneLabel} error={showErrors ? errors.phone : undefined} required>
-          <input
-            type="tel"
-            inputMode="tel"
-            value={form.phone}
-            onChange={(e) => updateField('phone', e.target.value)}
-            placeholder={CHECKOUT.phonePlaceholder}
-            className={inputClass(showErrors && !!errors.phone)}
-            autoComplete="tel"
-          />
-        </Field>
+          <Field label={CHECKOUT.phoneLabel} error={showErrors ? errors.phone : undefined} required>
+            <input
+              type="tel"
+              inputMode="tel"
+              value={form.phone}
+              onChange={(e) => updateField('phone', e.target.value)}
+              placeholder={CHECKOUT.phonePlaceholder}
+              className={inputClass(showErrors && !!errors.phone)}
+              autoComplete="tel"
+            />
+          </Field>
+        </div>
 
         <Field label={CHECKOUT.emailLabel}>
           <input
@@ -155,9 +172,29 @@ export function CheckoutForm({
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="font-bn-heading text-xl font-bold text-primary mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
           {CHECKOUT.addressSection}
         </legend>
+
+        <DistrictSelector
+          value={form.district}
+          onChange={(d) => updateField('district', d)}
+          error={showErrors ? errors.district : undefined}
+        />
+
+        {zoneLabel && (
+          <p className="font-bn-body text-sm text-terracotta -mt-2">{zoneLabel}</p>
+        )}
+
+        <Field label={CHECKOUT.thanaLabel} error={showErrors ? errors.thana : undefined} required>
+          <input
+            type="text"
+            value={form.thana}
+            onChange={(e) => updateField('thana', e.target.value)}
+            placeholder={CHECKOUT.thanaPlaceholder}
+            className={inputClass(showErrors && !!errors.thana)}
+          />
+        </Field>
 
         <Field
           label={CHECKOUT.addressLabel}
@@ -173,31 +210,6 @@ export function CheckoutForm({
           />
         </Field>
 
-        <Field label={CHECKOUT.cityLabel} error={showErrors ? errors.city : undefined} required>
-          <select
-            value={form.city}
-            onChange={(e) => updateField('city', e.target.value)}
-            className={inputClass(showErrors && !!errors.city)}
-          >
-            <option value="">{CHECKOUT.cityPlaceholder}</option>
-            {CHECKOUT.cities.map((city) => (
-              <option key={city.value} value={city.value}>
-                {city.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label={CHECKOUT.postcodeLabel}>
-          <input
-            type="text"
-            value={form.postcode}
-            onChange={(e) => updateField('postcode', e.target.value)}
-            placeholder={CHECKOUT.postcodePlaceholder}
-            className={inputClass()}
-          />
-        </Field>
-
         <Field label={CHECKOUT.noteLabel}>
           <textarea
             value={form.note}
@@ -210,7 +222,7 @@ export function CheckoutForm({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="font-bn-heading text-xl font-bold text-primary mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
           {CHECKOUT.paymentSection}
         </legend>
 
@@ -219,7 +231,9 @@ export function CheckoutForm({
             id="pay-cod"
             checked={form.paymentMethod === 'cod'}
             onChange={() => updateField('paymentMethod', 'cod')}
-            label={`💵 ${CHECKOUT.paymentCod}`}
+            title={CHECKOUT.paymentCod}
+            subtitle="পণ্য হাতে পেয়ে পেমেন্ট করুন"
+            badge="💵"
           />
         )}
         {settings.bkashEnabled && (
@@ -227,7 +241,10 @@ export function CheckoutForm({
             id="pay-bkash"
             checked={form.paymentMethod === 'bkash'}
             onChange={() => updateField('paymentMethod', 'bkash')}
-            label={`📱 ${CHECKOUT.paymentBkash}`}
+            title={CHECKOUT.paymentBkash}
+            subtitle={`Send money to: ${settings.bkashMerchantNumber || '01307-777733'}`}
+            badge="bKash"
+            badgeClass="text-pink-600 font-bold"
           />
         )}
         {settings.nagadEnabled && (
@@ -235,13 +252,16 @@ export function CheckoutForm({
             id="pay-nagad"
             checked={form.paymentMethod === 'nagad'}
             onChange={() => updateField('paymentMethod', 'nagad')}
-            label={`📱 ${CHECKOUT.paymentNagad}`}
+            title={CHECKOUT.paymentNagad}
+            subtitle={`Send money to: ${settings.nagadMerchantNumber || '01307-777733'}`}
+            badge="Nagad"
+            badgeClass="text-orange-600 font-bold"
           />
         )}
 
         {(form.paymentMethod === 'bkash' || form.paymentMethod === 'nagad') && (
-          <div className="rounded-lg bg-secondary/80 p-4 space-y-3">
-            <p className="font-bn-body text-sm text-primary leading-relaxed">
+          <div className="space-y-3 rounded-lg border border-border-subtle bg-cream/60 p-4">
+            <p className="font-bn-body text-sm text-charcoal leading-relaxed">
               {CHECKOUT.paymentInstruction.replace('{number}', paymentNumber)}
             </p>
             <Field
@@ -261,18 +281,20 @@ export function CheckoutForm({
         )}
       </fieldset>
 
-      <div className="space-y-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full min-h-14 rounded-lg bg-accent text-white font-bn-body text-lg font-semibold hover:bg-[#7a6549] disabled:opacity-60 transition-colors"
-        >
-          {isSubmitting ? CHECKOUT.submitting : CHECKOUT.submit}
-        </button>
-        <p className="font-bn-body text-xs text-center text-text-light leading-relaxed">
-          {CHECKOUT.terms}
-        </p>
-      </div>
+      {!hideSubmitButton && (
+        <div className="space-y-3 lg:hidden">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full min-h-14 rounded-lg bg-terracotta font-bn-body text-lg font-semibold text-white hover:opacity-90 disabled:opacity-60 transition"
+          >
+            {isSubmitting ? CHECKOUT.submitting : CHECKOUT.submit}
+          </button>
+          <p className="font-bn-body text-xs text-center text-text-light leading-relaxed">
+            {CHECKOUT.terms}
+          </p>
+        </div>
+      )}
     </form>
   );
 }
@@ -290,9 +312,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block font-bn-body text-base font-medium text-primary mb-1.5">
+      <label className="block font-bn-body text-base font-medium text-charcoal mb-1.5">
         {label}
-        {required && <span className="text-accent ml-0.5">*</span>}
+        {required && <span className="text-terracotta ml-0.5">*</span>}
       </label>
       {children}
       {error && (
@@ -306,8 +328,8 @@ function Field({
 
 function inputClass(hasError?: boolean) {
   return cn(
-    'w-full min-h-12 rounded-lg border px-4 font-bn-body text-base bg-background text-primary',
-    'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent',
+    'w-full min-h-12 rounded-lg border px-4 font-bn-body text-base bg-white text-charcoal',
+    'focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta',
     hasError ? 'border-red-500' : 'border-border-subtle'
   );
 }
@@ -316,19 +338,25 @@ function PaymentOption({
   id,
   checked,
   onChange,
-  label,
+  title,
+  subtitle,
+  badge,
+  badgeClass,
 }: {
   id: string;
   checked: boolean;
   onChange: () => void;
-  label: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  badgeClass?: string;
 }) {
   return (
     <label
       htmlFor={id}
       className={cn(
-        'flex items-center gap-3 min-h-14 px-4 rounded-xl border-2 cursor-pointer transition-colors',
-        checked ? 'border-accent bg-accent/5' : 'border-border-subtle bg-background'
+        'flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition',
+        checked ? 'border-terracotta bg-cream' : 'border-border-subtle bg-white hover:border-neutral-300'
       )}
     >
       <input
@@ -337,9 +365,13 @@ function PaymentOption({
         name="payment"
         checked={checked}
         onChange={onChange}
-        className="h-5 w-5 accent-accent"
+        className="h-5 w-5 accent-terracotta"
       />
-      <span className="font-bn-body text-base font-medium text-primary">{label}</span>
+      <div className="flex-1 min-w-0">
+        <div className="font-bn-body font-medium text-charcoal">{title}</div>
+        <div className="font-bn-body text-sm text-text-light">{subtitle}</div>
+      </div>
+      <span className={cn('text-sm shrink-0', badgeClass)}>{badge}</span>
     </label>
   );
 }
