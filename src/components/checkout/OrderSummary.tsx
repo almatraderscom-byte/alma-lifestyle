@@ -5,6 +5,7 @@ import { formatBdtPrice } from '@/lib/format-bn';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import type { CartItem } from '@/context/CartContext';
+import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
 interface OrderSummaryProps {
@@ -15,6 +16,7 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ items, subtotal, cityValue, className }: OrderSummaryProps) {
+  const { getLineUnitPrice, isLinePriceChanged, isLineUnavailable, livePrices } = useCart();
   const settings = useStoreSettings();
   const deliveryCharge = getDeliveryCharge(cityValue, settings);
   const total = subtotal + deliveryCharge;
@@ -31,19 +33,30 @@ export function OrderSummary({ items, subtotal, cityValue, className }: OrderSum
       </h2>
 
       <ul className="space-y-3 max-h-64 overflow-y-auto">
-        {items.map((item) => (
-          <li key={item.variantId} className="flex gap-3">
-            <div className={cn('h-14 w-11 shrink-0 rounded', item.image)} aria-hidden />
-            <div className="flex-1 min-w-0">
-              <p className="font-bn-body text-sm font-medium text-primary line-clamp-2">
-                {item.title}
-              </p>
-              <p className="font-bn-body text-xs text-text-light mt-0.5">
-                ×{item.quantity} — {formatBdtPrice(item.price * item.quantity)}
-              </p>
-            </div>
-          </li>
-        ))}
+        {items.map((item) => {
+          const unit = getLineUnitPrice(item);
+          return (
+            <li key={item.variantId} className="flex gap-3">
+              <div className={cn('h-14 w-11 shrink-0 rounded', item.image)} aria-hidden />
+              <div className="flex-1 min-w-0">
+                <p className="font-bn-body text-sm font-medium text-primary line-clamp-2">
+                  {livePrices[item.productId]?.title ?? item.title}
+                </p>
+                <p className="font-bn-body text-xs text-text-light mt-0.5">
+                  ×{item.quantity} — {formatBdtPrice(unit * item.quantity)}
+                </p>
+                {isLinePriceChanged(item) && (
+                  <p className="font-bn-body text-[10px] text-amber-700 mt-0.5">
+                    দাম আপডেট হয়েছে
+                  </p>
+                )}
+                {isLineUnavailable(item) && (
+                  <p className="font-bn-body text-[10px] text-red-700 mt-0.5">স্টকে নেই</p>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="space-y-2 pt-2 border-t border-border-subtle">

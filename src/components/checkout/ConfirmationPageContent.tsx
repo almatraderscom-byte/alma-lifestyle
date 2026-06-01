@@ -62,7 +62,7 @@ export function ConfirmationPageContent() {
                 {item.title} ×{item.quantity}
               </span>
               <span className="shrink-0 font-medium">
-                {formatBdtPrice(item.price * item.quantity)}
+                {formatBdtPrice((item.priceSnapshot ?? item.price ?? 0) * item.quantity)}
               </span>
             </li>
           ))}

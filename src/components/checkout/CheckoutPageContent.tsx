@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { CheckoutForm, type CheckoutFormData } from '@/components/checkout/CheckoutForm';
 import { OrderSummary, useOrderTotals } from '@/components/checkout/OrderSummary';
 import { useCart } from '@/context/CartContext';
+import { fetchLiveCartPrices } from '@/lib/cart-live-prices';
 import { BREADCRUMB, CART, CHECKOUT } from '@/lib/content';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
@@ -17,9 +18,18 @@ import { useStoreSettings } from '@/context/StoreSettingsContext';
 export function CheckoutPageContent() {
   const settings = useStoreSettings();
   const router = useRouter();
-  const { items, subtotal, hydrated, clearCart } = useCart();
+  const {
+    items,
+    subtotal,
+    hydrated,
+    clearCart,
+    getLineUnitPrice,
+    hasUnavailableItems,
+    refreshLivePrices,
+  } = useCart();
   const [cityValue, setCityValue] = useState('dhaka');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [priceWarning, setPriceWarning] = useState<string | null>(null);
 
   const { total } = useOrderTotals(subtotal, cityValue);
 
@@ -45,12 +55,36 @@ export function CheckoutPageContent() {
   }
 
   async function handleSubmit(data: CheckoutFormData) {
+    setPriceWarning(null);
     setIsSubmitting(true);
+
+    const livePrices = await fetchLiveCartPrices(items.map((i) => i.productId));
+    await refreshLivePrices();
+
+    const unavailable = items.filter((i) => livePrices[i.productId] && !livePrices[i.productId].isAvailable);
+    if (unavailable.length > 0) {
+      setPriceWarning('কিছু পণ্য স্টকে নেই। কার্ট থেকে সরিয়ে আবার চেষ্টা করুন।');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const pricedItems = items.map((item) => {
+      const unit =
+        livePrices[item.productId]?.price ?? getLineUnitPrice(item);
+      return { ...item, unitPriceBdt: unit };
+    });
+
+    const liveSubtotal = pricedItems.reduce(
+      (sum, i) => sum + i.unitPriceBdt * i.quantity,
+      0
+    );
+
     const deliveryCharge = getDeliveryCharge(data.city, settings);
-    const total = subtotal + deliveryCharge;
+    const total = liveSubtotal + deliveryCharge;
     const paymentMethod = getPaymentLabel(data.paymentMethod);
     const customerName = data.name.trim();
     const customerPhone = data.phone.trim();
+    const customerEmail = data.email.trim() || undefined;
     const cityLabel = getCityLabel(data.city);
 
     let orderNumber: string | undefined;
@@ -60,17 +94,19 @@ export function CheckoutPageContent() {
         const created = await createOrderApi({
           customerName,
           customerPhone,
+          customerEmail,
           shippingAddress: `${cityLabel}, Bangladesh`,
           shippingCity: cityLabel,
           paymentMethod,
-          items: items.map((item) => ({
+          items: pricedItems.map((item) => ({
+            productId: item.productId,
             productSlug: item.slug,
             quantity: item.quantity,
-            unitPriceBdt: item.price,
-            productTitle: item.title,
+            unitPriceBdt: item.unitPriceBdt,
+            productTitle: livePrices[item.productId]?.title ?? item.title,
             productSku: item.slug,
           })),
-          subtotalBdt: subtotal,
+          subtotalBdt: liveSubtotal,
           shippingCostBdt: deliveryCharge,
           totalBdt: total,
         });
@@ -81,8 +117,11 @@ export function CheckoutPageContent() {
     }
 
     const order = createPlacedOrder({
-      items: [...items],
-      subtotal,
+      items: pricedItems.map((item) => ({
+        ...item,
+        priceSnapshot: item.unitPriceBdt,
+      })),
+      subtotal: liveSubtotal,
       deliveryCharge,
       total,
       paymentMethod,
@@ -129,6 +168,17 @@ export function CheckoutPageContent() {
       <h1 className="font-bn-heading text-2xl sm:text-3xl font-bold text-primary mb-8">
         {CHECKOUT.title}
       </h1>
+
+      {priceWarning && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 font-bn-body text-sm text-amber-900">
+          {priceWarning}
+        </p>
+      )}
+      {hasUnavailableItems && !priceWarning && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-bn-body text-sm text-red-800">
+          কার্টে স্টকে নেই এমন পণ্য আছে — চেকআউটের আগে সরিয়ে ফেলুন।
+        </p>
+      )}
 
       <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-10 lg:items-start">
         <div className="order-2 lg:order-1">

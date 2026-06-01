@@ -18,6 +18,7 @@ import {
   getOrders,
 } from '@/server/db/queries/orders';
 import { getProductBySlug, getProductById } from '@/server/db/queries/products';
+import { getProductsLivePrices } from '@/server/db/queries/product-prices';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess, apiUnauthorized } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
@@ -105,9 +106,37 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    const livePrices = await getProductsLivePrices(
+      resolvedItems.map((i) => i.productId)
+    );
+
+    const pricedItems = resolvedItems.map((item) => {
+      const live = livePrices[item.productId];
+      if (!live) {
+        throw new Error(`Product pricing unavailable: ${item.productId}`);
+      }
+      if (!live.isAvailable) {
+        throw new Error(`Product out of stock: ${live.title}`);
+      }
+      return {
+        ...item,
+        unitPriceBdt: live.price,
+        productTitle: live.title || item.productTitle,
+      };
+    });
+
+    const serverSubtotal = pricedItems.reduce(
+      (sum, i) => sum + i.unitPriceBdt * i.quantity,
+      0
+    );
+    const serverTotal =
+      serverSubtotal + parsed.data.shippingCostBdt;
+
     const { order, items } = mapCreateOrderToDb(brandId, orderNumber, {
       ...parsed.data,
-      items: resolvedItems,
+      subtotalBdt: serverSubtotal,
+      totalBdt: serverTotal,
+      items: pricedItems,
     });
 
     const created = await createOrder({ order, items });

@@ -7,28 +7,42 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from 'react';
+import {
+  cartLinePriceChanged,
+  fetchLiveCartPrices,
+  getCartLineUnitPrice,
+  isCartLineUnavailable,
+  type LivePriceMap,
+} from '@/lib/cart-live-prices';
 
 const STORAGE_KEY = 'alma-lifestyle-cart';
+const LIVE_PRICE_POLL_MS = 30_000;
 
 export interface CartItem {
   productId: string;
   variantId: string;
   title: string;
-  price: number;
+  /** Price (BDT) when item was added — used to detect admin price changes */
+  priceSnapshot: number;
   quantity: number;
   color: string;
   size: string;
   image: string;
   slug: string;
-  /** Links cart lines added as one family set purchase */
   familySetId?: string;
   familySetLabel?: string;
+  /** @deprecated use priceSnapshot — migrated on load */
+  price?: number;
 }
 
-export type AddToCartInput = Omit<CartItem, 'variantId' | 'quantity'> & {
+export type AddToCartInput = Omit<CartItem, 'variantId' | 'quantity' | 'priceSnapshot'> & {
   quantity?: number;
+  priceSnapshot?: number;
+  /** @deprecated use priceSnapshot */
+  price?: number;
 };
 
 interface CartState {
@@ -47,12 +61,23 @@ function buildVariantId(productId: string, color: string, size: string): string 
   return `${productId}::${color}::${size}`;
 }
 
+function normalizeCartItem(raw: CartItem): CartItem {
+  const priceSnapshot = raw.priceSnapshot ?? raw.price ?? 0;
+  return { ...raw, priceSnapshot };
+}
+
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'HYDRATE':
-      return { ...state, items: action.items, hydrated: true };
+      return {
+        ...state,
+        items: action.items.map(normalizeCartItem),
+        hydrated: true,
+      };
     case 'ADD_ITEM': {
       const quantity = Math.min(10, Math.max(1, action.item.quantity ?? 1));
+      const priceSnapshot =
+        action.item.priceSnapshot ?? action.item.price ?? 0;
       const variantId = buildVariantId(
         action.item.productId,
         action.item.color,
@@ -77,6 +102,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             ...action.item,
             variantId,
             quantity,
+            priceSnapshot,
           },
         ],
       };
@@ -105,8 +131,16 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 interface CartContextValue {
   items: CartItem[];
   hydrated: boolean;
+  livePrices: LivePriceMap;
+  livePricesLoading: boolean;
   itemCount: number;
   subtotal: number;
+  getLineUnitPrice: (item: CartItem) => number;
+  isLineUnavailable: (item: CartItem) => boolean;
+  isLinePriceChanged: (item: CartItem) => boolean;
+  hasUnavailableItems: boolean;
+  hasPriceChanges: boolean;
+  refreshLivePrices: () => Promise<void>;
   addItem: (item: AddToCartInput) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
@@ -121,13 +155,15 @@ function loadFromStorage(): CartItem[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as CartItem[];
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (i) =>
-        i &&
-        typeof i.variantId === 'string' &&
-        typeof i.price === 'number' &&
-        typeof i.quantity === 'number'
-    );
+    return parsed
+      .filter(
+        (i) =>
+          i &&
+          typeof i.variantId === 'string' &&
+          typeof i.productId === 'string' &&
+          typeof i.quantity === 'number'
+      )
+      .map(normalizeCartItem);
   } catch {
     return [];
   }
@@ -135,7 +171,8 @@ function loadFromStorage(): CartItem[] {
 
 function saveToStorage(items: CartItem[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    const lean = items.map(({ price, ...rest }) => rest);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lean));
   } catch {
     /* ignore quota errors */
   }
@@ -146,6 +183,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items: [],
     hydrated: false,
   });
+  const [livePrices, setLivePrices] = useState<LivePriceMap>({});
+  const [livePricesLoading, setLivePricesLoading] = useState(false);
+
+  // useState import missing - need to add useState to imports
 
   useEffect(() => {
     dispatch({ type: 'HYDRATE', items: loadFromStorage() });
@@ -156,6 +197,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
       saveToStorage(state.items);
     }
   }, [state.items, state.hydrated]);
+
+  const refreshLivePrices = useCallback(async () => {
+    const ids = state.items.map((i) => i.productId);
+    if (!ids.length) {
+      setLivePrices({});
+      return;
+    }
+    setLivePricesLoading(true);
+    try {
+      const prices = await fetchLiveCartPrices(ids);
+      setLivePrices(prices);
+    } finally {
+      setLivePricesLoading(false);
+    }
+  }, [state.items]);
+
+  useEffect(() => {
+    if (!state.hydrated || state.items.length === 0) return;
+    void refreshLivePrices();
+    const interval = setInterval(() => void refreshLivePrices(), LIVE_PRICE_POLL_MS);
+    return () => clearInterval(interval);
+  }, [state.hydrated, state.items, refreshLivePrices]);
+
+  const getLineUnitPrice = useCallback(
+    (item: CartItem) => getCartLineUnitPrice(item, livePrices),
+    [livePrices]
+  );
+
+  const isLineUnavailable = useCallback(
+    (item: CartItem) => isCartLineUnavailable(item, livePrices),
+    [livePrices]
+  );
+
+  const isLinePriceChanged = useCallback(
+    (item: CartItem) => cartLinePriceChanged(item, livePrices),
+    [livePrices]
+  );
 
   const addItem = useCallback((item: AddToCartInput) => {
     dispatch({ type: 'ADD_ITEM', item });
@@ -179,16 +257,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const subtotal = useMemo(
-    () => state.items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [state.items]
+    () =>
+      state.items.reduce(
+        (sum, i) => sum + getCartLineUnitPrice(i, livePrices) * i.quantity,
+        0
+      ),
+    [state.items, livePrices]
+  );
+
+  const hasUnavailableItems = useMemo(
+    () => state.items.some((i) => isCartLineUnavailable(i, livePrices)),
+    [state.items, livePrices]
+  );
+
+  const hasPriceChanges = useMemo(
+    () => state.items.some((i) => cartLinePriceChanged(i, livePrices)),
+    [state.items, livePrices]
   );
 
   const value = useMemo(
     () => ({
       items: state.items,
       hydrated: state.hydrated,
+      livePrices,
+      livePricesLoading,
       itemCount,
       subtotal,
+      getLineUnitPrice,
+      isLineUnavailable,
+      isLinePriceChanged,
+      hasUnavailableItems,
+      hasPriceChanges,
+      refreshLivePrices,
       addItem,
       removeItem,
       updateQuantity,
@@ -197,8 +297,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [
       state.items,
       state.hydrated,
+      livePrices,
+      livePricesLoading,
       itemCount,
       subtotal,
+      getLineUnitPrice,
+      isLineUnavailable,
+      isLinePriceChanged,
+      hasUnavailableItems,
+      hasPriceChanges,
+      refreshLivePrices,
       addItem,
       removeItem,
       updateQuantity,

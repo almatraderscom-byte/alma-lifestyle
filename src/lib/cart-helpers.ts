@@ -25,7 +25,7 @@ export function catalogToCartItem(
   return {
     productId: product.id,
     title: product.title,
-    price: product.price,
+    priceSnapshot: product.price,
     quantity: options?.quantity ?? 1,
     color,
     size: options?.size ?? getDefaultSize(product),

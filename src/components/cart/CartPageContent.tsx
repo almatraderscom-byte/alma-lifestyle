@@ -17,7 +17,19 @@ import { CATALOG_PRODUCTS, toCardProduct } from '@/lib/products-data';
 import { cn } from '@/lib/utils';
 
 export function CartPageContent() {
-  const { items, itemCount, subtotal, hydrated, updateQuantity, removeItem } = useCart();
+  const {
+    items,
+    itemCount,
+    subtotal,
+    hydrated,
+    updateQuantity,
+    removeItem,
+    getLineUnitPrice,
+    isLineUnavailable,
+    isLinePriceChanged,
+    hasUnavailableItems,
+    livePrices,
+  } = useCart();
 
   const deliveryCharge = getDeliveryCharge('dhaka');
   const total = subtotal + deliveryCharge;
@@ -31,11 +43,12 @@ export function CartPageContent() {
 
   const whatsappMessage = useMemo(() => {
     if (items.length === 0) return SITE.whatsappPrefill;
-    const lines = items.map(
-      (i) => `• ${i.title} (${i.color}, ${i.size}) x${i.quantity} — ${formatBdtPrice(i.price * i.quantity)}`
-    );
+    const lines = items.map((i) => {
+      const unit = getLineUnitPrice(i);
+      return `• ${i.title} (${i.color}, ${i.size}) x${i.quantity} — ${formatBdtPrice(unit * i.quantity)}`;
+    });
     return `আসসালামু আলাইকুম, আমি ALMA Lifestyle থেকে অর্ডার করতে চাই:\n\n${lines.join('\n')}\n\nমোট: ${formatBdtPrice(subtotal)}`;
-  }, [items, subtotal]);
+  }, [items, subtotal, getLineUnitPrice]);
 
   const whatsappHref = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
@@ -93,7 +106,11 @@ export function CartPageContent() {
       <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-10 lg:items-start">
         <ul className="space-y-4">
           {items.map((item) => {
-            const lineTotal = item.price * item.quantity;
+            const unitPrice = getLineUnitPrice(item);
+            const lineTotal = unitPrice * item.quantity;
+            const unavailable = isLineUnavailable(item);
+            const priceChanged = isLinePriceChanged(item);
+            const displayTitle = livePrices[item.productId]?.title ?? item.title;
             return (
               <li
                 key={item.variantId}
@@ -110,14 +127,24 @@ export function CartPageContent() {
                         href={`/products/${item.slug}`}
                         className="font-bn-body text-base font-medium text-primary line-clamp-2 hover:text-accent"
                       >
-                        {item.title}
+                        {displayTitle}
                       </Link>
                       <p className="font-bn-body text-sm text-text-light mt-0.5">
                         {formatVariantLabel(item.color, item.size)}
                       </p>
                       <p className="font-bn-heading text-lg font-bold text-primary mt-1">
-                        {formatBdtPrice(item.price)}
+                        {formatBdtPrice(unitPrice)}
                       </p>
+                      {priceChanged && (
+                        <p className="font-bn-body text-xs text-amber-700 mt-1">
+                          দাম পরিবর্তিত হয়েছে (পূর্বে {formatBdtPrice(item.priceSnapshot)})
+                        </p>
+                      )}
+                      {unavailable && (
+                        <p className="font-bn-body text-xs text-red-700 mt-1 bg-red-50 rounded px-2 py-1">
+                          ⚠️ এই পণ্যটি এখন স্টকে নেই
+                        </p>
+                      )}
                     </div>
                     <p className="font-bn-heading text-lg font-bold text-primary shrink-0">
                       {formatBdtPrice(lineTotal)}
@@ -202,9 +229,20 @@ export function CartPageContent() {
               </button>
             </div>
 
+            {hasUnavailableItems && (
+              <p className="font-bn-body text-sm text-red-700 text-center">
+                স্টকে নেই এমন পণ্য সরিয়ে চেকআউট করুন
+              </p>
+            )}
             <Link
-              href="/checkout"
-              className="flex w-full min-h-14 items-center justify-center rounded-lg bg-accent text-white font-bn-body text-lg font-semibold hover:bg-[#7a6549] transition-colors"
+              href={hasUnavailableItems ? '#' : '/checkout'}
+              aria-disabled={hasUnavailableItems}
+              className={cn(
+                'flex w-full min-h-14 items-center justify-center rounded-lg font-bn-body text-lg font-semibold transition-colors',
+                hasUnavailableItems
+                  ? 'pointer-events-none bg-neutral-300 text-neutral-500'
+                  : 'bg-accent text-white hover:bg-[#7a6549]'
+              )}
             >
               {CART.checkout}
             </Link>
