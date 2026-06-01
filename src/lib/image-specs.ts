@@ -22,7 +22,7 @@ export const IMAGE_SPECS = {
     label: 'Brand Logo',
     recommended: { width: 200, height: 60 },
     aspectRatio: '10:3 (horizontal)',
-    maxSizeMB: 1,
+    maxSizeMB: 2,
     acceptedFormats: ['png', 'webp'],
     description: 'Main logo shown in header and footer',
     tips: [
@@ -37,7 +37,7 @@ export const IMAGE_SPECS = {
     label: 'Favicon (Browser Tab Icon)',
     recommended: { width: 512, height: 512 },
     aspectRatio: '1:1 (square)',
-    maxSizeMB: 0.5,
+    maxSizeMB: 1,
     acceptedFormats: ['png', 'webp'],
     description: 'Small icon shown in browser tabs',
     tips: [

@@ -4,8 +4,8 @@
 
 | Image Type | Dimensions | Aspect Ratio | Max Size |
 |------------|------------|--------------|----------|
-| Logo | 200×60 | 10:3 | 1MB |
-| Favicon | 512×512 | 1:1 | 0.5MB |
+| Logo | 200×60 | 10:3 | 2MB |
+| Favicon | 512×512 | 1:1 | 1MB |
 | Hero Banner | 1920×1080 | 16:9 | 4MB |
 | Product Main | 1200×1500 | 4:5 | 3MB |
 | Product Gallery | 1200×1500 | 4:5 | 3MB |
