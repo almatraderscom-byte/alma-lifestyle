@@ -98,6 +98,10 @@ export function migrateLegacySettings(raw: Record<string, unknown>): AppSettings
   return {
     ...defaults,
     storeName: String(raw.storeName ?? defaults.storeName),
+    tagline: String(raw.tagline ?? defaults.tagline),
+    logoUrl: String(raw.logoUrl ?? defaults.logoUrl),
+    faviconUrl: String(raw.faviconUrl ?? defaults.faviconUrl),
+    seoDefaultOgImageUrl: String(raw.seoDefaultOgImageUrl ?? defaults.seoDefaultOgImageUrl),
     contactEmail: String(raw.supportEmail ?? raw.contactEmail ?? defaults.contactEmail),
     contactPhone: String(raw.supportPhone ?? raw.contactPhone ?? defaults.contactPhone),
     usdExchangeRate:

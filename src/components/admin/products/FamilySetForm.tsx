@@ -256,6 +256,7 @@ export function FamilySetForm() {
                 value={state.memberImages[slot] ?? null}
                 onChange={(img) => setMemberImage(slot, img)}
                 uploadFolder={`family-sets/${designSlug || 'draft'}`}
+                specKey={slot === 'family_group' ? 'familyMatchingMain' : 'familyMatchingCard'}
               />
             ))}
           </div>

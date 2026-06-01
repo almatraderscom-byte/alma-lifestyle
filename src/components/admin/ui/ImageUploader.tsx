@@ -6,6 +6,12 @@ import { uid } from '@/lib/admin-store';
 import { uploadImageApi } from '@/lib/admin-api';
 import { shouldUseApi } from '@/lib/data-source';
 import { prepareImageForUpload } from '@/lib/prepare-image-upload';
+import {
+  getImageDimensionWarnings,
+  validateImageFileBasics,
+} from '@/lib/image-upload-validation';
+import { getImageSpec } from '@/lib/image-specs';
+import { ImageSpecGuidance } from '@/components/admin/SmartImageUpload';
 import { cn } from '@/lib/utils';
 
 interface ImageUploaderProps {
@@ -14,22 +20,37 @@ interface ImageUploaderProps {
 }
 
 export function ImageUploader({ images, onChange }: ImageUploaderProps) {
+  const primarySpec = getImageSpec('productPrimary');
+  const gallerySpec = getImageSpec('productGallery');
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
 
   const processFiles = useCallback(
     async (files: FileList | null) => {
       if (!files?.length) return;
       setUploading(true);
+      setError('');
+      setWarning('');
 
       try {
         const newImages: ProductImage[] = [];
+        const warnings: string[] = [];
 
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
-          let url: string;
+          const spec = images.length === 0 && i === 0 ? primarySpec : gallerySpec;
+          const basics = validateImageFileBasics(file, spec);
+          if (basics.error) {
+            setError(basics.error);
+            return;
+          }
+          const dimWarning = await getImageDimensionWarnings(file, spec);
+          if (dimWarning) warnings.push(dimWarning);
 
+          let url: string;
           if (shouldUseApi()) {
             const prepared = await prepareImageForUpload(file);
             url = await uploadImageApi(prepared, 'products');
@@ -49,11 +70,14 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
           });
         }
 
+        if (warnings.length) {
+          setWarning(warnings[0]);
+        }
+
         const merged = [...images, ...newImages].map((img, idx) => ({
           ...img,
           sortOrder: idx,
-          isFeatured:
-            idx === 0 ? true : img.isFeatured && !newImages.some((n) => n.isFeatured),
+          isFeatured: idx === 0 ? true : img.isFeatured && !newImages.some((n) => n.isFeatured),
         }));
         if (!merged.some((m) => m.isFeatured) && merged[0]) {
           merged[0].isFeatured = true;
@@ -63,7 +87,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         setUploading(false);
       }
     },
-    [images, onChange]
+    [gallerySpec, images, onChange, primarySpec]
   );
 
   function setFeatured(id: string) {
@@ -85,6 +109,20 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
 
   return (
     <div className="space-y-4">
+      <ImageSpecGuidance specKey="productPrimary" />
+      <ImageSpecGuidance specKey="productGallery" />
+
+      {error && (
+        <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          ❌ {error}
+        </div>
+      )}
+      {warning && (
+        <div className="rounded border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+          ⚠️ {warning}
+        </div>
+      )}
+
       <div
         role="button"
         tabIndex={0}
@@ -114,13 +152,16 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         ) : (
           <>
             <p className="text-sm font-medium text-neutral-700">Drop images here or click to upload</p>
-            <p className="text-xs text-neutral-500 mt-1">PNG, JPG, WebP — auto-compressed to 4MB max</p>
+            <p className="text-xs text-neutral-500 mt-1">
+              {primarySpec.recommended.width}×{primarySpec.recommended.height}px (main) • Max{' '}
+              {primarySpec.maxSizeMB}MB
+            </p>
           </>
         )}
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           className="hidden"
           disabled={uploading}
@@ -135,7 +176,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
             .map((img) => (
               <div
                 key={img.id}
-                className="group relative aspect-square rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100"
+                className="group relative aspect-[4/5] rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100"
               >
                 {img.url ? (
                   // eslint-disable-next-line @next/next/no-img-element

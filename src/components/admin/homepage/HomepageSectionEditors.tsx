@@ -66,6 +66,7 @@ export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
         <Input label="Secondary CTA link" value={data.ctaSecondaryHref} onChange={(e) => onChange({ ...data, ctaSecondaryHref: e.target.value })} />
       </div>
       <HomepageImageUpload
+        specKey="heroImage"
         label="Background image"
         folder="hero"
         value={data.backgroundImageUrl}
@@ -139,6 +140,7 @@ function CategoryCardEditor({
         <Input label="Subtitle" value={card.subtitle} onChange={(e) => onChange({ ...card, subtitle: e.target.value })} />
       )}
       <HomepageImageUpload
+        specKey="categoryCard"
         label="Background image"
         folder={`categories/${card.categorySlug || 'card'}`}
         value={card.imageUrl}
@@ -284,6 +286,7 @@ export function BrandStoryEditor({ data, onChange }: EditorProps<BrandStorySecti
           key={index}
           label={meta.label}
           description={meta.description}
+          specKey={index === 0 ? 'brandStoryMain' : 'brandStorySmall'}
           folder={`brand-story/slot-${index + 1}`}
           slot={images[index] ?? { url: '', caption: '', alt: '', imageHint: meta.description }}
           onChange={(slot) => updateImage(index, slot)}
@@ -350,6 +353,7 @@ export function CollectionBannerEditor({ data, onChange }: EditorProps<Collectio
       <Input label="Promo text" value={data.promo} onChange={(e) => onChange({ ...data, promo: e.target.value })} />
       <ColorSwatchPicker label="Background color" value={data.bgClass} onChange={(bgClass: CategoryColorClass) => onChange({ ...data, bgClass })} />
       <HomepageImageUpload
+        specKey="collectionBanner"
         label="Background image (optional)"
         folder="collection-banner"
         value={data.backgroundImageUrl}
@@ -396,6 +400,7 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
             )}
           </div>
           <HomepageImageUpload
+            specKey="communityPhoto"
             folder={`community/${tile.id}`}
             value={tile.imageUrl}
             onChange={(url) => updateTile(tile.id, { imageUrl: url })}
@@ -491,6 +496,7 @@ export function OurProcessEditor({
             }
           />
           <HomepageImageUpload
+            specKey="ourProcessStep"
             label="Step image"
             folder={`our-process/step-${i + 1}`}
             value={step.imageUrl}
