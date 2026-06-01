@@ -10,6 +10,7 @@ import {
 } from '@/server/db/queries/collections-admin';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import { revalidateCollectionPages } from '@/lib/storefront/revalidate';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -43,6 +44,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const ids = await getCollectionProductIds(id);
+    revalidateCollectionPages(updated.slug);
     return apiSuccess(mapDbCollectionToAdmin(updated, ids));
   });
 }
@@ -50,7 +52,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
+    const existing = await getCollectionById(id);
     await deleteCollection(id);
+    revalidateCollectionPages(existing?.slug);
     return apiSuccess({ id, deleted: true });
   });
 }

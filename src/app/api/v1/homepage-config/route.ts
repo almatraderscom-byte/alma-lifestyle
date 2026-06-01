@@ -1,4 +1,3 @@
-import { revalidatePath } from 'next/cache';
 import type { NextRequest } from 'next/server';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import {
@@ -10,6 +9,7 @@ import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-c
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import { revalidateHomepage } from '@/lib/storefront/revalidate';
 
 export async function GET() {
   if (!isSupabaseAdminConfigured()) {
@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest) {
     console.log('[Config API] Saving homepage, hero backgroundImageUrl:', 
       hero?.id === 'hero' ? hero.data.backgroundImageUrl : '(no hero)');
     const saved = await saveHomepageConfig(normalized);
-    revalidatePath('/');
+    revalidateHomepage();
     return apiSuccess(saved);
   });
 }

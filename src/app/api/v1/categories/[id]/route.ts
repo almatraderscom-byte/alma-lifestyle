@@ -8,6 +8,7 @@ import {
 } from '@/server/db/queries/categories-admin';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import { revalidateCategoryPages } from '@/lib/storefront/revalidate';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -33,6 +34,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const updated = await updateCategory(id, parsed.data);
     if (!updated) return apiNotFound('Category');
+    revalidateCategoryPages();
     return apiSuccess(mapDbCategoryToAdmin(updated));
   });
 }
@@ -41,6 +43,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
     await deleteCategory(id);
+    revalidateCategoryPages();
     return apiSuccess({ id, deleted: true });
   });
 }

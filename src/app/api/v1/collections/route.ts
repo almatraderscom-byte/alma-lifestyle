@@ -11,6 +11,7 @@ import { getPublishedCollections } from '@/server/db/queries/collections';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import { revalidateCollectionPages } from '@/lib/storefront/revalidate';
 
 export async function GET(request: NextRequest) {
   const admin = request.nextUrl.searchParams.get('admin') === 'true';
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const productIds = await getCollectionProductIds(created.id);
+    revalidateCollectionPages(created.slug);
     return apiSuccess(mapDbCollectionToAdmin(created, productIds), { status: 201 });
   });
 }

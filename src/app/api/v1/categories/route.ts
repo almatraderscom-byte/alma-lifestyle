@@ -6,6 +6,7 @@ import { getCategories } from '@/server/db/queries/categories';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
+import { revalidateCategoryPages } from '@/lib/storefront/revalidate';
 
 export async function GET(request: NextRequest) {
   const admin = request.nextUrl.searchParams.get('admin') === 'true';
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
       active: parsed.data.active ?? true,
     });
 
+    revalidateCategoryPages();
     return apiSuccess(mapDbCategoryToAdmin(created), { status: 201 });
   });
 }

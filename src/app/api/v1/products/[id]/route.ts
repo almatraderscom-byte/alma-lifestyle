@@ -17,6 +17,7 @@ import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { tryRequireAdmin } from '@/server/api/auth';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import type { AdminProduct } from '@/lib/admin-store';
+import { revalidateProductPages } from '@/lib/storefront/revalidate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const updated = await updateAdminProduct(id, product);
     if (!updated) return apiNotFound('Product');
+    revalidateProductPages(updated.slug);
     return apiSuccess(updated);
   });
 }
@@ -93,7 +95,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return apiNotFound('Product');
   }
   return withAdmin(request, async () => {
+    const existing = await getAdminProductById(id);
     await softDeleteProduct(id);
+    revalidateProductPages(existing?.slug);
     return apiSuccess({ id, deleted: true });
   });
 }

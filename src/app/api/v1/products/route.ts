@@ -29,6 +29,7 @@ import type { AdminProduct } from '@/lib/admin-store';
 import type { ProductWithRelations } from '@/server/db/schema';
 import type { ProductType } from '@/lib/product-design-types';
 import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
+import { revalidateProductPages } from '@/lib/storefront/revalidate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -275,6 +276,7 @@ export async function POST(request: NextRequest) {
     };
 
     const created = await createAdminProduct(product);
+    revalidateProductPages(created.slug);
     return apiSuccess(created, { status: 201 });
   });
 }

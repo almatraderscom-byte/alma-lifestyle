@@ -58,13 +58,28 @@ function applyFrameOptions(request: NextRequest, response: NextResponse): NextRe
   return response;
 }
 
+function applyCacheHeaders(pathname: string, response: NextResponse): NextResponse {
+  if (pathname.startsWith('/admin')) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return response;
+  }
+
+  if (pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/collections')) {
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate');
+  }
+
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/v1')) {
     const limited = applyApiRateLimit(request);
     if (limited) return limited;
-    return applyFrameOptions(request, NextResponse.next());
+    const apiRes = NextResponse.next();
+    apiRes.headers.set('Cache-Control', 'no-store');
+    return applyFrameOptions(request, apiRes);
   }
 
   if (pathname.startsWith('/admin')) {
@@ -81,13 +96,19 @@ export function middleware(request: NextRequest) {
     if (!isAdminAuthenticated(request)) {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('from', pathname);
-      return applyFrameOptions(request, NextResponse.redirect(loginUrl));
+      return applyCacheHeaders(
+        pathname,
+        applyFrameOptions(request, NextResponse.redirect(loginUrl))
+      );
     }
 
-    return applyFrameOptions(request, NextResponse.next());
+    return applyCacheHeaders(
+      pathname,
+      applyFrameOptions(request, NextResponse.next())
+    );
   }
 
-  return applyFrameOptions(request, NextResponse.next());
+  return applyCacheHeaders(pathname, applyFrameOptions(request, NextResponse.next()));
 }
 
 export const config = {

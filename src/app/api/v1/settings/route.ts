@@ -5,6 +5,7 @@ import { getAppSettings, saveAppSettings } from '@/server/db/queries/homepage';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import { revalidateSettingsPages } from '@/lib/storefront/revalidate';
 
 function publicSettings(settings: AppSettings) {
   return {
@@ -60,6 +61,7 @@ export async function PUT(request: NextRequest) {
       ...body,
     });
 
+    revalidateSettingsPages();
     return apiSuccess(saved);
   });
 }

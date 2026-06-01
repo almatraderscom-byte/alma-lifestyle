@@ -3,6 +3,7 @@ import { ensureStorageBuckets } from '@/server/storage/ensure-buckets';
 import { uploadImage, validateImageFile } from '@/server/storage/upload';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin } from '@/server/api/handler';
+import { revalidateAfterUpload } from '@/lib/storefront/revalidate';
 
 export async function POST(request: NextRequest) {
   console.log('[Upload API] ========== Request received ==========');
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     const url = await uploadImage(file, folder, bucket);
     console.log('[Upload API] Public URL:', url);
+    revalidateAfterUpload(bucket);
     return apiSuccess({ url });
   });
 }
