@@ -7,18 +7,38 @@ import { ProductDetails } from '@/components/product/ProductDetails';
 import { ProductMatchingSetPDP } from '@/components/product/ProductMatchingSetPDP';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { BREADCRUMB, PDP } from '@/lib/content';
-import { CATALOG_PRODUCTS, toCardProduct, type CatalogProduct } from '@/lib/products-data';
+import {
+  CATALOG_PRODUCTS,
+  toCardProduct,
+  type CatalogProduct,
+} from '@/lib/products-data';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 
 interface ProductDetailViewProps {
   product: CatalogProduct;
+  catalogProducts?: CatalogProduct[];
 }
 
-export function ProductDetailView({ product }: ProductDetailViewProps) {
-  const related = CATALOG_PRODUCTS.filter(
-    (p) => p.categorySlug === product.categorySlug && p.slug !== product.slug
-  ).slice(0, 4);
+function pickRelatedAndRecent(
+  product: CatalogProduct,
+  catalog: CatalogProduct[]
+): { related: CatalogProduct[]; recent: CatalogProduct[] } {
+  const others = catalog.filter((p) => p.slug !== product.slug);
+  const related = others
+    .filter((p) => p.categorySlug === product.categorySlug)
+    .slice(0, 4);
+  const recent = others.slice(0, 4);
+  return { related, recent };
+}
 
-  const recent = CATALOG_PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 4);
+export function ProductDetailView({
+  product,
+  catalogProducts = [],
+}: ProductDetailViewProps) {
+  const catalog = shouldUseStaticDemoCatalog()
+    ? CATALOG_PRODUCTS
+    : catalogProducts;
+  const { related, recent } = pickRelatedAndRecent(product, catalog);
 
   return (
     <div className="bg-warm-white">

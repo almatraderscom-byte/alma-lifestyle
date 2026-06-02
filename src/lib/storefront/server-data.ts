@@ -6,7 +6,12 @@ import {
   getStaticCategoryNavItems,
   type HeaderNavItem,
 } from '@/lib/nav-menu';
-import { getProducts, getProductBySlug, getFeaturedProducts } from '@/server/db/queries/products';
+import {
+  getProducts,
+  getPublishedProductBySlug,
+  getFeaturedProducts,
+} from '@/server/db/queries/products';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
 import {
@@ -125,7 +130,7 @@ export async function resolveFeaturedProductsServer(
   const section = sanitizeFeaturedSectionData(data);
   const limit = section.productCount;
 
-  if (!isSupabaseAdminConfigured()) {
+  if (shouldUseStaticDemoCatalog()) {
     const { CATALOG_PRODUCTS } = await import('@/lib/products-data');
     return CATALOG_PRODUCTS.slice(0, limit).map((p, i) => ({
       ...toCardProduct(p),
@@ -236,7 +241,7 @@ export async function loadCatalogProductsServer(options?: {
   categoryId?: string;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
-  if (!isSupabaseAdminConfigured()) {
+  if (shouldUseStaticDemoCatalog()) {
     return { products: CATALOG_PRODUCTS, total: CATALOG_PRODUCTS.length };
   }
 
@@ -256,59 +261,67 @@ export async function loadCatalogProductsServer(options?: {
     const products = groupProductsForListing(result.data, catById);
 
     return { products, total: products.length };
-  } catch {
-    return { products: CATALOG_PRODUCTS, total: CATALOG_PRODUCTS.length };
+  } catch (err) {
+    console.error('[storefront] loadCatalogProductsServer failed:', err);
+    return { products: [], total: 0 };
   }
 }
 
 export async function loadProductBySlugServer(
   slug: string
 ): Promise<CatalogProduct | null> {
-  if (!isSupabaseAdminConfigured()) {
+  if (shouldUseStaticDemoCatalog()) {
     return getStaticProductBySlug(slug) ?? null;
   }
 
   try {
-    const group = await getDesignGroupBySlug(slug);
-    if (!group) return getStaticProductBySlug(slug) ?? null;
-
-    const row = group.members.find((m) => m.slug === slug) ?? group.anchor;
-    if (!row.published) return getStaticProductBySlug(slug) ?? null;
-
     const brandId = await getBrandId();
     const categories = await getCategories(brandId);
-    const category = categories.find((c) => c.id === row.category_id);
+    const categoryById = new Map(categories.map((c) => [c.id, c]));
 
-    const catalog = mapDbProductToCatalog(row, category);
-    if (group.members.length > 1) {
-      catalog.designGroupMembers = group.members.map((m, i) =>
-        mapDbProductToCatalog(m, category, i)
-      );
-      catalog.designGroupId = group.anchor.design_group_id ?? group.anchor.id;
-      catalog.designGroupName =
-        group.anchor.design_group_name ?? group.anchor.title;
+    const group = await getDesignGroupBySlug(slug);
+    if (group) {
+      const row = group.members.find((m) => m.slug === slug) ?? group.anchor;
+      const category = categoryById.get(row.category_id);
+
+      const catalog = mapDbProductToCatalog(row, category);
+      if (group.members.length > 1) {
+        catalog.designGroupMembers = group.members.map((m, i) =>
+          mapDbProductToCatalog(m, categoryById.get(m.category_id), i)
+        );
+        catalog.designGroupId = group.anchor.design_group_id ?? group.anchor.id;
+        catalog.designGroupName =
+          group.anchor.design_group_name ?? group.anchor.title;
+      }
+      return catalog;
     }
-    return catalog;
-  } catch {
-    return getStaticProductBySlug(slug) ?? null;
+
+    const simple = await getPublishedProductBySlug(slug);
+    if (!simple) return null;
+
+    return mapDbProductToCatalog(simple, categoryById.get(simple.category_id));
+  } catch (err) {
+    console.error('[storefront] loadProductBySlugServer failed:', slug, err);
+    return null;
   }
 }
 
 export async function loadAllProductSlugsServer(): Promise<string[]> {
-  if (!isSupabaseAdminConfigured()) {
+  if (shouldUseStaticDemoCatalog()) {
     return getStaticSlugs();
   }
 
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     return result.data.map((p) => p.slug);
-  } catch {
-    return getStaticSlugs();
+  } catch (err) {
+    console.error('[storefront] loadAllProductSlugsServer failed:', err);
+    return [];
   }
 }
 
 export async function loadFeaturedProductsServer(limit: number): Promise<CatalogProduct[]> {
-  if (!isSupabaseAdminConfigured()) {
+  if (shouldUseStaticDemoCatalog()) {
     return CATALOG_PRODUCTS.slice(0, limit);
   }
 
@@ -318,8 +331,9 @@ export async function loadFeaturedProductsServer(limit: number): Promise<Catalog
     const catById = new Map(categories.map((c) => [c.id, c]));
     const rows = await getFeaturedProducts(limit);
     return rows.map((row, i) => mapDbProductToCatalog(row, catById.get(row.category_id), i));
-  } catch {
-    return CATALOG_PRODUCTS.slice(0, limit);
+  } catch (err) {
+    console.error('[storefront] loadFeaturedProductsServer failed:', err);
+    return [];
   }
 }
 

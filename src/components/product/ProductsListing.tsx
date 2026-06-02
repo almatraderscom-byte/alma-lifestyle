@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductFiltersPanel } from '@/components/product/ProductFiltersPanel';
 import { BREADCRUMB, PRODUCTS_PAGE } from '@/lib/content';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import {
   CATALOG_PRODUCTS,
   CATEGORY_LABELS,
@@ -33,7 +34,9 @@ interface ProductsListingProps {
 }
 
 export function ProductsListing({ initialProducts }: ProductsListingProps) {
-  const catalogSource = initialProducts ?? CATALOG_PRODUCTS;
+  const catalogSource = shouldUseStaticDemoCatalog()
+    ? (initialProducts ?? CATALOG_PRODUCTS)
+    : (initialProducts ?? []);
   const searchParams = useSearchParams();
   const router = useRouter();
 

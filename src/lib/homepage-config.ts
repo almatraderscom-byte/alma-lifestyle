@@ -16,6 +16,7 @@ import {
   dedupeFeaturedAdminProducts,
   sanitizeFeaturedSectionData,
 } from '@/lib/featured-products';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import { shouldUseApi } from '@/lib/data-source';
 import type {
   CategoriesSectionData,
@@ -414,7 +415,7 @@ function getPublishedCatalogLocal(): AdminProduct[] {
 export function resolveFeaturedProducts(data: FeaturedSectionData): FeaturedProduct[] {
   const section = sanitizeFeaturedSectionData(data);
   if (shouldUseApi()) {
-    return HOME_FEATURED_PRODUCTS.slice(0, section.productCount);
+    return [];
   }
   const catalog = getPublishedCatalogLocal();
   let list: AdminProduct[] = [];
@@ -436,7 +437,9 @@ export function resolveFeaturedProducts(data: FeaturedSectionData): FeaturedProd
   }
 
   if (list.length === 0) {
-    return HOME_FEATURED_PRODUCTS.slice(0, section.productCount);
+    return shouldUseStaticDemoCatalog()
+      ? HOME_FEATURED_PRODUCTS.slice(0, section.productCount)
+      : [];
   }
 
   list = dedupeFeaturedAdminProducts(list, section.productCount);

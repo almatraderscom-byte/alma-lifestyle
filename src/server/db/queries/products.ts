@@ -142,6 +142,27 @@ export async function getProductBySlug(
   return sortProductRelations(data as ProductWithRelations);
 }
 
+/** Storefront PDP / slug routes — published and not soft-deleted. */
+export async function getPublishedProductBySlug(
+  slug: string
+): Promise<ProductWithRelations | null> {
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select(PRODUCT_RELATIONS_SELECT)
+    .eq('slug', slug)
+    .eq('published', true)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  assertNoError(error, 'getPublishedProductBySlug');
+
+  if (!data) {
+    return null;
+  }
+
+  return sortProductRelations(data as ProductWithRelations);
+}
+
 export async function getProductById(
   id: string
 ): Promise<ProductWithRelations | null> {
@@ -171,6 +192,7 @@ export async function getFeaturedProducts(
     .from('products')
     .select(PRODUCT_RELATIONS_SELECT)
     .eq('published', true)
+    .is('deleted_at', null)
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(limit);
 

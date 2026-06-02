@@ -16,7 +16,7 @@ export const SITE = {
 export const NAV = {
   shop: { label: 'দোকান', href: '/products' },
   newArrivals: { label: 'নতুন', href: '/new' },
-  collections: { label: 'কালেকশন', href: '/collections' },
+  collections: { label: 'কালেকশন', href: '/products' },
   about: { label: 'আমাদের সম্পর্কে', href: '/about' },
   categoriesLabel: 'Categories',
 } as const;
@@ -33,7 +33,7 @@ export const EDITORIAL_HERO = {
   title: 'আধুনিক পরিবারের প্রিমিয়াম পার্টনার',
   subtitle: 'প্রিমিয়াম মানে আপনার পরিবারের জন্য — এলিগেন্ট স্টাইল, সাশ্রয়ী দামে',
   ctaPrimary: 'View Collection',
-  ctaPrimaryHref: '/collections',
+  ctaPrimaryHref: '/products',
   ctaSecondary: 'গল্পটা জানুন →',
   ctaSecondaryHref: '/about',
   imageHint: 'Image: Editorial hero — model in maroon panjabi, soft natural light, full body',
@@ -290,7 +290,7 @@ export const COLLECTION_BANNER = {
   subtitle: 'এই ঈদে নিজেকে সাজান আভিজাত্যে',
   cta: 'কালেকশন দেখুন →',
   promo: 'সীমিত সময়ের জন্য — ২০% ছাড়',
-  href: '/collections',
+  href: '/products',
   imageHint: 'Image: Eid collection hero — family in festive panjabi, golden hour',
 } as const;
 

@@ -17,10 +17,16 @@ import {
   toBanglaNumber,
 } from '@/lib/format-bn';
 import { isFreeDelivery } from '@/lib/delivery';
+import type { FeaturedProduct } from '@/lib/content';
 import { CATALOG_PRODUCTS, toCardProduct } from '@/lib/products-data';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import { cn } from '@/lib/utils';
 
-export function CartPageContent() {
+interface CartPageContentProps {
+  recommendations?: FeaturedProduct[];
+}
+
+export function CartPageContent({ recommendations = [] }: CartPageContentProps) {
   const settings = useStoreSettings();
   const {
     items,
@@ -38,12 +44,13 @@ export function CartPageContent() {
 
   const freeDelivery = isFreeDelivery(subtotal, settings);
 
-  const recommendations = useMemo(() => {
+  const suggested = useMemo(() => {
     const inCart = new Set(items.map((i) => i.productId));
-    return CATALOG_PRODUCTS.filter((p) => !inCart.has(p.id))
-      .slice(0, 4)
-      .map(toCardProduct);
-  }, [items]);
+    const source = shouldUseStaticDemoCatalog()
+      ? CATALOG_PRODUCTS.map(toCardProduct)
+      : recommendations;
+    return source.filter((p) => !inCart.has(p.id)).slice(0, 4);
+  }, [items, recommendations]);
 
   const whatsappMessage = useMemo(() => {
     if (items.length === 0) return SITE.whatsappPrefill;
@@ -303,13 +310,13 @@ export function CartPageContent() {
           </motion.aside>
         </div>
 
-        {recommendations.length > 0 && (
+        {suggested.length > 0 && (
           <section className="mt-12 md:mt-16 border-t border-border-subtle pt-10">
             <h2 className="font-bn-heading text-xl font-bold text-charcoal mb-6">
               {CART.recommendationsTitle}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {recommendations.map((product, idx) => (
+              {suggested.map((product, idx) => (
                 <ProductCard key={product.id} product={product} index={idx} />
               ))}
             </div>
