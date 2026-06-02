@@ -5,6 +5,11 @@ export function assertNoError(
   context: string
 ): void {
   if (error) {
+    if (error.code === '23505') {
+      throw new Error(
+        'এই SKU আগে থেকে আছে। স্বয়ংক্রিয়ভাবে নতুন SKU তৈরি হবে।'
+      );
+    }
     throw new Error(`${context}: ${error.message} (${error.code})`);
   }
 }

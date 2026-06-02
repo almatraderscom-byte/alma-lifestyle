@@ -8,7 +8,8 @@ import {
   buildFamilySetProducts,
   validateFamilySetState,
   designSlugFromName,
-  skuPrefixForType,
+  categoryCodeFromSlug,
+  skuPreviewForType,
   FAMILY_MEMBER_TYPES,
   FAMILY_MEMBER_LABELS,
   FAMILY_CARD_BG,
@@ -25,7 +26,8 @@ import {
   GIRL_VARIANT_SIZE_BN,
   SIZE_PRESETS,
 } from '@/lib/product-design-types';
-import { getCategories, saveProduct } from '@/lib/admin-store';
+import { getCategories } from '@/lib/admin-store';
+import { createFamilySetApi } from '@/lib/admin-api';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
@@ -63,6 +65,11 @@ export function FamilySetForm() {
     () => (state.designName.trim() ? designSlugFromName(state.designName) : ''),
     [state.designName]
   );
+
+  const categoryCode = useMemo(() => {
+    const cat = categories.find((c) => c.id === state.categoryId);
+    return categoryCodeFromSlug(cat?.slug ?? 'panjabi');
+  }, [categories, state.categoryId]);
 
   useEffect(() => {
     void getCategories().then((cats) => {
@@ -121,27 +128,18 @@ export function FamilySetForm() {
     setProgress(steps);
     setSaving(true);
 
-    let rootId: string | undefined;
-    let created = 0;
-
     try {
       for (let i = 0; i < ordered.length; i++) {
         setProgress((prev) =>
           prev.map((s, idx) => (idx === i ? { ...s, status: 'loading' } : s))
         );
-        const saved = await saveProduct({
-          ...ordered[i],
-          designGroupId: rootId,
-        });
-        if (!rootId) {
-          rootId = saved.designGroupId ?? saved.id;
-        }
-        created++;
-        setProgress((prev) =>
-          prev.map((s, idx) => (idx === i ? { ...s, status: 'done' } : s))
-        );
       }
-      toast(`Family Set created! ${created} products added.`, 'success');
+
+      const result = await createFamilySetApi(ordered);
+      const saved = result.products ?? result.created ?? [];
+
+      setProgress((prev) => prev.map((s) => ({ ...s, status: 'done' as const })));
+      toast(`Family Set created! ${saved.length} products added.`, 'success');
       router.push('/admin/products');
     } catch (err) {
       setProgress((prev) =>
@@ -173,6 +171,22 @@ export function FamilySetForm() {
           <p className="text-xs text-neutral-500">
             URL base: <code className="bg-neutral-100 px-1">{designSlug}</code>
           </p>
+        )}
+        {designSlug && FAMILY_MEMBER_TYPES.some((t) => state.members[t].enabled) && (
+          <div className="mt-2 rounded-lg bg-neutral-50 p-3 text-sm text-neutral-600">
+            <p className="mb-1 font-medium text-neutral-800">SKU Preview</p>
+            <p className="mb-2 text-xs text-neutral-500">
+              Sequence (001, 002, …) is assigned automatically on save.
+            </p>
+            <ul className="space-y-1 text-xs font-mono">
+              {FAMILY_MEMBER_TYPES.filter((t) => state.members[t].enabled).map((type) => (
+                <li key={type}>
+                  {FAMILY_MEMBER_LABELS[type]}:{' '}
+                  {skuPreviewForType(designSlug, type, categoryCode)}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         <Textarea
           label="Description (Bangla) *"
@@ -267,7 +281,7 @@ export function FamilySetForm() {
         if (!state.members[type].enabled) return null;
         const cfg = state.members[type];
         const expanded = state.expanded[type];
-        const sku = designSlug ? skuPrefixForType(designSlug, type) : '—';
+        const sku = designSlug ? skuPreviewForType(designSlug, type, categoryCode) : '—';
 
         return (
           <section
@@ -329,7 +343,7 @@ export function FamilySetForm() {
                     </div>
                     {designSlug && (
                       <p className="text-xs text-neutral-500">
-                        SKU prefix: <code className="bg-white/60 px-1">{sku}</code> (variants:{' '}
+                        Product SKU: <code className="bg-white/60 px-1">{sku}</code> (variants:{' '}
                         -G15, -G69, -G1014)
                       </p>
                     )}
@@ -377,7 +391,7 @@ export function FamilySetForm() {
                         : SIZE_PRESETS[type].join(', ')}
                     </p>
                     <p className="text-xs text-neutral-500">
-                      SKU prefix: <code className="bg-white/60 px-1">{sku}</code>
+                      Product SKU: <code className="bg-white/60 px-1">{sku}</code>
                     </p>
                   </>
                 )}

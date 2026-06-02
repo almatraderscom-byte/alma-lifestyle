@@ -9,6 +9,14 @@ import {
 } from '@/lib/mappers/admin-product';
 import type { AdminProduct } from '@/lib/admin-store';
 import { getProductById } from './products';
+import { getCategoryById } from './categories-admin';
+import {
+  baseCodeForFamilyProduct,
+  generateUniqueFamilySetSku,
+  isFamilyDesignMember,
+  remapVariantSkusForProductSku,
+} from './family-set-sku';
+import { categoryCodeFromSlug } from '@/lib/family-set-admin';
 
 const PRODUCT_RELATIONS_SELECT = `
   *,
@@ -71,13 +79,42 @@ async function syncVariantsAndImages(
   }
 }
 
+async function resolveFamilyMemberSku(
+  product: AdminProduct,
+  brandId: string
+): Promise<AdminProduct> {
+  if (!isFamilyDesignMember(product) || !product.productType) {
+    return product;
+  }
+
+  const category = await getCategoryById(product.categoryId);
+  const categoryCode = categoryCodeFromSlug(category?.slug ?? 'panjabi');
+  const baseCode = baseCodeForFamilyProduct(product);
+  const uniqueSku = await generateUniqueFamilySetSku(
+    brandId,
+    categoryCode,
+    product.productType,
+    baseCode
+  );
+
+  return {
+    ...product,
+    sku: uniqueSku,
+    variants: remapVariantSkusForProductSku(product, uniqueSku),
+  };
+}
+
 export async function createAdminProduct(
   product: AdminProduct,
   rates?: { usdRate?: number; aedRate?: number }
 ): Promise<AdminProduct> {
   const brandId = await getBrandId();
+  const productId = product.id || crypto.randomUUID();
+  let productToSave = { ...product, id: productId };
+  productToSave = await resolveFamilyMemberSku(productToSave, brandId);
+
   const mapped = mapAdminProductToDbInsert({
-    product: { ...product, id: product.id || crypto.randomUUID() },
+    product: productToSave,
     brandId,
     usdRate: rates?.usdRate,
     aedRate: rates?.aedRate,
@@ -93,33 +130,33 @@ export async function createAdminProduct(
 
   assertNoError(error, 'createAdminProduct');
 
-  const productId = (inserted as unknown as { id: string }).id;
+  const insertedProductId = (inserted as unknown as { id: string }).id;
   const withRelations = mapAdminProductToDbInsert({
-    product: { ...product, id: productId },
+    product: productToSave,
     brandId,
     usdRate: rates?.usdRate,
     aedRate: rates?.aedRate,
   });
 
-  await syncVariantsAndImages(productId, withRelations);
-  await syncCollectionProducts(productId, product.collectionIds);
+  await syncVariantsAndImages(insertedProductId, withRelations);
+  await syncCollectionProducts(insertedProductId, productToSave.collectionIds);
 
-  const groupId = product.designGroupId ?? productId;
+  const groupId = productToSave.designGroupId ?? insertedProductId;
   const isGroupRoot =
-    product.productType !== 'simple' &&
-    (!product.designGroupId || product.designGroupId === productId);
+    productToSave.productType !== 'simple' &&
+    (!productToSave.designGroupId || productToSave.designGroupId === insertedProductId);
 
   await getSupabaseAdmin()
     .from('products')
     .update({
-      design_group_id: isGroupRoot ? productId : groupId,
-      design_group_name: product.designGroupName ?? product.title,
+      design_group_id: isGroupRoot ? insertedProductId : groupId,
+      design_group_name: productToSave.designGroupName ?? productToSave.title,
     } as never)
-    .eq('id', productId);
+    .eq('id', insertedProductId);
 
-  const full = await getProductById(productId);
+  const full = await getProductById(insertedProductId);
   if (!full) throw new Error('Product not found after create');
-  const collectionIds = await getProductCollectionIds(productId);
+  const collectionIds = await getProductCollectionIds(insertedProductId);
   return mapDbProductToAdmin(full, collectionIds);
 }
 

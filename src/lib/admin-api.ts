@@ -79,6 +79,44 @@ export async function createProductApi(product: AdminProduct): Promise<AdminProd
   });
 }
 
+export type FamilySetCreateResult = {
+  success: boolean;
+  products?: AdminProduct[];
+  created?: AdminProduct[];
+  errors?: { member: string; error: string }[];
+  message?: string;
+};
+
+export async function createFamilySetApi(
+  products: AdminProduct[]
+): Promise<FamilySetCreateResult> {
+  const res = await fetch('/api/v1/admin/family-sets', {
+    method: 'POST',
+    body: JSON.stringify({ products }),
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const json = (await res.json()) as ApiSuccess<FamilySetCreateResult> | ApiError;
+  if (json.status === 'error') {
+    throw new Error(json.error);
+  }
+
+  const data = json.data;
+  if (!res.ok && res.status !== 207) {
+    throw new Error(`Family set save failed (${res.status})`);
+  }
+
+  if (data.errors?.length) {
+    throw new Error(
+      data.message ??
+        data.errors.map((e) => `${e.member}: ${e.error}`).join('; ')
+    );
+  }
+
+  return data;
+}
+
 export async function updateProductApi(
   id: string,
   product: AdminProduct

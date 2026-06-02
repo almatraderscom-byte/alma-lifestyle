@@ -137,20 +137,44 @@ export function skuCodeFromDesignSlug(designSlug: string): string {
   return code.slice(0, 8) || 'DSN';
 }
 
-export function skuPrefixForType(designSlug: string, type: FamilyMemberType): string {
+/** Category slug → SKU segment (e.g. panjabi → PNJ). */
+export function categoryCodeFromSlug(categorySlug: string): string {
+  const map: Record<string, string> = {
+    panjabi: 'PNJ',
+    'three-piece': 'TPC',
+    'two-piece': 'TPC',
+    women: 'WOM',
+    kids: 'KID',
+  };
+  const slug = categorySlug.toLowerCase();
+  if (map[slug]) return map[slug];
+  return slug.replace(/[^a-z0-9]/gi, '').slice(0, 3).toUpperCase() || 'PNJ';
+}
+
+export const FAMILY_MEMBER_SKU_SUFFIX: Record<FamilyMemberType, string> = {
+  men_panjabi: 'M',
+  boy_panjabi: 'B',
+  women_three_piece: 'W',
+  girl_two_piece: 'G',
+};
+
+export function skuPrefixForType(
+  designSlug: string,
+  type: FamilyMemberType,
+  categoryCode = 'PNJ'
+): string {
   const code = skuCodeFromDesignSlug(designSlug);
-  switch (type) {
-    case 'men_panjabi':
-      return `ALM-PNJ-${code}-M`;
-    case 'boy_panjabi':
-      return `ALM-PNJ-${code}-B`;
-    case 'women_three_piece':
-      return `ALM-PNJ-${code}-W`;
-    case 'girl_two_piece':
-      return `ALM-PNJ-${code}-G`;
-    default:
-      return `ALM-PNJ-${code}`;
-  }
+  const suffix = FAMILY_MEMBER_SKU_SUFFIX[type];
+  return `ALM-${categoryCode}-${code}-${suffix}`;
+}
+
+/** Preview SKU shown in admin (next sequence is assigned on save). */
+export function skuPreviewForType(
+  designSlug: string,
+  type: FamilyMemberType,
+  categoryCode = 'PNJ'
+): string {
+  return `${skuPrefixForType(designSlug, type, categoryCode)}-001`;
 }
 
 function newVariantId(): string {
