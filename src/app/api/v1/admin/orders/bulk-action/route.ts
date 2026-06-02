@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { mapAdminOrderStatusToDb } from '@/lib/mappers/admin-product';
-import { insertAuditLog } from '@/server/db/queries/audit-log';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import {
   archiveOrder,
   canPermanentlyDeleteOrder,
@@ -11,7 +11,7 @@ import {
   updateOrderStatus,
 } from '@/server/db/queries/orders';
 import { apiError, apiSuccess } from '@/server/api/response';
-import { requireAdmin } from '@/server/api/auth';
+import { requireAdmin, requireDestructiveRole } from '@/server/api/auth';
 import { withAdmin } from '@/server/api/handler';
 
 export const runtime = 'nodejs';
@@ -34,27 +34,29 @@ export async function POST(request: NextRequest) {
     const { orderIds, action } = parsed.data;
 
     if (action === 'archive') {
+      await requireDestructiveRole(request);
       for (const id of orderIds) {
         await archiveOrder(id, admin.email);
-        await insertAuditLog({
-          action: 'archive_order_bulk',
+        await insertAuditLogForAdmin(admin, {
+          action: 'archive_order',
           entity_type: 'order',
           entity_id: id,
-          performed_by: admin.email,
+          notes: 'Bulk archive',
         });
       }
     } else if (action === 'cancel') {
       const dbStatus = mapAdminOrderStatusToDb('cancelled');
       for (const id of orderIds) {
         await updateOrderStatus(id, dbStatus);
-        await insertAuditLog({
-          action: 'cancel_order_bulk',
+        await insertAuditLogForAdmin(admin, {
+          action: 'cancel_order',
           entity_type: 'order',
           entity_id: id,
-          performed_by: admin.email,
+          notes: 'Bulk cancel',
         });
       }
     } else {
+      await requireDestructiveRole(request);
       const orders = await Promise.all(orderIds.map((id) => getOrderById(id)));
       const missing = orders.filter((o) => !o);
       if (missing.length > 0) {
@@ -71,12 +73,12 @@ export async function POST(request: NextRequest) {
       }
 
       for (const entry of orders.filter((o): o is NonNullable<typeof o> => Boolean(o))) {
-        await insertAuditLog({
-          action: 'delete_order_bulk',
+        await insertAuditLogForAdmin(admin, {
+          action: 'delete_order',
           entity_type: 'order',
           entity_id: entry.id,
           entity_data: entry as unknown as Record<string, unknown>,
-          performed_by: admin.email,
+          notes: 'Bulk permanent deletion',
         });
       }
 

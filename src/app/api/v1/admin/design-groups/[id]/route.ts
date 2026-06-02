@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/server/api/auth';
-import { insertAuditLog } from '@/server/db/queries/audit-log';
+import { requireDestructiveRole } from '@/server/api/auth';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import {
   getProductsInDesignGroup,
   unlinkDesignGroup,
@@ -20,14 +20,14 @@ interface RouteParams {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
-    const admin = await requireAdmin(request);
+    const admin = await requireDestructiveRole(request);
     const products = await getProductsInDesignGroup(id);
 
     if (products.length === 0) {
       return apiNotFound('Design group');
     }
 
-    await insertAuditLog({
+    await insertAuditLogForAdmin(admin, {
       action: 'delete_design_group',
       entity_type: 'design_group',
       entity_id: id,
@@ -36,7 +36,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         product_count: products.length,
         products,
       },
-      performed_by: admin.email,
       notes: `Unlinked ${products.length} products from design group`,
     });
 

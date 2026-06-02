@@ -7,6 +7,14 @@ import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { apiError, apiNotConfigured, apiUnauthorized } from './response';
 import { requireAdmin } from './auth';
 
+function mapAuthError(err: unknown): Response | null {
+  if (err instanceof Error) {
+    if (err.message === 'UNAUTHORIZED') return apiUnauthorized();
+    if (err.message === 'FORBIDDEN') return apiError('Forbidden', 403, 'FORBIDDEN');
+  }
+  return null;
+}
+
 export function ensureSupabase() {
   if (!isSupabaseAdminConfigured()) {
     console.error(
@@ -26,13 +34,17 @@ export async function withAdmin(
 
   try {
     await requireAdmin(request);
-  } catch {
+  } catch (err) {
+    const mapped = mapAuthError(err);
+    if (mapped) return mapped;
     return apiUnauthorized();
   }
 
   try {
     return await handler();
   } catch (err) {
+    const mapped = mapAuthError(err);
+    if (mapped) return mapped;
     const message = err instanceof Error ? err.message : 'Internal server error';
     return apiError(message, 500, 'INTERNAL_ERROR');
   }
@@ -47,6 +59,8 @@ export async function withPublicDb(
   try {
     return await handler();
   } catch (err) {
+    const mapped = mapAuthError(err);
+    if (mapped) return mapped;
     const message = err instanceof Error ? err.message : 'Internal server error';
     return apiError(message, 500, 'INTERNAL_ERROR');
   }

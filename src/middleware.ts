@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit } from '@/lib/rate-limit';
-
-const ADMIN_SESSION_COOKIE = 'alma_admin_session';
+import {
+  ADMIN_SESSION_COOKIE,
+  isAdminSessionCookie,
+  parseAdminSessionCookie,
+} from '@/lib/admin-session';
+import { canAccessAdminPath } from '@/lib/admin-roles';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -39,9 +43,12 @@ function applyApiRateLimit(request: NextRequest): NextResponse | null {
   return null;
 }
 
+function getAdminSession(request: NextRequest) {
+  return parseAdminSessionCookie(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+}
+
 function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE);
-  return adminSession?.value === 'authenticated';
+  return isAdminSessionCookie(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
 /** Allow admin live-preview iframe on same origin; deny embedding elsewhere. */
@@ -99,6 +106,17 @@ export function middleware(request: NextRequest) {
       return applyCacheHeaders(
         pathname,
         applyFrameOptions(request, NextResponse.redirect(loginUrl))
+      );
+    }
+
+    const session = getAdminSession(request);
+    if (session && !canAccessAdminPath(pathname, session.role)) {
+      return applyCacheHeaders(
+        pathname,
+        applyFrameOptions(
+          request,
+          NextResponse.redirect(new URL('/admin?forbidden=1', request.url))
+        )
       );
     }
 

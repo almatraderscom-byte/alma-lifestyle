@@ -3,6 +3,8 @@ import type { AppSettings } from '@/lib/admin-settings-types';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import { getAppSettings, saveAppSettings } from '@/server/db/queries/homepage';
 import { apiError, apiSuccess } from '@/server/api/response';
+import { requireSettingsRole } from '@/server/api/auth';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { revalidateSettingsPages } from '@/lib/storefront/revalidate';
@@ -56,6 +58,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   return withAdmin(request, async () => {
+    const admin = await requireSettingsRole(request);
     const body = (await request.json()) as AppSettings;
     if (!body?.storeName) {
       return apiError('Invalid settings payload', 400, 'VALIDATION_ERROR');
@@ -64,6 +67,13 @@ export async function PUT(request: NextRequest) {
     const saved = await saveAppSettings({
       ...getDefaultAppSettings(),
       ...body,
+    });
+
+    await insertAuditLogForAdmin(admin, {
+      action: 'update_settings',
+      entity_type: 'settings',
+      entity_id: 'site',
+      notes: 'Store settings updated',
     });
 
     revalidateSettingsPages();

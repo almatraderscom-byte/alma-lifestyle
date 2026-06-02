@@ -1,55 +1,67 @@
 import type { NextRequest } from 'next/server';
-import { ADMIN_SESSION_COOKIE, parseSessionCookie } from '@/lib/admin-auth';
-import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
-import { getSupabaseAdmin } from '@/server/db/client';
+import {
+  ADMIN_SESSION_COOKIE,
+  parseAdminSessionCookie,
+  type AdminRole,
+  type AdminSession,
+} from '@/lib/admin-session';
+import { canPerformDestructiveActions, canManageAdminUsers, canManageSettings } from '@/lib/admin-roles';
 
 export interface AdminAuthContext {
   userId: string;
   email: string;
-  role: string;
-  source: 'legacy' | 'supabase';
+  name: string;
+  role: AdminRole;
+  source: 'session';
+}
+
+function sessionToContext(session: AdminSession): AdminAuthContext {
+  return {
+    userId: session.userId,
+    email: session.email,
+    name: session.name,
+    role: session.role,
+    source: 'session',
+  };
+}
+
+export function getAdminFromRequest(request: NextRequest): AdminAuthContext | null {
+  const value = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const session = parseAdminSessionCookie(value);
+  return session ? sessionToContext(session) : null;
 }
 
 export async function requireAdmin(request: NextRequest): Promise<AdminAuthContext> {
-  const legacy = parseSessionCookie(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-  if (legacy?.user?.email) {
-    return {
-      userId: legacy.user.email,
-      email: legacy.user.email,
-      role: 'admin',
-      source: 'legacy',
-    };
-  }
+  const admin = getAdminFromRequest(request);
+  if (!admin) throw new Error('UNAUTHORIZED');
+  return admin;
+}
 
-  if (!isSupabaseAdminConfigured()) {
-    throw new Error('UNAUTHORIZED');
-  }
+export async function requireRole(
+  request: NextRequest,
+  roles: AdminRole[]
+): Promise<AdminAuthContext> {
+  const admin = await requireAdmin(request);
+  if (!roles.includes(admin.role)) throw new Error('FORBIDDEN');
+  return admin;
+}
 
-  const authHeader = request.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
-    const { data, error } = await getSupabaseAdmin().auth.getUser(token);
-    if (!error && data.user?.email) {
-      const { data: adminRow } = await getSupabaseAdmin()
-        .from('admin_users')
-        .select('role')
-        .eq('id', data.user.id)
-        .maybeSingle();
+export async function requireDestructiveRole(request: NextRequest): Promise<AdminAuthContext> {
+  const admin = await requireAdmin(request);
+  if (!canPerformDestructiveActions(admin.role)) throw new Error('FORBIDDEN');
+  return admin;
+}
 
-      const role = (adminRow as { role: string } | null)?.role;
+export async function requireSettingsRole(request: NextRequest): Promise<AdminAuthContext> {
+  const admin = await requireAdmin(request);
+  if (!canManageSettings(admin.role)) throw new Error('FORBIDDEN');
+  return admin;
+}
 
-      if (role) {
-        return {
-          userId: data.user.id,
-          email: data.user.email,
-          role,
-          source: 'supabase',
-        };
-      }
-    }
-  }
-
-  throw new Error('UNAUTHORIZED');
+export async function requireOwnerRole(request: NextRequest): Promise<AdminAuthContext> {
+  const admin = await requireAdmin(request);
+  if (!canManageAdminUsers(admin.role)) throw new Error('FORBIDDEN');
+  return admin;
 }
 
 export async function tryRequireAdmin(
@@ -70,6 +82,9 @@ export interface CustomerAuthContext {
 export async function tryRequireCustomer(
   request: NextRequest
 ): Promise<CustomerAuthContext | null> {
+  const { isSupabaseAdminConfigured } = await import('@/lib/supabase/config');
+  const { getSupabaseAdmin } = await import('@/server/db/client');
+
   if (!isSupabaseAdminConfigured()) return null;
 
   const authHeader = request.headers.get('authorization');

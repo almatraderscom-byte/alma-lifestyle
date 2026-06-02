@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/context/AdminAuthContext';
+import { canManageAdminUsers } from '@/lib/admin-roles';
 import { exportAllData, getOrders, importData } from '@/lib/admin-store';
 import { useAdminToast } from '@/context/AdminToastContext';
 
@@ -22,7 +23,8 @@ const NAV = [
     ],
   },
   { href: '/admin/orders', label: 'Orders', icon: CartIcon, badge: true },
-  { href: '/admin/audit-log', label: 'Audit Log', icon: BellIcon },
+  { href: '/admin/audit-log', label: 'Activity Log', icon: BellIcon },
+  { href: '/admin/users', label: 'Admin Users', icon: UsersIcon, ownerOnly: true },
   {
     href: '/admin/notifications',
     label: 'Notifications',
@@ -117,7 +119,11 @@ export function AdminSidebar({
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {NAV.map((item) => {
+          {NAV.filter(
+            (item) =>
+              !('ownerOnly' in item && item.ownerOnly) ||
+              (user && canManageAdminUsers(user.role))
+          ).map((item) => {
             if (item.children) {
               const isProducts = item.href === '/admin/products';
               const isNotifications = item.href === '/admin/notifications';
@@ -254,7 +260,7 @@ export function AdminSidebar({
                 <p className="text-sm font-medium truncate">{user?.name ?? 'Admin'}</p>
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => void logout()}
                   className="text-xs text-white/60 hover:text-white"
                 >
                   Logout

@@ -1,22 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { login } from '@/lib/admin-auth';
+import { loginWithApi } from '@/lib/admin-auth';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@alma.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const success = login(email, password);
+    const user = await loginWithApi(email, password);
 
-    if (success) {
+    if (user) {
       window.location.href = '/admin';
     } else {
       setError('Invalid email or password');
@@ -39,6 +39,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
               required
+              autoComplete="username"
             />
           </div>
 
@@ -50,6 +51,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
               required
+              autoComplete="current-password"
             />
           </div>
 
@@ -62,10 +64,6 @@ export default function AdminLoginPage() {
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
-
-          <p className="text-center text-gray-400 text-sm mt-4">
-            Default: admin@alma.com / admin123
-          </p>
         </form>
       </div>
     </div>
