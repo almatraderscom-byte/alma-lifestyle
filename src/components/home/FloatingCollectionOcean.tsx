@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion, type Transition } from 'framer-motion';
 import { AutoRotateProductImage } from '@/components/product/AutoRotateProductImage';
 import { getDefaultProductImage, resolveProductImageUrl } from '@/lib/default-images';
+import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import { HOME_FEATURED_PRODUCTS } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
@@ -114,15 +115,19 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
   const slots: OceanSlot[] = [];
   const seenIds = new Set<string>();
   const seenImageUrls = new Set<string>();
+  const useDemoFill = shouldUseStaticDemoCatalog();
+  const slotLimit = useDemoFill
+    ? OCEAN_SLOT_COUNT
+    : Math.min(OCEAN_SLOT_COUNT, products.length);
+
   let productIndex = 0;
 
-  for (let i = 0; i < OCEAN_SLOT_COUNT; i++) {
+  for (let i = 0; i < slotLimit; i++) {
     let assigned: OceanSlot | null = null;
 
     while (productIndex < products.length) {
       const candidate = products[productIndex];
       productIndex += 1;
-
       if (seenIds.has(candidate.id)) continue;
 
       const imageUrl = getImageUrl(candidate);
@@ -147,20 +152,23 @@ function buildOceanSlots(products: OceanProduct[]): OceanSlot[] {
       break;
     }
 
-    if (!assigned) {
+    if (!assigned && useDemoFill) {
       const product = placeholderProduct(i);
       const imageUrl = getImageUrl(product);
       assigned = {
         key: product.id,
         product,
-        galleryImages: product.galleryImages ?? [{ id: product.id, bgClass: product.bgClass, url: imageUrl }],
+        galleryImages:
+          product.galleryImages ?? [
+            { id: product.id, bgClass: product.bgClass, url: imageUrl },
+          ],
         imageUrl,
         bgClass: PLACEHOLDER_BGS[i % PLACEHOLDER_BGS.length],
-        isPlaceholder: false,
+        isPlaceholder: true,
       };
     }
 
-    slots.push(assigned);
+    if (assigned) slots.push(assigned);
   }
 
   return slots;

@@ -89,6 +89,8 @@ export async function getDesignGroupBySlug(
     .from('products')
     .select(PRODUCT_RELATIONS_SELECT)
     .eq('slug', slug)
+    .eq('published', true)
+    .is('deleted_at', null)
     .maybeSingle();
 
   assertNoError(error, 'getDesignGroupBySlug.product');

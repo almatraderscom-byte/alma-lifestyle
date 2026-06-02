@@ -19,7 +19,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/components/ui/Toast';
 import { resolveProductImageUrl } from '@/lib/default-images';
 import { getProductBySlug } from '@/lib/products-data';
-import { catalogToCartItem } from '@/lib/cart-helpers';
+import { cardDisplayToCartItem } from '@/lib/cart-helpers';
 import {
   AutoRotateProductImage,
   type ProductCardGalleryImage,
@@ -113,10 +113,9 @@ export function ProductCard({
   }, []);
 
   function addProductToCart() {
-    const slug = product.slug ?? product.href.replace('/products/', '');
-    const catalog = getProductBySlug(slug);
-    if (!catalog) return null;
-    const payload = catalogToCartItem(catalog);
+    const slug = product.slug ?? product.href.replace('/products/', '').replace(/\/$/, '');
+    const payload = cardDisplayToCartItem(product, slug, catalogProduct?.categorySlug);
+    if (!payload) return null;
     addItem(payload);
     return payload;
   }
