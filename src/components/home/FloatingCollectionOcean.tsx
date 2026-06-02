@@ -374,7 +374,7 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
         className="relative z-10 mb-12 px-4 text-center md:mb-16"
       >
         <p className="editorial-label mx-auto mb-3 w-fit text-terracotta">জনপ্রিয় সংগ্রহ</p>
-        <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-5xl lg:text-6xl">
+        <h2 className="font-bn-display text-3xl font-bold text-charcoal md:text-5xl lg:text-6xl">
           সবচেয়ে জনপ্রিয় ডিজাইন
         </h2>
         <p className="mx-auto mt-4 max-w-xl font-bn-body text-base text-text-light md:text-lg">

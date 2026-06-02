@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { formatBnText } from '@/lib/format-bn';
+import { getTextFontClass, splitTextForAnimation } from '@/lib/text-utils';
 import { cn } from '@/lib/utils';
 import type { CollectionBannerSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
@@ -17,28 +18,29 @@ interface CollectionBannerEditorialProps {
 
 function CharacterTitle({ text, active }: { text: string; active: boolean }) {
   const reduceMotion = useReducedMotion();
-  const chars = Array.from(text);
+  const fontClass = getTextFontClass(text, 'display');
+  const units = splitTextForAnimation(text);
+  const headingClass = cn(
+    fontClass,
+    'text-[2rem] sm:text-5xl md:text-6xl font-bold text-cream leading-[1.3]'
+  );
 
-  if (reduceMotion) {
-    return (
-      <h2 className="font-bn-heading text-[2rem] sm:text-5xl md:text-6xl font-bold text-cream leading-[1.3]">
-        {text}
-      </h2>
-    );
+  if (reduceMotion || units.length <= 1) {
+    return <h2 className={headingClass}>{text}</h2>;
   }
 
   return (
-    <h2 className="font-bn-heading text-[2rem] sm:text-5xl md:text-6xl font-bold text-cream leading-[1.3]">
-      {chars.map((char, i) => (
+    <h2 className={headingClass}>
+      {units.map((unit, i) => (
         <motion.span
-          key={`${i}-${char}`}
+          key={`${i}-${unit}`}
           className="inline-block"
-          style={char === ' ' ? { width: '0.35em' } : undefined}
+          style={unit === ' ' ? { width: '0.35em' } : undefined}
           initial={{ opacity: 0, y: 20 }}
           animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.4, delay: i * 0.03, ease: EASE_PREMIUM }}
         >
-          {char === ' ' ? '\u00A0' : char}
+          {unit === ' ' ? '\u00A0' : unit}
         </motion.span>
       ))}
     </h2>
@@ -55,7 +57,7 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
   const bannerFallback = getDefaultImageForHint(
     data.imageHint || 'Eid collection banner'
   );
-  const charCount = Array.from(data.title).length;
+  const charCount = splitTextForAnimation(data.title).length;
   const subtitleDelay = charCount * 0.03 + 0.2;
   const ctaDelay = subtitleDelay + 0.25;
 
