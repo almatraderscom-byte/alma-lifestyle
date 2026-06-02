@@ -93,6 +93,11 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
     showToast(PDP.toastAdded);
   }
 
+  function handleBuyNow() {
+    addItem(catalogToCartItem(active, { size: selectedSize, quantity }));
+    router.push('/cart');
+  }
+
   function handleFamilyAdd() {
     const setId = `family-${product.designGroupId ?? product.id}-${Date.now()}`;
     for (const m of members) {
@@ -198,13 +203,22 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAddToBag}
-          className="w-full min-h-14 rounded-lg bg-accent text-white font-bn-body text-lg font-semibold"
-        >
-          {PDP.addToBag}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={handleAddToBag}
+            className="flex-1 min-h-14 rounded-lg border-2 border-charcoal text-charcoal font-bn-body text-base font-semibold hover:bg-charcoal hover:text-cream transition-colors"
+          >
+            🛒 {PDP.addToBag}
+          </button>
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="flex-1 min-h-14 rounded-lg bg-terracotta text-white font-bn-body text-base font-semibold hover:bg-[#b06d4f] transition-colors shadow-md"
+          >
+            {PDP.buyNow}
+          </button>
+        </div>
 
         {members.length > 1 && (
           <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-5 space-y-4">

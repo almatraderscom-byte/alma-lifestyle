@@ -15,7 +15,6 @@ export function getFreeDeliveryThreshold(settings?: AppSettings): number {
 export function getZoneCharges(settings?: AppSettings) {
   return {
     dhaka_city: settings?.dhakaCityDeliveryChargeBdt ?? DELIVERY_CHARGES.dhaka_city,
-    dhaka_district: settings?.dhakaDistrictDeliveryChargeBdt ?? DELIVERY_CHARGES.dhaka_district,
     outside_dhaka: settings?.outsideCityDeliveryChargeBdt ?? DELIVERY_CHARGES.outside_dhaka,
   };
 }
@@ -26,20 +25,20 @@ export function getDeliveryChargeFromSettings(
   subtotal = 0
 ): number {
   const threshold = getFreeDeliveryThreshold(settings);
-  if (subtotal >= threshold) return 0;
+  const charges = getZoneCharges(settings);
 
   const district = normalizeDistrictKey(districtOrLegacyCity);
   if (!district) {
-    return settings?.outsideCityDeliveryChargeBdt ?? CHECKOUT.deliveryChargeOutside;
+    return charges.outside_dhaka;
   }
 
-  const found = findDistrict(district);
-  if (!found) {
-    return settings?.outsideCityDeliveryChargeBdt ?? DELIVERY_CHARGES.outside_dhaka;
-  }
-
-  const charges = getZoneCharges(settings);
-  return charges[found.zone];
+  return getDeliveryChargeForDistrict(
+    district,
+    subtotal,
+    threshold,
+    charges.dhaka_city,
+    charges.outside_dhaka
+  );
 }
 
 /** @deprecated Use district-based lookup; kept for callers passing subtotal. */

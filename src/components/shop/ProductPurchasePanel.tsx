@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ShopProduct } from '@/types/shop';
 import { formatPrice } from '@/lib/currency';
 import { Button } from '@/components/shared/Button';
+import { WhatsAppLink } from '@/components/ui/WhatsAppLink';
 import { cn } from '@/lib/utils';
 
 interface ProductPurchasePanelProps {
@@ -11,14 +13,21 @@ interface ProductPurchasePanelProps {
 }
 
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
+  const router = useRouter();
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? '');
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? '');
   const [added, setAdded] = useState(false);
   const pricing = formatPrice(product.price, product.compareAtPrice);
+  const whatsappMessage = `Hi, I want to order: ${product.title} (${selectedColor}, ${selectedSize})`;
 
   function handleAddToCart() {
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  function handleBuyNow() {
+    handleAddToCart();
+    router.push('/cart');
   }
 
   return (
@@ -93,25 +102,31 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
       </div>
 
       <div className="flex flex-col gap-2 pt-2">
-        <Button
-          size="lg"
-          className="w-full"
-          disabled={!product.inStock}
-          onClick={handleAddToCart}
-        >
-          {added ? 'Added to cart ✓' : product.inStock ? 'Add to bag' : 'Out of stock'}
-        </Button>
-        <Button variant="outline" size="lg" className="w-full" href="/cart">
-          View cart
-        </Button>
-        <a
-          href={`https://wa.me/8801000000000?text=${encodeURIComponent(`Hi, I want to order: ${product.title} (${selectedColor}, ${selectedSize})`)}`}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 w-full"
+            disabled={!product.inStock}
+            onClick={handleAddToCart}
+          >
+            {added ? 'Added to cart ✓' : product.inStock ? 'Add to bag' : 'Out of stock'}
+          </Button>
+          <Button
+            size="lg"
+            className="flex-1 w-full"
+            disabled={!product.inStock}
+            onClick={handleBuyNow}
+          >
+            Buy now
+          </Button>
+        </div>
+        <WhatsAppLink
+          message={whatsappMessage}
           className="w-full h-11 flex items-center justify-center text-sm font-medium border border-alma-border rounded-sm hover:bg-alma-cream transition-colors"
-          target="_blank"
-          rel="noopener noreferrer"
         >
           Order on WhatsApp
-        </a>
+        </WhatsAppLink>
       </div>
 
       <ul className="text-xs text-alma-muted space-y-1.5 border-t border-alma-border pt-4">

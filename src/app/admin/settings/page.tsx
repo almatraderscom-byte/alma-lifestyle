@@ -144,11 +144,33 @@ export default function AdminSettingsPage() {
 
         {tab === 'Delivery & Shipping' && (
           <>
-            <Input label="Free delivery threshold (BDT)" type="number" value={form.freeDeliveryThresholdBdt} onChange={(e) => patch('freeDeliveryThresholdBdt', Number(e.target.value))} />
-            <Input label="Dhaka city delivery (BDT)" type="number" value={form.dhakaCityDeliveryChargeBdt} onChange={(e) => patch('dhakaCityDeliveryChargeBdt', Number(e.target.value))} />
-            <Input label="Dhaka district delivery (BDT)" type="number" value={form.dhakaDistrictDeliveryChargeBdt} onChange={(e) => patch('dhakaDistrictDeliveryChargeBdt', Number(e.target.value))} />
-            <Input label="Outside Dhaka delivery (BDT)" type="number" value={form.outsideCityDeliveryChargeBdt} onChange={(e) => patch('outsideCityDeliveryChargeBdt', Number(e.target.value))} />
-            <Input label="Default delivery charge (BDT)" type="number" value={form.defaultDeliveryChargeBdt} onChange={(e) => patch('defaultDeliveryChargeBdt', Number(e.target.value))} />
+            <section className="space-y-4 rounded-lg border border-neutral-200 p-4">
+              <h3 className="text-base font-semibold text-neutral-900">ডেলিভারি চার্জ / Delivery Charges</h3>
+              <Input
+                label="ঢাকা সিটির ভিতরে / Dhaka City (BDT)"
+                type="number"
+                value={form.dhakaCityDeliveryChargeBdt}
+                onChange={(e) => patch('dhakaCityDeliveryChargeBdt', Number(e.target.value))}
+                placeholder="80"
+              />
+              <Input
+                label="ঢাকার বাইরে / Outside Dhaka (BDT)"
+                type="number"
+                value={form.outsideCityDeliveryChargeBdt}
+                onChange={(e) => patch('outsideCityDeliveryChargeBdt', Number(e.target.value))}
+                placeholder="120"
+              />
+              <div>
+                <Input
+                  label="ফ্রি ডেলিভারির সীমা / Free Delivery Threshold (BDT)"
+                  type="number"
+                  value={form.freeDeliveryThresholdBdt}
+                  onChange={(e) => patch('freeDeliveryThresholdBdt', Number(e.target.value))}
+                  placeholder="2000"
+                />
+                <p className="mt-1 text-xs text-neutral-500">এর উপরে অর্ডারে ডেলিভারি ফ্রি (সারা দেশ)</p>
+              </div>
+            </section>
             <Input label="Estimated delivery time" value={form.estimatedDeliveryTime} onChange={(e) => patch('estimatedDeliveryTime', e.target.value)} />
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-800">Free delivery cities</p>

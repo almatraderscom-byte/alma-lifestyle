@@ -22,6 +22,7 @@ export type CustomerOrderEmailData = {
   paymentMethod: string;
   estimatedDelivery: string;
   orderDate?: string;
+  freeThreshold?: number;
 };
 
 export function buildCustomerOrderEmail(
@@ -60,8 +61,34 @@ export function buildCustomerOrderEmail(
 
   const deliveryCell =
     data.deliveryCharge === 0
-      ? `<span style="color: ${EMAIL_BRAND.successText}; font-weight: 600;">🎉 ফ্রি</span>`
+      ? `<span style="color: ${EMAIL_BRAND.successText}; font-weight: 700;">🎉 ফ্রি!</span>`
       : formatBdtEmail(data.deliveryCharge);
+
+  const freeThreshold = data.freeThreshold ?? 2000;
+  const amountToFree = Math.max(0, freeThreshold - data.subtotal);
+
+  const freeDeliveryExtraRow =
+    data.deliveryCharge === 0
+      ? `
+                <tr>
+                  <td colspan="2" style="padding: 8px 0;">
+                    <div style="background: ${EMAIL_BRAND.successBg}; padding: 12px; border-radius: 6px; text-align: center;">
+                      <p style="margin: 0; color: ${EMAIL_BRAND.successText}; font-size: 13px;">
+                        🎁 ৳${freeThreshold.toLocaleString('en-US')}+ অর্ডারের জন্য ডেলিভারি ফ্রি!
+                      </p>
+                    </div>
+                  </td>
+                </tr>`
+      : amountToFree > 0
+        ? `
+                <tr>
+                  <td colspan="2" style="padding: 4px 0;">
+                    <p style="margin: 0; color: ${EMAIL_BRAND.textMuted}; font-size: 11px; font-style: italic;">
+                      💡 ৳${amountToFree.toLocaleString('en-US')}+ টাকার অর্ডারে ফ্রি ডেলিভারি (পরবর্তী অর্ডারে)
+                    </p>
+                  </td>
+                </tr>`
+        : '';
 
   const body = `
           <tr>
@@ -103,6 +130,7 @@ export function buildCustomerOrderEmail(
                   <td style="padding: 6px 0; color: ${EMAIL_BRAND.textMuted}; font-size: 14px;">ডেলিভারি চার্জ</td>
                   <td align="right" style="padding: 6px 0; font-size: 14px;">${deliveryCell}</td>
                 </tr>
+                ${freeDeliveryExtraRow}
                 <tr>
                   <td colspan="2" style="border-top: 2px solid ${EMAIL_BRAND.charcoal}; padding-top: 10px;"></td>
                 </tr>

@@ -1,12 +1,11 @@
 export interface District {
   name_bn: string;
   name_en: string;
-  zone: 'dhaka_city' | 'dhaka_district' | 'outside_dhaka';
+  zone: 'dhaka_city' | 'outside_dhaka';
 }
 
 export const DELIVERY_CHARGES = {
   dhaka_city: 80,
-  dhaka_district: 100,
   outside_dhaka: 120,
 } as const;
 
@@ -14,18 +13,18 @@ export const FREE_DELIVERY_THRESHOLD = 2000;
 
 export const BANGLADESH_DISTRICTS: District[] = [
   { name_bn: 'ঢাকা সিটি', name_en: 'Dhaka City', zone: 'dhaka_city' },
-  { name_bn: 'গাজীপুর', name_en: 'Gazipur', zone: 'dhaka_district' },
-  { name_bn: 'নারায়ণগঞ্জ', name_en: 'Narayanganj', zone: 'dhaka_district' },
-  { name_bn: 'মুন্সিগঞ্জ', name_en: 'Munshiganj', zone: 'dhaka_district' },
-  { name_bn: 'মানিকগঞ্জ', name_en: 'Manikganj', zone: 'dhaka_district' },
-  { name_bn: 'নরসিংদী', name_en: 'Narsingdi', zone: 'dhaka_district' },
-  { name_bn: 'টাঙ্গাইল', name_en: 'Tangail', zone: 'dhaka_district' },
-  { name_bn: 'কিশোরগঞ্জ', name_en: 'Kishoreganj', zone: 'dhaka_district' },
-  { name_bn: 'ফরিদপুর', name_en: 'Faridpur', zone: 'dhaka_district' },
-  { name_bn: 'গোপালগঞ্জ', name_en: 'Gopalganj', zone: 'dhaka_district' },
-  { name_bn: 'মাদারীপুর', name_en: 'Madaripur', zone: 'dhaka_district' },
-  { name_bn: 'রাজবাড়ী', name_en: 'Rajbari', zone: 'dhaka_district' },
-  { name_bn: 'শরীয়তপুর', name_en: 'Shariatpur', zone: 'dhaka_district' },
+  { name_bn: 'গাজীপুর', name_en: 'Gazipur', zone: 'outside_dhaka' },
+  { name_bn: 'নারায়ণগঞ্জ', name_en: 'Narayanganj', zone: 'outside_dhaka' },
+  { name_bn: 'মুন্সিগঞ্জ', name_en: 'Munshiganj', zone: 'outside_dhaka' },
+  { name_bn: 'মানিকগঞ্জ', name_en: 'Manikganj', zone: 'outside_dhaka' },
+  { name_bn: 'নরসিংদী', name_en: 'Narsingdi', zone: 'outside_dhaka' },
+  { name_bn: 'টাঙ্গাইল', name_en: 'Tangail', zone: 'outside_dhaka' },
+  { name_bn: 'কিশোরগঞ্জ', name_en: 'Kishoreganj', zone: 'outside_dhaka' },
+  { name_bn: 'ফরিদপুর', name_en: 'Faridpur', zone: 'outside_dhaka' },
+  { name_bn: 'গোপালগঞ্জ', name_en: 'Gopalganj', zone: 'outside_dhaka' },
+  { name_bn: 'মাদারীপুর', name_en: 'Madaripur', zone: 'outside_dhaka' },
+  { name_bn: 'রাজবাড়ী', name_en: 'Rajbari', zone: 'outside_dhaka' },
+  { name_bn: 'শরীয়তপুর', name_en: 'Shariatpur', zone: 'outside_dhaka' },
   { name_bn: 'চট্টগ্রাম', name_en: 'Chattogram', zone: 'outside_dhaka' },
   { name_bn: 'কক্সবাজার', name_en: "Cox's Bazar", zone: 'outside_dhaka' },
   { name_bn: 'কুমিল্লা', name_en: 'Cumilla', zone: 'outside_dhaka' },
@@ -108,23 +107,20 @@ export function findDistrict(district: string): District | undefined {
 export function getDeliveryChargeForDistrict(
   district: string,
   subtotal: number,
-  freeThreshold = FREE_DELIVERY_THRESHOLD
+  freeThreshold: number = FREE_DELIVERY_THRESHOLD,
+  dhakaCharge: number = DELIVERY_CHARGES.dhaka_city,
+  outsideCharge: number = DELIVERY_CHARGES.outside_dhaka
 ): number {
   if (subtotal >= freeThreshold) return 0;
   const found = findDistrict(district);
-  if (!found) return DELIVERY_CHARGES.outside_dhaka;
-  return DELIVERY_CHARGES[found.zone];
+  if (!found) return outsideCharge;
+  return found.zone === 'dhaka_city' ? dhakaCharge : outsideCharge;
 }
 
 export function getZoneLabel(district: string): string {
   const found = findDistrict(district);
   if (!found) return '';
-  switch (found.zone) {
-    case 'dhaka_city':
-      return 'ঢাকা সিটি (১-২ দিন)';
-    case 'dhaka_district':
-      return 'ঢাকা জেলা (২-৩ দিন)';
-    case 'outside_dhaka':
-      return 'ঢাকার বাইরে (৩-৫ দিন)';
-  }
+  return found.zone === 'dhaka_city'
+    ? 'ঢাকা সিটি (১-২ দিন)'
+    : 'ঢাকার বাইরে (৩-৫ দিন)';
 }

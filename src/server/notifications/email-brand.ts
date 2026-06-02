@@ -1,4 +1,5 @@
 import { resolveEmailLogoSrc } from '@/lib/email-logo-url';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 /** Email-safe brand tokens (inline styles only). */
@@ -57,9 +58,11 @@ export async function getEmailBrandingContext(): Promise<EmailBrandingContext> {
   let instagramUrl: string | undefined;
   let logoUrl = `${siteUrl}/api/email-logo`;
   let logoSource: EmailBrandingContext['logoSource'] = 'proxy';
+  let whatsappUrl = buildWhatsAppHref();
 
   try {
     const settings = await loadPublicSettingsServer();
+    whatsappUrl = buildWhatsAppHref(settings);
     const resolved = resolveEmailLogoSrc({
       logoUrl: settings.logoUrl,
       faviconUrl: settings.faviconUrl,
@@ -95,7 +98,7 @@ export async function getEmailBrandingContext(): Promise<EmailBrandingContext> {
     supportPhone: EMAIL_CONTACT.phoneDisplay,
     supportPhoneTel: EMAIL_CONTACT.phoneTel,
     supportEmail: EMAIL_CONTACT.email,
-    whatsappUrl: `https://wa.me/8801307777733`,
+    whatsappUrl,
     facebookUrl,
     instagramUrl,
   };

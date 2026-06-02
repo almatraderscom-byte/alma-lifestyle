@@ -3,13 +3,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CONFIRMATION, SITE } from '@/lib/content';
+import { CONFIRMATION } from '@/lib/content';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { loadLastOrder, type PlacedOrder } from '@/lib/orders';
 import { cn } from '@/lib/utils';
 
 export function ConfirmationPageContent() {
   const router = useRouter();
+  const settings = useStoreSettings();
   const [order, setOrder] = useState<PlacedOrder | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -31,7 +34,7 @@ export function ConfirmationPageContent() {
   }
 
   const whatsappMessage = `আসসালামু আলাইকুম, আমার অর্ডার নম্বর: ${order.orderNumber}। অর্ডার ট্র্যাক করতে চাই।`;
-  const whatsappHref = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappHref = buildWhatsAppHref(settings, whatsappMessage);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10 md:py-16 text-center">

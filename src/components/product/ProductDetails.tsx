@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { SITE, PDP } from '@/lib/content';
+import { PDP } from '@/lib/content';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
@@ -55,13 +57,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     showToast(PDP.toastAdded);
   }
 
+  const settings = useStoreSettings();
+
   function handleBuyNow() {
     addItem(buildCartPayload());
-    router.push('/checkout');
+    router.push('/cart');
   }
 
   const whatsappMessage = `আসসালামু আলাইকুম, আমি "${product.title}" (${selectedColor?.name ?? ''}, ${selectedSize}, পরিমাণ: ${quantity}) অর্ডার করতে চাই।`;
-  const whatsappHref = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappHref = buildWhatsAppHref(settings, whatsappMessage);
 
   const accordionItems = [
     { id: 'desc', title: PDP.accordion.description, content: product.description },
@@ -181,20 +185,22 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </div>
 
       <div className="space-y-3 pt-2">
-        <button
-          type="button"
-          onClick={handleAddToBag}
-          className="w-full min-h-14 rounded-lg bg-accent text-white font-bn-body text-lg font-semibold hover:bg-[#7a6549] transition-colors"
-        >
-          {PDP.addToBag}
-        </button>
-        <button
-          type="button"
-          onClick={handleBuyNow}
-          className="w-full min-h-14 rounded-lg bg-primary text-secondary font-bn-body text-lg font-semibold hover:bg-primary/90 transition-colors"
-        >
-          {PDP.buyNow}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={handleAddToBag}
+            className="flex-1 min-h-14 rounded-lg border-2 border-charcoal text-charcoal font-bn-body text-base font-semibold hover:bg-charcoal hover:text-cream transition-colors"
+          >
+            🛒 {PDP.addToBag}
+          </button>
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="flex-1 min-h-14 rounded-lg bg-terracotta text-white font-bn-body text-base font-semibold hover:bg-[#b06d4f] transition-colors shadow-md"
+          >
+            {PDP.buyNow}
+          </button>
+        </div>
         <a
           href={whatsappHref}
           target="_blank"

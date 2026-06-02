@@ -7,7 +7,9 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ProductCard } from '@/components/product/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { BREADCRUMB, CART, SITE } from '@/lib/content';
-import { DELIVERY_CHARGES } from '@/lib/bangladesh-districts';
+import { getZoneCharges, getFreeDeliveryThreshold } from '@/lib/delivery-settings';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import {
   formatBdtPrice,
   formatItemCount,
@@ -15,7 +17,6 @@ import {
   toBanglaNumber,
 } from '@/lib/format-bn';
 import { isFreeDelivery } from '@/lib/delivery';
-import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { CATALOG_PRODUCTS, toCardProduct } from '@/lib/products-data';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +54,9 @@ export function CartPageContent() {
     return `আসসালামু আলাইকুম, আমি ALMA Lifestyle থেকে অর্ডার করতে চাই:\n\n${lines.join('\n')}\n\nমোট: ${formatBdtPrice(subtotal)}`;
   }, [items, subtotal, getLineUnitPrice]);
 
-  const whatsappHref = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+  const charges = getZoneCharges(settings);
+  const freeThreshold = getFreeDeliveryThreshold(settings);
+  const whatsappHref = buildWhatsAppHref(settings, whatsappMessage);
 
   if (!hydrated) {
     return (
@@ -242,8 +245,8 @@ export function CartPageContent() {
                 </div>
                 {!freeDelivery && (
                   <p className="text-xs text-text-light leading-relaxed">
-                    {CART.deliveryFrom} ৳{DELIVERY_CHARGES.dhaka_city} • ঢাকা জেলা ৳
-                    {DELIVERY_CHARGES.dhaka_district} • বাইরে ৳{DELIVERY_CHARGES.outside_dhaka}
+                    {CART.deliveryFrom} ৳{charges.dhaka_city} (ঢাকা সিটি) • ঢাকার বাইরে ৳
+                    {charges.outside_dhaka} • ৳{freeThreshold.toLocaleString('en-US')}+ ফ্রি
                   </p>
                 )}
               </div>

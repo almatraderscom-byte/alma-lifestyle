@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
+import { WhatsAppLink } from '@/components/ui/WhatsAppLink';
 
 export const metadata: Metadata = {
   title: 'যোগাযোগ | ALMA Lifestyle',
@@ -92,15 +93,12 @@ export default function ContactPage() {
               >
                 ig
               </a>
-              <a
-                href="https://wa.me/8801307777733"
-                target="_blank"
-                rel="noopener noreferrer"
+              <WhatsAppLink
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald font-bn-body text-white hover:opacity-90"
                 aria-label="WhatsApp"
               >
                 WA
-              </a>
+              </WhatsAppLink>
             </div>
           </div>
         </div>

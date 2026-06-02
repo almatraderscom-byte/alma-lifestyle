@@ -43,7 +43,7 @@ const OCEAN_SLOT_COUNT = 12;
 const FALL_START_Y = -600;
 const FALL_STAGGER_S = 0.2;
 const FALL_DURATION_S = 1.5;
-const INTRO_COMPLETE_MS = 4000;
+const LANDING_STAGGER_MS = 200;
 
 const FALL_EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 
@@ -208,24 +208,31 @@ interface OceanCardProps {
   config: CardConfig;
   idx: number;
   isInView: boolean;
-  introComplete: boolean;
   reduceMotion: boolean | null;
 }
 
-function OceanCard({
-  slot,
-  config,
-  idx,
-  isInView,
-  introComplete,
-  reduceMotion,
-}: OceanCardProps) {
+function OceanCard({ slot, config, idx, isInView, reduceMotion }: OceanCardProps) {
   const { product, galleryImages, imageUrl, bgClass, isPlaceholder } = slot;
   const staggerOffset = (idx * 420) % 2500;
   const fallRotateOffset = idx % 2 === 0 ? -15 : 15;
   const startRotate = config.rotate + fallRotateOffset;
+  const [hasLanded, setHasLanded] = useState(Boolean(reduceMotion));
 
-  const showWave = introComplete || Boolean(reduceMotion);
+  useEffect(() => {
+    if (!isInView) {
+      setHasLanded(Boolean(reduceMotion));
+      return;
+    }
+    if (reduceMotion) {
+      setHasLanded(true);
+      return;
+    }
+    const landingTime = idx * LANDING_STAGGER_MS + FALL_DURATION_S * 1000;
+    const timer = window.setTimeout(() => setHasLanded(true), landingTime);
+    return () => window.clearTimeout(timer);
+  }, [isInView, idx, reduceMotion]);
+
+  const showWave = hasLanded;
   const active = isInView || Boolean(reduceMotion);
 
   return (
@@ -325,7 +332,6 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
-  const [introComplete, setIntroComplete] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -342,19 +348,7 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
     [isMobile]
   );
 
-  useEffect(() => {
-    if (!isInView) return;
-
-    if (reduceMotion) {
-      setIntroComplete(true);
-      return;
-    }
-
-    const timer = window.setTimeout(() => setIntroComplete(true), INTRO_COMPLETE_MS);
-    return () => window.clearTimeout(timer);
-  }, [isInView, reduceMotion]);
-
-  const ctaDelay = reduceMotion ? 0.5 : 4.5;
+  const ctaDelay = reduceMotion ? 0.5 : (OCEAN_SLOT_COUNT - 1) * (LANDING_STAGGER_MS / 1000) + FALL_DURATION_S + 0.3;
 
   return (
     <section
@@ -401,7 +395,6 @@ export function FloatingCollectionOcean({ products }: FloatingCollectionOceanPro
             config={configs[idx % configs.length]}
             idx={idx}
             isInView={isInView}
-            introComplete={introComplete}
             reduceMotion={reduceMotion}
           />
         ))}
