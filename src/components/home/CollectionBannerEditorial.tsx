@@ -1,7 +1,14 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'framer-motion';
 import { formatBnText } from '@/lib/format-bn';
 import { getTextFontClass, splitTextForAnimation } from '@/lib/text-utils';
 import { cn } from '@/lib/utils';
@@ -9,20 +16,25 @@ import type { CollectionBannerSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { getDefaultImageForHint } from '@/lib/default-images';
-import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
 import { EASE_PREMIUM } from '@/lib/animation-variants';
 
 interface CollectionBannerEditorialProps {
   data?: CollectionBannerSectionData;
 }
 
-function CharacterTitle({ text, active }: { text: string; active: boolean }) {
+function AnimatedTitle({
+  text,
+  active,
+}: {
+  text: string;
+  active: boolean;
+}) {
   const reduceMotion = useReducedMotion();
   const fontClass = getTextFontClass(text, 'display');
   const units = splitTextForAnimation(text);
   const headingClass = cn(
     fontClass,
-    'text-[2rem] sm:text-5xl md:text-6xl font-bold text-cream leading-[1.3]'
+    'text-[2.2rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold text-cream leading-[1.25]'
   );
 
   if (reduceMotion || units.length <= 1) {
@@ -36,9 +48,17 @@ function CharacterTitle({ text, active }: { text: string; active: boolean }) {
           key={`${i}-${unit}`}
           className="inline-block"
           style={unit === ' ' ? { width: '0.35em' } : undefined}
-          initial={{ opacity: 0, y: 20 }}
-          animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.4, delay: i * 0.03, ease: EASE_PREMIUM }}
+          initial={{ opacity: 0, y: 50, rotateX: -90 }}
+          animate={
+            active
+              ? { opacity: 1, y: 0, rotateX: 0 }
+              : { opacity: 0, y: 50, rotateX: -90 }
+          }
+          transition={{
+            duration: 0.6,
+            delay: 0.35 + i * 0.05,
+            ease: [0.215, 0.61, 0.355, 1],
+          }}
         >
           {unit === ' ' ? '\u00A0' : unit}
         </motion.span>
@@ -49,47 +69,116 @@ function CharacterTitle({ text, active }: { text: string; active: boolean }) {
 
 export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEditorialProps) {
   const reduceMotion = useReducedMotion();
-  const { ref, isInView } = useScrollAnimation();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: '-100px', amount: 0.3 });
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
   const data =
     dataProp ??
     getDefaultHomepageConfig().sections.find((s) => s.id === 'collectionBanner')!.data;
 
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const bgY = useTransform(scrollYProgress, [0, 1], [-40, 40]);
+
   const bannerFallback = getDefaultImageForHint(
     data.imageHint || 'Eid collection banner'
   );
-  const charCount = splitTextForAnimation(data.title).length;
-  const subtitleDelay = charCount * 0.03 + 0.2;
-  const ctaDelay = subtitleDelay + 0.25;
+  const titleUnits = splitTextForAnimation(data.title);
+  const subtitleDelay = 0.45 + titleUnits.length * 0.05 + 0.2;
+  const ctaDelay = subtitleDelay + 0.2;
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(touch);
+    if (touch) return;
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = section.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setMousePos({ x, y });
+    };
+    const handleEnter = () => setIsHovering(true);
+    const handleLeave = () => setIsHovering(false);
+
+    section.addEventListener('mousemove', handleMouseMove);
+    section.addEventListener('mouseenter', handleEnter);
+    section.addEventListener('mouseleave', handleLeave);
+
+    return () => {
+      section.removeEventListener('mousemove', handleMouseMove);
+      section.removeEventListener('mouseenter', handleEnter);
+      section.removeEventListener('mouseleave', handleLeave);
+    };
+  }, [reduceMotion]);
 
   return (
     <section
-      ref={ref}
-      className="relative min-h-[70vh] flex items-center justify-center pattern-overlay"
+      ref={sectionRef}
+      className={cn(
+        'relative min-h-[70vh] md:min-h-[760px] flex items-center justify-center overflow-hidden pattern-overlay',
+        !isTouchDevice && !reduceMotion && 'cursor-crosshair'
+      )}
     >
-      <HomepageSectionImage
-        src={data.backgroundImageUrl}
-        fallbackSrc={bannerFallback}
-        alt={data.title}
-        sizes="100vw"
-        priority
+      <motion.div className="absolute inset-0 scale-110" style={reduceMotion ? undefined : { y: bgY }}>
+        <HomepageSectionImage
+          src={data.backgroundImageUrl}
+          fallbackSrc={bannerFallback}
+          alt={data.title}
+          sizes="100vw"
+          priority
+        />
+      </motion.div>
+
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          opacity: isHovering && !isTouchDevice && !reduceMotion ? 0.4 : 0.55,
+        }}
+        aria-hidden
       />
-      <div className="absolute inset-0 bg-charcoal/50" aria-hidden />
-      <div className="relative z-10 text-center px-6 md:px-12 max-w-3xl">
+      {isHovering && !isTouchDevice && !reduceMotion && (
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(
+              circle 350px at ${mousePos.x}% ${mousePos.y}%,
+              transparent 0%,
+              transparent 30%,
+              rgba(0,0,0,0.3) 70%,
+              rgba(0,0,0,0.6) 100%
+            )`,
+          }}
+          aria-hidden
+        />
+      )}
+
+      <div className="relative z-10 text-center px-6 md:px-12 max-w-4xl py-20 md:py-28">
         <motion.p
-          className="editorial-label text-mustard mb-6 mx-auto w-fit"
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          className="editorial-label text-mustard mb-6 mx-auto w-fit tracking-[0.16em]"
+          initial={reduceMotion ? false : { opacity: 0, y: -10 }}
           animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 0.5, ease: EASE_PREMIUM }}
+          transition={{ duration: 0.4, ease: EASE_PREMIUM }}
         >
-          {data.label}
+          {data.label || 'বিশেষ আয়োজন'}
         </motion.p>
 
-        <CharacterTitle text={data.title} active={isInView || Boolean(reduceMotion)} />
+        <AnimatedTitle text={data.title} active={isInView || Boolean(reduceMotion)} />
 
         <motion.p
           className="font-bn-body text-lg md:text-xl text-cream/85 mt-5"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={isInView || reduceMotion ? { opacity: 1 } : undefined}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.6, delay: subtitleDelay, ease: EASE_PREMIUM }}
         >
           {data.subtitle}
@@ -97,18 +186,45 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
 
         <motion.div
           className="mt-10"
-          initial={reduceMotion ? false : { scale: 0.9, opacity: 0 }}
+          initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
           animate={isInView || reduceMotion ? { scale: 1, opacity: 1 } : undefined}
           transition={{ duration: 0.5, delay: ctaDelay, ease: EASE_PREMIUM }}
         >
-          <Link
-            href={data.href}
-            className="inline-flex items-center justify-center min-h-14 px-10 bg-cream text-charcoal font-bn-body text-lg font-semibold rounded hover:bg-white transition-colors duration-300"
+          <motion.div
+            animate={reduceMotion ? undefined : { boxShadow: ['0 0 0 rgba(201,125,93,0.0)', '0 0 24px rgba(201,125,93,0.28)', '0 0 0 rgba(201,125,93,0.0)'] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="inline-block rounded"
           >
-            {data.cta}
-          </Link>
+            <Link
+              href={data.href}
+              className="inline-flex items-center justify-center min-h-14 px-10 bg-cream text-charcoal font-bn-body text-lg font-semibold rounded hover:bg-white transition-colors duration-300"
+            >
+              {data.cta} →
+            </Link>
+          </motion.div>
         </motion.div>
-        <p className="font-bn-body text-sm text-mustard mt-6">{formatBnText(data.promo)}</p>
+        {data.promo && (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, x: 100 }}
+            animate={
+              isInView || reduceMotion
+                ? reduceMotion
+                  ? { opacity: 1, x: 0 }
+                  : { opacity: 1, x: 0, y: [0, -8, 0] }
+                : undefined
+            }
+            transition={{
+              opacity: { duration: 0.6, delay: 1 },
+              x: { duration: 0.6, delay: 1, ease: EASE_PREMIUM },
+              y: { duration: 3, delay: 1.5, ease: 'easeInOut', repeat: Infinity },
+            }}
+            className="mt-6 inline-block px-6 py-2 bg-mustard/20 backdrop-blur-sm border border-mustard/50 rounded-full"
+          >
+            <span className="font-bn-body text-mustard text-sm font-medium">
+              {formatBnText(data.promo)}
+            </span>
+          </motion.div>
+        )}
         <p className="sr-only">{data.imageHint}</p>
       </div>
     </section>
