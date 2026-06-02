@@ -32,9 +32,24 @@ import { dedupeFeaturedCatalogProducts } from '@/lib/featured-products';
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
-import type { Category } from '@/server/db/schema';
+import type { Category, ProductWithRelations } from '@/server/db/schema';
 
 export const STOREFRONT_REVALIDATE = 60;
+
+async function loadRawPublishedProductRows(): Promise<{
+  rows: ProductWithRelations[];
+  catById: Map<string, Category>;
+}> {
+  const brandId = await getBrandId();
+  const categories = await getCategories(brandId);
+  const catById = new Map(categories.map((c) => [c.id, c]));
+  const result = await getProducts({ page: 1, limit: 500, published: true });
+  return { rows: result.data, catById };
+}
+
+function sortCatalogByNewest(list: CatalogProduct[]): CatalogProduct[] {
+  return [...list].sort((a, b) => b.createdAt - a.createdAt);
+}
 
 function enrichCategoryCard(
   card: CategoryCardConfig,
@@ -119,18 +134,26 @@ export async function resolveFeaturedProductsServer(
     let list = [...products];
 
     if (data.source === 'latest') {
-      list.sort((a, b) => b.createdAt - a.createdAt);
+      list = sortCatalogByNewest(list);
     } else if (data.source === 'bestsellers') {
-      list.sort((a, b) => b.popularScore - a.popularScore);
+      list = [...list].sort((a, b) => b.popularScore - a.popularScore);
     } else if (data.manualProductIds.length > 0) {
-      const byId = new Map(products.map((p) => [p.id, p]));
-      list = data.manualProductIds
+      const { rows, catById } = await loadRawPublishedProductRows();
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      const selectedRows = data.manualProductIds
         .map((id) => byId.get(id))
-        .filter((p): p is CatalogProduct => !!p);
+        .filter((r): r is ProductWithRelations => !!r);
+
+      if (selectedRows.length > 0) {
+        list = groupProductsForListing(selectedRows, catById);
+      } else {
+        // Stale demo IDs or unpublished picks — show newest published sets instead
+        list = sortCatalogByNewest(products);
+      }
     }
 
     if (list.length === 0) {
-      list = await loadFeaturedProductsServer(limit);
+      list = sortCatalogByNewest(products);
     }
 
     list = dedupeFeaturedCatalogProducts(list, limit);
@@ -140,8 +163,9 @@ export async function resolveFeaturedProductsServer(
       layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',
     }));
   } catch {
+    const { products } = await loadCatalogProductsServer({ limit: 200 });
     const fallback = dedupeFeaturedCatalogProducts(
-      await loadFeaturedProductsServer(limit),
+      sortCatalogByNewest(products),
       limit
     );
     return fallback.map((p, i) => ({

@@ -213,6 +213,10 @@ export function FeaturedEditor({ data, onChange }: EditorProps<FeaturedSectionDa
       </fieldset>
       {data.source === 'manual' && (
         <div className="space-y-2 rounded-lg border border-neutral-200 p-3">
+          <p className="text-xs text-neutral-600">
+            প্রতিটি ম্যাচিং সেট (পুরুষ/মহিলা/ছেলে/মেয়ে) হোমপেজে একটিমাত্র কার্ড হিসেবে দেখাবে। ৪টি
+            কার্ডের জন্য ৪টি আলাদা ডিজাইন বা সিম্পল পণ্য বেছে নিন — একই সেটের সব ভ্যারিয়েন্ট নয়।
+          </p>
           <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="max-h-48 overflow-y-auto space-y-1">
             {products
