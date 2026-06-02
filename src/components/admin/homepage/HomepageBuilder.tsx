@@ -79,7 +79,7 @@ export function HomepageBuilder() {
         saveDraftHomepageConfig(fallback);
         toast('Could not load saved config — showing defaults', 'error');
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
+     
   }, []);
 
   const sortedSections = useMemo(

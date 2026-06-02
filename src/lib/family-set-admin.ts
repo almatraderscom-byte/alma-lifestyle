@@ -285,7 +285,7 @@ export function buildFamilySetProducts(
   const groupName = state.designName.trim();
   const now = new Date().toISOString();
   const products: AdminProduct[] = [];
-  let groupId = input.designGroupId;
+  const groupId = input.designGroupId;
 
   const shared = {
     description: state.description,
