@@ -12,7 +12,10 @@ import {
 } from '@/lib/content';
 import type { FeaturedProduct } from '@/lib/content';
 import { getTotalStock, type AdminProduct } from '@/lib/admin-store';
-import { dedupeFeaturedAdminProducts } from '@/lib/featured-products';
+import {
+  dedupeFeaturedAdminProducts,
+  sanitizeFeaturedSectionData,
+} from '@/lib/featured-products';
 import { shouldUseApi } from '@/lib/data-source';
 import type {
   CategoriesSectionData,
@@ -409,35 +412,36 @@ function getPublishedCatalogLocal(): AdminProduct[] {
 }
 
 export function resolveFeaturedProducts(data: FeaturedSectionData): FeaturedProduct[] {
+  const section = sanitizeFeaturedSectionData(data);
   if (shouldUseApi()) {
-    return HOME_FEATURED_PRODUCTS.slice(0, data.productCount);
+    return HOME_FEATURED_PRODUCTS.slice(0, section.productCount);
   }
   const catalog = getPublishedCatalogLocal();
   let list: AdminProduct[] = [];
 
-  if (data.source === 'latest') {
+  if (section.source === 'latest') {
     list = [...catalog].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  } else if (data.source === 'bestsellers') {
+  } else if (section.source === 'bestsellers') {
     list = [...catalog].sort((a, b) => getTotalStock(a) - getTotalStock(b));
-  } else {
-    const idSet = new Set(data.manualProductIds);
-    list = data.manualProductIds
+  } else if (section.source === 'manual' && section.manualProductIds.length > 0) {
+    list = section.manualProductIds
       .map((id) => catalog.find((p) => p.id === id))
       .filter((p): p is AdminProduct => !!p);
-    if (list.length === 0) {
-      list = catalog.filter((p) => idSet.has(p.id));
-    }
+  } else {
+    list = [...catalog].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
   }
 
   if (list.length === 0) {
-    return HOME_FEATURED_PRODUCTS.slice(0, data.productCount);
+    return HOME_FEATURED_PRODUCTS.slice(0, section.productCount);
   }
 
-  list = dedupeFeaturedAdminProducts(list, data.productCount);
+  list = dedupeFeaturedAdminProducts(list, section.productCount);
 
-  return list.slice(0, data.productCount).map((p, i) => adminProductToFeatured(p, i));
+  return list.slice(0, section.productCount).map((p, i) => adminProductToFeatured(p, i));
 }
 
 export function getSectionConfig<K extends HomepageSectionId>(

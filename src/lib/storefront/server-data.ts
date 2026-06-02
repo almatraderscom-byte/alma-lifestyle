@@ -28,7 +28,10 @@ import type {
   HomepageConfig,
 } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
-import { dedupeFeaturedCatalogProducts } from '@/lib/featured-products';
+import {
+  dedupeFeaturedCatalogProducts,
+  sanitizeFeaturedSectionData,
+} from '@/lib/featured-products';
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
@@ -119,7 +122,8 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
 export async function resolveFeaturedProductsServer(
   data: FeaturedSectionData
 ): Promise<FeaturedProduct[]> {
-  const limit = data.productCount;
+  const section = sanitizeFeaturedSectionData(data);
+  const limit = section.productCount;
 
   if (!isSupabaseAdminConfigured()) {
     const { CATALOG_PRODUCTS } = await import('@/lib/products-data');
@@ -133,23 +137,36 @@ export async function resolveFeaturedProductsServer(
     const { products } = await loadCatalogProductsServer({ limit: 200 });
     let list = [...products];
 
-    if (data.source === 'latest') {
+    if (section.source === 'latest') {
       list = sortCatalogByNewest(list);
-    } else if (data.source === 'bestsellers') {
+    } else if (section.source === 'bestsellers') {
       list = [...list].sort((a, b) => b.popularScore - a.popularScore);
-    } else if (data.manualProductIds.length > 0) {
+    } else if (section.source === 'manual' && section.manualProductIds.length > 0) {
       const { rows, catById } = await loadRawPublishedProductRows();
       const byId = new Map(rows.map((r) => [r.id, r]));
-      const selectedRows = data.manualProductIds
+      const selectedRows = section.manualProductIds
         .map((id) => byId.get(id))
         .filter((r): r is ProductWithRelations => !!r);
 
       if (selectedRows.length > 0) {
         list = groupProductsForListing(selectedRows, catById);
+        const deduped = dedupeFeaturedCatalogProducts(list, limit);
+        if (deduped.length < limit) {
+          const seen = new Set(deduped.map((p) => p.designGroupId ?? p.slug ?? p.id));
+          for (const candidate of sortCatalogByNewest(products)) {
+            if (deduped.length >= limit) break;
+            const key = candidate.designGroupId ?? candidate.slug ?? candidate.id;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            deduped.push(candidate);
+          }
+        }
+        list = deduped;
       } else {
-        // Stale demo IDs or unpublished picks — show newest published sets instead
         list = sortCatalogByNewest(products);
       }
+    } else {
+      list = sortCatalogByNewest(list);
     }
 
     if (list.length === 0) {
