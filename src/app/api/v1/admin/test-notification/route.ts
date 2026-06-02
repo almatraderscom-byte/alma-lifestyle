@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getEmailBrandingContext } from '@/server/notifications/email-brand';
+import { buildTestEmail } from '@/server/notifications/templates/test-email';
 import {
   getNotificationEnvDiagnostics,
   sendEmailToCustomer,
@@ -45,27 +47,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const fromDisplay = process.env.FROM_EMAIL?.trim() || 'onboarding@resend.dev';
+        const brand = await getEmailBrandingContext();
+        const fromDisplay =
+          getNotificationEnvDiagnostics().resolvedFrom ||
+          process.env.FROM_EMAIL?.trim() ||
+          'onboarding@resend.dev';
 
         const result = await sendEmailToCustomer(
           recipient,
           '🧪 ALMA Notification Test',
-          `<!DOCTYPE html>
-<html>
-<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #C97D5D; color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0;">✅ Test Email Successful!</h1>
-  </div>
-  <div style="background: #f5f5f5; padding: 24px; border-radius: 0 0 8px 8px;">
-    <p>If you're reading this, your ALMA notification system is working correctly! 🎉</p>
-    <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-    <p><strong>From:</strong> ${fromDisplay}</p>
-    <p><strong>To:</strong> ${recipient}</p>
-    <hr>
-    <p style="color: #666; font-size: 12px;">This is a test email from the ALMA admin panel.</p>
-  </div>
-</body>
-</html>`,
+          buildTestEmail(recipient, fromDisplay, brand),
           {
             notificationType: 'admin_test_email',
             triggeredBy: 'admin_test',
