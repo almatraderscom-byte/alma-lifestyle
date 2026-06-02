@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   motion,
@@ -74,6 +74,7 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const [isHovering, setIsHovering] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const touchActiveRef = useRef(false);
 
   const data =
     dataProp ??
@@ -92,34 +93,71 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
   const subtitleDelay = 0.45 + titleUnits.length * 0.05 + 0.2;
   const ctaDelay = subtitleDelay + 0.2;
 
+  const updatePointerPosition = useCallback((clientX: number, clientY: number) => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const rect = section.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    setMousePos({
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
+  }, []);
+
   useEffect(() => {
     if (reduceMotion) return;
-    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    const touch =
+      typeof window !== 'undefined' &&
+      ('ontouchstart' in window || navigator.maxTouchPoints > 0);
     setIsTouchDevice(touch);
-    if (touch) return;
 
     const section = sectionRef.current;
     if (!section) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = section.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      setMousePos({ x, y });
+      updatePointerPosition(e.clientX, e.clientY);
     };
     const handleEnter = () => setIsHovering(true);
     const handleLeave = () => setIsHovering(false);
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      touchActiveRef.current = true;
+      setIsHovering(true);
+      updatePointerPosition(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!touchActiveRef.current || e.touches.length !== 1) return;
+      updatePointerPosition(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const endTouch = () => {
+      touchActiveRef.current = false;
+      setIsHovering(false);
+    };
+
     section.addEventListener('mousemove', handleMouseMove);
     section.addEventListener('mouseenter', handleEnter);
     section.addEventListener('mouseleave', handleLeave);
+    section.addEventListener('touchstart', handleTouchStart, { passive: true });
+    section.addEventListener('touchmove', handleTouchMove, { passive: true });
+    section.addEventListener('touchend', endTouch);
+    section.addEventListener('touchcancel', endTouch);
 
     return () => {
       section.removeEventListener('mousemove', handleMouseMove);
       section.removeEventListener('mouseenter', handleEnter);
       section.removeEventListener('mouseleave', handleLeave);
+      section.removeEventListener('touchstart', handleTouchStart);
+      section.removeEventListener('touchmove', handleTouchMove);
+      section.removeEventListener('touchend', endTouch);
+      section.removeEventListener('touchcancel', endTouch);
     };
-  }, [reduceMotion]);
+  }, [reduceMotion, updatePointerPosition]);
 
   return (
     <section
@@ -143,11 +181,11 @@ export function CollectionBannerEditorial({ data: dataProp }: CollectionBannerEd
         className="absolute inset-0 transition-opacity duration-500"
         style={{
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          opacity: isHovering && !isTouchDevice && !reduceMotion ? 0.4 : 0.55,
+          opacity: isHovering && !reduceMotion ? 0.4 : 0.55,
         }}
         aria-hidden
       />
-      {isHovering && !isTouchDevice && !reduceMotion && (
+      {isHovering && !reduceMotion && (
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-300"
           style={{
