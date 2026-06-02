@@ -58,11 +58,14 @@ section[id],
 
 .font-bn-body {
   font-family: var(--font-hind-siliguri), 'Hind Siliguri', system-ui, sans-serif;
+  font-feature-settings: 'calt' 1, 'liga' 1;
   line-height: 1.8;
 }
 
+.font-bn-display,
 .font-bn-heading {
-  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', 'Hind Siliguri', serif;
+  font-feature-settings: 'calt' 1, 'liga' 1;
   line-height: 1.4;
 }
 

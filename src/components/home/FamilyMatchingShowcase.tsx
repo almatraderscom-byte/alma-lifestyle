@@ -9,6 +9,7 @@ import type { FamilyMatchingSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
 import { scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
+import { getTextFontClass } from '@/lib/text-utils';
 
 interface FamilyMatchingShowcaseProps {
   data?: FamilyMatchingSectionData;
@@ -29,7 +30,12 @@ export function FamilyMatchingShowcase({ data: dataProp }: FamilyMatchingShowcas
             viewport={scrollViewport}
           >
             <p className="editorial-label mb-3 text-terracotta">{data.label}</p>
-            <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-5xl leading-[1.35]">
+            <h2
+              className={cn(
+                getTextFontClass(data.title, 'display'),
+                'text-3xl font-bold text-charcoal md:text-5xl leading-[1.35]'
+              )}
+            >
               {data.title}
             </h2>
             <p className="font-bn-body mt-5 text-base text-text-light md:text-lg leading-relaxed">

@@ -8,6 +8,7 @@ import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
 import { isUsableImageUrl } from '@/lib/homepage-image';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import { getTextFontClass } from '@/lib/text-utils';
 import type { HeroSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { EASE_PREMIUM } from '@/lib/animation-variants';
@@ -152,7 +153,12 @@ export function EditorialHero({ data: dataProp }: EditorialHeroProps) {
           {formatBnText(data.caption)}
         </p>
 
-        <h1 className="font-bn-heading text-[2.25rem] md:text-[3.5rem] font-bold text-charcoal leading-[1.35]">
+        <h1
+          className={cn(
+            getTextFontClass(data.title, 'display'),
+            'text-[2.25rem] md:text-[3.5rem] font-bold text-charcoal leading-[1.35]'
+          )}
+        >
           {data.title}
         </h1>
 

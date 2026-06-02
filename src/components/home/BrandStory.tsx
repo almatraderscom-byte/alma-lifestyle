@@ -12,6 +12,7 @@ import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
 import { EASE_PREMIUM, scrollViewport } from '@/lib/animation-variants';
 import { BRAND_STORY } from '@/lib/content';
 import { cn } from '@/lib/utils';
+import { getTextFontClass } from '@/lib/text-utils';
 
 interface BrandStoryProps {
   data?: BrandStorySectionData;
@@ -101,11 +102,21 @@ export function BrandStory({ data: dataProp }: BrandStoryProps) {
             className="md:py-4"
           >
             <p className="editorial-label mb-4 text-terracotta">{data.label || BRAND_STORY.label}</p>
-            <h2 className="font-bn-heading text-[1.75rem] font-bold text-charcoal md:text-4xl leading-[1.35]">
+            <h2
+              className={cn(
+                getTextFontClass(data.title || BRAND_STORY.title, 'display'),
+                'text-[1.75rem] font-bold text-charcoal md:text-4xl leading-[1.35]'
+              )}
+            >
               {data.title || BRAND_STORY.title}
             </h2>
 
-            <blockquote className="my-6 border-l-4 border-terracotta pl-5 font-bn-heading text-xl italic text-maroon md:text-2xl">
+            <blockquote
+              className={cn(
+                getTextFontClass(BRAND_STORY.blockquote, 'display'),
+                'my-6 border-l-4 border-terracotta pl-5 text-xl italic text-maroon md:text-2xl'
+              )}
+            >
               {BRAND_STORY.blockquote}
             </blockquote>
 
