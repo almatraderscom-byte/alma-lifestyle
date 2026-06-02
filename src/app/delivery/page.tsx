@@ -90,19 +90,9 @@ export default function DeliveryPage() {
             <td>৳৮০</td>
           </tr>
           <tr>
-            <td>ঢাকা জেলা</td>
-            <td>২-৩ দিন</td>
-            <td>৳১০০</td>
-          </tr>
-          <tr>
-            <td>ঢাকার বাইরে</td>
+            <td>ঢাকার বাইরে (সব জেলা)</td>
             <td>৩-৫ দিন</td>
             <td>৳১২০</td>
-          </tr>
-          <tr>
-            <td>চর/দ্বীপ এলাকা</td>
-            <td>৫-৭ দিন</td>
-            <td>৳২০০</td>
           </tr>
         </tbody>
       </table>

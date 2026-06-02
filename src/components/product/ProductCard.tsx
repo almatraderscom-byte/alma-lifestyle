@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,7 @@ export function ProductCard({
   editorial = false,
   index = 0,
 }: ProductCardProps) {
+  const router = useRouter();
   const { addItem } = useCart();
   const { showToast } = useToast();
   const { has: isWished, toggle: toggleWishlist } = useWishlist();
@@ -110,14 +112,25 @@ export function ProductCard({
     };
   }, []);
 
+  function addProductToCart() {
+    const slug = product.slug ?? product.href.replace('/products/', '');
+    const catalog = getProductBySlug(slug);
+    if (!catalog) return null;
+    const payload = catalogToCartItem(catalog);
+    addItem(payload);
+    return payload;
+  }
+
   function handleAddToBag(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const slug = product.slug ?? product.href.replace('/products/', '');
-    const catalog = getProductBySlug(slug);
-    if (!catalog) return;
-    addItem(catalogToCartItem(catalog));
-    showToast(PDP.toastAdded);
+    if (addProductToCart()) showToast(PDP.toastAdded);
+  }
+
+  function handleBuyNow(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (addProductToCart()) router.push('/cart');
   }
 
   const hoverLift = !reducedMotion && isDesktop;
@@ -253,18 +266,35 @@ export function ProductCard({
           )}
         </div>
 
-        <motion.button
-          type="button"
+        <div
           className={cn(
-            'w-full min-h-12 font-bn-body text-base font-semibold rounded-sm',
-            'bg-terracotta text-white hover:bg-[#b06d4f] transition-colors duration-300',
-            editorial ? 'md:hidden' : 'md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100 opacity-100'
+            'flex flex-col sm:flex-row gap-2',
+            editorial ? 'md:hidden' : 'md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 opacity-100'
           )}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleAddToBag}
         >
-          {FEATURED_SECTION.addToBag}
-        </motion.button>
+          <motion.button
+            type="button"
+            className={cn(
+              'flex-1 min-h-12 font-bn-body text-sm font-semibold rounded-sm',
+              'border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-cream transition-colors duration-300'
+            )}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAddToBag}
+          >
+            {FEATURED_SECTION.addToBag}
+          </motion.button>
+          <motion.button
+            type="button"
+            className={cn(
+              'flex-1 min-h-12 font-bn-body text-sm font-semibold rounded-sm',
+              'bg-terracotta text-white hover:bg-[#b06d4f] transition-colors duration-300'
+            )}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleBuyNow}
+          >
+            {PDP.buyNow}
+          </motion.button>
+        </div>
       </div>
     </motion.article>
   );

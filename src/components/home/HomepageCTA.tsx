@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { SITE } from '@/lib/content';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { scrollViewport } from '@/lib/animation-variants';
 
 export function HomepageCTA() {
   const reduceMotion = useReducedMotion();
-  const whatsappHref = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(SITE.whatsappPrefill)}`;
+  const settings = useStoreSettings();
+  const whatsappHref = buildWhatsAppHref(settings, SITE.whatsappPrefill);
 
   return (
     <section className="relative overflow-hidden py-16 md:py-24">

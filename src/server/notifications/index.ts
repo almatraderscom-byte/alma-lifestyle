@@ -8,6 +8,8 @@ import {
 import { buildAdminOrderEmail } from '@/server/notifications/templates/admin-order';
 import { buildCustomerOrderEmail } from '@/server/notifications/templates/order-confirmation';
 import { buildOrderStatusEmail } from '@/server/notifications/templates/order-status';
+import { getFreeDeliveryThreshold } from '@/lib/delivery-settings';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 export interface NotificationSendContext {
   notificationType?: string;
@@ -502,6 +504,8 @@ export async function sendOrderConfirmationToCustomer(
   }
 
   const brand = await getEmailBrandingContext();
+  const settings = await loadPublicSettingsServer();
+  const freeThreshold = getFreeDeliveryThreshold(settings);
   const dateStr = new Date(order.created_at).toLocaleDateString('bn-BD', {
     day: 'numeric',
     month: 'long',
@@ -520,6 +524,7 @@ export async function sendOrderConfirmationToCustomer(
       paymentMethod: order.payment_method,
       estimatedDelivery: estimateDeliveryText(),
       orderDate: dateStr,
+      freeThreshold,
     },
     brand
   );

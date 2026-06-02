@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { WhatsAppLink } from '@/components/ui/WhatsAppLink';
 
 interface PageLayoutProps {
   badge?: string;
@@ -58,14 +59,9 @@ export function PageLayout({
             আমাদের কাস্টমার সার্ভিস টিম সবসময় আপনার পাশে আছে
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <a
-              href="https://wa.me/8801307777733"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md bg-emerald px-6 py-3 font-bn-body text-white transition hover:opacity-90"
-            >
+            <WhatsAppLink className="rounded-md bg-emerald px-6 py-3 font-bn-body text-white transition hover:opacity-90">
               WhatsApp এ চ্যাট করুন
-            </a>
+            </WhatsAppLink>
             <a
               href="tel:+8801307777733"
               className="rounded-md border-2 border-terracotta px-6 py-3 font-bn-body text-terracotta transition hover:bg-terracotta hover:text-white"

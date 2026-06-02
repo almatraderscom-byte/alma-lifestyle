@@ -1,10 +1,8 @@
 'use client';
 
-import {
-  BANGLADESH_DISTRICTS,
-  DELIVERY_CHARGES,
-  FREE_DELIVERY_THRESHOLD,
-} from '@/lib/bangladesh-districts';
+import { BANGLADESH_DISTRICTS } from '@/lib/bangladesh-districts';
+import { getFreeDeliveryThreshold, getZoneCharges } from '@/lib/delivery-settings';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
 interface DistrictSelectorProps {
@@ -14,6 +12,10 @@ interface DistrictSelectorProps {
 }
 
 export function DistrictSelector({ value, onChange, error }: DistrictSelectorProps) {
+  const settings = useStoreSettings();
+  const charges = getZoneCharges(settings);
+  const freeThreshold = getFreeDeliveryThreshold(settings);
+
   return (
     <div>
       <label className="block font-bn-body text-base font-medium text-charcoal mb-1.5">
@@ -34,22 +36,14 @@ export function DistrictSelector({ value, onChange, error }: DistrictSelectorPro
 
         <optgroup label="ঢাকা সিটি">
           <option value="ঢাকা সিটি">
-            ঢাকা সিটি — ৳{DELIVERY_CHARGES.dhaka_city} ডেলিভারি
+            ঢাকা সিটি — ৳{charges.dhaka_city} ডেলিভারি
           </option>
         </optgroup>
 
-        <optgroup label="ঢাকা জেলা ও আশেপাশে">
-          {BANGLADESH_DISTRICTS.filter((d) => d.zone === 'dhaka_district').map((d) => (
-            <option key={d.name_en} value={d.name_bn}>
-              {d.name_bn} — ৳{DELIVERY_CHARGES.dhaka_district}
-            </option>
-          ))}
-        </optgroup>
-
-        <optgroup label="ঢাকার বাইরে">
+        <optgroup label="ঢাকার বাইরে (গাজীপুর, নারায়ণগঞ্জ সহ সব জেলা)">
           {BANGLADESH_DISTRICTS.filter((d) => d.zone === 'outside_dhaka').map((d) => (
             <option key={d.name_en} value={d.name_bn}>
-              {d.name_bn} — ৳{DELIVERY_CHARGES.outside_dhaka}
+              {d.name_bn} — ৳{charges.outside_dhaka}
             </option>
           ))}
         </optgroup>
@@ -62,7 +56,7 @@ export function DistrictSelector({ value, onChange, error }: DistrictSelectorPro
       )}
 
       <p className="mt-1.5 font-bn-body text-xs text-text-light">
-        ৳{FREE_DELIVERY_THRESHOLD.toLocaleString('en-US')}+ অর্ডারে ফ্রি ডেলিভারি
+        ৳{freeThreshold.toLocaleString('en-US')}+ অর্ডারে ফ্রি ডেলিভারি
       </p>
     </div>
   );

@@ -26,9 +26,4 @@ export function useStoreSettings(): AppSettings {
   return useContext(StoreSettingsContext);
 }
 
-/** E.164 digits only for wa.me links */
-export function whatsappE164(settings: AppSettings): string {
-  const code = settings.whatsappCountryCode.replace(/\D/g, '');
-  const num = settings.whatsappNumber.replace(/\D/g, '');
-  return `${code}${num}`;
-}
+export { buildWhatsAppHref, whatsappE164 } from '@/lib/whatsapp';

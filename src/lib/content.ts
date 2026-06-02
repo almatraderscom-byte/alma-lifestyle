@@ -7,7 +7,7 @@ import { UI } from './ui-terms';
 export const SITE = {
   brandName: 'ALMA',
   tagline: 'প্রিমিয়াম স্টাইল ও মান — চড়া দাম ছাড়াই',
-  whatsappNumber: '8801000000000',
+  whatsappNumber: '8801307777733',
   whatsappPrefill:
     'আসসালামু আলাইকুম, আমি ALMA Lifestyle থেকে পণ্য সম্পর্কে জানতে চাই।',
   copyrightYear: '২০২৬',
@@ -405,7 +405,7 @@ export const PDP = {
   quantity: UI.quantity,
   sizeChart: 'Size Chart',
   addToBag: UI.addToCart,
-  buyNow: UI.buyNow,
+  buyNow: '⚡ এখনই কিনুন',
   addFullSetToCart: 'Add Full Set to Cart',
   whatsappOrder: '📱 Order on WhatsApp',
   trust: {
