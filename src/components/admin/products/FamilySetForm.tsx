@@ -26,8 +26,9 @@ import {
   GIRL_VARIANT_SIZE_BN,
   SIZE_PRESETS,
 } from '@/lib/product-design-types';
-import { getCategories } from '@/lib/admin-store';
-import { createFamilySetApi } from '@/lib/admin-api';
+import { getCategories, saveProduct } from '@/lib/admin-store';
+import { createProductApi } from '@/lib/admin-api';
+import { shouldUseApi } from '@/lib/data-source';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
@@ -116,7 +117,7 @@ export function FamilySetForm() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    const { products } = buildFamilySetProducts({ state });
+    const { products } = buildFamilySetProducts({ state, categoryCode });
     const ordered = [...products].sort(
       (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
     );
@@ -129,17 +130,47 @@ export function FamilySetForm() {
     setSaving(true);
 
     try {
-      for (let i = 0; i < ordered.length; i++) {
-        setProgress((prev) =>
-          prev.map((s, idx) => (idx === i ? { ...s, status: 'loading' } : s))
-        );
+      if (shouldUseApi()) {
+        let rootId: string | undefined;
+        let created = 0;
+        for (let i = 0; i < ordered.length; i++) {
+          setProgress((prev) =>
+            prev.map((s, idx) => (idx === i ? { ...s, status: 'loading' } : s))
+          );
+          const saved = await createProductApi({
+            ...ordered[i],
+            designGroupId: rootId,
+          });
+          if (!rootId) {
+            rootId = saved.designGroupId ?? saved.id;
+          }
+          created++;
+          setProgress((prev) =>
+            prev.map((s, idx) => (idx === i ? { ...s, status: 'done' } : s))
+          );
+        }
+        toast(`Family Set created! ${created} products added.`, 'success');
+      } else {
+        let rootId: string | undefined;
+        let created = 0;
+        for (let i = 0; i < ordered.length; i++) {
+          setProgress((prev) =>
+            prev.map((s, idx) => (idx === i ? { ...s, status: 'loading' } : s))
+          );
+          const saved = await saveProduct({
+            ...ordered[i],
+            designGroupId: rootId,
+          });
+          if (!rootId) {
+            rootId = saved.designGroupId ?? saved.id;
+          }
+          created++;
+          setProgress((prev) =>
+            prev.map((s, idx) => (idx === i ? { ...s, status: 'done' } : s))
+          );
+        }
+        toast(`Family Set created! ${created} products added.`, 'success');
       }
-
-      const result = await createFamilySetApi(ordered);
-      const saved = result.products ?? result.created ?? [];
-
-      setProgress((prev) => prev.map((s) => ({ ...s, status: 'done' as const })));
-      toast(`Family Set created! ${saved.length} products added.`, 'success');
       router.push('/admin/products');
     } catch (err) {
       setProgress((prev) =>

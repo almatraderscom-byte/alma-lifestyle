@@ -272,12 +272,15 @@ function buildVariants(
 export interface BuildFamilyProductsInput {
   state: FamilySetFormState;
   designGroupId?: string;
+  /** e.g. PNJ from category slug; defaults to PNJ */
+  categoryCode?: string;
 }
 
 export function buildFamilySetProducts(
   input: BuildFamilyProductsInput
 ): { products: AdminProduct[]; designSlug: string } {
   const { state } = input;
+  const categoryCode = input.categoryCode ?? 'PNJ';
   const designSlug = designSlugFromName(state.designName);
   const groupName = state.designName.trim();
   const now = new Date().toISOString();
@@ -304,11 +307,11 @@ export function buildFamilySetProducts(
   for (const type of enabledTypes) {
     const cfg = state.members[type];
 
-    const sku = skuPrefixForType(designSlug, type);
+    const skuPrefix = skuPrefixForType(designSlug, type, categoryCode);
     const labelBn = PRODUCT_TYPE_LABELS_BN[type];
     const variants = buildVariants(
       type,
-      sku,
+      skuPrefix,
       cfg.stockPerSize,
       cfg.womenFreeSize,
       cfg.girlAges
@@ -323,7 +326,7 @@ export function buildFamilySetProducts(
       title: `${groupName} - ${labelBn}`,
       slug: slugForDesignMember(designSlug, type),
       priceBdt: cfg.priceBdt,
-      sku,
+      sku: skuPrefix,
       hasVariants: variants.length > 0,
       variants: variants.length > 0 ? variants : undefined,
       stock: variants.length > 0 ? undefined : cfg.stockPerSize,
