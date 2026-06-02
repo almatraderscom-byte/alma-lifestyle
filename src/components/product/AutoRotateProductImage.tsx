@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { DEFAULT_IMAGES, resolveProductImageUrl } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 
@@ -118,13 +118,16 @@ export function AutoRotateProductImage({
   ]);
 
   useEffect(() => {
-    if (!hasMultiple) return;
-    const nextIdx = (currentIndex + 1) % validImages.length;
-    const nextUrl = validImages[nextIdx]?.url;
-    if (!nextUrl) return;
-    const img = new window.Image();
-    img.src = nextUrl;
-  }, [currentIndex, hasMultiple, validImages]);
+    if (!validImages.length) return;
+    validImages.forEach((image) => {
+      const src = productSlug
+        ? resolveProductImageUrl(image.url, productSlug, categorySlug)
+        : image.url;
+      if (!src) return;
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [validImages, productSlug, categorySlug]);
 
   useEffect(() => {
     return () => {
@@ -178,6 +181,7 @@ export function AutoRotateProductImage({
   }
 
   const active = validImages[currentIndex] ?? validImages[0];
+  const showCrossfade = hasMultiple && !reduceMotion;
 
   return (
     <div
@@ -195,7 +199,31 @@ export function AutoRotateProductImage({
         dragElastic={0.12}
         onDragEnd={handleSwipe}
       >
-        {reduceMotion || !hasMultiple ? (
+        {showCrossfade ? (
+          <div className="absolute inset-0">
+            {validImages.map((image, idx) => (
+              <motion.div
+                key={image.id}
+                className="absolute inset-0"
+                initial={false}
+                animate={{ opacity: idx === currentIndex ? 1 : 0 }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
+                style={{
+                  willChange: 'opacity',
+                  pointerEvents: idx === currentIndex ? 'auto' : 'none',
+                }}
+              >
+                <GalleryImageLayer
+                  image={image}
+                  alt={`${alt} - image ${idx + 1}`}
+                  priority={priority && idx === 0}
+                  productSlug={productSlug}
+                  categorySlug={categorySlug}
+                />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
           <GalleryImageLayer
             image={active}
             alt={alt}
@@ -203,25 +231,6 @@ export function AutoRotateProductImage({
             productSlug={productSlug}
             categorySlug={categorySlug}
           />
-        ) : (
-          <AnimatePresence mode="sync">
-            <motion.div
-              key={active.id}
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-            >
-              <GalleryImageLayer
-                image={active}
-                alt={`${alt} - image ${currentIndex + 1}`}
-                priority={priority && currentIndex === 0}
-                productSlug={productSlug}
-                categorySlug={categorySlug}
-              />
-            </motion.div>
-          </AnimatePresence>
         )}
       </motion.div>
 
