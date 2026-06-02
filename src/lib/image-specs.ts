@@ -298,7 +298,7 @@ export type ImageSpecKey = keyof typeof IMAGE_SPECS;
 
 export function formatImageSpec(specKey: ImageSpecKey): string {
   const spec = IMAGE_SPECS[specKey];
-  return `${spec.recommended.width}×${spec.recommended.height}px • ${spec.aspectRatio} • Max ${spec.maxSizeMB}MB`;
+  return `${spec.recommended.width}×${spec.recommended.height}px • ${spec.aspectRatio} • Up to ${spec.maxSizeMB}MB (larger files auto-compressed)`;
 }
 
 export function getImageSpec(specKey: ImageSpecKey): ImageSpec {
