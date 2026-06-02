@@ -38,7 +38,7 @@ export function CheckoutPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [priceWarning, setPriceWarning] = useState<string | null>(null);
 
-  const { total } = useOrderTotals(subtotal, districtValue);
+  const { deliveryCharge, total } = useOrderTotals(subtotal, districtValue);
 
   useEffect(() => {
     if (hydrated && items.length === 0 && !isSubmitting) {
@@ -187,7 +187,7 @@ export function CheckoutPageContent() {
     <>
       {isSubmitting && <OrderSubmittingAnimation />}
 
-      <div className="min-h-screen bg-cream">
+      <div className="min-h-screen bg-cream pb-28 lg:pb-0">
         <section className="border-b border-border-subtle bg-white py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             <p className="font-bn-body text-xs font-medium tracking-widest text-terracotta mb-2">
@@ -298,9 +298,18 @@ export function CheckoutPageContent() {
                   hideSubmitButton
                 />
               </motion.section>
+
+              <div className="lg:hidden">
+                <OrderSummary
+                  items={items}
+                  subtotal={subtotal}
+                  districtValue={districtValue}
+                  compact
+                />
+              </div>
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="hidden lg:block lg:col-span-1">
               <div className="lg:sticky lg:top-24">
                 <OrderSummary
                   items={items}
@@ -315,6 +324,34 @@ export function CheckoutPageContent() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-subtle bg-white shadow-[0_-8px_30px_rgba(42,38,34,0.12)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          role="region"
+          aria-label="অর্ডার নিশ্চিত করুন"
+        >
+          <div className="mx-auto flex max-w-7xl items-center gap-3">
+            <div className="shrink-0">
+              <p className="font-bn-body text-xs text-text-light">{CHECKOUT.total}</p>
+              <p className="font-bn-heading text-xl font-bold text-terracotta">
+                {formatBdtPrice(total)}
+              </p>
+              {districtValue && deliveryCharge > 0 && (
+                <p className="font-bn-body text-[10px] text-text-light">
+                  {CHECKOUT.delivery}: {formatBdtPrice(deliveryCharge)}
+                </p>
+              )}
+            </div>
+            <button
+              type="submit"
+              form="checkout-form"
+              disabled={submitDisabled || isSubmitting}
+              className="flex min-h-12 flex-1 items-center justify-center rounded-lg bg-terracotta px-4 font-bn-body text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? CHECKOUT.submitting : `${CHECKOUT.submit} →`}
+            </button>
           </div>
         </div>
       </div>

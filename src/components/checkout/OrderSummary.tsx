@@ -14,6 +14,8 @@ interface OrderSummaryProps {
   subtotal: number;
   districtValue: string;
   className?: string;
+  /** Compact layout for inline mobile summary card */
+  compact?: boolean;
   showSubmitButton?: boolean;
   isSubmitting?: boolean;
   submitDisabled?: boolean;
@@ -24,6 +26,7 @@ export function OrderSummary({
   subtotal,
   districtValue,
   className,
+  compact = false,
   showSubmitButton = false,
   isSubmitting = false,
   submitDisabled = false,
@@ -43,11 +46,21 @@ export function OrderSummary({
         className
       )}
     >
-      <h2 className="font-bn-heading text-xl font-bold text-charcoal border-b border-border-subtle pb-3">
+      <h2
+        className={cn(
+          'font-bn-heading font-bold text-charcoal border-b border-border-subtle pb-3',
+          compact ? 'text-lg' : 'text-xl'
+        )}
+      >
         {CHECKOUT.orderSummaryTitle}
       </h2>
 
-      <ul className="space-y-3 max-h-56 overflow-y-auto">
+      <ul
+        className={cn(
+          'space-y-3 overflow-y-auto',
+          compact ? 'max-h-40' : 'max-h-56'
+        )}
+      >
         {items.map((item) => {
           const unit = getLineUnitPrice(item);
           return (
@@ -115,7 +128,7 @@ export function OrderSummary({
           type="submit"
           form="checkout-form"
           disabled={submitDisabled || isSubmitting}
-          className="hidden lg:flex w-full min-h-14 items-center justify-center rounded-lg bg-terracotta font-bn-body text-lg font-semibold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="flex w-full min-h-14 items-center justify-center rounded-lg bg-terracotta font-bn-body text-lg font-semibold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {isSubmitting ? CHECKOUT.submitting : `${CHECKOUT.submit} →`}
         </button>
