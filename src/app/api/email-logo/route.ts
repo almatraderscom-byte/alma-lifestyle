@@ -1,55 +1,71 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { NextResponse } from 'next/server';
-import { getSiteBaseUrl } from '@/server/notifications/email-brand';
-import { isValidStoredFaviconUrl } from '@/lib/favicon-url';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-const CACHE = 'public, max-age=3600, stale-while-revalidate=86400';
-
-async function proxyImage(url: string): Promise<NextResponse | null> {
+async function serveStaticFallback(): Promise<NextResponse> {
   try {
-    const upstream = await fetch(url.trim(), {
+    const filePath = path.join(process.cwd(), 'public', 'brand', 'alma-email-logo.jpg');
+    const buffer = await readFile(filePath);
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch (e) {
+    console.error('[email-logo] Static fallback missing:', e);
+    return NextResponse.json({ error: 'Logo not configured' }, { status: 404 });
+  }
+}
+
+/** Public logo for email clients — proxies admin logo/favicon or serves bundled JPG. */
+export async function GET() {
+  try {
+    const settings = await loadPublicSettingsServer();
+
+    let imageUrl = settings.logoUrl?.trim();
+    if (!imageUrl?.startsWith('https://')) {
+      imageUrl = settings.faviconUrl?.trim();
+    }
+
+    if (!imageUrl?.startsWith('https://')) {
+      console.log('[email-logo] No https logo/favicon in settings — using static fallback');
+      return serveStaticFallback();
+    }
+
+    const response = await fetch(imageUrl, {
       cache: 'no-store',
       headers: { Accept: 'image/*' },
     });
 
-    if (!upstream.ok) return null;
+    if (!response.ok) {
+      console.error('[email-logo] Failed to fetch:', imageUrl, response.status);
+      return serveStaticFallback();
+    }
 
-    const contentType = upstream.headers.get('content-type') ?? '';
-    if (!contentType.startsWith('image/')) return null;
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.startsWith('image/')) {
+      console.error('[email-logo] Invalid content-type:', contentType);
+      return serveStaticFallback();
+    }
 
-    const body = await upstream.arrayBuffer();
-    if (body.byteLength === 0) return null;
+    const buffer = await response.arrayBuffer();
+    if (buffer.byteLength === 0) {
+      return serveStaticFallback();
+    }
 
-    return new NextResponse(body, {
+    return new NextResponse(buffer, {
       headers: {
         'Content-Type': contentType.split(';')[0] || 'image/jpeg',
-        'Cache-Control': CACHE,
+        'Cache-Control': 'public, max-age=3600',
       },
     });
-  } catch (e) {
-    console.warn('[email-logo] Upstream fetch failed:', url, e);
-    return null;
+  } catch (error) {
+    console.error('[email-logo] Error:', error);
+    return serveStaticFallback();
   }
-}
-
-/**
- * Public logo image for transactional email clients.
- * Prefer direct Supabase URLs in templates; this endpoint is the reliable fallback.
- */
-export async function GET() {
-  const siteUrl = getSiteBaseUrl();
-  const settings = await loadPublicSettingsServer();
-
-  const candidates = [settings.logoUrl, settings.faviconUrl].filter(
-    (u): u is string => isValidStoredFaviconUrl(u)
-  );
-
-  for (const url of candidates) {
-    const response = await proxyImage(url);
-    if (response) return response;
-  }
-
-  return NextResponse.redirect(`${siteUrl}/brand/alma-email-logo.jpg`, 302);
 }
