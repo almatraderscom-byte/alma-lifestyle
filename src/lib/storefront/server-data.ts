@@ -28,6 +28,7 @@ import type {
   HomepageConfig,
 } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
+import { dedupeFeaturedCatalogProducts } from '@/lib/featured-products';
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
@@ -132,12 +133,17 @@ export async function resolveFeaturedProductsServer(
       list = await loadFeaturedProductsServer(limit);
     }
 
+    list = dedupeFeaturedCatalogProducts(list, limit);
+
     return list.slice(0, limit).map((p, i) => ({
       ...toCardProduct(p),
       layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',
     }));
   } catch {
-    const fallback = await loadFeaturedProductsServer(limit);
+    const fallback = dedupeFeaturedCatalogProducts(
+      await loadFeaturedProductsServer(limit),
+      limit
+    );
     return fallback.map((p, i) => ({
       ...toCardProduct(p),
       layout: (i % 2 === 1 ? 'tall' : 'normal') as 'normal' | 'tall',

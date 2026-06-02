@@ -12,6 +12,7 @@ import {
 } from '@/lib/content';
 import type { FeaturedProduct } from '@/lib/content';
 import { getTotalStock, type AdminProduct } from '@/lib/admin-store';
+import { dedupeFeaturedAdminProducts } from '@/lib/featured-products';
 import { shouldUseApi } from '@/lib/data-source';
 import type {
   CategoriesSectionData,
@@ -433,6 +434,8 @@ export function resolveFeaturedProducts(data: FeaturedSectionData): FeaturedProd
   if (list.length === 0) {
     return HOME_FEATURED_PRODUCTS.slice(0, data.productCount);
   }
+
+  list = dedupeFeaturedAdminProducts(list, data.productCount);
 
   return list.slice(0, data.productCount).map((p, i) => adminProductToFeatured(p, i));
 }
