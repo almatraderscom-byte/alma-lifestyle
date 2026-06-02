@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { mapDbOrderToAdmin } from '@/lib/mappers/admin-product';
-import { insertAuditLog } from '@/server/db/queries/audit-log';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import { getOrderById, restoreOrder } from '@/server/db/queries/orders';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { requireAdmin } from '@/server/api/auth';
@@ -24,11 +24,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const updated = await restoreOrder(id);
     if (!updated) return apiNotFound('Order');
 
-    await insertAuditLog({
+    await insertAuditLogForAdmin(admin, {
       action: 'restore_order',
       entity_type: 'order',
       entity_id: id,
-      performed_by: admin.email,
     });
 
     revalidatePath('/admin/orders');

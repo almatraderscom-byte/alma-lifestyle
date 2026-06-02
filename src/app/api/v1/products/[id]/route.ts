@@ -14,7 +14,8 @@ import {
   mapDbProductToPublic,
 } from '@/lib/mappers/public-product';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
-import { tryRequireAdmin } from '@/server/api/auth';
+import { requireDestructiveRole, tryRequireAdmin } from '@/server/api/auth';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import type { AdminProduct } from '@/lib/admin-store';
 import { revalidateProductPages } from '@/lib/storefront/revalidate';
@@ -95,8 +96,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return apiNotFound('Product');
   }
   return withAdmin(request, async () => {
+    const admin = await requireDestructiveRole(request);
     const existing = await getAdminProductById(id);
     await softDeleteProduct(id);
+    await insertAuditLogForAdmin(admin, {
+      action: 'delete_product',
+      entity_type: 'product',
+      entity_id: id,
+      entity_data: existing ? { title: existing.title, slug: existing.slug } : undefined,
+    });
     revalidateProductPages(existing?.slug);
     return apiSuccess({ id, deleted: true });
   });

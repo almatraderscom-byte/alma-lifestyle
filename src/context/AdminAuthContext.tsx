@@ -11,10 +11,9 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getAdminUser,
-  isLoggedIn,
-  login as authLogin,
-  logout as authLogout,
+  fetchCurrentAdmin,
+  loginWithApi,
+  logoutWithApi,
   type AdminUser,
 } from '@/lib/admin-auth';
 import { ensureAdminSeed } from '@/lib/admin-store';
@@ -23,7 +22,7 @@ interface AdminAuthContextValue {
   user: AdminUser | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
@@ -35,20 +34,23 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     ensureAdminSeed();
-    setUser(isLoggedIn() ? getAdminUser() : null);
-    setReady(true);
+    void fetchCurrentAdmin().then((u) => {
+      setUser(u);
+      setReady(true);
+    });
   }, []);
 
-  const login = useCallback((email: string, password: string) => {
-    const ok = authLogin(email, password);
-    if (ok) {
-      setUser(getAdminUser());
+  const login = useCallback(async (email: string, password: string) => {
+    const loggedIn = await loginWithApi(email, password);
+    if (loggedIn) {
+      setUser(loggedIn);
+      return true;
     }
-    return Promise.resolve(ok);
+    return false;
   }, []);
 
-  const logout = useCallback(() => {
-    authLogout();
+  const logout = useCallback(async () => {
+    await logoutWithApi();
     setUser(null);
     router.push('/admin/login');
   }, [router]);

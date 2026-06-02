@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { mapDbOrderToAdmin } from '@/lib/mappers/admin-product';
-import { insertAuditLog } from '@/server/db/queries/audit-log';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
 import {
   archiveOrder,
   canPermanentlyDeleteOrder,
@@ -9,7 +9,7 @@ import {
   getOrderById,
 } from '@/server/db/queries/orders';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
-import { requireAdmin } from '@/server/api/auth';
+import { requireAdmin, requireDestructiveRole } from '@/server/api/auth';
 import { withAdmin } from '@/server/api/handler';
 
 export const runtime = 'nodejs';
@@ -29,11 +29,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const updated = await archiveOrder(id, admin.email);
     if (!updated) return apiNotFound('Order');
 
-    await insertAuditLog({
+    await insertAuditLogForAdmin(admin, {
       action: 'archive_order',
       entity_type: 'order',
       entity_id: id,
-      performed_by: admin.email,
     });
 
     revalidatePath('/admin/orders');
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
-    const admin = await requireAdmin(request);
+    const admin = await requireDestructiveRole(request);
     const order = await getOrderById(id);
     if (!order) return apiNotFound('Order');
 
@@ -60,12 +59,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    await insertAuditLog({
+    await insertAuditLogForAdmin(admin, {
       action: 'delete_order',
       entity_type: 'order',
       entity_id: id,
       entity_data: order as unknown as Record<string, unknown>,
-      performed_by: admin.email,
       notes: 'Permanent deletion',
     });
 

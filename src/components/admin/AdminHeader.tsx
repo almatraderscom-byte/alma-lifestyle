@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdminAuth } from '@/context/AdminAuthContext';
+import { canManageSettings } from '@/lib/admin-roles';
 import { cn } from '@/lib/utils';
 
 interface AdminHeaderProps {
@@ -72,27 +73,28 @@ export function AdminHeader({ breadcrumbs, onMenuClick }: AdminHeaderProps) {
           </button>
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
-              <p className="px-4 py-2 text-xs text-neutral-500 border-b border-neutral-100">{user?.email}</p>
-              <Link
-                href="/admin/settings"
-                className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                onClick={() => setDropdownOpen(false)}
-              >
-                Profile
-              </Link>
-              <Link
-                href="/admin/settings"
-                className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                onClick={() => setDropdownOpen(false)}
-              >
-                Settings
-              </Link>
+              <p className="px-4 py-2 text-xs text-neutral-500 border-b border-neutral-100">
+                <span className="block font-medium text-neutral-800">{user?.name}</span>
+                {user?.email}
+                {user?.role && (
+                  <span className="block mt-0.5 capitalize text-neutral-400">{user.role}</span>
+                )}
+              </p>
+              {user && canManageSettings(user.role) && (
+                <Link
+                  href="/admin/settings"
+                  className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Settings
+                </Link>
+              )}
               <button
                 type="button"
                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 onClick={() => {
                   setDropdownOpen(false);
-                  logout();
+                  void logout();
                 }}
               >
                 Logout

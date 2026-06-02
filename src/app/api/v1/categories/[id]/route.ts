@@ -6,8 +6,8 @@ import {
   getCategoryById,
   updateCategory,
 } from '@/server/db/queries/categories-admin';
-import { insertAuditLog } from '@/server/db/queries/audit-log';
-import { requireAdmin } from '@/server/api/auth';
+import { insertAuditLogForAdmin } from '@/server/db/queries/audit-log';
+import { requireAdmin, requireDestructiveRole } from '@/server/api/auth';
 import { apiError, apiNotFound, apiSuccess } from '@/server/api/response';
 import { withAdmin, withPublicDb } from '@/server/api/handler';
 import { revalidateCategoryPages } from '@/lib/storefront/revalidate';
@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   return withAdmin(request, async () => {
-    const admin = await requireAdmin(request);
+    const admin = await requireDestructiveRole(request);
     const category = await getCategoryById(id);
     if (!category) return apiNotFound('Category');
 
@@ -55,12 +55,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return apiError(message, 400, 'DELETE_NOT_ALLOWED');
     }
 
-    await insertAuditLog({
+    await insertAuditLogForAdmin(admin, {
       action: 'delete_category',
       entity_type: 'category',
       entity_id: id,
       entity_data: category as unknown as Record<string, unknown>,
-      performed_by: admin.email,
     });
 
     revalidateCategoryPages();

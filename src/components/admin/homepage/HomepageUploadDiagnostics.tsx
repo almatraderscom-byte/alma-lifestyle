@@ -3,7 +3,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { isLoggedIn } from '@/lib/admin-auth';
+import { fetchCurrentAdmin } from '@/lib/admin-auth';
 import {
   setHomepageUploadAttemptListener,
   type HomepageUploadAttemptRecord,
@@ -22,7 +22,7 @@ export function HomepageUploadDiagnostics() {
   const [lastAttempt, setLastAttempt] = useState<HomepageUploadAttemptRecord | null>(null);
 
   useEffect(() => {
-    setAdminOk(isLoggedIn());
+    void fetchCurrentAdmin().then((u) => setAdminOk(Boolean(u)));
   }, []);
 
   useEffect(() => {

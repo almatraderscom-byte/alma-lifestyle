@@ -183,6 +183,9 @@ export interface AdminAuditLog {
   entity_id: string;
   entity_data: Json | null;
   performed_by: string | null;
+  performed_by_id: UUID | null;
+  performed_by_email: string | null;
+  performed_by_name: string | null;
   performed_at: Timestamp;
   notes: string | null;
 }
