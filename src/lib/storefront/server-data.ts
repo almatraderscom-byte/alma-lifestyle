@@ -92,7 +92,7 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
     const stored = await getHomepageConfigOrDefault();
     let config = ensureHomepageConfig(stored);
     const categories = await loadCategoriesServer();
-    const { products } = await loadCatalogProductsServer({ limit: 500 });
+    const { products } = await loadCatalogProductsServer({ limit: 200 });
     config = await enrichHomepageCategories(config, categories, products);
     return config;
   } catch {

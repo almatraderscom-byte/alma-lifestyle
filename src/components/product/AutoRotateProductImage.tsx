@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { DEFAULT_IMAGES, resolveProductImageUrl } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
@@ -83,7 +83,7 @@ export function AutoRotateProductImage({
     amount: 0.3,
   });
 
-  const validImages = images?.filter(Boolean) ?? [];
+  const validImages = useMemo(() => images?.filter(Boolean) ?? [], [images]);
   const hasMultiple = validImages.length > 1;
   const hasRealUrls = Boolean(
     productSlug || validImages.some((g) => g.url?.trim())
@@ -117,23 +117,41 @@ export function AutoRotateProductImage({
     reduceMotion,
   ]);
 
+  const preloadSourcesKey = useMemo(
+    () =>
+      validImages
+        .map((image) =>
+          productSlug
+            ? resolveProductImageUrl(image.url, productSlug, categorySlug)
+            : image.url
+        )
+        .filter(Boolean)
+        .join('|'),
+    [validImages, productSlug, categorySlug]
+  );
+
   useEffect(() => {
-    if (!validImages.length) return;
-    validImages.forEach((image) => {
-      const src = productSlug
-        ? resolveProductImageUrl(image.url, productSlug, categorySlug)
-        : image.url;
-      if (!src) return;
+    if (!preloadSourcesKey) return;
+    for (const src of preloadSourcesKey.split('|')) {
       const img = new window.Image();
       img.src = src;
-    });
-  }, [validImages, productSlug, categorySlug]);
+    }
+  }, [preloadSourcesKey]);
 
   useEffect(() => {
     return () => {
       if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
     };
   }, []);
+
+  const showCrossfade = hasMultiple && !reduceMotion;
+  const crossfadeIndices = useMemo(() => {
+    if (!showCrossfade || validImages.length === 0) {
+      return [Math.min(currentIndex, Math.max(validImages.length - 1, 0))];
+    }
+    const prev = (currentIndex - 1 + validImages.length) % validImages.length;
+    return [prev, currentIndex];
+  }, [showCrossfade, currentIndex, validImages.length]);
 
   function pauseBriefly(ms: number) {
     setIsPaused(true);
@@ -181,7 +199,6 @@ export function AutoRotateProductImage({
   }
 
   const active = validImages[currentIndex] ?? validImages[0];
-  const showCrossfade = hasMultiple && !reduceMotion;
 
   return (
     <div
@@ -201,27 +218,31 @@ export function AutoRotateProductImage({
       >
         {showCrossfade ? (
           <div className="absolute inset-0">
-            {validImages.map((image, idx) => (
-              <motion.div
-                key={image.id}
-                className="absolute inset-0"
-                initial={false}
-                animate={{ opacity: idx === currentIndex ? 1 : 0 }}
-                transition={{ duration: 0.6, ease: 'easeInOut' }}
-                style={{
-                  willChange: 'opacity',
-                  pointerEvents: idx === currentIndex ? 'auto' : 'none',
-                }}
-              >
-                <GalleryImageLayer
-                  image={image}
-                  alt={`${alt} - image ${idx + 1}`}
-                  priority={priority && idx === 0}
-                  productSlug={productSlug}
-                  categorySlug={categorySlug}
-                />
-              </motion.div>
-            ))}
+            {crossfadeIndices.map((idx) => {
+              const image = validImages[idx];
+              if (!image) return null;
+              return (
+                <motion.div
+                  key={image.id}
+                  className="absolute inset-0"
+                  initial={false}
+                  animate={{ opacity: idx === currentIndex ? 1 : 0 }}
+                  transition={{ duration: 0.6, ease: 'easeInOut' }}
+                  style={{
+                    willChange: 'opacity',
+                    pointerEvents: idx === currentIndex ? 'auto' : 'none',
+                  }}
+                >
+                  <GalleryImageLayer
+                    image={image}
+                    alt={`${alt} - image ${idx + 1}`}
+                    priority={priority && idx === 0}
+                    productSlug={productSlug}
+                    categorySlug={categorySlug}
+                  />
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           <GalleryImageLayer
