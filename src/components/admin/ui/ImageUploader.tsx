@@ -5,7 +5,10 @@ import type { ProductImage } from '@/lib/admin-store';
 import { uid } from '@/lib/admin-store';
 import { uploadImageApi } from '@/lib/admin-api';
 import { shouldUseApi } from '@/lib/data-source';
-import { prepareImageForUpload } from '@/lib/prepare-image-upload';
+import {
+  formatCompressionNotice,
+  prepareImageForUploadDetailed,
+} from '@/lib/prepare-image-upload';
 import {
   getImageDimensionWarnings,
   validateImageFileBasics,
@@ -57,7 +60,17 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
             );
             return;
           }
-          const prepared = await prepareImageForUpload(file);
+          const { file: prepared, compressed, originalBytes } =
+            await prepareImageForUploadDetailed(file, {
+              maxSizeMB: spec.maxSizeMB,
+              maxWidthOrHeight: Math.max(
+                spec.recommended.width,
+                spec.recommended.height
+              ),
+            });
+          if (compressed) {
+            warnings.push(formatCompressionNotice(originalBytes, prepared.size));
+          }
           url = await uploadImageApi(prepared, 'products');
 
           newImages.push({
@@ -145,14 +158,14 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         {uploading ? (
           <p className="text-sm text-neutral-600 flex items-center gap-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C97D5D] border-t-transparent" />
-            Uploading…
+            Optimizing & uploading…
           </p>
         ) : (
           <>
             <p className="text-sm font-medium text-neutral-700">Drop images here or click to upload</p>
             <p className="text-xs text-neutral-500 mt-1">
-              {primarySpec.recommended.width}×{primarySpec.recommended.height}px (main) • Max{' '}
-              {primarySpec.maxSizeMB}MB
+              {primarySpec.recommended.width}×{primarySpec.recommended.height}px (main) • Larger
+              than {primarySpec.maxSizeMB}MB? We compress automatically
             </p>
           </>
         )}

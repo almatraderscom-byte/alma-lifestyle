@@ -1,14 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { getImageSpec, getAspectRatioDecimal, type ImageSpecKey } from '@/lib/image-specs';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getImageDimensionWarnings,
   validateImageFileBasics,
 } from '@/lib/image-upload-validation';
 import { uploadPreparedHomepageImage } from '@/lib/homepage-upload';
 import { uploadImageApi } from '@/lib/admin-api';
-import { prepareImageForUpload } from '@/lib/prepare-image-upload';
+import {
+  formatCompressionNotice,
+  prepareImageForUploadDetailed,
+} from '@/lib/prepare-image-upload';
+import { getImageSpec, getAspectRatioDecimal, type ImageSpecKey } from '@/lib/image-specs';
 import { shouldUseApi } from '@/lib/data-source';
 import { isDataImageUrl } from '@/lib/image-url-display';
 import { cn } from '@/lib/utils';
@@ -53,7 +56,8 @@ export function ImageSpecGuidance({ specKey }: { specKey: ImageSpecKey }) {
             {spec.aspectRatio})
           </p>
           <p className="text-gray-600">
-            <strong>Max size:</strong> {spec.maxSizeMB}MB • <strong>Formats:</strong>{' '}
+            <strong>Target size:</strong> up to {spec.maxSizeMB}MB (larger files are compressed
+            automatically) • <strong>Formats:</strong>{' '}
             {spec.acceptedFormats.join(', ').toUpperCase()}
           </p>
           <div className="mt-2 flex items-center gap-2">
@@ -174,6 +178,14 @@ export function SmartImageUpload({
     [onChange, onUpload, reportError]
   );
 
+  const prepareOptions = useMemo(
+    () => ({
+      maxSizeMB: spec.maxSizeMB,
+      maxWidthOrHeight: Math.max(spec.recommended.width, spec.recommended.height),
+    }),
+    [spec]
+  );
+
   const uploadFile = useCallback(
     async (file: File) => {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -184,8 +196,14 @@ export function SmartImageUpload({
         throw new Error('ICO uploads are not supported. Please use a 512×512 PNG favicon.');
       }
 
+      const { file: prepared, compressed, originalBytes } =
+        await prepareImageForUploadDetailed(file, prepareOptions);
+
+      if (compressed) {
+        setWarning(formatCompressionNotice(originalBytes, prepared.size));
+      }
+
       if (upload.mode === 'homepage') {
-        const prepared = await prepareImageForUpload(file);
         return uploadPreparedHomepageImage(prepared, upload.folder);
       }
 
@@ -195,10 +213,9 @@ export function SmartImageUpload({
         );
       }
 
-      const prepared = await prepareImageForUpload(file);
       return uploadImageApi(prepared, upload.folder, upload.bucket ?? 'homepage-images');
     },
-    [upload]
+    [prepareOptions, upload]
   );
 
   const handleFileSelect = useCallback(
@@ -281,7 +298,7 @@ export function SmartImageUpload({
         {uploading ? (
           <div className="space-y-2">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-            <p className="text-sm text-blue-600">Uploading…</p>
+            <p className="text-sm text-blue-600">Optimizing & uploading…</p>
           </div>
         ) : displayUrl ? (
           <div className="space-y-3">
@@ -315,7 +332,8 @@ export function SmartImageUpload({
             </div>
             <p className="text-sm font-medium text-gray-700">Drop image here or click to browse</p>
             <p className="text-xs text-gray-500">
-              {spec.recommended.width}×{spec.recommended.height}px • Max {spec.maxSizeMB}MB
+              {spec.recommended.width}×{spec.recommended.height}px • Auto-compress over{' '}
+              {spec.maxSizeMB}MB
             </p>
           </div>
         )}

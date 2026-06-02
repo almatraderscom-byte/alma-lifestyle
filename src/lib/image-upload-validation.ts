@@ -19,17 +19,11 @@ export async function getImageDimensionsFromFile(
   });
 }
 
+/** Format-only check — oversized files are compressed in `prepareImageForUpload`. */
 export function validateImageFileBasics(
   file: File,
   spec: ImageSpec
 ): { error?: string } {
-  const sizeMB = file.size / (1024 * 1024);
-  if (sizeMB > spec.maxSizeMB) {
-    return {
-      error: `File too large: ${sizeMB.toFixed(1)}MB. Maximum allowed: ${spec.maxSizeMB}MB`,
-    };
-  }
-
   const ext = file.name.split('.').pop()?.toLowerCase() || '';
   if (!spec.acceptedFormats.includes(ext)) {
     return {
