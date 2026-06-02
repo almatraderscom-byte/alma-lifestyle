@@ -6,6 +6,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
+import { PageTransition } from '@/components/layout/PageTransition';
+import { RouteProgressBar } from '@/components/layout/RouteProgressBar';
 import { ToastProvider } from '@/components/ui/Toast';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
@@ -31,10 +33,15 @@ export function RootShell({
       <NavMenuProvider items={navItems}>
         <CartProvider>
           <WishlistProvider>
+            <Suspense fallback={null}>
+              <RouteProgressBar />
+            </Suspense>
             <Suspense fallback={<header className="sticky top-0 z-40 h-16 border-b bg-white lg:h-20" />}>
               <Header />
             </Suspense>
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
           <Footer />
           <ScrollToTop />
           <WhatsAppButton />
