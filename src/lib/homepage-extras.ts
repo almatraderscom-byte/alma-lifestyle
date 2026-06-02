@@ -52,7 +52,7 @@ const PROCESS_STEP_DEFAULTS = [
     icon: '🔎',
     title: 'বাছাই',
     description:
-      'আমরা trusted manufacturer ও vendor দের থেকে best products বাছাই করি',
+      'আমরা trusted manufacturer ও vendor দের থেকে best products যত্নে বাছাই করি',
     bgClass: 'bg-terracotta' as CategoryColorClass,
     imageHint: 'Image: Product curation — premium selection',
   },
@@ -93,6 +93,77 @@ const PROCESS_STEP_DEFAULTS = [
   },
 ];
 
+/** Detect outdated copy (weavers/tailors/handwoven claims) saved in the database. */
+const LEGACY_PROCESS_MARKERS =
+  /তাঁতি|হাতে\s*বোনা|দর্জি|মোটিফ|স্কেচ|সিরাজগঞ্জ|নরসিংদী|কুমিল্লার\s*তাঁতি/i;
+
+export function ourProcessHasLegacyClaims(section: OurProcessSectionData | undefined): boolean {
+  if (!section) return false;
+  const header = `${section.title} ${section.subtitle}`;
+  if (LEGACY_PROCESS_MARKERS.test(header)) return true;
+  return (section.steps ?? []).some((step) =>
+    LEGACY_PROCESS_MARKERS.test(`${step.title} ${step.description}`)
+  );
+}
+
+export function getDefaultOurProcessSection(): OurProcessSectionData {
+  return {
+    show: true,
+    label: 'আমাদের প্রক্রিয়া',
+    title: 'বাছাই থেকে আপনার দরজায়',
+    subtitle: 'ছয়টি ধাপে আপনার কাছে পৌঁছায় প্রতিটি ALMA পণ্য',
+    steps: PROCESS_STEP_DEFAULTS.map((step) => ({
+      ...step,
+      imageUrl: '',
+      caption: '',
+      alt: '',
+    })),
+  };
+}
+
+function mergeOurProcessWithDefaults(
+  saved: OurProcessSectionData | undefined,
+  defaults: OurProcessSectionData
+): OurProcessSectionData {
+  const useDefaultCopy =
+    !saved?.steps?.length ||
+    saved.steps.length !== defaults.steps.length ||
+    ourProcessHasLegacyClaims(saved);
+
+  if (!useDefaultCopy && saved) {
+    return migrateOurProcessSection(
+      {
+        ...defaults,
+        ...saved,
+        steps: defaults.steps.map((def, i) => ({
+          ...def,
+          ...saved.steps[i],
+        })),
+      },
+      defaults
+    );
+  }
+
+  return migrateOurProcessSection(
+    {
+      show: saved?.show ?? defaults.show,
+      label: defaults.label,
+      title: defaults.title,
+      subtitle: defaults.subtitle,
+      steps: defaults.steps.map((def, i) => {
+        const savedStep = saved?.steps?.[i];
+        return {
+          ...def,
+          imageUrl: savedStep?.imageUrl?.trim() || def.imageUrl,
+          caption: savedStep?.caption ?? def.caption,
+          alt: savedStep?.alt ?? def.alt,
+        };
+      }),
+    },
+    defaults
+  );
+}
+
 export function getDefaultHomepageExtras(): HomepageExtras {
   return {
     familyMatching: {
@@ -112,18 +183,7 @@ export function getDefaultHomepageExtras(): HomepageExtras {
         id: `family-${i + 1}`,
       })),
     },
-    ourProcess: {
-      show: true,
-      label: 'আমাদের প্রক্রিয়া',
-      title: 'আমরা কীভাবে কাজ করি',
-      subtitle: 'যত্নে বাছাই থেকে আপনার দরজায় — ছয়টি ধাপ',
-      steps: PROCESS_STEP_DEFAULTS.map((s) => ({
-        ...s,
-        imageUrl: '',
-        caption: '',
-        alt: '',
-      })),
-    },
+    ourProcess: getDefaultOurProcessSection(),
   };
 }
 
@@ -151,17 +211,7 @@ export function mergeHomepageExtras(
     defaults.familyMatching
   );
 
-  const ourProcess = migrateOurProcessSection(
-    {
-      ...defaults.ourProcess,
-      ...savedOp,
-      steps: defaults.ourProcess.steps.map((def, i) => ({
-        ...def,
-        ...savedOp?.steps?.[i],
-      })),
-    },
-    defaults.ourProcess
-  );
+  const ourProcess = mergeOurProcessWithDefaults(savedOp, defaults.ourProcess);
 
   return { familyMatching, ourProcess };
 }

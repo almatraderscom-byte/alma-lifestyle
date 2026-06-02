@@ -455,13 +455,32 @@ export { FamilyMatchingEditor } from '@/components/admin/homepage/FamilyMatching
 export function OurProcessEditor({
   data,
   onChange,
+  onResetToDefaults,
+  resetting,
 }: {
   data: OurProcessSectionData;
   onChange: (data: OurProcessSectionData) => void;
+  onResetToDefaults?: () => void;
+  resetting?: boolean;
 }) {
   const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
+      {onResetToDefaults && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-amber-900 max-w-md">
+            পুরনো তাঁতি/দর্জি টেক্সট আছে? Approved curation copy তে ফিরে যেতে reset করুন।
+          </p>
+          <button
+            type="button"
+            disabled={resetting}
+            onClick={onResetToDefaults}
+            className="shrink-0 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+          >
+            {resetting ? 'Resetting…' : 'Reset process copy'}
+          </button>
+        </div>
+      )}
       <div id="our-process-editor-top" className="scroll-mt-4 space-y-4">
         <label className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2 text-sm">
           <span className="font-medium text-neutral-700">Show section on homepage</span>

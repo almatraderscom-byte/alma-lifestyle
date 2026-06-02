@@ -14,7 +14,7 @@ import type {
   HomepageSectionId,
 } from '@/lib/homepage-config-types';
 import { isConfigSectionId } from '@/lib/homepage-edit-messages';
-import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
+import { getDefaultHomepageExtras, getDefaultOurProcessSection } from '@/lib/homepage-extras';
 import { HOMEPAGE_SECTION_LABELS } from '@/lib/homepage-config-types';
 import { Button } from '@/components/admin/ui/Button';
 import { useAdminToast } from '@/context/AdminToastContext';
@@ -54,6 +54,7 @@ export function HomepageBuilder() {
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
   const [previewKey, setPreviewKey] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [resettingProcess, setResettingProcess] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const desktopIframeRef = useRef<HTMLIFrameElement>(null);
@@ -183,6 +184,43 @@ export function HomepageBuilder() {
       ...c,
       extras: updater(c.extras ?? getDefaultHomepageExtras()),
     }));
+  }
+
+  async function handleResetProcessSection() {
+    if (
+      !window.confirm(
+        'Reset Our Process text to the approved defaults? Uploaded step images are kept when possible.'
+      )
+    ) {
+      return;
+    }
+    setResettingProcess(true);
+    try {
+      const res = await fetch('/api/v1/admin/reset-process-section', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const json = (await res.json()) as {
+        status?: string;
+        data?: { ourProcess?: ReturnType<typeof getDefaultOurProcessSection> };
+        error?: string;
+      };
+      if (!res.ok || json.status !== 'success') {
+        throw new Error(json.error ?? 'Reset failed');
+      }
+      const ourProcess = json.data?.ourProcess ?? getDefaultOurProcessSection();
+      updateExtras((e) => ({ ...e, ourProcess }));
+      const reloaded = await getHomepageConfig();
+      setConfig(reloaded);
+      saveDraftHomepageConfig(reloaded);
+      dispatchDraftUpdated();
+      setPreviewKey((k) => k + 1);
+      toast('Process section reset to defaults', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Reset failed', 'error');
+    } finally {
+      setResettingProcess(false);
+    }
   }
 
   async function handleResetToDefaults() {
@@ -505,6 +543,8 @@ export function HomepageBuilder() {
                 <OurProcessEditor
                   data={config.extras?.ourProcess ?? getDefaultHomepageExtras().ourProcess}
                   onChange={(ourProcess) => updateExtras((e) => ({ ...e, ourProcess }))}
+                  onResetToDefaults={() => void handleResetProcessSection()}
+                  resetting={resettingProcess}
                 />
               </div>
             )}
