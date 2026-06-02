@@ -108,6 +108,12 @@ export interface AdminProduct {
   updatedAt: string;
 }
 
+export interface AdminOrderLineItem {
+  name: string;
+  quantity: number;
+  priceBdt: number;
+}
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -118,6 +124,11 @@ export interface AdminOrder {
   status: OrderStatus;
   itemsCount: number;
   city: string;
+  shippingAddress?: string;
+  paymentMethod?: string;
+  subtotalBdt?: number;
+  deliveryChargeBdt?: number;
+  items?: AdminOrderLineItem[];
   createdAt: string;
   updatedAt: string;
   archivedAt?: string | null;

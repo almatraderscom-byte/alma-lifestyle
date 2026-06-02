@@ -233,6 +233,20 @@ export default function AdminSettingsPage() {
             <Toggle label="New order admin notification" checked={form.newOrderAdminNotificationEnabled} onChange={(v) => patch('newOrderAdminNotificationEnabled', v)} />
             <Input label="Email From name" value={form.emailFromName} onChange={(e) => patch('emailFromName', e.target.value)} />
             <Input label="Email From address" type="email" value={form.emailFromAddress} onChange={(e) => patch('emailFromAddress', e.target.value)} />
+
+            <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+              <h3 className="text-base font-semibold text-neutral-900">WhatsApp notifications</h3>
+              <p className="text-sm text-neutral-600">
+                Store Information ট্যাবে WhatsApp নম্বর সেট করুন। নতুন অর্ডারে অ্যাডমিন ইমেইলে
+                &quot;WhatsApp এ কনফার্ম করুন&quot; বাটন থাকবে — ক্লিক করলে গ্রাহকের চ্যাটে
+                প্রি-ফিল মেসেজ খুলবে (CallMeBot লাগে না)।
+              </p>
+              <ul className="text-sm text-neutral-700 space-y-1 list-disc list-inside">
+                <li>ইমেইল — স্বয়ংক্রিয়</li>
+                <li>ব্রাউজার নোটিফিকেশন — অ্যাডমিন প্যানেল খোলা থাকলে (~৩০ সেকেন্ড)</li>
+                <li>Orders পেজ — প্রতিটি অর্ডারে WhatsApp Confirm / Call</li>
+              </ul>
+            </section>
           </>
         )}
 

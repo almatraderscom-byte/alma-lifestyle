@@ -5,8 +5,11 @@ import { buildTestEmail } from '@/server/notifications/templates/test-email';
 import {
   getNotificationEnvDiagnostics,
   sendEmailToCustomer,
-  sendWhatsAppToAdmin,
 } from '@/server/notifications';
+import {
+  buildWhatsAppLink,
+  getAdminNotificationPhone,
+} from '@/server/notifications/whatsapp-notifications';
 import { withAdmin } from '@/server/api/handler';
 
 export const dynamic = 'force-dynamic';
@@ -69,16 +72,15 @@ export async function POST(request: NextRequest) {
       }
 
       if (body.type === 'whatsapp') {
-        const result = await sendWhatsAppToAdmin(
-          `🧪 *ALMA Notification Test*\n\nIf you receive this, WhatsApp notifications are working! ✅\n\nTime: ${new Date().toLocaleString()}`,
-          {
-            notificationType: 'admin_test_whatsapp',
-            triggeredBy: 'admin_test',
-          }
-        );
+        const adminPhone = await getAdminNotificationPhone();
+        const message = `🧪 *ALMA Notification Test*\n\nSmart WhatsApp links are enabled ✅\n\nTime: ${new Date().toLocaleString('bn-BD')}`;
+        const url = buildWhatsAppLink(adminPhone, message);
 
-        return NextResponse.json(result, {
-          status: result.success ? 200 : 500,
+        return NextResponse.json({
+          success: true,
+          url,
+          message:
+            'Open the link on your phone to test WhatsApp (no CallMeBot required).',
         });
       }
 

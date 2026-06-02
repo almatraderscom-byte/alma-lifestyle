@@ -17,6 +17,7 @@ import { Table, type TableColumn } from '@/components/admin/ui/Table';
 import { Select } from '@/components/admin/ui/Select';
 import { Button } from '@/components/admin/ui/Button';
 import { useAdminToast } from '@/context/AdminToastContext';
+import { OrderWhatsAppActions } from '@/components/admin/OrderWhatsAppActions';
 
 type ConfirmTarget = { type: 'single'; id: string } | { type: 'bulk' } | null;
 
@@ -193,12 +194,33 @@ export default function AdminOrdersPage() {
         render: (o) => new Date(o.createdAt).toLocaleDateString('en-GB'),
       },
       {
+        key: 'whatsapp',
+        header: 'WhatsApp',
+        render: (o) => <OrderWhatsAppActions order={o} compact />,
+      },
+      {
         key: 'actions',
         header: 'Actions',
         render: (o) => (
           <div className="flex flex-wrap items-center gap-1 text-sm">
             {!o.archivedAt && (
               <>
+                {o.status === 'pending' && (
+                  <button
+                    type="button"
+                    className="rounded px-2 py-1 text-neutral-800 bg-neutral-100 hover:bg-neutral-200"
+                    title="Mark as processing"
+                    onClick={() => {
+                      void updateOrderStatus(o.id, 'processing')
+                        .then(() => loadOrders())
+                        .catch((err) =>
+                          toast(err instanceof Error ? err.message : 'Update failed', 'error')
+                        );
+                    }}
+                  >
+                    ✓ Confirm
+                  </button>
+                )}
                 {o.status !== 'cancelled' && o.status !== 'delivered' && (
                   <button
                     type="button"

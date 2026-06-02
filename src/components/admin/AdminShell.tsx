@@ -11,6 +11,7 @@ import { AdminToastProvider } from '@/context/AdminToastContext';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
+import { OrderNotificationListener } from '@/components/admin/OrderNotificationListener';
 
 const BREADCRUMB_MAP: Record<string, string[]> = {
   '/admin': ['Dashboard'],
@@ -100,6 +101,7 @@ function AdminLayoutInner({
         onCloseMobile={() => setMobileOpen(false)}
       />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+        <OrderNotificationListener />
         <AdminHeader breadcrumbs={breadcrumbs} onMenuClick={() => setMobileOpen(true)} />
         <main className={isHomepageBuilder ? 'flex-1 p-0' : 'flex-1 p-4 lg:p-6'}>
           {!isHomepageBuilder && (

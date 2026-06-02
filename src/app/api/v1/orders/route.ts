@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     });
 
     const data = result.data.map((row) =>
-      mapDbOrderToAdmin(row, row.order_items?.length ?? 0)
+      mapDbOrderToAdmin(row, row.order_items?.length ?? 0, row.order_items)
     );
 
     return apiSuccess({

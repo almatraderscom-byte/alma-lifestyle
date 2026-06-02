@@ -10,6 +10,7 @@ import { buildCustomerOrderEmail } from '@/server/notifications/templates/order-
 import { buildOrderStatusEmail } from '@/server/notifications/templates/order-status';
 import { getFreeDeliveryThreshold } from '@/lib/delivery-settings';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { registerCustomerWhatsAppLinkNotification } from '@/server/notifications/whatsapp-notifications';
 
 export interface NotificationSendContext {
   notificationType?: string;
@@ -419,29 +420,11 @@ export async function notifyAdminOfNewOrder(
 ): Promise<NotificationSendResult> {
   console.log('[Notifications] notifyAdminOfNewOrder called for order:', order.id, order.order_number);
 
-  const message = `🎉 নতুন অর্ডার পেলেন!
-
-অর্ডার #${order.order_number}
-গ্রাহক: ${order.customer_name}
-ফোন: ${order.customer_phone}
-পরিমাণ: ৳${order.total}
-পেমেন্ট: ${order.payment_method}
-ডেলিভারি: ${order.shipping_address}
-
-পণ্য:
-${formatOrderItemsList(order.items)}
-
-Admin: ${adminPanelUrl(order.id)}`;
-
-  const wa = await sendWhatsAppToAdmin(message, {
-    notificationType: 'order_admin_whatsapp',
-    orderId: order.id,
-    triggeredBy: 'order_created',
-  });
+  const wa = await registerCustomerWhatsAppLinkNotification(order);
   if (!wa.success) {
-    console.error('[Notifications] Admin WhatsApp failed:', wa.error);
+    console.error('[Notifications] WhatsApp link registration failed:', wa.error);
   } else {
-    console.log('[Notifications] Admin WhatsApp sent');
+    console.log('[Notifications] Customer WhatsApp confirm link ready:', wa.url);
   }
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim();
@@ -469,6 +452,7 @@ Admin: ${adminPanelUrl(order.id)}`;
       deliveryCharge: order.delivery_cost,
       total: order.total,
       adminPanelUrl: adminPanelUrl(order.id),
+      customerWhatsAppUrl: wa.success ? wa.url : undefined,
     },
     brand
   );
@@ -695,8 +679,8 @@ export function getNotificationEnvDiagnostics() {
     replyTo: resolveReplyToEmail() ?? 'NOT_SET',
     fromName: process.env.FROM_NAME?.trim() || 'ALMA Lifestyle (default)',
     adminEmail: process.env.ADMIN_EMAIL?.trim() ? 'SET' : 'NOT_SET',
-    hasCallmebotKey: !!process.env.CALLMEBOT_API_KEY?.trim(),
-    hasWhatsappNumber: !!process.env.ADMIN_WHATSAPP_NUMBER?.trim(),
+    whatsappMethod: 'wa_me_smart_links',
+    storeWhatsappFromSettings: true,
     nodeEnv: process.env.NODE_ENV,
   };
 }

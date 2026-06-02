@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const order = await getOrderById(id);
     if (!order) return apiNotFound('Order');
     return apiSuccess({
-      ...mapDbOrderToAdmin(order, order.order_items?.length ?? 0),
+      ...mapDbOrderToAdmin(order, order.order_items?.length ?? 0, order.order_items),
       items: order.order_items,
     });
   });

@@ -19,6 +19,8 @@ export type AdminOrderEmailData = {
   deliveryCharge: number;
   total: number;
   adminPanelUrl: string;
+  /** wa.me link — admin taps to confirm order on WhatsApp */
+  customerWhatsAppUrl?: string;
 };
 
 export function buildAdminOrderEmail(
@@ -82,7 +84,12 @@ export function buildAdminOrderEmail(
           </tr>
           <tr>
             <td align="center" style="padding: 8px 32px 32px;">
-              <a href="${escapeHtml(data.adminPanelUrl)}" style="display: inline-block; background-color: ${EMAIL_BRAND.terracotta}; color: ${EMAIL_BRAND.white}; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">অ্যাডমিনে অর্ডার দেখুন</a>
+              ${
+                data.customerWhatsAppUrl
+                  ? `<a href="${escapeHtml(data.customerWhatsAppUrl)}" style="display: inline-block; background-color: #25D366; color: ${EMAIL_BRAND.white}; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 4px;">💬 WhatsApp এ কনফার্ম করুন</a>`
+                  : ''
+              }
+              <a href="${escapeHtml(data.adminPanelUrl)}" style="display: inline-block; background-color: ${EMAIL_BRAND.terracotta}; color: ${EMAIL_BRAND.white}; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 4px;">অ্যাডমিনে অর্ডার দেখুন</a>
             </td>
           </tr>`;
 

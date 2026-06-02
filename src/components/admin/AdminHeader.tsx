@@ -114,6 +114,14 @@ export function AdminHeader({ breadcrumbs, onMenuClick }: AdminHeaderProps) {
               >
                 Change password
               </Link>
+              <Link
+                href="/admin/orders"
+                className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Orders (WhatsApp)
+              </Link>
               {user && canManageSettings(user.role) && (
                 <Link
                   href="/admin/settings"

@@ -11,8 +11,8 @@ interface EnvDiagnostics {
     fromEmail: string;
     resolvedFrom: string;
     adminEmail: string;
-    hasCallmebotKey: boolean;
-    hasWhatsappNumber: boolean;
+    whatsappMethod?: string;
+    storeWhatsappFromSettings?: boolean;
     nodeEnv?: string;
   };
   timestamp?: string;
@@ -104,13 +104,22 @@ export default function NotificationTestPage() {
         body: JSON.stringify({ type: 'whatsapp' }),
       });
 
-      const data = (await res.json()) as { success?: boolean; error?: string };
+      const data = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        url?: string;
+        message?: string;
+      };
 
       console.log('WhatsApp test response:', data);
 
-      if (data.success) {
-        setStatus('✅ WhatsApp message sent! Check your phone.');
-        setErrorDetails('');
+      if (data.success && data.url) {
+        setStatus('✅ WhatsApp link ready — open on your phone');
+        setErrorDetails(data.url);
+        window.open(data.url, '_blank', 'noopener,noreferrer');
+      } else if (data.success) {
+        setStatus('✅ WhatsApp test OK');
+        setErrorDetails(data.message ?? '');
       } else {
         setStatus('❌ WhatsApp failed');
         setErrorDetails(data.error ?? 'Unknown error — check Vercel logs');
@@ -161,8 +170,7 @@ export default function NotificationTestPage() {
               {envStatus.env.adminEmail === 'SET' ? '✅' : '❌'} ADMIN_EMAIL:{' '}
               {envStatus.env.adminEmail}
             </li>
-            <li>{envStatus.env.hasCallmebotKey ? '✅' : '❌'} CALLMEBOT_API_KEY</li>
-            <li>{envStatus.env.hasWhatsappNumber ? '✅' : '❌'} ADMIN_WHATSAPP_NUMBER</li>
+            <li>WhatsApp: {envStatus.env.whatsappMethod ?? 'wa_me'}</li>
           </ul>
         </div>
       )}
@@ -232,8 +240,8 @@ export default function NotificationTestPage() {
           <li>After changing env vars, redeploy on Vercel without build cache</li>
           <li>Check Vercel → Logs → Functions for lines starting with [Email] or [Test API]</li>
           <li>
-            CallMeBot: send &quot;I allow callmebot to send me messages&quot; to +34 644 51 95 23
-            from your WhatsApp first
+            WhatsApp: set store WhatsApp number in Settings → Store Information. New orders include
+            a green &quot;WhatsApp confirm&quot; button (wa.me link).
           </li>
         </ul>
       </div>

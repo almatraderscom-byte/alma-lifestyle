@@ -253,17 +253,34 @@ const ORDER_STATUS_TO_DB: Record<OrderStatus, string> = {
   cancelled: 'cancelled',
 };
 
-export function mapDbOrderToAdmin(row: Order, itemsCount: number): AdminOrder {
+export function mapDbOrderToAdmin(
+  row: Order,
+  itemsCount: number,
+  orderItems?: OrderItem[]
+): AdminOrder {
+  const subtotalBdt = Math.round(Number(row.subtotal_usd) * DEFAULT_USD_RATE);
+  const deliveryChargeBdt = Math.round(Number(row.shipping_cost_usd) * DEFAULT_USD_RATE);
+  const totalBdt = Math.round(Number(row.total_usd) * DEFAULT_USD_RATE);
+
   return {
     id: row.id,
     orderNumber: row.order_number,
     customerName: row.customer_name,
     customerEmail: row.customer_email ?? undefined,
     customerPhone: row.customer_phone,
-    totalBdt: Math.round(Number(row.total_usd) * DEFAULT_USD_RATE),
+    totalBdt,
     status: ORDER_STATUS_TO_ADMIN[row.status] ?? 'pending',
     itemsCount,
     city: row.shipping_city ?? '',
+    shippingAddress: row.shipping_address,
+    paymentMethod: row.payment_method ?? 'COD',
+    subtotalBdt,
+    deliveryChargeBdt,
+    items: orderItems?.map((item) => ({
+      name: item.product_title,
+      quantity: item.quantity,
+      priceBdt: Math.round(Number(item.unit_price_usd) * DEFAULT_USD_RATE),
+    })),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archivedAt: row.archived_at ?? null,
