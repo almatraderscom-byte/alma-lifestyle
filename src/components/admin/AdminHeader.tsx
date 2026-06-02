@@ -66,32 +66,69 @@ export function AdminHeader({ breadcrumbs, onMenuClick }: AdminHeaderProps) {
           <button
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C97D5D] text-sm font-semibold text-white"
-            aria-label="Admin menu"
+            className={cn(
+              'flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-50',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97D5D]/40'
+            )}
+            aria-expanded={dropdownOpen}
+            aria-haspopup="menu"
+            aria-label="Admin account menu"
           >
-            {user?.name?.[0] ?? 'A'}
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C97D5D] text-sm font-semibold text-white shrink-0">
+              {user?.name?.[0]?.toUpperCase() ?? 'A'}
+            </span>
+            <span className="hidden sm:block text-sm font-medium text-neutral-800 max-w-[140px] truncate">
+              {user?.name ?? 'Admin'}
+            </span>
+            <span className="hidden sm:block text-neutral-400 text-xs" aria-hidden>
+              ▼
+            </span>
           </button>
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
-              <p className="px-4 py-2 text-xs text-neutral-500 border-b border-neutral-100">
-                <span className="block font-medium text-neutral-800">{user?.name}</span>
-                {user?.email}
+            <div
+              className="absolute right-0 mt-2 w-56 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg z-50"
+              role="menu"
+            >
+              <div className="px-4 py-3 border-b border-neutral-100">
+                <p className="text-sm font-medium text-neutral-900">{user?.name}</p>
+                <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
                 {user?.role && (
-                  <span className="block mt-0.5 capitalize text-neutral-400">{user.role}</span>
+                  <span className="mt-1.5 inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs capitalize text-neutral-600">
+                    {user.role}
+                  </span>
                 )}
-              </p>
+              </div>
+              <Link
+                href="/admin/profile"
+                className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                My profile
+              </Link>
+              <Link
+                href="/admin/profile#password"
+                className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Change password
+              </Link>
               {user && canManageSettings(user.role) && (
                 <Link
                   href="/admin/settings"
                   className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                  role="menuitem"
                   onClick={() => setDropdownOpen(false)}
                 >
                   Settings
                 </Link>
               )}
+              <div className="my-1 border-t border-neutral-100" />
               <button
                 type="button"
                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                role="menuitem"
                 onClick={() => {
                   setDropdownOpen(false);
                   void logout();

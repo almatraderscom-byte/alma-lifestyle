@@ -24,6 +24,7 @@ const BREADCRUMB_MAP: Record<string, string[]> = {
   '/admin/settings': ['Dashboard', 'Settings'],
   '/admin/users': ['Dashboard', 'Admin Users'],
   '/admin/audit-log': ['Dashboard', 'Activity Log'],
+  '/admin/profile': ['Dashboard', 'My Profile'],
 };
 
 function getBreadcrumbs(pathname: string): string[] {
