@@ -1,3 +1,4 @@
+import { resolveEmailLogoSrc } from '@/lib/email-logo-url';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 /** Email-safe brand tokens (inline styles only). */
@@ -24,6 +25,8 @@ export const EMAIL_CONTACT = {
 
 export type EmailBrandingContext = {
   logoUrl: string;
+  /** Where logoUrl was resolved from (debug) */
+  logoSource: 'logo' | 'favicon' | 'proxy' | 'static';
   siteUrl: string;
   trackUrl: string;
   supportPhone: string;
@@ -47,32 +50,46 @@ function isPublicHttpUrl(url: string | undefined | null): url is string {
   return !!t && (t.startsWith('https://') || t.startsWith('http://'));
 }
 
-/** Logo for `<img src>` — admin upload first, then favicon, then site favicon proxy. */
+/** Logo for `<img src>` — direct public storage URL preferred; else /api/email-logo proxy. */
 export async function getEmailBrandingContext(): Promise<EmailBrandingContext> {
   const siteUrl = getSiteBaseUrl();
-  let logoUrl = `${siteUrl}/api/favicon`;
   let facebookUrl: string | undefined;
   let instagramUrl: string | undefined;
+  let logoUrl = `${siteUrl}/api/email-logo`;
+  let logoSource: EmailBrandingContext['logoSource'] = 'proxy';
 
   try {
     const settings = await loadPublicSettingsServer();
-    if (isPublicHttpUrl(settings.logoUrl)) {
-      logoUrl = settings.logoUrl.trim();
-    } else if (isPublicHttpUrl(settings.faviconUrl)) {
-      logoUrl = settings.faviconUrl.trim();
-    }
+    const resolved = resolveEmailLogoSrc({
+      logoUrl: settings.logoUrl,
+      faviconUrl: settings.faviconUrl,
+      settingsVersion: settings.updatedAt,
+      siteUrl,
+    });
+    logoUrl = resolved.src;
+    logoSource = resolved.source;
+
     if (isPublicHttpUrl(settings.facebookUrl)) {
       facebookUrl = settings.facebookUrl.trim();
     }
     if (isPublicHttpUrl(settings.instagramUrl)) {
       instagramUrl = settings.instagramUrl.trim();
     }
+
+    console.log('[email-brand] Resolved logo URL:', {
+      logoUrl,
+      source: logoSource,
+      hasLogoInSettings: Boolean(settings.logoUrl?.trim()),
+      hasFaviconInSettings: Boolean(settings.faviconUrl?.trim()),
+    });
   } catch (e) {
-    console.warn('[Email] Could not load public settings for branding:', e);
+    console.warn('[email-brand] Could not load public settings for branding:', e);
+    console.log('[email-brand] Using fallback logo proxy:', logoUrl);
   }
 
   return {
     logoUrl,
+    logoSource,
     siteUrl,
     trackUrl: `${siteUrl}/track`,
     supportPhone: EMAIL_CONTACT.phoneDisplay,
@@ -84,12 +101,17 @@ export async function getEmailBrandingContext(): Promise<EmailBrandingContext> {
   };
 }
 
-export function escapeHtml(text: string): string {
-  return text
+/** HTML attribute-safe encoding (preserves URL structure). */
+export function escapeAttr(value: string): string {
+  return value
     .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/>/g, '&gt;');
+}
+
+export function escapeHtml(text: string): string {
+  return escapeAttr(text);
 }
 
 export function formatBdtEmail(amount: number): string {

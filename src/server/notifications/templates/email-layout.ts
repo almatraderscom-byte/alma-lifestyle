@@ -1,6 +1,7 @@
 import {
   EMAIL_BRAND,
   EMAIL_CONTACT,
+  escapeAttr,
   escapeHtml,
   type EmailBrandingContext,
 } from '@/server/notifications/email-brand';
@@ -36,10 +37,24 @@ export function wrapEmailDocument(
 }
 
 function emailHeader(brand: EmailBrandingContext): string {
+  const logoSrc = escapeAttr(brand.logoUrl);
   return `
           <tr>
             <td align="center" style="padding: 36px 24px 24px; background: linear-gradient(135deg, ${EMAIL_BRAND.maroon} 0%, ${EMAIL_BRAND.maroonDark} 100%);">
-              <img src="${escapeHtml(brand.logoUrl)}" alt="${EMAIL_CONTACT.brandName}" width="72" height="72" style="border-radius: 50%; background: ${EMAIL_BRAND.white}; padding: 8px; display: block; margin: 0 auto; border: 0;">
+              <!--[if mso]>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td width="80" height="80" align="center">
+              <![endif]-->
+              <img
+                src="${logoSrc}"
+                alt="${EMAIL_CONTACT.brandName}"
+                width="80"
+                height="80"
+                border="0"
+                style="display: block; width: 80px; height: 80px; max-width: 80px; border-radius: 50%; background: ${EMAIL_BRAND.white}; padding: 8px; margin: 0 auto; border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic;"
+              />
+              <!--[if mso]>
+              </td></tr></table>
+              <![endif]-->
               <h1 style="color: ${EMAIL_BRAND.white}; font-size: 26px; margin: 16px 0 4px; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.02em;">${EMAIL_CONTACT.brandName}</h1>
               <p style="color: rgba(255,255,255,0.92); font-size: 14px; margin: 0; line-height: 1.5;">${EMAIL_CONTACT.taglineBn}</p>
             </td>

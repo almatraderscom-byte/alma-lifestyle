@@ -23,7 +23,7 @@ Templates load branding via `getEmailBrandingContext()`:
 
 1. **Admin → Settings → Logo** (public HTTPS URL, e.g. Supabase Storage) — preferred  
 2. **Favicon URL** from settings  
-3. Fallback: `{SITE_URL}/api/favicon`
+3. Fallback: `{SITE_URL}/api/email-logo` (proxies storage; static JPG if unset)
 
 Upload a square PNG (at least 128×128) in admin so the header `<img>` renders in Gmail/Apple Mail.
 
