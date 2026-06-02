@@ -175,7 +175,7 @@ export const IMAGE_SPECS = {
     label: 'Community Photo',
     recommended: { width: 800, height: 800 },
     aspectRatio: '1:1 (square)',
-    maxSizeMB: 2,
+    maxSizeMB: 3,
     acceptedFormats: ['jpg', 'png', 'webp'],
     description: 'Customer photos for community section',
     tips: [
