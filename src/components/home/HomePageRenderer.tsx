@@ -39,6 +39,7 @@ import { CinematicHero } from '@/components/cinematic/CinematicHero';
 import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
 import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
+import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
 
 /** Toggle V2 cinematic homepage (admin toggle later). */
 
@@ -162,6 +163,7 @@ export function HomePageRenderer({
   if ((config.cinematicMode ?? true) && !editMode && !preview) {
     return (
       <HomepageEditModeProvider editMode={false}>
+        <CinematicAssetPreload />
         <CinematicLoadingOverlay />
         <CinematicHero />
         <ColorWashBridge from="charcoal" to="cream" />

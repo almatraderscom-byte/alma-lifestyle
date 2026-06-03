@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -150,6 +151,18 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
               }}
               aria-hidden={activeStage !== index}
             >
+              {chapterProducts[index]?.galleryImages?.[0]?.url && index !== 3 && (
+                <Image
+                  src={chapterProducts[index]!.galleryImages![0].url!}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="50vw"
+                  priority={index < 2}
+                  loading={index < 2 ? 'eager' : 'lazy'}
+                  aria-hidden
+                />
+              )}
               <div className="relative z-[1] space-y-3 text-center text-cream">
                 <p className="font-bn-heading text-lg">{stage.imageLabel}</p>
                 {chapterProducts[index] && index !== 3 && (
