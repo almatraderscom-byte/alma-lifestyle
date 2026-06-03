@@ -135,6 +135,8 @@ export function Header() {
   const shopActive =
     pathname === '/products' && searchParams.get('sort') !== 'newest' && !searchParams.get('category');
   const newActive = pathname === '/products' && searchParams.get('sort') === 'newest';
+  const islamicActive =
+    pathname === '/products' && searchParams.get('category') === 'islamic';
 
   return (
     <>
@@ -223,6 +225,16 @@ export function Header() {
                   ))}
                 </div>
               </div>
+
+              <Link href={NAV.islamic.href} className={navLinkClass(islamicActive)}>
+                <span className="inline-flex items-center">
+                  <span
+                    className="mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-mustard"
+                    aria-hidden
+                  />
+                  {NAV.islamic.label}
+                </span>
+              </Link>
 
               <Link href={NAV.about.href} className={navLinkClass(pathname === NAV.about.href)}>
                 {NAV.about.label}
@@ -383,6 +395,14 @@ export function Header() {
                     </ul>
                   )}
                 </div>
+
+                <Link
+                  href={NAV.islamic.href}
+                  className="flex min-h-[48px] items-center py-3 text-lg font-bn-heading text-charcoal"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {NAV.islamic.label}
+                </Link>
 
                 <div className="mt-2 border-t border-border-subtle pt-2">
                   <Link
