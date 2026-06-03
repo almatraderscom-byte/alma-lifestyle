@@ -5,7 +5,8 @@ import { useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const LERP = 0.18;
-const TRAIL_LAG = [0.35, 0.55, 0.75];
+const TRAIL_DELAYS = [5, 10, 15] as const;
+const TRAIL_OPACITY = [0.5, 0.3, 0.15] as const;
 
 export function CustomCursor() {
   const reduced = useReducedMotion();
@@ -13,11 +14,8 @@ export function CustomCursor() {
   const [hovering, setHovering] = useState(false);
   const target = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
-  const trails = useRef([
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-  ]);
+  const history = useRef<{ x: number; y: number }[]>([]);
+  const frame = useRef(0);
   const mainRef = useRef<HTMLDivElement>(null);
   const trailRefs = useRef<(HTMLDivElement | null)[]>([]);
   const ringRef = useRef<HTMLDivElement>(null);
@@ -45,26 +43,25 @@ export function CustomCursor() {
     };
 
     const tick = () => {
+      frame.current += 1;
       pos.current.x += (target.current.x - pos.current.x) * LERP;
       pos.current.y += (target.current.y - pos.current.y) * LERP;
 
-      trails.current.forEach((trail, i) => {
-        const lag = TRAIL_LAG[i] ?? 0.5;
-        trail.x += (pos.current.x - trail.x) * lag;
-        trail.y += (pos.current.y - trail.y) * lag;
-      });
+      history.current.unshift({ x: pos.current.x, y: pos.current.y });
+      if (history.current.length > 20) history.current.length = 20;
 
       const { x, y } = pos.current;
       if (mainRef.current) {
-        mainRef.current.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        mainRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
       }
       if (ringRef.current) {
-        ringRef.current.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        ringRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
       }
       trailRefs.current.forEach((el, i) => {
         if (!el) return;
-        const t = trails.current[i];
-        el.style.transform = `translate(${t.x}px, ${t.y}px) translate(-50%, -50%)`;
+        const delay = TRAIL_DELAYS[i] ?? 15;
+        const trailPos = history.current[delay] ?? pos.current;
+        el.style.transform = `translate3d(${trailPos.x}px, ${trailPos.y}px, 0) translate(-50%, -50%)`;
       });
 
       rafRef.current = requestAnimationFrame(tick);
@@ -87,26 +84,27 @@ export function CustomCursor() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[200] hidden lg:block" aria-hidden>
-      {trails.current.map((_, i) => (
+      {TRAIL_DELAYS.map((_, i) => (
         <div
           key={i}
           ref={(el) => {
             trailRefs.current[i] = el;
           }}
-          className="absolute top-0 left-0 h-1.5 w-1.5 rounded-full bg-mustard/50 mix-blend-difference will-change-transform"
+          className="absolute top-0 left-0 h-2.5 w-2.5 rounded-full bg-mustard mix-blend-difference will-change-transform"
+          style={{ opacity: TRAIL_OPACITY[i] }}
         />
       ))}
       <div
         ref={mainRef}
         className={cn(
-          'absolute top-0 left-0 rounded-full bg-mustard mix-blend-difference will-change-transform',
-          hovering ? 'h-0 w-0 opacity-0' : 'h-2.5 w-2.5'
+          'absolute top-0 left-0 h-2.5 w-2.5 rounded-full bg-mustard mix-blend-difference will-change-transform',
+          hovering && 'opacity-0'
         )}
       />
       <div
         ref={ringRef}
         className={cn(
-          'absolute top-0 left-0 rounded-full border border-mustard mix-blend-difference will-change-transform transition-[width,height,opacity] duration-300',
+          'absolute top-0 left-0 rounded-full border border-mustard bg-transparent mix-blend-difference will-change-transform transition-[width,height,opacity] duration-300',
           hovering ? 'h-11 w-11 opacity-100' : 'h-2.5 w-2.5 opacity-0'
         )}
       />
