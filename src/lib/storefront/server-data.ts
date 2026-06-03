@@ -26,6 +26,9 @@ import {
   getStaticCustomLayoutProductBySlug,
   getStaticCustomLayoutProducts,
   getStaticCustomLayoutSlugs,
+  getStaticIslamicProductBySlug,
+  getStaticIslamicProducts,
+  getStaticIslamicSlugs,
   mergeStaticProductOverrides,
   type CatalogProduct,
 } from '@/lib/products-data';
@@ -264,7 +267,10 @@ export async function loadCatalogProductsServer(options?: {
 
     const products = groupProductsForListing(result.data, catById);
     const seen = new Set(products.map((p) => p.slug));
-    for (const staticProduct of getStaticCustomLayoutProducts()) {
+    for (const staticProduct of [
+      ...getStaticIslamicProducts(),
+      ...getStaticCustomLayoutProducts(),
+    ]) {
       if (!seen.has(staticProduct.slug)) {
         products.push(staticProduct);
         seen.add(staticProduct.slug);
@@ -314,10 +320,18 @@ export async function loadProductBySlugServer(
       );
     }
 
-    return getStaticCustomLayoutProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
-    return getStaticCustomLayoutProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   }
 }
 
@@ -329,13 +343,13 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     const slugs = new Set(result.data.map((p) => p.slug));
-    for (const slug of getStaticCustomLayoutSlugs()) {
+    for (const slug of [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()]) {
       slugs.add(slug);
     }
     return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return getStaticCustomLayoutSlugs();
+    return [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()];
   }
 }
 

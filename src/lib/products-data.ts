@@ -3,6 +3,7 @@ import type { ProductType } from '@/lib/product-design-types';
 import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
 import { getDefaultProductImage } from '@/lib/default-images';
 import { buildListingCardGallery } from '@/lib/product-gallery';
+import { ISLAMIC_CATALOG_PRODUCTS } from '@/lib/islamic-catalog-products';
 
 export type CategorySlug =
   | 'panjabi'
@@ -132,6 +133,7 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     published: true,
     inStock: true,
   },
+  ...ISLAMIC_CATALOG_PRODUCTS,
 ];
 
 function mk(
@@ -229,6 +231,19 @@ export function getStaticCustomLayoutProducts(): CatalogProduct[] {
 
 export function getStaticCustomLayoutSlugs(): string[] {
   return getStaticCustomLayoutProducts().map((p) => p.slug);
+}
+
+/** Static Islamic catalog rows merged into live storefront when not yet in Supabase. */
+export function getStaticIslamicProducts(): CatalogProduct[] {
+  return ISLAMIC_CATALOG_PRODUCTS;
+}
+
+export function getStaticIslamicSlugs(): string[] {
+  return ISLAMIC_CATALOG_PRODUCTS.map((p) => p.slug);
+}
+
+export function getStaticIslamicProductBySlug(slug: string): CatalogProduct | undefined {
+  return ISLAMIC_CATALOG_PRODUCTS.find((p) => p.slug === slug);
 }
 
 /**
