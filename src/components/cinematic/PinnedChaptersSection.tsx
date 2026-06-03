@@ -2,17 +2,40 @@
 
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import {
   CINEMATIC_CHAPTERS,
   CINEMATIC_GRADIENT_CSS,
   type CinematicGradientToken,
 } from '@/lib/cinematic-config';
+import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { CardProduct } from '@/lib/products-data';
 
+const GRADIENT_HEX: Record<CinematicGradientToken, string> = {
+  maroon: '#6b2737',
+  terracotta: '#c97d5d',
+  mustard: '#c89b3c',
+  emerald: '#2d6a4f',
+  'emerald-deep': '#1b4332',
+  charcoal: '#2c2c2c',
+};
+
 function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken) {
   return `linear-gradient(135deg, ${CINEMATIC_GRADIENT_CSS[from]}, ${CINEMATIC_GRADIENT_CSS[to]})`;
+}
+
+function stageBackground(
+  stage: (typeof CINEMATIC_CHAPTERS.stages)[number],
+  index: number,
+  product: CardProduct | null | undefined
+) {
+  const from = stage.gradientFrom as CinematicGradientToken;
+  const to = stage.gradientTo as CinematicGradientToken;
+  if (index === 3 || !product?.galleryImages?.[0]?.url) {
+    return stageGradient(from, to);
+  }
+  return `linear-gradient(135deg, ${GRADIENT_HEX[from]}88, ${GRADIENT_HEX[to]}88), url(${product.galleryImages[0].url})`;
 }
 
 interface PinnedChaptersSectionProps {
@@ -59,34 +82,42 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
           {stages.map((stage, index) => (
             <article
               key={stage.eyebrow}
-              className="rounded-sm border border-border-subtle bg-background p-8"
+              className="relative min-h-[480px] overflow-hidden rounded-sm border border-border-subtle"
               style={{
-                backgroundImage: stageGradient(
-                  stage.gradientFrom as CinematicGradientToken,
-                  stage.gradientTo as CinematicGradientToken
-                ),
-                backgroundBlendMode: 'overlay',
+                backgroundImage: stageBackground(stage, index, chapterProducts[index]),
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
               }}
             >
-              <p className="font-bn-body text-[10px] uppercase tracking-[0.35em] text-mustard">
-                {stage.eyebrow}
-              </p>
-              <h2 className="mt-4 font-bn-heading text-xl font-semibold text-charcoal">
-                {stage.heading}
-              </h2>
-              <p className="mt-3 font-bn-body text-sm leading-relaxed text-charcoal/85">
-                {stage.body}
-              </p>
-              {'cta' in stage && stage.cta && (
-                <Link
-                  href={stage.cta.href}
-                  data-cursor="ring"
-                  className="mt-6 inline-flex min-h-12 items-center rounded-sm border border-charcoal px-6 font-bn-body text-sm font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-cream"
-                >
-                  {stage.cta.label}
-                </Link>
-              )}
-              <p className="mt-6 font-bn-heading text-sm text-cream/90">{stage.imageLabel}</p>
+              <div className="relative flex h-full min-h-[480px] flex-col justify-end p-8">
+                <p className="font-bn-body text-[10px] uppercase tracking-[0.35em] text-mustard">
+                  {stage.eyebrow}
+                </p>
+                <h2 className="mt-4 font-bn-heading text-xl font-semibold text-cream">
+                  {stage.heading}
+                </h2>
+                <p className="mt-3 font-bn-body text-sm leading-relaxed text-cream/85">
+                  {stage.body}
+                </p>
+                {chapterProducts[index] && index !== 3 && (
+                  <div className="mt-4 space-y-1">
+                    <p className="font-bn-body text-sm text-cream/85">{chapterProducts[index]!.title}</p>
+                    <p className="font-bn-heading text-xl text-cream">
+                      {formatBdtPrice(chapterProducts[index]!.price)}
+                    </p>
+                  </div>
+                )}
+                {'cta' in stage && stage.cta && (
+                  <Link
+                    href={stage.cta.href}
+                    data-cursor="ring"
+                    className="mt-6 inline-flex min-h-12 items-center rounded-sm border border-cream px-6 font-bn-body text-sm font-semibold text-cream transition-colors hover:bg-cream hover:text-charcoal"
+                  >
+                    {stage.cta.label}
+                  </Link>
+                )}
+                <p className="mt-6 font-bn-heading text-sm text-cream/90">{stage.imageLabel}</p>
+              </div>
             </article>
           ))}
         </div>
@@ -95,7 +126,12 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
   }
 
   return (
-    <section ref={sectionRef} className="relative hidden h-[2400px] bg-cream md:block">
+    <section
+      ref={sectionRef}
+      className="relative hidden h-[2400px] bg-cream md:block"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="sticky top-0 flex h-screen overflow-hidden">
         <div className="relative w-1/2">
           {stages.map((stage, index) => (
@@ -106,16 +142,23 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                 activeStage === index ? 'opacity-100 scale-100' : 'pointer-events-none opacity-0 scale-[1.05]'
               )}
               style={{
-                backgroundImage: stageGradient(
-                  stage.gradientFrom as CinematicGradientToken,
-                  stage.gradientTo as CinematicGradientToken
-                ),
+                backgroundImage: stageBackground(stage, index, chapterProducts[index]),
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 transitionProperty: instant ? 'opacity' : 'opacity, transform',
                 transitionDuration: instant ? '0ms' : undefined,
               }}
               aria-hidden={activeStage !== index}
             >
-              <span className="font-bn-heading text-lg text-cream">{stage.imageLabel}</span>
+              <div className="relative z-[1] space-y-3 text-center text-cream">
+                <p className="font-bn-heading text-lg">{stage.imageLabel}</p>
+                {chapterProducts[index] && index !== 3 && (
+                  <div className="space-y-1">
+                    <p className="font-bn-body text-sm opacity-85">{chapterProducts[index]!.title}</p>
+                    <p className="font-bn-heading text-xl">{formatBdtPrice(chapterProducts[index]!.price)}</p>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -151,7 +194,7 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                 <Link
                   href={stage.cta.href}
                   data-cursor="ring"
-                  className="mt-8 inline-flex min-h-12 items-center rounded-sm border-2 border-mustard px-8 font-bn-body text-sm font-semibold text-charcoal transition-colors hover:bg-mustard hover:text-charcoal"
+                  className="mt-8 inline-flex min-h-12 items-center rounded-sm border-2 border-mustard px-8 font-bn-body text-sm font-semibold text-charcoal transition-colors hover:bg-mustard hover:text-charcoal focus-visible:outline-2 focus-visible:outline-mustard"
                 >
                   {stage.cta.label}
                 </Link>
