@@ -1,0 +1,79 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { calmEase } from '@/components/product/murda-moshari/animation-config';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
+
+const STORAGE_KEY = 'murda-overlay-seen';
+
+interface CinematicOverlayProps {
+  onComplete: () => void;
+}
+
+export function CinematicOverlay({ onComplete }: CinematicOverlayProps) {
+  const reduced = useReducedMotion();
+  const { brand, tagline } = useMurdaPage().overlay;
+  const [phase, setPhase] = useState<'brand' | 'tagline' | 'exit'>('brand');
+  // Bangla cannot be split by character — conjuncts and dependent vowels break.
+  // Split by word to preserve correct rendering.
+  const taglineWords = tagline.split(' ');
+
+  useEffect(() => {
+    if (reduced) {
+      onComplete();
+      return;
+    }
+    const t1 = window.setTimeout(() => setPhase('tagline'), 600);
+    const t2 = window.setTimeout(() => setPhase('exit'), 1600);
+    const t3 = window.setTimeout(() => {
+      sessionStorage.setItem(STORAGE_KEY, '1');
+      onComplete();
+    }, 2400);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [reduced, onComplete]);
+
+  if (reduced) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cream px-6"
+      initial={{ opacity: 1 }}
+      animate={
+        phase === 'exit'
+          ? { opacity: 0, y: -24, scale: 0.98 }
+          : { opacity: 1, y: 0, scale: 1 }
+      }
+      transition={{ duration: phase === 'exit' ? 0.8 : 0.5, ease: calmEase }}
+      aria-hidden
+    >
+      <p className="font-brand text-xs tracking-[0.35em] text-mustard uppercase">{brand}</p>
+      <p className="font-bn-heading mt-8 text-center text-xl text-charcoal md:text-2xl">
+        {taglineWords.map((word, i) => (
+          <motion.span
+            key={`${word}-${i}`}
+            className="mr-[0.35em] inline-block last:mr-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: phase === 'brand' ? 0 : 1 }}
+            transition={{
+              duration: 0.5,
+              delay: phase === 'tagline' ? i * 0.2 : 0,
+              ease: calmEase,
+            }}
+          >
+            {word}
+          </motion.span>
+        ))}
+      </p>
+    </motion.div>
+  );
+}
+
+export function readMurdaOverlaySeen(): boolean {
+  if (typeof window === 'undefined') return true;
+  return sessionStorage.getItem(STORAGE_KEY) === '1';
+}

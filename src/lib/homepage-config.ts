@@ -114,6 +114,7 @@ export function getDefaultHomepageConfig(): HomepageConfig {
           categoryFromContent(CATEGORY_SHOWCASE.stacked[0], false),
           categoryFromContent(CATEGORY_SHOWCASE.stacked[1], false),
           categoryFromContent(CATEGORY_SHOWCASE.stacked[2], false),
+          categoryFromContent(CATEGORY_SHOWCASE.stacked[3], false),
         ],
       },
     },

@@ -16,10 +16,45 @@ export const SITE = {
 export const NAV = {
   shop: { label: 'দোকান', href: '/products' },
   newArrivals: { label: 'নতুন', href: '/new' },
+  islamic: { label: 'ইসলামিক', href: '/products?category=islamic' },
   collections: { label: 'কালেকশন', href: '/products' },
   about: { label: 'আমাদের সম্পর্কে', href: '/about' },
   categoriesLabel: 'Categories',
 } as const;
+
+/** Storefront product categories (filters, nav, footer). */
+export const CATEGORIES = [
+  {
+    slug: 'panjabi',
+    name: 'পাঞ্জাবি',
+    nameEn: 'Panjabi',
+    description: 'প্রিমিয়াম পাঞ্জাবি ও ফ্যামিলি সেট',
+  },
+  {
+    slug: 'electronics',
+    name: 'ইলেকট্রনিক্স',
+    nameEn: 'Electronics',
+    description: 'গ্যাজেট ও ইলেকট্রনিক্স',
+  },
+  {
+    slug: 'accessories',
+    name: 'এক্সেসরিজ',
+    nameEn: 'Accessories',
+    description: 'বেল্ট, ওয়ালেট ও আরও',
+  },
+  {
+    slug: 'home-decor',
+    name: 'হোম ও ডেকর',
+    nameEn: 'Home & Decor',
+    description: 'ঘর সাজানোর পণ্য',
+  },
+  {
+    slug: 'islamic',
+    name: 'ইসলামিক',
+    nameEn: 'Islamic',
+    description: 'মসজিদ, ইবাদত ও ইসলামিক প্রয়োজনের পণ্য',
+  },
+] as const;
 
 export const MOBILE_NAV_ICONS = {
   search: { label: UI.search, href: '/products' },
@@ -82,7 +117,18 @@ export const CATEGORY_SHOWCASE = {
       bg: 'bg-emerald',
       imageHint: 'Image: Home decor — ceramic vase, cushions',
     },
+    {
+      slug: 'islamic',
+      name: 'ইসলামিক',
+      href: '/products?category=islamic',
+      bg: 'bg-emerald',
+      imageHint: 'Image: Islamic products — Smart Murda Moshari',
+    },
   ],
+  islamicCard: {
+    eyebrow: 'নতুন বিভাগ',
+    viewLabel: 'দেখুন',
+  },
 } as const;
 
 /** Featured products — Section 4 */
@@ -345,6 +391,7 @@ export const FOOTER = {
     { label: 'ইলেকট্রনিক্স', href: '/products?category=electronics' },
     { label: 'এক্সেসরিজ', href: '/products?category=accessories' },
     { label: 'হোম ও ডেকর', href: '/products?category=home-decor' },
+    { label: 'ইসলামিক', href: '/products?category=islamic' },
   ],
   helpTitle: 'সাহায্য',
   helpLinks: [
@@ -423,6 +470,117 @@ export const PDP = {
   relatedTitle: 'আপনার জন্য আরও পণ্য',
   recentTitle: 'Recently Viewed',
   toastAdded: 'Added to cart!',
+} as const;
+
+/** Smart Murda Moshari long-form landing — all Bangla copy for MurdaMoshariLanding */
+export const MURDA_MOSHARI_PAGE = {
+  overlay: {
+    brand: 'ALMA Lifestyle',
+    tagline: 'প্রিয়জনের সম্মানে',
+  },
+  hero: {
+    eyebrow: 'ইসলামিক পণ্য',
+    heading: 'মৃত্যুর পরেও তাঁর সম্মান আমাদের হাতে',
+    subheading:
+      'যাঁকে আপনি ভালোবাসেন — মা, বাবা, স্ত্রী, কন্যা — তাঁদের শেষ গোসলের মুহূর্তে পর্দা, পবিত্রতা ও মর্যাদা রক্ষা করুন। এটাই আমাদের ইসলামি দায়িত্ব।',
+    primaryCta: 'অর্ডার করতে চাই',
+    whatsappCta: 'WhatsApp এ অর্ডার করুন',
+    whatsappNumber: '8801307777733',
+    whatsappPrefill: 'আসসালামু আলাইকুম। আমি স্মার্ট মুর্দা মশারী অর্ডার করতে চাই।',
+    trustItems: [
+      'ক্যাশ অন ডেলিভারি',
+      'সারাদেশে ডেলিভারি',
+      'কোনো অগ্রিম পেমেন্ট নয়',
+    ],
+  },
+  narrative: {
+    eyebrow: 'যে মুহূর্তের কথা কেউ ভাবতে চায় না',
+    scenes: [
+      'ঘরে কান্নার রোল উঠেছে। প্রিয় মানুষটি আর নেই।',
+      'গোসলের সময় হলো। আত্মীয়রা ছোটাছুটি করছেন একটা ভাল কাপড়ের জন্য, একটা পর্দার জন্য।',
+      'কিন্তু সেই কঠিন মুহূর্তে আপস করতে হলো — সতর পুরোপুরি ঢাকে না, কাপড় নাপাক হওয়ার ভয়।',
+      'এই কষ্টটা যেন আপনার পরিবারকে কখনো না পেতে হয়।',
+    ],
+  },
+  problem: {
+    heading: 'প্রিয়জনের শেষ গোসলের সেই মুহূর্ত — আমরা কি প্রস্তুত?',
+    intro:
+      'হঠাৎ যখন কেউ চলে যান, তখন পরিবার শোকে স্তব্ধ। সেই অবস্থায় গোসলের প্রস্তুতি নিতে গিয়ে অনেক সময় —',
+    points: [
+      'সতর ঠিকভাবে ঢাকা থাকে না',
+      'কাপড়ে নাপাকি লাগার আশঙ্কা থেকে যায়',
+      'উপর থেকে তাকালে ভেতরটা দেখা যায়',
+      'মহিলাদের পর্দা — যা সারাজীবন রক্ষা করেছেন — তা ভেঙে যাওয়ার ভয় থাকে',
+    ],
+    outro: 'এই সব কষ্টের একটি পরিপূর্ণ সমাধান — স্মার্ট মুর্দা মশারী।',
+  },
+  solution: {
+    eyebrow: 'একটি দায়িত্বশীল সমাধান',
+    heading: 'মা, বোন, কন্যা — তাঁদের পর্দা মৃত্যুর পরেও',
+    body: 'জীবনে যাঁরা পর্দা মেনে চলেছেন — মৃত্যুর পরে তাঁদের পর্দা যেন না ভাঙে। চারদিক সম্পূর্ণ ঢাকা, উপরে শ্বাসপ্রশ্বাসের জন্য নেট, আলাদা দরজা — ইসলামিক বিধান অনুযায়ী পরিপূর্ণ পর্দা ও সম্মান একসাথে।',
+    tags: ['৪ দিকে ঢাকা', 'মেশ টপ', 'আলাদা দরজা'],
+  },
+  features: {
+    heading: 'যা যা পাচ্ছেন এই প্যাকেজে',
+    subheading: 'একবার কিনলে বহু পরিবারের কাজে আসবে — ইনশাআল্লাহ',
+    items: [
+      { title: 'চারদিক সম্পূর্ণ ঢাকা', desc: 'ভেতরের কিছুই বাইরে থেকে দেখা যাবে না' },
+      { title: 'শ্বাসপ্রশ্বাসের ব্যবস্থা', desc: 'উপরে নেট — বাতাস ও আলো ঢুকবে, কিন্তু দৃষ্টি যাবে না' },
+      { title: 'আলাদা দরজা সিস্টেম', desc: 'গোসল করানোর জন্য সহজ প্রবেশ ও বের হওয়া' },
+      { title: 'মসজিদে দান করার যোগ্য', desc: 'সদকায়ে জারিয়াহ হিসেবে রেখে যেতে পারেন' },
+      { title: 'টেকসই প্যাকেজিং', desc: 'বছরের পর বছর সংরক্ষণযোগ্য মজবুত বক্সে' },
+      { title: 'লম্বা ১০.৫ ফুট', desc: 'পরিপূর্ণ আকার, যেকোনো বয়সের জন্য' },
+      { title: 'চওড়া ৬.৫ ফুট', desc: 'প্রশস্ত ভেতর, কাজের সুবিধা' },
+      { title: 'উচ্চতা ৬.৫ ফুট', desc: 'দাঁড়িয়ে কাজ করার যথেষ্ট জায়গা' },
+    ],
+  },
+  specs: {
+    length: { value: '১০.৫', unit: 'ফুট', label: 'লম্বা' },
+    width: { value: '৬.৫', unit: 'ফুট', label: 'চওড়া' },
+    height: { value: '৬.৫', unit: 'ফুট', label: 'উচ্চতা' },
+  },
+  story: {
+    eyebrow: 'একটি বাস্তব গল্প',
+    heading: 'রহমান সাহেবের কথা',
+    body: 'আমার মা গত বছর চলে গেলেন। হাসপাতাল থেকে বাসায় আনার পর সবাই কাঁদছিল। গোসলের সময় হলো — কিন্তু ভাল কোনো পর্দার ব্যবস্থা ছিল না। আত্মীয়রা শাড়ি দিয়ে কোনোমতে ঢাকলেন, কিন্তু আমার ছোট বোনের চোখে যে কষ্টটা দেখেছিলাম, সেটা আজও ভুলতে পারি না। মা সারাজীবন পর্দা মেনে চলেছেন — তাঁর শেষ মুহূর্তে যেন সেই পর্দা ভাঙে, এটা আমাদের কারো কাম্য ছিল না। তখনই সিদ্ধান্ত নিলাম — আর কোনো পরিবার যেন এই কষ্ট না পায়। তাই দু\'টি কিনে রেখেছি — একটি ঘরের জন্য, একটি আমাদের এলাকার মসজিদে দান করার জন্য।',
+    attribution: '— রহমান সাহেব, ঢাকা',
+  },
+  donation: {
+    eyebrow: 'সদকায়ে জারিয়াহ',
+    heading: 'বাবা-মা চলে গেছেন? তাঁদের জন্য চলমান সওয়াব পাঠান',
+    body: 'আপনার এলাকার মসজিদে একটি স্মার্ট মুর্দা মশারী দান করুন। যতদিন এটি ব্যবহার হবে — যতজন প্রিয়জনের শেষ গোসলে কাজে আসবে — ততদিন আপনার মৃত আত্মীয়দের আমলনামায় সওয়াব যোগ হতে থাকবে, ইনশাআল্লাহ।',
+    cta: 'দানের জন্য অর্ডার করুন',
+  },
+  pricing: {
+    leadLine: 'একটি পরিবারের সম্মান রক্ষায়',
+    originalLabel: 'পুরাতন মূল্য',
+    originalPrice: 2260,
+    offerLabel: 'অফার মূল্য মাত্র',
+    offerPrice: 1790,
+    savingsLabel: 'আপনি সাশ্রয় করছেন',
+    urgency: 'স্টক সীমিত — এখনই অর্ডার করুন',
+    cta: 'অর্ডার করতে চাই',
+    toastAdded: 'ব্যাগে যোগ করা হয়েছে!',
+    reassurance: 'ক্যাশ অন ডেলিভারি — কোনো অগ্রিম পেমেন্ট নয়',
+  },
+  reviews: {
+    heading: 'যাঁদের পরিবারের কঠিন মুহূর্তে আমরা পাশে ছিলাম',
+    subheading: 'প্রিয়জন হারিয়ে এই মানুষগুলো আমাদের জানিয়েছেন তাঁদের অভিজ্ঞতা',
+    verifiedLabel: 'যাচাইকৃত গ্রাহক',
+    images: [
+      '/products/murda-moshari/review-1.jpg',
+      '/products/murda-moshari/review-2.jpg',
+      '/products/murda-moshari/review-3.jpg',
+    ],
+  },
+  trustFooter: {
+    whatsappEyebrow: 'যেকোনো প্রশ্নে',
+    whatsappTitle: 'WhatsApp এ যোগাযোগ করুন',
+    whatsappSubtitle: 'সকাল ৯টা থেকে রাত ১০টা পর্যন্ত',
+    whatsappCta: 'মেসেজ পাঠান',
+    whatsappNumber: '8801307777733',
+    closing: 'আপনার পরিবারের কঠিন মুহূর্তে আমরা সম্মানের সাথে পাশে আছি, ইনশাআল্লাহ।',
+  },
 } as const;
 
 export const SIZE_CHART = {

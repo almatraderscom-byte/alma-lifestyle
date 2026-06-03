@@ -23,6 +23,10 @@ import {
   CATALOG_PRODUCTS,
   getProductBySlug as getStaticProductBySlug,
   getAllProductSlugs as getStaticSlugs,
+  getStaticCustomLayoutProductBySlug,
+  getStaticCustomLayoutProducts,
+  getStaticCustomLayoutSlugs,
+  mergeStaticProductOverrides,
   type CatalogProduct,
 } from '@/lib/products-data';
 import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-config';
@@ -259,11 +263,18 @@ export async function loadCatalogProductsServer(options?: {
     });
 
     const products = groupProductsForListing(result.data, catById);
+    const seen = new Set(products.map((p) => p.slug));
+    for (const staticProduct of getStaticCustomLayoutProducts()) {
+      if (!seen.has(staticProduct.slug)) {
+        products.push(staticProduct);
+        seen.add(staticProduct.slug);
+      }
+    }
 
     return { products, total: products.length };
   } catch (err) {
     console.error('[storefront] loadCatalogProductsServer failed:', err);
-    return { products: [], total: 0 };
+    return { products: getStaticCustomLayoutProducts(), total: getStaticCustomLayoutProducts().length };
   }
 }
 
@@ -293,16 +304,20 @@ export async function loadProductBySlugServer(
         catalog.designGroupName =
           group.anchor.design_group_name ?? group.anchor.title;
       }
-      return catalog;
+      return mergeStaticProductOverrides(catalog);
     }
 
     const simple = await getPublishedProductBySlug(slug);
-    if (!simple) return null;
+    if (simple) {
+      return mergeStaticProductOverrides(
+        mapDbProductToCatalog(simple, categoryById.get(simple.category_id))
+      );
+    }
 
-    return mapDbProductToCatalog(simple, categoryById.get(simple.category_id));
+    return getStaticCustomLayoutProductBySlug(slug) ?? null;
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
-    return null;
+    return getStaticCustomLayoutProductBySlug(slug) ?? null;
   }
 }
 
@@ -313,10 +328,14 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
 
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
-    return result.data.map((p) => p.slug);
+    const slugs = new Set(result.data.map((p) => p.slug));
+    for (const slug of getStaticCustomLayoutSlugs()) {
+      slugs.add(slug);
+    }
+    return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return [];
+    return getStaticCustomLayoutSlugs();
   }
 }
 
