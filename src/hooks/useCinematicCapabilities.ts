@@ -26,7 +26,8 @@ export function useCinematicCapabilities() {
     reduced: !!reduced,
     isMobile,
     isSlowConnection,
-    useVideo: isReady && !isMobile && !isSlowConnection && !reduced,
+    /** Video when desktop + capable; `isReady` only gates layout, not video eligibility */
+    useVideo: !isMobile && !isSlowConnection && !reduced,
     isReady,
   };
 }

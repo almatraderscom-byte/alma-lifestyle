@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import { useCinematicCapabilities } from '@/hooks/useCinematicCapabilities';
@@ -77,7 +76,9 @@ export function CinematicHero() {
       data-cursor="ring"
     >
       <div className="absolute inset-0">
-        {isReady && useVideo ? (
+        {!isReady ? (
+          <div className="absolute inset-0 bg-charcoal" aria-hidden />
+        ) : useVideo ? (
           <video
             className="absolute inset-0 h-full w-full object-cover"
             src={CINEMATIC_HERO.videoSrc}
@@ -90,13 +91,13 @@ export function CinematicHero() {
             aria-hidden
           />
         ) : (
-          <Image
+          // Native img — avoid next/image optimizer caching or wrong fallbacks
+          <img
             src={CINEMATIC_HERO.posterSrc}
             alt=""
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
+            className="absolute inset-0 h-full w-full object-cover"
+            decoding="async"
+            fetchPriority="high"
           />
         )}
       </div>
