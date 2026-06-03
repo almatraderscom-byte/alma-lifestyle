@@ -11,7 +11,7 @@ import {
   getPublishedProductBySlug,
   getFeaturedProducts,
 } from '@/server/db/queries/products';
-import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
+import { shouldLoadCatalogFromDatabase } from '@/lib/storefront/catalog-source';
 import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
 import { getAppSettings } from '@/server/db/queries/homepage';
 import {
@@ -26,6 +26,9 @@ import {
   getStaticCustomLayoutProductBySlug,
   getStaticCustomLayoutProducts,
   getStaticCustomLayoutSlugs,
+  getStaticIslamicProductBySlug,
+  getStaticIslamicProducts,
+  getStaticIslamicSlugs,
   mergeStaticProductOverrides,
   type CatalogProduct,
 } from '@/lib/products-data';
@@ -134,7 +137,7 @@ export async function resolveFeaturedProductsServer(
   const section = sanitizeFeaturedSectionData(data);
   const limit = section.productCount;
 
-  if (shouldUseStaticDemoCatalog()) {
+  if (!shouldLoadCatalogFromDatabase()) {
     const { CATALOG_PRODUCTS } = await import('@/lib/products-data');
     return CATALOG_PRODUCTS.slice(0, limit).map((p, i) => ({
       ...toCardProduct(p),
@@ -245,7 +248,7 @@ export async function loadCatalogProductsServer(options?: {
   categoryId?: string;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
-  if (shouldUseStaticDemoCatalog()) {
+  if (!shouldLoadCatalogFromDatabase()) {
     return { products: CATALOG_PRODUCTS, total: CATALOG_PRODUCTS.length };
   }
 
@@ -264,7 +267,10 @@ export async function loadCatalogProductsServer(options?: {
 
     const products = groupProductsForListing(result.data, catById);
     const seen = new Set(products.map((p) => p.slug));
-    for (const staticProduct of getStaticCustomLayoutProducts()) {
+    for (const staticProduct of [
+      ...getStaticIslamicProducts(),
+      ...getStaticCustomLayoutProducts(),
+    ]) {
       if (!seen.has(staticProduct.slug)) {
         products.push(staticProduct);
         seen.add(staticProduct.slug);
@@ -274,14 +280,24 @@ export async function loadCatalogProductsServer(options?: {
     return { products, total: products.length };
   } catch (err) {
     console.error('[storefront] loadCatalogProductsServer failed:', err);
-    return { products: getStaticCustomLayoutProducts(), total: getStaticCustomLayoutProducts().length };
+    const fallback = [
+      ...getStaticIslamicProducts(),
+      ...getStaticCustomLayoutProducts(),
+    ];
+    const seen = new Set<string>();
+    const products = fallback.filter((p) => {
+      if (seen.has(p.slug)) return false;
+      seen.add(p.slug);
+      return true;
+    });
+    return { products, total: products.length };
   }
 }
 
 export async function loadProductBySlugServer(
   slug: string
 ): Promise<CatalogProduct | null> {
-  if (shouldUseStaticDemoCatalog()) {
+  if (!shouldLoadCatalogFromDatabase()) {
     return getStaticProductBySlug(slug) ?? null;
   }
 
@@ -314,33 +330,41 @@ export async function loadProductBySlugServer(
       );
     }
 
-    return getStaticCustomLayoutProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
-    return getStaticCustomLayoutProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   }
 }
 
 export async function loadAllProductSlugsServer(): Promise<string[]> {
-  if (shouldUseStaticDemoCatalog()) {
+  if (!shouldLoadCatalogFromDatabase()) {
     return getStaticSlugs();
   }
 
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     const slugs = new Set(result.data.map((p) => p.slug));
-    for (const slug of getStaticCustomLayoutSlugs()) {
+    for (const slug of [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()]) {
       slugs.add(slug);
     }
     return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return getStaticCustomLayoutSlugs();
+    return [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()];
   }
 }
 
 export async function loadFeaturedProductsServer(limit: number): Promise<CatalogProduct[]> {
-  if (shouldUseStaticDemoCatalog()) {
+  if (!shouldLoadCatalogFromDatabase()) {
     return CATALOG_PRODUCTS.slice(0, limit);
   }
 

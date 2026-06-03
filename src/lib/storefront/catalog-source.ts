@@ -1,6 +1,17 @@
-import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import {
+  isSupabaseAdminConfigured,
+  isSupabaseConfigured,
+} from '@/lib/supabase/config';
 
-/** Demo catalog in `products-data.ts` — local dev only, never on production Supabase. */
+/**
+ * Use the static demo catalog from `products-data.ts` when Supabase is not wired up.
+ * Uses public env only so server and client agree (service role is server-only).
+ */
 export function shouldUseStaticDemoCatalog(): boolean {
-  return !isSupabaseAdminConfigured();
+  return !isSupabaseConfigured();
+}
+
+/** Server may read/write products when the service role is available. */
+export function shouldLoadCatalogFromDatabase(): boolean {
+  return isSupabaseAdminConfigured();
 }
