@@ -147,22 +147,16 @@ export function CinematicHero() {
         aria-hidden
       />
 
-      <div className="relative z-10 flex h-full flex-col justify-between px-6 py-10 md:px-12">
-        <div className="flex items-center gap-2">
-          <motion.span
-            className="h-2 w-2 rounded-full bg-mustard"
-            animate={instant ? undefined : { opacity: [1, 0.35, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.span
-            className="font-bn-body text-[10px] uppercase tracking-[0.25em] text-cream/80"
-            initial={instant ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: instant ? 0 : 3.2, duration: 0.6 }}
-          >
+      {!instant && (
+        <div className="absolute top-12 left-12 z-20 flex items-center gap-2 opacity-0 animate-fade-in-delayed lg:left-16">
+          <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-mustard" />
+          <span className="font-en-display text-[10px] uppercase tracking-[0.4em] text-cream/70">
             AI VIDEO · CINEMATIC MODE
-          </motion.span>
+          </span>
         </div>
+      )}
+
+      <div className="relative z-10 flex h-full flex-col justify-between px-6 py-10 md:px-12">
 
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <motion.p
@@ -200,16 +194,23 @@ export function CinematicHero() {
           </motion.p>
         </div>
 
-        <motion.div
-          className="flex items-end justify-between font-bn-body text-[10px] uppercase tracking-[0.3em] text-cream/60"
-          initial={instant ? { opacity: 1 } : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: instant ? 0 : 8.2, duration: 0.7 }}
-        >
-          <span>{CINEMATIC_HERO.metaLeft}</span>
-          <span>{CINEMATIC_HERO.metaRight}</span>
-        </motion.div>
+        {instant ? (
+          <div className="flex items-end justify-between font-bn-body text-[10px] uppercase tracking-[0.3em] text-cream/60">
+            <span>{CINEMATIC_HERO.metaLeft}</span>
+            <span>{CINEMATIC_HERO.metaRight}</span>
+          </div>
+        ) : null}
       </div>
+
+      {!instant && (
+        <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between font-en-display text-[9px] uppercase tracking-[0.4em] text-cream/55 opacity-0 animate-fade-in-meta lg:left-16 lg:right-16">
+          <span>
+            <span className="mr-3 inline-block h-px w-7 align-middle bg-mustard" />
+            {CINEMATIC_HERO.metaLeft}
+          </span>
+          <span>{CINEMATIC_HERO.metaRight}</span>
+        </div>
+      )}
     </section>
   );
 }
