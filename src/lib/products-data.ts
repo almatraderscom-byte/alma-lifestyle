@@ -212,6 +212,16 @@ export function getProductBySlug(slug: string): CatalogProduct | undefined {
   return CATALOG_PRODUCTS.find((p) => p.slug === slug);
 }
 
+/** Apply static catalog fields (e.g. customLayout) when the live DB row omits them. */
+export function mergeStaticProductOverrides(product: CatalogProduct): CatalogProduct {
+  const staticProduct = getProductBySlug(product.slug);
+  if (!staticProduct) return product;
+  return {
+    ...product,
+    ...(staticProduct.customLayout ? { customLayout: staticProduct.customLayout } : {}),
+  };
+}
+
 export function getAllProductSlugs(): string[] {
   return CATALOG_PRODUCTS.map((p) => p.slug);
 }
