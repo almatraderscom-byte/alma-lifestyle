@@ -15,8 +15,8 @@ export function Footer() {
   return (
     <footer className="bg-primary text-secondary mt-auto">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
-          <div className="sm:col-span-2 md:col-span-1">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
+          <div className="col-span-2 mb-6 md:col-span-1 md:mb-0">
             <p className="font-brand text-3xl text-secondary">{settings.storeName}</p>
             <p className="font-bn-body text-base text-secondary/80 mt-3 leading-relaxed">
               {settings.tagline}
@@ -62,16 +62,16 @@ export function Footer() {
             </div>
           </div>
 
-          <div>
-            <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
+          <div className="min-w-0">
+            <h3 className="font-bn-heading text-base md:text-lg font-semibold text-secondary mb-3 md:mb-4">
               {FOOTER.shopTitle}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               {FOOTER.shopLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}
-                    className="font-bn-body text-base text-secondary/75 hover:text-secondary transition-colors"
+                    className="font-bn-body text-sm md:text-base text-secondary/75 hover:text-secondary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -80,16 +80,16 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
+          <div className="min-w-0">
+            <h3 className="font-bn-heading text-base md:text-lg font-semibold text-secondary mb-3 md:mb-4">
               {FOOTER.helpTitle}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               {FOOTER.helpLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}
-                    className="font-bn-body text-base text-secondary/75 hover:text-secondary transition-colors"
+                    className="font-bn-body text-sm md:text-base text-secondary/75 hover:text-secondary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -98,16 +98,16 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-bn-heading text-lg font-semibold text-secondary mb-4">
+          <div className="col-span-2 md:col-span-1 min-w-0">
+            <h3 className="font-bn-heading text-base md:text-lg font-semibold text-secondary mb-3 md:mb-4">
               {FOOTER.companyTitle}
             </h3>
-            <ul className="space-y-3">
+            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 md:space-y-3 md:gap-x-0">
               {FOOTER.companyLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}
-                    className="font-bn-body text-base text-secondary/75 hover:text-secondary transition-colors"
+                    className="font-bn-body text-sm md:text-base text-secondary/75 hover:text-secondary transition-colors"
                   >
                     {link.label}
                   </Link>
