@@ -531,6 +531,8 @@ export const MURDA_MOSHARI_PAGE = {
     savingsLabel: 'আপনি সাশ্রয় করছেন',
     urgency: 'স্টক সীমিত — এখনই অর্ডার করুন',
     cta: 'অর্ডার করতে চাই',
+    toastAdded: 'ব্যাগে যোগ করা হয়েছে!',
+    codNote: '✓ ক্যাশ অন ডেলিভারি — কোনো অগ্রিম নয়',
   },
   reviews: {
     heading: 'আমাদের সম্মানিত কাস্টমারের রিভিউ',
