@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import {
   calmEase,
   murdaViewport,
@@ -13,7 +13,7 @@ function splitSentences(text: string): string[] {
 }
 
 export function StorySection() {
-  const { story } = MURDA_MOSHARI_PAGE;
+  const { story } = useMurdaPage();
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const sentences = splitSentences(story.body);

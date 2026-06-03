@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import {
   calmEase,
   fadeUp,
@@ -122,7 +122,7 @@ function FeatureCard({
 }
 
 export function FeatureGridSection() {
-  const { features } = MURDA_MOSHARI_PAGE;
+  const { features } = useMurdaPage();
   const reduced = useReducedMotion();
   const Wrapper = reduced ? 'section' : motion.section;
 

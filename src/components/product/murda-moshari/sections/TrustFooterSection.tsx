@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
 import {
   calmEase,
@@ -11,10 +11,11 @@ import {
 } from '@/components/product/murda-moshari/animation-config';
 
 export function TrustFooterSection() {
-  const { trustFooter } = MURDA_MOSHARI_PAGE;
+  const page = useMurdaPage();
+  const { trustFooter } = page;
   const reduced = useReducedMotion();
   const { duration, transition } = useMurdaMotionTiming();
-  const waHref = murdaWhatsAppHref(trustFooter.whatsappNumber, MURDA_MOSHARI_PAGE.hero.whatsappPrefill);
+  const waHref = murdaWhatsAppHref(trustFooter.whatsappNumber, page.hero.whatsappPrefill);
   const Wrapper = reduced ? 'section' : motion.section;
 
   return (

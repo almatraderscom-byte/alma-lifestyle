@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import {
   calmEase,
   fadeUp,
@@ -15,7 +15,7 @@ interface DonationSectionProps {
 }
 
 export function DonationSection({ onOrderClick }: DonationSectionProps) {
-  const { donation } = MURDA_MOSHARI_PAGE;
+  const { donation } = useMurdaPage();
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const Wrapper = reduced ? 'section' : motion.section;

@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { formatBdtPrice, formatBnText, toBanglaNumber } from '@/lib/format-bn';
 import {
   calmEase,
@@ -19,7 +19,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps) {
-  const { pricing } = MURDA_MOSHARI_PAGE;
+  const { pricing } = useMurdaPage();
   const savings = pricing.originalPrice - pricing.offerPrice;
   const reduced = useReducedMotion();
   const { duration, transition } = useMurdaMotionTiming();

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { formatBnText } from '@/lib/format-bn';
 import {
   calmEase,
@@ -13,7 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export function ReviewGallerySection() {
-  const { reviews } = MURDA_MOSHARI_PAGE;
+  const { reviews } = useMurdaPage();
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const scrollRef = useRef<HTMLDivElement>(null);

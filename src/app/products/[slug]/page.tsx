@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MurdaMoshariLanding } from '@/components/product/MurdaMoshariLanding';
 import { ProductDetailView } from '@/components/product/ProductDetailView';
+import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-content';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
+import { getLandingContent } from '@/server/db/queries/landing-content';
+import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import {
   loadAllProductSlugsServer,
   loadCatalogProductsServer,
@@ -56,7 +59,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = mergeStaticProductOverrides(loaded);
 
   if (product.customLayout === 'murda-moshari-landing') {
-    return <MurdaMoshariLanding product={product} />;
+    const content =
+      isSupabaseAdminConfigured()
+        ? (await getLandingContent(slug)) ?? getDefaultMurdaMoshariContent()
+        : getDefaultMurdaMoshariContent();
+    return <MurdaMoshariLanding product={product} content={content} />;
   }
 
   return (

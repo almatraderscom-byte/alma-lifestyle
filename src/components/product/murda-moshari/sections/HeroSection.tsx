@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
 import { HeroProductImage } from '@/components/product/murda-moshari/HeroProductImage';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
 import {
   calmEase,
@@ -94,7 +94,7 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onOrderClick }: HeroSectionProps) {
-  const { hero } = MURDA_MOSHARI_PAGE;
+  const { hero } = useMurdaPage();
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const words = hero.heading.split(' ');

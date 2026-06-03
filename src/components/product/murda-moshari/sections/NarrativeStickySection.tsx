@@ -8,7 +8,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { patternDiamondStyle } from '@/components/product/murda-moshari/animation-config';
 
 function NarrativeScene({
@@ -73,7 +73,7 @@ function NarrativeScene({
 }
 
 export function NarrativeStickySection() {
-  const { narrative } = MURDA_MOSHARI_PAGE;
+  const { narrative } = useMurdaPage();
   const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({

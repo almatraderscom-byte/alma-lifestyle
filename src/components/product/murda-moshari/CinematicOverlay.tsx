@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
 import { calmEase } from '@/components/product/murda-moshari/animation-config';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 
 const STORAGE_KEY = 'murda-overlay-seen';
 
@@ -13,9 +13,11 @@ interface CinematicOverlayProps {
 
 export function CinematicOverlay({ onComplete }: CinematicOverlayProps) {
   const reduced = useReducedMotion();
-  const { brand, tagline } = MURDA_MOSHARI_PAGE.overlay;
+  const { brand, tagline } = useMurdaPage().overlay;
   const [phase, setPhase] = useState<'brand' | 'tagline' | 'exit'>('brand');
-  const letters = tagline.split('');
+  // Bangla cannot be split by character — conjuncts and dependent vowels break.
+  // Split by word to preserve correct rendering.
+  const taglineWords = tagline.split(' ');
 
   useEffect(() => {
     if (reduced) {

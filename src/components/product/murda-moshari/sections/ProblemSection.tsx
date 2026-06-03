@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import {
   calmEase,
   fadeIn,
@@ -10,7 +10,7 @@ import {
 } from '@/components/product/murda-moshari/animation-config';
 
 export function ProblemSection() {
-  const { problem } = MURDA_MOSHARI_PAGE;
+  const { problem } = useMurdaPage();
   const [before, after] = problem.outro.split('পরিপূর্ণ সমাধান');
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();

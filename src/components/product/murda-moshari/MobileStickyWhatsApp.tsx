@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
 
 interface MobileStickyWhatsAppProps {
@@ -16,7 +16,7 @@ export function MobileStickyWhatsApp({
   pageRevealed,
 }: MobileStickyWhatsAppProps) {
   const reduced = useReducedMotion();
-  const { hero } = MURDA_MOSHARI_PAGE;
+  const { hero } = useMurdaPage();
   const [show, setShow] = useState(false);
 
   useEffect(() => {

@@ -10,6 +10,7 @@ import {
   CinematicOverlay,
   readMurdaOverlaySeen,
 } from '@/components/product/murda-moshari/CinematicOverlay';
+import { MurdaPageProvider, useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { MobileStickyWhatsApp } from '@/components/product/murda-moshari/MobileStickyWhatsApp';
 import { ScrollProgressBar } from '@/components/product/murda-moshari/ScrollProgressBar';
 import { SectionBridge } from '@/components/product/murda-moshari/SectionBridge';
@@ -25,23 +26,24 @@ import { SolutionSection } from '@/components/product/murda-moshari/sections/Sol
 import { SpecStripSection } from '@/components/product/murda-moshari/sections/SpecStripSection';
 import { StorySection } from '@/components/product/murda-moshari/sections/StorySection';
 import { TrustFooterSection } from '@/components/product/murda-moshari/sections/TrustFooterSection';
-import { BREADCRUMB, MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { BREADCRUMB } from '@/lib/content';
+import type { MurdaMoshariContent } from '@/lib/landing-content-types';
 import { catalogToCartItem, getDefaultSize } from '@/lib/cart-helpers';
 import type { CatalogProduct } from '@/lib/products-data';
 
-const HERO_IMAGE = '/products/murda-moshari/hero-black.jpg';
-
 function MurdaProductJsonLd({ product }: { product: CatalogProduct }) {
+  const page = useMurdaPage();
+  const heroImage = page.hero.heroImage ?? '/products/murda-moshari/hero-black.jpg';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    image: HERO_IMAGE,
+    image: heroImage,
     description: product.description,
     sku: product.sku ?? 'ALM-ISL-001',
     offers: {
       '@type': 'Offer',
-      price: MURDA_MOSHARI_PAGE.pricing.offerPrice,
+      price: page.pricing.offerPrice,
       priceCurrency: 'BDT',
       availability: 'https://schema.org/InStock',
       url: `https://almatraders.com${product.href}`,
@@ -56,11 +58,8 @@ function MurdaProductJsonLd({ product }: { product: CatalogProduct }) {
   );
 }
 
-export interface MurdaMoshariLandingProps {
-  product: CatalogProduct;
-}
-
-export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
+function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
+  const page = useMurdaPage();
   const router = useRouter();
   const { addItem } = useCart();
   const { showToast } = useToast();
@@ -96,9 +95,9 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
         quantity: qty,
       })
     );
-    showToast(MURDA_MOSHARI_PAGE.pricing.toastAdded);
+    showToast(page.pricing.toastAdded);
     router.push('/checkout');
-  }, [addItem, product, qty, router, showToast]);
+  }, [addItem, page.pricing.toastAdded, product, qty, router, showToast]);
 
   const breadcrumbItems = useMemo(
     () => [
@@ -143,5 +142,18 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
       </div>
       <MobileStickyWhatsApp pricingInView={pricingInView} pageRevealed={overlayDone} />
     </div>
+  );
+}
+
+export interface MurdaMoshariLandingProps {
+  product: CatalogProduct;
+  content: MurdaMoshariContent;
+}
+
+export function MurdaMoshariLanding({ product, content }: MurdaMoshariLandingProps) {
+  return (
+    <MurdaPageProvider page={content}>
+      <MurdaMoshariLandingInner product={product} />
+    </MurdaPageProvider>
   );
 }

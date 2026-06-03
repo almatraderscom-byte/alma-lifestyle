@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import {
   calmEase,
   fadeUp,
@@ -12,7 +12,7 @@ import {
 } from '@/components/product/murda-moshari/animation-config';
 import { cn } from '@/lib/utils';
 
-const IN_USE_IMAGE = '/products/murda-moshari/in-use.jpg';
+const DEFAULT_IN_USE_IMAGE = '/products/murda-moshari/in-use.jpg';
 
 const chipPositions = ['left-3 top-3', 'right-3 top-3', 'left-3 bottom-3'] as const;
 const chipOffsets = [
@@ -22,7 +22,8 @@ const chipOffsets = [
 ] as const;
 
 export function SolutionSection() {
-  const { solution } = MURDA_MOSHARI_PAGE;
+  const { solution } = useMurdaPage();
+  const inUseImage = solution.image ?? DEFAULT_IN_USE_IMAGE;
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const Wrapper = reduced ? 'section' : motion.section;
@@ -36,7 +37,7 @@ export function SolutionSection() {
               <div className="absolute inset-0">
                 {reduced ? (
                   <Image
-                    src={IN_USE_IMAGE}
+                    src={inUseImage}
                     alt="স্মার্ট মুর্দা মশারী ব্যবহারে — চারদিক ঢাকা ও পর্দা"
                     fill
                     className="object-cover"
@@ -51,7 +52,7 @@ export function SolutionSection() {
                     transition={{ duration: duration(1.1), ease: calmEase }}
                   >
                     <Image
-                      src={IN_USE_IMAGE}
+                      src={inUseImage}
                       alt="স্মার্ট মুর্দা মশারী ব্যবহারে — চারদিক ঢাকা ও পর্দা"
                       fill
                       className="object-cover"

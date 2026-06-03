@@ -10,7 +10,7 @@ import {
   useReducedMotion,
   useTransform,
 } from 'framer-motion';
-import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { toBanglaNumber } from '@/lib/format-bn';
 import {
   calmEase,
@@ -91,7 +91,7 @@ function AnimatedSpecValue({
 }
 
 export function SpecStripSection() {
-  const { specs } = MURDA_MOSHARI_PAGE;
+  const { specs } = useMurdaPage();
   const specRows = [
     { target: 10.5, label: specs.length.label, unit: specs.length.unit },
     { target: 6.5, label: specs.width.label, unit: specs.width.unit },
