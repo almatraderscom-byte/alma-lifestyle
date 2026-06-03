@@ -50,7 +50,12 @@ export interface CategoriesSectionData {
   label: string;
   title: string;
   featured: CategoryCardConfig;
-  stacked: [CategoryCardConfig, CategoryCardConfig, CategoryCardConfig];
+  stacked: [
+    CategoryCardConfig,
+    CategoryCardConfig,
+    CategoryCardConfig,
+    CategoryCardConfig,
+  ];
 }
 
 export type FeaturedProductSource = 'latest' | 'bestsellers' | 'manual';
