@@ -75,6 +75,7 @@ export function CinematicHero() {
       onMouseMove={onMouseMove}
       data-cursor="ring"
     >
+      <h1 className="sr-only">Alma Lifestyle — পরিবারের ঐতিহ্যে বোনা প্রতিটি গল্প</h1>
       <div className="absolute inset-0">
         {!isReady ? (
           <div className="absolute inset-0 bg-charcoal" aria-hidden />

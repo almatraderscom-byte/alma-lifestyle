@@ -9,10 +9,20 @@ const SESSION_KEY = 'cinematic-overlay-seen';
 export function CinematicLoadingOverlay() {
   const reduced = useReducedMotion();
   const [visible, setVisible] = useState(false);
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      return sessionStorage.getItem(SESSION_KEY) === '1';
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
     if (reduced) return;
+    const nav = navigator as Navigator & { connection?: { effectiveType?: string } };
+    const conn = nav.connection?.effectiveType;
+    if (conn === '2g' || conn === 'slow-2g') return;
     try {
       if (sessionStorage.getItem(SESSION_KEY) === '1') return;
     } catch {
@@ -49,6 +59,9 @@ export function CinematicLoadingOverlay() {
       onAnimationComplete={() => {
         if (!visible) setDismissed(true);
       }}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Alma Lifestyle"
       aria-hidden={!visible}
     >
       <motion.div
