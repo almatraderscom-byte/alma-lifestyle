@@ -7,7 +7,6 @@ import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-what
 import {
   calmEase,
   murdaViewport,
-  patternDiamondStyle,
   useMurdaMotionTiming,
 } from '@/components/product/murda-moshari/animation-config';
 
@@ -68,11 +67,6 @@ export function TrustFooterSection() {
           </motion.p>
         )}
       </div>
-      <div
-        className="pointer-events-none absolute right-8 top-8 opacity-[0.03]"
-        style={patternDiamondStyle}
-        aria-hidden
-      />
     </Wrapper>
   );
 }

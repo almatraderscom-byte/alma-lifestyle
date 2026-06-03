@@ -1,21 +1,29 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useInView, useReducedMotion } from 'framer-motion';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { useToast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
+import {
+  CinematicOverlay,
+  readMurdaOverlaySeen,
+} from '@/components/product/murda-moshari/CinematicOverlay';
+import { MobileStickyWhatsApp } from '@/components/product/murda-moshari/MobileStickyWhatsApp';
 import { ScrollProgressBar } from '@/components/product/murda-moshari/ScrollProgressBar';
 import { SectionBridge } from '@/components/product/murda-moshari/SectionBridge';
 import { SectionDivider } from '@/components/product/murda-moshari/SectionDivider';
 import { DonationSection } from '@/components/product/murda-moshari/sections/DonationSection';
 import { FeatureGridSection } from '@/components/product/murda-moshari/sections/FeatureGridSection';
 import { HeroSection } from '@/components/product/murda-moshari/sections/HeroSection';
+import { NarrativeStickySection } from '@/components/product/murda-moshari/sections/NarrativeStickySection';
 import { PricingSection } from '@/components/product/murda-moshari/sections/PricingSection';
 import { ProblemSection } from '@/components/product/murda-moshari/sections/ProblemSection';
 import { ReviewGallerySection } from '@/components/product/murda-moshari/sections/ReviewGallerySection';
 import { SolutionSection } from '@/components/product/murda-moshari/sections/SolutionSection';
 import { SpecStripSection } from '@/components/product/murda-moshari/sections/SpecStripSection';
+import { StorySection } from '@/components/product/murda-moshari/sections/StorySection';
 import { TrustFooterSection } from '@/components/product/murda-moshari/sections/TrustFooterSection';
 import { BREADCRUMB, MURDA_MOSHARI_PAGE } from '@/lib/content';
 import { catalogToCartItem, getDefaultSize } from '@/lib/cart-helpers';
@@ -57,6 +65,18 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [qty, setQty] = useState(1);
+  const reduced = useReducedMotion();
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const pricingInView = useInView(pricingRef, { amount: 0.35 });
+  const [overlayDone, setOverlayDone] = useState(true);
+
+  useEffect(() => {
+    if (reduced) {
+      setOverlayDone(true);
+      return;
+    }
+    setOverlayDone(readMurdaOverlaySeen());
+  }, [reduced]);
 
   const scrollToOrder = useCallback(() => {
     document.getElementById('order')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -86,26 +106,35 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
     <div className="overflow-x-hidden bg-warm-white">
       <ScrollProgressBar />
       <MurdaProductJsonLd product={product} />
-      <div className="mx-auto max-w-6xl px-4 py-6 md:py-8">
-        <Breadcrumb items={breadcrumbItems} className="mb-2" />
+      {!overlayDone && <CinematicOverlay onComplete={() => setOverlayDone(true)} />}
+      <div>
+        <div className="mx-auto max-w-6xl px-4 py-6 md:py-8">
+          <Breadcrumb items={breadcrumbItems} className="mb-2" />
+        </div>
+        <HeroSection onOrderClick={scrollToOrder} />
+        <SectionDivider />
+        <ProblemSection />
+        <NarrativeStickySection />
+        <SectionBridge from="from-cream" to="to-cream" />
+        <SolutionSection />
+        <SectionDivider />
+        <FeatureGridSection />
+        <SectionBridge from="from-white" to="to-cream" />
+        <SpecStripSection />
+        <SectionDivider />
+        <StorySection />
+        <SectionDivider />
+        <DonationSection onOrderClick={scrollToOrder} />
+        <SectionBridge from="from-emerald" to="to-cream" />
+        <div ref={pricingRef}>
+          <PricingSection qty={qty} setQty={setQty} onAddToCart={handleAddToCart} />
+        </div>
+        <SectionDivider />
+        <ReviewGallerySection />
+        <SectionBridge from="from-white" to="to-cream" />
+        <TrustFooterSection />
       </div>
-      <HeroSection onOrderClick={scrollToOrder} />
-      <SectionDivider />
-      <ProblemSection />
-      <SectionBridge from="from-white" to="to-cream" />
-      <SolutionSection />
-      <SectionDivider />
-      <FeatureGridSection />
-      <SectionBridge from="from-white" to="to-cream" />
-      <SpecStripSection />
-      <SectionDivider />
-      <DonationSection onOrderClick={scrollToOrder} />
-      <SectionBridge from="from-emerald" to="to-cream" />
-      <PricingSection qty={qty} setQty={setQty} onAddToCart={handleAddToCart} />
-      <SectionDivider />
-      <ReviewGallerySection />
-      <SectionBridge from="from-white" to="to-cream" />
-      <TrustFooterSection />
+      <MobileStickyWhatsApp pricingInView={pricingInView} pageRevealed={overlayDone} />
     </div>
   );
 }
