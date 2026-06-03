@@ -37,6 +37,7 @@ const NAV = [
   },
   { href: '/admin/customers', label: 'Customers', icon: UsersIcon },
   { href: '/admin/homepage', label: 'Homepage Builder', icon: LayoutIcon },
+  { href: '/admin/landing', label: 'Landing Pages', icon: LayoutIcon },
   { href: '/admin/settings', label: 'Settings', icon: GearIcon },
 ];
 

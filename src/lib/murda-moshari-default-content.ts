@@ -6,7 +6,14 @@ export function getDefaultMurdaMoshariContent(): MurdaMoshariContent {
   return {
     overlay: { ...MURDA_MOSHARI_PAGE.overlay },
     hero: {
-      ...MURDA_MOSHARI_PAGE.hero,
+      eyebrow: MURDA_MOSHARI_PAGE.hero.eyebrow,
+      heading: MURDA_MOSHARI_PAGE.hero.heading,
+      subheading: MURDA_MOSHARI_PAGE.hero.subheading,
+      primaryCta: MURDA_MOSHARI_PAGE.hero.primaryCta,
+      whatsappCta: MURDA_MOSHARI_PAGE.hero.whatsappCta,
+      whatsappNumber: MURDA_MOSHARI_PAGE.hero.whatsappNumber,
+      whatsappPrefill: MURDA_MOSHARI_PAGE.hero.whatsappPrefill,
+      trustItems: [...MURDA_MOSHARI_PAGE.hero.trustItems],
       heroImage: '/products/murda-moshari/hero-black.jpg',
     },
     narrative: {
@@ -20,7 +27,10 @@ export function getDefaultMurdaMoshariContent(): MurdaMoshariContent {
       outro: MURDA_MOSHARI_PAGE.problem.outro,
     },
     solution: {
-      ...MURDA_MOSHARI_PAGE.solution,
+      eyebrow: MURDA_MOSHARI_PAGE.solution.eyebrow,
+      heading: MURDA_MOSHARI_PAGE.solution.heading,
+      body: MURDA_MOSHARI_PAGE.solution.body,
+      tags: [...MURDA_MOSHARI_PAGE.solution.tags],
       image: '/products/murda-moshari/in-use.jpg',
     },
     features: {

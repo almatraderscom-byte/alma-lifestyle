@@ -59,10 +59,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = mergeStaticProductOverrides(loaded);
 
   if (product.customLayout === 'murda-moshari-landing') {
-    const content =
-      isSupabaseAdminConfigured()
-        ? (await getLandingContent(slug)) ?? getDefaultMurdaMoshariContent()
-        : getDefaultMurdaMoshariContent();
+    let content = getDefaultMurdaMoshariContent();
+    if (isSupabaseAdminConfigured()) {
+      try {
+        content = (await getLandingContent(slug)) ?? content;
+      } catch {
+        // DB unavailable at build/runtime — use static defaults
+      }
+    }
     return <MurdaMoshariLanding product={product} content={content} />;
   }
 

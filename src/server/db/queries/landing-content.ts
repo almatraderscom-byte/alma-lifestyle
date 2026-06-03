@@ -36,8 +36,9 @@ export async function getLandingContent(slug: string): Promise<MurdaMoshariConte
     .maybeSingle();
 
   assertNoError(error, 'getLandingContent');
-  if (!data?.content) return null;
-  return parseContent(data.content);
+  const row = data as { content: unknown } | null;
+  if (!row?.content) return null;
+  return parseContent(row.content);
 }
 
 export async function listLandingContents(): Promise<LandingContentListItem[]> {
@@ -47,7 +48,7 @@ export async function listLandingContents(): Promise<LandingContentListItem[]> {
     .order('updated_at', { ascending: false });
 
   assertNoError(error, 'listLandingContents');
-  return (data ?? []) as LandingContentListItem[];
+  return (data ?? []) as unknown as LandingContentListItem[];
 }
 
 export async function saveLandingContent(
@@ -66,7 +67,9 @@ export async function saveLandingContent(
 
   assertNoError(fetchError, 'saveLandingContent.fetch');
 
-  if (existing) {
+  const existingRow = existing as unknown as { id: string } | null;
+
+  if (existingRow?.id) {
     const { data, error } = await getSupabaseAdmin()
       .from('product_landing_contents')
       .update({
@@ -79,7 +82,8 @@ export async function saveLandingContent(
       .single();
 
     assertNoError(error, 'saveLandingContent.update');
-    return parseContent((data as { content: unknown }).content) ?? validated;
+    const updated = data as unknown as { content: unknown } | null;
+    return parseContent(updated?.content) ?? validated;
   }
 
   const { data, error } = await getSupabaseAdmin()
@@ -94,7 +98,8 @@ export async function saveLandingContent(
     .single();
 
   assertNoError(error, 'saveLandingContent.insert');
-  return parseContent((data as { content: unknown }).content) ?? validated;
+  const inserted = data as unknown as { content: unknown } | null;
+  return parseContent(inserted?.content) ?? validated;
 }
 
 export function resolveMurdaLayoutKey(layoutKey?: string): string {
