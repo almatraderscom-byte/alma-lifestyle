@@ -132,6 +132,9 @@ export function FeatureGridSection() {
         <h2 className="font-bn-heading text-center text-2xl text-charcoal md:text-3xl">
           {features.heading}
         </h2>
+        <p className="font-bn-body mt-3 text-center text-sm text-charcoal/70 md:text-base">
+          {features.subheading}
+        </p>
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.items.map((item, index) => (
             <FeatureCard

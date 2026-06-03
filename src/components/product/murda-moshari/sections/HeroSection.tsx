@@ -1,12 +1,11 @@
 'use client';
 
-import Image from 'next/image';
-import { Phone } from 'lucide-react';
-import {
-  motion,
-  useReducedMotion,
-} from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
+import { HeroProductImage } from '@/components/product/murda-moshari/HeroProductImage';
 import { MURDA_MOSHARI_PAGE } from '@/lib/content';
+import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
 import {
   calmEase,
   fadeUp,
@@ -15,7 +14,7 @@ import {
   staggerContainer,
   useMurdaMotionTiming,
 } from '@/components/product/murda-moshari/animation-config';
-const PHONE_TEL = 'tel:+8801307777733';
+import { cn } from '@/lib/utils';
 
 function CheckMarkDraw({ delay }: { delay: number }) {
   const reduced = useReducedMotion();
@@ -31,7 +30,7 @@ function CheckMarkDraw({ delay }: { delay: number }) {
       width="14"
       height="14"
       viewBox="0 0 14 14"
-      className="text-emerald shrink-0"
+      className="shrink-0 text-emerald"
       aria-hidden
     >
       <motion.path
@@ -99,27 +98,55 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const words = hero.heading.split(' ');
+  const sectionRef = useRef<HTMLElement>(null);
+  const [spot, setSpot] = useState({ x: 0, y: 0, visible: false });
 
   const MotionTag = reduced ? 'section' : motion.section;
-  const MotionDiv = reduced ? 'div' : motion.div;
   const MotionP = reduced ? 'p' : motion.p;
   const MotionH1 = reduced ? 'h1' : motion.h1;
   const MotionButton = reduced ? 'button' : motion.button;
   const MotionA = reduced ? 'a' : motion.a;
 
+  const waHref = murdaWhatsAppHref(hero.whatsappNumber, hero.whatsappPrefill);
+
   return (
-    <MotionTag className="relative overflow-visible bg-cream py-16 md:py-24">
+    <MotionTag
+      ref={sectionRef}
+      className="relative overflow-visible bg-cream py-16 md:py-24"
+      onMouseMove={
+        reduced
+          ? undefined
+          : (e) => {
+              const rect = sectionRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              setSpot({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+                visible: true,
+              });
+            }
+      }
+      onMouseLeave={reduced ? undefined : () => setSpot((s) => ({ ...s, visible: false }))}
+    >
+      {!reduced && spot.visible && (
+        <motion.div
+          className="pointer-events-none absolute z-0 hidden h-[300px] w-[300px] rounded-full bg-mustard/10 blur-3xl lg:block"
+          style={{ left: spot.x - 150, top: spot.y - 150 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          aria-hidden
+        />
+      )}
+
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
         {!reduced && (
-          <MotionDiv
+          <motion.div
             className="absolute -inset-[50%] opacity-[0.04]"
             style={patternDiamondStyle}
             animate={{ rotate: 360 }}
             transition={{ duration: 240, repeat: Infinity, ease: 'linear' }}
           />
-        )}
-        {reduced && (
-          <div className="absolute inset-0 opacity-[0.04]" style={patternDiamondStyle} />
         )}
       </div>
 
@@ -148,14 +175,14 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
           >
             {words.map((word, i) =>
               reduced ? (
-                <span key={`${word}-${i}`} className="inline-block mr-[0.25em]">
+                <span key={`${word}-${i}`} className="mr-[0.25em] inline-block">
                   {word}
                 </span>
               ) : (
                 <motion.span
                   key={`${word}-${i}`}
                   variants={fadeUp}
-                  className="inline-block mr-[0.25em]"
+                  className="mr-[0.25em] inline-block"
                 >
                   {word}
                 </motion.span>
@@ -191,18 +218,24 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               {hero.primaryCta}
             </MotionButton>
             <MotionA
-              href={PHONE_TEL}
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald/40 bg-transparent px-6 font-bn-body text-base font-semibold text-emerald"
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl',
+                'border border-[#25D366]/50 bg-transparent px-6 font-bn-body text-base font-semibold text-[#25D366]',
+                'transition-colors hover:border-[#25D366] hover:bg-[#25D366] hover:text-cream'
+              )}
               {...(!reduced && {
                 initial: { opacity: 0, scale: 0.95 },
                 whileInView: { opacity: 1, scale: 1 },
                 viewport: murdaViewport,
                 transition: transition({ duration: duration(0.5), delay: duration(0.85) }),
-                whileHover: { y: -2, boxShadow: '0 8px 24px rgba(42, 38, 34, 0.12)' },
+                whileHover: { y: -2, boxShadow: '0 8px 24px rgba(37, 211, 102, 0.2)' },
               })}
             >
-              <Phone className="h-5 w-5 shrink-0" aria-hidden />
-              {hero.secondaryCta}
+              <WhatsAppIcon className="h-5 w-5 shrink-0" />
+              {hero.whatsappCta}
             </MotionA>
           </div>
 

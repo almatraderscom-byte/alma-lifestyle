@@ -54,7 +54,10 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
             transition: transition({ duration: duration(0.7) }),
           })}
         >
-          <div className="relative inline-block">
+          <p className="font-bn-heading text-center text-lg text-charcoal/80 md:text-xl">
+            {pricing.leadLine}
+          </p>
+          <div className="relative mt-6 inline-block">
             <p className="font-bn-body text-lg text-charcoal/60">
               {pricing.originalLabel}: {formatBdtPrice(pricing.originalPrice)}
             </p>
@@ -192,7 +195,7 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
             )}
           </div>
           <p className="font-bn-body mt-4 text-center text-sm text-charcoal/70">
-            {pricing.codNote}
+            {pricing.reassurance}
           </p>
         </Card>
       </div>
