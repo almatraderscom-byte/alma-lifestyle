@@ -15,7 +15,6 @@ import {
   staggerContainer,
   useMurdaMotionTiming,
 } from '@/components/product/murda-moshari/animation-config';
-const HERO_IMAGE = '/products/murda-moshari/hero-black.jpg';
 const PHONE_TEL = 'tel:+8801307777733';
 
 function CheckMarkDraw({ delay }: { delay: number }) {
@@ -224,42 +223,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               style={{ boxShadow: '0 0 40px rgba(200, 155, 60, 0.08)' }}
             >
               <FrameDraw />
-              <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-charcoal/5">
-                {reduced ? (
-                  <Image
-                    src={HERO_IMAGE}
-                    alt="স্মার্ট মুর্দা মশারী — কালো রঙের পর্দা মশারী"
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority
-                  />
-                ) : (
-                  <motion.div
-                    className="relative h-full w-full"
-                    initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                    whileInView={{ clipPath: 'inset(0 0 0 0)' }}
-                    viewport={murdaViewport}
-                    transition={{ duration: duration(1.2), ease: calmEase }}
-                  >
-                    <motion.div
-                      className="relative h-full w-full"
-                      initial={{ scale: 1 }}
-                      animate={{ scale: 1.04 }}
-                      transition={{ duration: 20, ease: 'linear' }}
-                    >
-                      <Image
-                        src={HERO_IMAGE}
-                        alt="স্মার্ট মুর্দা মশারী — কালো রঙের পর্দা মশারী"
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        priority
-                      />
-                    </motion.div>
-                  </motion.div>
-                )}
-              </div>
+              <HeroProductImage />
             </div>
           </div>
         </div>

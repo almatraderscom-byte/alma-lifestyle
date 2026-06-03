@@ -32,23 +32,9 @@ export function SolutionSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 md:grid-cols-2 md:gap-14">
         <div className="order-2 md:order-1">
           <div className="relative overflow-visible">
-            <div className="relative aspect-[3/2] overflow-hidden rounded-2xl md:rounded-l-3xl md:rounded-r-none">
-              {reduced ? (
-                <Image
-                  src={IN_USE_IMAGE}
-                  alt="স্মার্ট মুর্দা মশারী ব্যবহারে — চারদিক ঢাকা ও পর্দা"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              ) : (
-                <motion.div
-                  className="relative h-full w-full"
-                  initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' }}
-                  whileInView={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
-                  viewport={murdaViewport}
-                  transition={{ duration: duration(1.1), ease: calmEase }}
-                >
+            <div className="relative aspect-[3/2] min-h-[200px] w-full overflow-hidden rounded-2xl md:min-h-[280px] md:rounded-l-3xl md:rounded-r-none">
+              <div className="absolute inset-0">
+                {reduced ? (
                   <Image
                     src={IN_USE_IMAGE}
                     alt="স্মার্ট মুর্দা মশারী ব্যবহারে — চারদিক ঢাকা ও পর্দা"
@@ -56,8 +42,24 @@ export function SolutionSection() {
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
-                </motion.div>
-              )}
+                ) : (
+                  <motion.div
+                    className="absolute inset-0"
+                    initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' }}
+                    whileInView={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
+                    viewport={murdaViewport}
+                    transition={{ duration: duration(1.1), ease: calmEase }}
+                  >
+                    <Image
+                      src={IN_USE_IMAGE}
+                      alt="স্মার্ট মুর্দা মশারী ব্যবহারে — চারদিক ঢাকা ও পর্দা"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </motion.div>
+                )}
+              </div>
               {solution.tags.map((tag, i) =>
                 reduced ? (
                   <span
