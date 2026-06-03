@@ -22,18 +22,49 @@ function NarrativeScene({
   total: number;
   scrollYProgress: MotionValue<number>;
 }) {
-  const start = index / total - 0.05;
-  const mid = index / total;
-  const end = (index + 1) / total;
+  // Each scene gets a clean slot with NO overlap with neighbors.
+  // Per scene: fade-in (4%) → hold (rest) → fade-out (4%).
+  // First scene starts at full opacity; last scene ends at full opacity.
+  // Handoff between scenes is sequential: scene N fully fades out
+  // BEFORE scene N+1 starts fading in — eliminating the overlap bug.
+  const segment = 1 / total;
+  const fade = 0.04;
+
+  const segStart = index * segment;
+  const segEnd = (index + 1) * segment;
+  const fadeInEnd = segStart + fade;
+  const fadeOutStart = segEnd - fade;
+
+  const isFirst = index === 0;
+  const isLast = index === total - 1;
+
+  // Slight vertical drift adds gentle motion so a slow scroll feels alive
+  // even during the brief blank moment between scenes.
+  const y = useTransform(
+    scrollYProgress,
+    [segStart, fadeInEnd, fadeOutStart, segEnd],
+    [16, 0, 0, -16]
+  );
+
   const opacity = useTransform(
     scrollYProgress,
-    [Math.max(0, start), mid, end, Math.min(1, end + 0.05)],
-    [0, 1, 1, 0]
+    [
+      isFirst ? 0 : segStart,
+      fadeInEnd,
+      fadeOutStart,
+      isLast ? 1 : segEnd,
+    ],
+    [
+      isFirst ? 1 : 0,
+      1,
+      1,
+      isLast ? 1 : 0,
+    ]
   );
 
   return (
     <motion.p
-      style={{ opacity }}
+      style={{ opacity, y }}
       className="absolute inset-x-0 top-1/2 mx-auto max-w-3xl -translate-y-1/2 px-6 text-center font-bn-heading text-2xl leading-relaxed text-charcoal md:text-4xl"
     >
       {text}
