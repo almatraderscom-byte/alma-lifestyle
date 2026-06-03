@@ -12,8 +12,7 @@ import {
   getFeaturedProducts,
 } from '@/server/db/queries/products';
 import { shouldLoadCatalogFromDatabase } from '@/lib/storefront/catalog-source';
-import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
-import { getAppSettings } from '@/server/db/queries/homepage';
+import { getHomepageConfigOrDefault, getAppSettings, getSiteSetting } from '@/server/db/queries/homepage';
 import {
   groupProductsForListing,
   mapDbProductToCatalog,
@@ -118,7 +117,7 @@ async function enrichHomepageCategories(
 
 export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
   if (!isSupabaseAdminConfigured()) {
-    return getDefaultHomepageConfig();
+    return { ...getDefaultHomepageConfig(), cinematicMode: true };
   }
   try {
     const stored = await getHomepageConfigOrDefault();
@@ -126,9 +125,11 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
     const categories = await loadCategoriesServer();
     const { products } = await loadCatalogProductsServer({ limit: 200 });
     config = await enrichHomepageCategories(config, categories, products);
+    const cinematicMode = await getSiteSetting('cinematic_mode_enabled');
+    config.cinematicMode = cinematicMode === null ? true : cinematicMode === 'true';
     return config;
   } catch {
-    return getDefaultHomepageConfig();
+    return { ...getDefaultHomepageConfig(), cinematicMode: true };
   }
 }
 

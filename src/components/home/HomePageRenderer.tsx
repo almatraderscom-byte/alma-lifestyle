@@ -9,6 +9,7 @@ import {
 } from '@/lib/homepage-config';
 import type { HomepageConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
+import type { CardProduct } from '@/lib/products-data';
 import { EditorialHero } from '@/components/home/EditorialHero';
 import {
   FloatingCollectionOcean,
@@ -33,11 +34,21 @@ import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
 import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
 import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
 import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
+import { CinematicLoadingOverlay } from '@/components/cinematic/CinematicLoadingOverlay';
+import { CinematicHero } from '@/components/cinematic/CinematicHero';
+import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
+import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
+import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
+import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
+
+/** Toggle V2 cinematic homepage (admin toggle later). */
+
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
   featuredProducts?: FeaturedProduct[];
   oceanProducts?: OceanProduct[];
+  chapterProducts?: (CardProduct | null)[];
   editMode?: boolean;
 }
 
@@ -116,6 +127,7 @@ export function HomePageRenderer({
   initialConfig,
   featuredProducts = [],
   oceanProducts = [],
+  chapterProducts = [],
   editMode = false,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
@@ -147,6 +159,19 @@ export function HomePageRenderer({
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
   const insertAfter = buildInsertAfter(extras);
+
+  if ((config.cinematicMode ?? true) && !editMode && !preview) {
+    return (
+      <HomepageEditModeProvider editMode={false}>
+        <CinematicAssetPreload />
+        <CinematicLoadingOverlay />
+        <CinematicHero />
+        <ColorWashBridge from="charcoal" to="cream" />
+        <PinnedChaptersSection chapterProducts={chapterProducts} />
+        <CinematicClosingSection />
+      </HomepageEditModeProvider>
+    );
+  }
 
   const blocks: ReactNode[] = [];
 

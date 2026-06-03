@@ -396,3 +396,5 @@ export function toCardProduct(
     aspectRatio: product.aspectRatio,
   };
 }
+
+export type CardProduct = ReturnType<typeof toCardProduct>;
