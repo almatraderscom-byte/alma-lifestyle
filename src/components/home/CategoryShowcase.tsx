@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { CATEGORY_SHOWCASE } from '@/lib/content';
 import { formatBnText } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
@@ -66,26 +68,78 @@ export function CategoryShowcase({ data: dataProp }: CategoryShowcaseProps) {
             />
           </motion.div>
 
-          <div className="grid grid-cols-3 md:grid-cols-1 md:col-span-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 md:col-span-5 gap-3 md:gap-4">
             {stacked.map((cat) => (
               <motion.div
                 key={cat.categorySlug}
                 variants={reduceMotion ? undefined : staggerItemVariants}
-                className="md:flex-1"
+                className={cn(
+                  'md:flex-1',
+                  cat.categorySlug === 'islamic' && 'col-span-2 md:col-span-2'
+                )}
               >
-                <CategoryCard
-                  href={cat.href}
-                  name={cat.displayName}
-                  bg={cat.bgClass}
-                  hint={cat.imageHint}
-                  imageUrl={cat.imageUrl}
-                />
+                {cat.categorySlug === 'islamic' ? (
+                  <IslamicCategoryCard
+                    href={cat.href}
+                    name={cat.displayName}
+                  />
+                ) : (
+                  <CategoryCard
+                    href={cat.href}
+                    name={cat.displayName}
+                    bg={cat.bgClass}
+                    hint={cat.imageHint}
+                    imageUrl={cat.imageUrl}
+                  />
+                )}
               </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function IslamicCategoryCard({ href, name }: { href: string; name: string }) {
+  const reduceMotion = useReducedMotion();
+  const { eyebrow, viewLabel } = CATEGORY_SHOWCASE.islamicCard;
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'group relative flex min-h-[120px] flex-col justify-between overflow-hidden rounded bg-emerald p-5 md:min-h-[140px] md:p-6',
+        'aspect-[2/1] md:aspect-auto md:h-full'
+      )}
+    >
+      {!reduceMotion && (
+        <motion.span
+          className="pointer-events-none absolute inset-0 bg-cream"
+          initial={{ x: '-100%' }}
+          whileHover={{ x: 0 }}
+          transition={{ duration: 0.45, ease: EASE_PREMIUM }}
+          aria-hidden
+        />
+      )}
+      <div className="relative z-10">
+        <p className="font-bn-body text-xs uppercase tracking-wider text-mustard transition-colors duration-300 group-hover:text-mustard">
+          {eyebrow}
+        </p>
+        <h3 className="font-bn-heading mt-2 text-2xl font-bold text-cream transition-colors duration-300 group-hover:text-emerald md:text-3xl">
+          {name}
+        </h3>
+      </div>
+      <span className="relative z-10 flex justify-end">
+        <span className="inline-flex items-center gap-1 font-bn-body text-sm text-cream transition-colors duration-300 group-hover:text-emerald">
+          {viewLabel}
+          <ArrowUpRight
+            className="h-4 w-4 text-mustard transition-colors duration-300 group-hover:text-emerald"
+            aria-hidden
+          />
+        </span>
+      </span>
+    </Link>
   );
 }
 

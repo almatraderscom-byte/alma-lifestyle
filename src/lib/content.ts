@@ -125,6 +125,10 @@ export const CATEGORY_SHOWCASE = {
       imageHint: 'Image: Islamic products — Smart Murda Moshari',
     },
   ],
+  islamicCard: {
+    eyebrow: 'নতুন বিভাগ',
+    viewLabel: 'দেখুন',
+  },
 } as const;
 
 /** Featured products — Section 4 */
