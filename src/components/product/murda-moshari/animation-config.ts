@@ -8,6 +8,9 @@ export const calmEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export const murdaViewport = { once: true as const, amount: 0.2 as const };
 
+/** Above-the-fold hero — fire on mount (whileInView can miss first paint). */
+export const heroViewport = { once: true as const, amount: 0 as const };
+
 export const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: calmEase } },

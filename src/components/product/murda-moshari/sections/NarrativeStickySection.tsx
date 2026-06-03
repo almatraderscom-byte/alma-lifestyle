@@ -86,7 +86,7 @@ export function NarrativeStickySection() {
       className="relative h-[200vh] md:h-[300vh]"
       aria-label={narrative.eyebrow}
     >
-      <div className="sticky top-0 flex h-[90vh] flex-col items-center justify-center overflow-hidden bg-cream md:h-screen">
+      <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden bg-cream">
         <div
           className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.04]"
           aria-hidden

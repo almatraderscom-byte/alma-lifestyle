@@ -156,8 +156,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
             className="font-bn-body text-xs uppercase tracking-wider text-mustard"
             {...(!reduced && {
               initial: { opacity: 0, x: -20 },
-              whileInView: { opacity: 1, x: 0 },
-              viewport: murdaViewport,
+              animate: { opacity: 1, x: 0 },
               transition: transition({ duration: duration(0.4) }),
             })}
           >
@@ -169,8 +168,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
             {...(!reduced && {
               variants: staggerContainer(stagger(0.06)),
               initial: 'hidden',
-              whileInView: 'visible',
-              viewport: murdaViewport,
+              animate: 'visible',
             })}
           >
             {words.map((word, i) =>
@@ -194,8 +192,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
             className="font-bn-body mt-5 text-lg leading-relaxed text-charcoal/80"
             {...(!reduced && {
               initial: { opacity: 0, y: 24 },
-              whileInView: { opacity: 1, y: 0 },
-              viewport: murdaViewport,
+              animate: { opacity: 1, y: 0 },
               transition: transition({ duration: duration(0.7), delay: duration(0.6) }),
             })}
           >
@@ -209,8 +206,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-emerald px-6 font-bn-body text-base font-semibold text-cream"
               {...(!reduced && {
                 initial: { opacity: 0, scale: 0.95 },
-                whileInView: { opacity: 1, scale: 1 },
-                viewport: murdaViewport,
+                animate: { opacity: 1, scale: 1 },
                 transition: transition({ duration: duration(0.5), delay: duration(0.75) }),
                 whileHover: { y: -2, boxShadow: '0 8px 24px rgba(42, 38, 34, 0.12)' },
               })}
@@ -228,8 +224,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               )}
               {...(!reduced && {
                 initial: { opacity: 0, scale: 0.95 },
-                whileInView: { opacity: 1, scale: 1 },
-                viewport: murdaViewport,
+                animate: { opacity: 1, scale: 1 },
                 transition: transition({ duration: duration(0.5), delay: duration(0.85) }),
                 whileHover: { y: -2, boxShadow: '0 8px 24px rgba(37, 211, 102, 0.2)' },
               })}

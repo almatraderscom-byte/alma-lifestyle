@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useInView, useReducedMotion } from 'framer-motion';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { useToast } from '@/components/ui/Toast';
@@ -70,6 +70,13 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
   const pricingInView = useInView(pricingRef, { amount: 0.35 });
   const [overlayDone, setOverlayDone] = useState(true);
 
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   useEffect(() => {
     if (reduced) {
       setOverlayDone(true);
@@ -103,7 +110,7 @@ export function MurdaMoshariLanding({ product }: MurdaMoshariLandingProps) {
   );
 
   return (
-    <div className="overflow-x-hidden bg-warm-white">
+    <div className="overflow-x-clip bg-warm-white">
       <ScrollProgressBar />
       <MurdaProductJsonLd product={product} />
       {!overlayDone && <CinematicOverlay onComplete={() => setOverlayDone(true)} />}
