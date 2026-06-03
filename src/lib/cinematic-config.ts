@@ -71,3 +71,10 @@ export const CINEMATIC_GRADIENT_CSS: Record<CinematicGradientToken, string> = {
   'emerald-deep': 'var(--emerald-shadow)',
   charcoal: 'var(--color-charcoal)',
 };
+
+export const CINEMATIC_CHAPTER_PRODUCTS = [
+  { stageIndex: 0, productSlug: 'royal-navy-panjabi' },
+  { stageIndex: 1, productSlug: 'maroon-festive-panjabi' },
+  { stageIndex: 2, productSlug: 'silk-premium-panjabi' },
+  { stageIndex: 3, productSlug: 'premium-cotton-panjabi' },
+] as const;

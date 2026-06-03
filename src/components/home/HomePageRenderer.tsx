@@ -9,6 +9,7 @@ import {
 } from '@/lib/homepage-config';
 import type { HomepageConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
+import type { CardProduct } from '@/lib/products-data';
 import { EditorialHero } from '@/components/home/EditorialHero';
 import {
   FloatingCollectionOcean,
@@ -46,6 +47,7 @@ interface HomePageRendererProps {
   initialConfig: HomepageConfig;
   featuredProducts?: FeaturedProduct[];
   oceanProducts?: OceanProduct[];
+  chapterProducts?: (CardProduct | null)[];
   editMode?: boolean;
 }
 
@@ -124,6 +126,7 @@ export function HomePageRenderer({
   initialConfig,
   featuredProducts = [],
   oceanProducts = [],
+  chapterProducts = [],
   editMode = false,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
@@ -162,7 +165,7 @@ export function HomePageRenderer({
         <CinematicLoadingOverlay />
         <CinematicHero />
         <ColorWashBridge from="charcoal" to="cream" />
-        <PinnedChaptersSection />
+        <PinnedChaptersSection chapterProducts={chapterProducts} />
         <CinematicClosingSection />
       </HomepageEditModeProvider>
     );

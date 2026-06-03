@@ -9,12 +9,17 @@ import {
   type CinematicGradientToken,
 } from '@/lib/cinematic-config';
 import { cn } from '@/lib/utils';
+import type { CardProduct } from '@/lib/products-data';
 
 function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken) {
   return `linear-gradient(135deg, ${CINEMATIC_GRADIENT_CSS[from]}, ${CINEMATIC_GRADIENT_CSS[to]})`;
 }
 
-export function PinnedChaptersSection() {
+interface PinnedChaptersSectionProps {
+  chapterProducts?: (CardProduct | null)[];
+}
+
+export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSectionProps) {
   const reduced = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
