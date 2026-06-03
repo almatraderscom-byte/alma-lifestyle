@@ -34,9 +34,13 @@ interface ProductsListingProps {
 }
 
 export function ProductsListing({ initialProducts }: ProductsListingProps) {
-  const catalogSource = shouldUseStaticDemoCatalog()
-    ? (initialProducts ?? CATALOG_PRODUCTS)
-    : (initialProducts ?? []);
+  /** Always trust server-passed catalog; static demo only when the server sent nothing. */
+  const catalogSource =
+    initialProducts && initialProducts.length > 0
+      ? initialProducts
+      : shouldUseStaticDemoCatalog()
+        ? CATALOG_PRODUCTS
+        : [];
   const searchParams = useSearchParams();
   const router = useRouter();
 

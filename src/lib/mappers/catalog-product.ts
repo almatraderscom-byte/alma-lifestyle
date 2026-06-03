@@ -94,7 +94,12 @@ export function mapDbProductToCatalog(
     ],
     rating: 4.5,
     reviewCount: 0,
-    aspectRatio: '3/4',
+    aspectRatio:
+      categorySlug === 'electronics' ||
+      categorySlug === 'home-decor' ||
+      categorySlug === 'islamic'
+        ? '1/1'
+        : '3/4',
     description: product.description ?? '',
     materialCare: product.care_instructions ?? '',
     deliveryInfo: '',
