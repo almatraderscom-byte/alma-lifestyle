@@ -53,7 +53,7 @@ export function CinematicHero() {
   const containerRef = useRef<HTMLElement>(null);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const instant = !!reduced;
-  const letterboxH = isMobile ? 24 : 40;
+  const letterboxH = isMobile ? 24 : 32;
 
   const onMouseMove = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -106,7 +106,7 @@ export function CinematicHero() {
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background:
-            'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.7) 100%)',
+            'radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.25) 80%, rgba(0,0,0,0.5) 100%)',
         }}
         aria-hidden
       />
