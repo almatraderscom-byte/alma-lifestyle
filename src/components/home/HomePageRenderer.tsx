@@ -41,7 +41,7 @@ import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSect
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 
 /** Toggle V2 cinematic homepage (admin toggle later). */
-const CINEMATIC_MODE = true;
+
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -159,7 +159,7 @@ export function HomePageRenderer({
   const extras = config.extras ?? getDefaultHomepageExtras();
   const insertAfter = buildInsertAfter(extras);
 
-  if (CINEMATIC_MODE && !editMode && !preview) {
+  if ((config.cinematicMode ?? true) && !editMode && !preview) {
     return (
       <HomepageEditModeProvider editMode={false}>
         <CinematicLoadingOverlay />

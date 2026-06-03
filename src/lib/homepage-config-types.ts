@@ -217,6 +217,7 @@ export type HomepageSectionConfig = {
 }[HomepageSectionId];
 
 export interface HomepageConfig {
+  cinematicMode?: boolean;
   sections: HomepageSectionConfig[];
   extras?: HomepageExtras;
   lastSaved: string;
