@@ -159,6 +159,14 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                   </div>
                 )}
               </div>
+              {activeStage === index && chapterProducts[index] && index !== 3 && (
+                <Link
+                  href={`/products/${chapterProducts[index]!.slug}`}
+                  data-cursor="ring"
+                  className="absolute inset-0 z-10"
+                  aria-label={`View ${chapterProducts[index]!.title}`}
+                />
+              )}
             </div>
           ))}
         </div>
