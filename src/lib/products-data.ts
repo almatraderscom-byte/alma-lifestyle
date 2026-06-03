@@ -222,6 +222,26 @@ export function mergeStaticProductOverrides(product: CatalogProduct): CatalogPro
   };
 }
 
+/** Static-only PDP entries (e.g. custom landing layouts) not yet in Supabase. */
+export function getStaticCustomLayoutProducts(): CatalogProduct[] {
+  return CATALOG_PRODUCTS.filter((p) => p.customLayout);
+}
+
+export function getStaticCustomLayoutSlugs(): string[] {
+  return getStaticCustomLayoutProducts().map((p) => p.slug);
+}
+
+/**
+ * When Supabase is primary, resolve static catalog products that define customLayout.
+ * Used as PDP fallback when the slug is not published in the database yet.
+ */
+export function getStaticCustomLayoutProductBySlug(
+  slug: string
+): CatalogProduct | undefined {
+  const product = getProductBySlug(slug);
+  return product?.customLayout ? product : undefined;
+}
+
 export function getAllProductSlugs(): string[] {
   return CATALOG_PRODUCTS.map((p) => p.slug);
 }

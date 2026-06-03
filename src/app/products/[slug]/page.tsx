@@ -66,6 +66,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
 export async function generateStaticParams() {
   const slugs = await loadAllProductSlugsServer();
-  const staticMurda = slugs.includes(MURDA_SLUG) ? [] : [{ slug: MURDA_SLUG }];
-  return [...slugs.map((slug) => ({ slug })), ...staticMurda];
+  return slugs.map((slug) => ({ slug }));
 }
