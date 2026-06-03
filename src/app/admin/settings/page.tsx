@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { AdminCustomerLink } from '@/components/admin/AdminCustomerLink';
 
 const TABS = [
+  'Homepage',
   'Store Information',
   'Social Media',
   'Delivery & Shipping',
@@ -31,10 +32,18 @@ export default function AdminSettingsPage() {
   const [tab, setTab] = useState<TabId>('Store Information');
   const [form, setForm] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cinematicMode, setCinematicMode] = useState(true);
+  const [cinematicSaving, setCinematicSaving] = useState(false);
 
   useEffect(() => {
-    getSettings()
-      .then(setForm)
+    Promise.all([
+      getSettings(),
+      fetch('/api/v1/settings/cinematic-mode').then((r) => r.json()),
+    ])
+      .then(([settings, cinematic]) => {
+        setForm(settings);
+        if (cinematic?.data?.enabled != null) setCinematicMode(cinematic.data.enabled);
+      })
       .finally(() => setLoading(false));
   }, []);
   const [cityInput, setCityInput] = useState('');
@@ -92,6 +101,44 @@ export default function AdminSettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="rounded-xl border border-neutral-200 bg-white p-6 space-y-4">
+        {tab === 'Homepage' && (
+          <>
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-neutral-900">Cinematic Homepage</h2>
+              <Toggle
+                label="Cinematic Homepage"
+                checked={cinematicMode}
+                onChange={async (enabled) => {
+                  setCinematicSaving(true);
+                  try {
+                    const res = await fetch('/api/v1/settings/cinematic-mode', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ enabled }),
+                    });
+                    if (!res.ok) throw new Error('Save failed');
+                    setCinematicMode(enabled);
+                    toast(
+                      enabled ? 'Cinematic homepage enabled' : 'Editorial homepage restored',
+                      'success'
+                    );
+                  } catch (err) {
+                    toast(err instanceof Error ? err.message : 'Save failed', 'error');
+                  } finally {
+                    setCinematicSaving(false);
+                  }
+                }}
+              />
+              <p className="text-sm text-neutral-600">
+                When enabled, homepage shows the cinematic experience. When disabled, falls back to
+                editorial layout. Changes take up to 60 seconds to appear on the live site.
+              </p>
+              {cinematicSaving && (
+                <p className="text-xs text-neutral-500">Saving…</p>
+              )}
+            </div>
+          </>
+        )}
         {tab === 'Store Information' && (
           <>
             <Input label="Store Name" value={form.storeName} onChange={(e) => patch('storeName', e.target.value)} />
