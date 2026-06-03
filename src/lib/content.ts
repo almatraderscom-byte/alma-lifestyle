@@ -16,10 +16,45 @@ export const SITE = {
 export const NAV = {
   shop: { label: 'দোকান', href: '/products' },
   newArrivals: { label: 'নতুন', href: '/new' },
+  islamic: { label: 'ইসলামিক', href: '/products?category=islamic' },
   collections: { label: 'কালেকশন', href: '/products' },
   about: { label: 'আমাদের সম্পর্কে', href: '/about' },
   categoriesLabel: 'Categories',
 } as const;
+
+/** Storefront product categories (filters, nav, footer). */
+export const CATEGORIES = [
+  {
+    slug: 'panjabi',
+    name: 'পাঞ্জাবি',
+    nameEn: 'Panjabi',
+    description: 'প্রিমিয়াম পাঞ্জাবি ও ফ্যামিলি সেট',
+  },
+  {
+    slug: 'electronics',
+    name: 'ইলেকট্রনিক্স',
+    nameEn: 'Electronics',
+    description: 'গ্যাজেট ও ইলেকট্রনিক্স',
+  },
+  {
+    slug: 'accessories',
+    name: 'এক্সেসরিজ',
+    nameEn: 'Accessories',
+    description: 'বেল্ট, ওয়ালেট ও আরও',
+  },
+  {
+    slug: 'home-decor',
+    name: 'হোম ও ডেকর',
+    nameEn: 'Home & Decor',
+    description: 'ঘর সাজানোর পণ্য',
+  },
+  {
+    slug: 'islamic',
+    name: 'ইসলামিক',
+    nameEn: 'Islamic',
+    description: 'মসজিদ, ইবাদত ও ইসলামিক প্রয়োজনের পণ্য',
+  },
+] as const;
 
 export const MOBILE_NAV_ICONS = {
   search: { label: UI.search, href: '/products' },
@@ -81,6 +116,13 @@ export const CATEGORY_SHOWCASE = {
       href: '/products?category=home-decor',
       bg: 'bg-emerald',
       imageHint: 'Image: Home decor — ceramic vase, cushions',
+    },
+    {
+      slug: 'islamic',
+      name: 'ইসলামিক',
+      href: '/products?category=islamic',
+      bg: 'bg-emerald',
+      imageHint: 'Image: Islamic products — Smart Murda Moshari',
     },
   ],
 } as const;
@@ -345,6 +387,7 @@ export const FOOTER = {
     { label: 'ইলেকট্রনিক্স', href: '/products?category=electronics' },
     { label: 'এক্সেসরিজ', href: '/products?category=accessories' },
     { label: 'হোম ও ডেকর', href: '/products?category=home-decor' },
+    { label: 'ইসলামিক', href: '/products?category=islamic' },
   ],
   helpTitle: 'সাহায্য',
   helpLinks: [

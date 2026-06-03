@@ -4,7 +4,14 @@ import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
 import { getDefaultProductImage } from '@/lib/default-images';
 import { buildListingCardGallery } from '@/lib/product-gallery';
 
-export type CategorySlug = 'panjabi' | 'electronics' | 'accessories' | 'home-decor';
+export type CategorySlug =
+  | 'panjabi'
+  | 'electronics'
+  | 'accessories'
+  | 'home-decor'
+  | 'islamic';
+
+export type CustomProductLayout = 'murda-moshari-landing';
 
 export type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'popular';
 
@@ -37,6 +44,11 @@ export type CatalogProduct = FeaturedProduct & {
   priceMin?: number;
   priceMax?: number;
   availableTypes?: ProductType[];
+  customLayout?: CustomProductLayout;
+  sku?: string;
+  fabric?: string;
+  published?: boolean;
+  inStock?: boolean;
 };
 
 export const CATEGORY_LABELS: Record<CategorySlug, string> = {
@@ -44,6 +56,7 @@ export const CATEGORY_LABELS: Record<CategorySlug, string> = {
   electronics: 'ইলেকট্রনিক্স',
   accessories: 'এক্সেসরিজ',
   'home-decor': 'হোম ও ডেকর',
+  islamic: 'ইসলামিক',
 };
 
 const COLOR_PRESETS = [
@@ -76,6 +89,49 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
   mk('sunglasses-classic', 'সানগ্লাস ক্লাসিক', 1100, 1350, 'accessories', 'bg-[#333]', 4.3, 11, ['black'], 60),
   mk('ceramic-flower-vase', 'সিরামিক ফ্লাওয়ার ভাস', 1200, undefined, 'home-decor', 'bg-[#9cb5a0]', 4.8, 8, ['green', 'cream'], 55, '1/1'),
   mk('cotton-cushion-set', 'কটন কুশন সেট', 1450, 1690, 'home-decor', 'bg-[#d4c4b0]', 4.5, 15, ['cream', 'maroon'], 58, '1/1'),
+  {
+    id: 'smart-murda-moshari',
+    slug: 'smart-murda-moshari',
+    title: 'স্মার্ট মুর্দা মশারী',
+    price: 1790,
+    compareAtPrice: 2260,
+    categorySlug: 'islamic',
+    categoryName: CATEGORY_LABELS.islamic,
+    bgClass: 'bg-charcoal',
+    href: '/products/smart-murda-moshari',
+    colors: [],
+    sizes: [],
+    rating: 4.9,
+    reviewCount: 0,
+    aspectRatio: '1/1',
+    description:
+      'মুসলমানের শেষ গোসলে পর্দা, পরিচ্ছন্নতা ও সম্মানের জন্য সম্পূর্ণ সমাধান।',
+    materialCare: 'টেকসই মেশ ও কাপড়। পরিচ্ছন্ন স্থানে রাখুন।',
+    deliveryInfo:
+      'ঢাকার ভিতরে ২-৩ কর্মদিবস, ঢাকার বাইরে ৩-৭ কর্মদিবস। ক্যাশ অন ডেলিভারি।',
+    returnPolicy:
+      '৭ দিনের মধ্যে অব্যবহৃত পণ্য রিটার্ন করা যাবে। পণ্য অবশ্যই মূল অবস্থায় থাকতে হবে।',
+    images: [
+      {
+        id: '1',
+        bgClass: 'bg-charcoal',
+        url: '/products/murda-moshari/hero-black.jpg',
+      },
+      {
+        id: '2',
+        bgClass: 'bg-charcoal',
+        url: '/products/murda-moshari/in-use.jpg',
+      },
+    ],
+    popularScore: 90,
+    createdAt: Date.now(),
+    productType: 'simple',
+    customLayout: 'murda-moshari-landing',
+    sku: 'ALM-ISL-001',
+    fabric: 'টেকসই মেশ ও কাপড়',
+    published: true,
+    inStock: true,
+  },
 ];
 
 function mk(
@@ -99,7 +155,9 @@ function mk(
   const sizes =
     categorySlug === 'panjabi' || categorySlug === 'accessories'
       ? ['S', 'M', 'L', 'XL', 'XXL']
-      : categorySlug === 'electronics' || categorySlug === 'home-decor'
+      : categorySlug === 'electronics' ||
+          categorySlug === 'home-decor' ||
+          categorySlug === 'islamic'
         ? []
         : ['S', 'M', 'L', 'XL'];
 
