@@ -31,6 +31,7 @@ import {
   getStaticIslamicSlugs,
   mergeStaticProductOverrides,
   type CatalogProduct,
+  type CategorySlug,
 } from '@/lib/products-data';
 import { ensureHomepageConfig, getDefaultHomepageConfig } from '@/lib/homepage-config';
 import type {
@@ -392,9 +393,18 @@ function isBestsellerProduct(product: CatalogProduct): boolean {
 }
 
 /** Distinct published products for the floating ocean (bestseller-tagged or top popular). */
-export async function loadOceanProductsServer(limit = 12): Promise<OceanCardProduct[]> {
-  const { products } = await loadCatalogProductsServer({ limit: 120, page: 1 });
-  const sorted = [...products].sort((a, b) => {
+export async function loadOceanProductsServer(
+  limit = 12,
+  categorySlugs: readonly CategorySlug[] = ['panjabi']
+): Promise<OceanCardProduct[]> {
+  // Pull a larger pool so after category-filtering we still have enough to fill `limit` slots
+  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
+
+  // Filter to allowed categories (default: panjabi only — homepage hero is clothing-focused)
+  const allowedSet = new Set<CategorySlug>(categorySlugs);
+  const filtered = products.filter((p) => allowedSet.has(p.categorySlug));
+
+  const sorted = [...filtered].sort((a, b) => {
     const aBest = isBestsellerProduct(a) ? 1 : 0;
     const bBest = isBestsellerProduct(b) ? 1 : 0;
     if (bBest !== aBest) return bBest - aBest;
