@@ -33,6 +33,14 @@ import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
 import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
 import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
 import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
+import { CinematicLoadingOverlay } from '@/components/cinematic/CinematicLoadingOverlay';
+import { CinematicHero } from '@/components/cinematic/CinematicHero';
+import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
+import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
+import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
+
+/** Toggle V2 cinematic homepage (admin toggle later). */
+const CINEMATIC_MODE = true;
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -147,6 +155,18 @@ export function HomePageRenderer({
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
   const insertAfter = buildInsertAfter(extras);
+
+  if (CINEMATIC_MODE && !editMode && !preview) {
+    return (
+      <HomepageEditModeProvider editMode={false}>
+        <CinematicLoadingOverlay />
+        <CinematicHero />
+        <ColorWashBridge from="charcoal" to="cream" />
+        <PinnedChaptersSection />
+        <CinematicClosingSection />
+      </HomepageEditModeProvider>
+    );
+  }
 
   const blocks: ReactNode[] = [];
 

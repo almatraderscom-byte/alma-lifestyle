@@ -3,6 +3,7 @@ import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/g
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
+import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
 import { FaviconSync } from '@/components/layout/FaviconSync';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
@@ -87,6 +88,7 @@ export default async function RootLayout({
           {hasFavicon ? (
             <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
           ) : null}
+          <CinematicGlobalChrome />
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />
