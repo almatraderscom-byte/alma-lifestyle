@@ -51,19 +51,19 @@ export function CinematicOverlay({ onComplete }: CinematicOverlayProps) {
     >
       <p className="font-brand text-xs tracking-[0.35em] text-mustard uppercase">{brand}</p>
       <p className="font-bn-heading mt-8 text-center text-xl text-charcoal md:text-2xl">
-        {letters.map((char, i) => (
+        {taglineWords.map((word, i) => (
           <motion.span
-            key={`${char}-${i}`}
-            className="inline-block"
+            key={`${word}-${i}`}
+            className="mr-[0.35em] inline-block last:mr-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: phase === 'brand' ? 0 : 1 }}
             transition={{
-              duration: 0.35,
-              delay: phase === 'tagline' ? i * 0.08 : 0,
+              duration: 0.5,
+              delay: phase === 'tagline' ? i * 0.2 : 0,
               ease: calmEase,
             }}
           >
-            {char === ' ' ? '\u00a0' : char}
+            {word}
           </motion.span>
         ))}
       </p>

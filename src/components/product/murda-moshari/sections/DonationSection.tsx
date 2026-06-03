@@ -19,7 +19,9 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const Wrapper = reduced ? 'section' : motion.section;
-  const letters = donation.eyebrow.split('');
+  // NOTE: Splitting Bangla by character breaks conjuncts (যুক্তাক্ষর) and
+  // dependent vowels (কার). Always split by space to preserve grapheme clusters.
+  const eyebrowWords = donation.eyebrow.split(' ');
 
   return (
     <Wrapper className="relative overflow-visible bg-emerald py-14 md:py-20">
@@ -39,16 +41,16 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
         <p className="font-bn-body text-xs uppercase tracking-wider text-mustard">
           {reduced
             ? donation.eyebrow
-            : letters.map((char, i) => (
+            : eyebrowWords.map((word, i) => (
                 <motion.span
-                  key={`${char}-${i}`}
+                  key={`${word}-${i}`}
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={murdaViewport}
-                  transition={transition({ duration: duration(0.35), delay: i * stagger(0.2) })}
-                  className="inline-block"
+                  transition={transition({ duration: duration(0.5), delay: i * stagger(0.25) })}
+                  className="mr-[0.35em] inline-block last:mr-0"
                 >
-                  {char === ' ' ? '\u00a0' : char}
+                  {word}
                 </motion.span>
               ))}
         </p>
