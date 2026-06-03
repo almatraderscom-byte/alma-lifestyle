@@ -173,8 +173,13 @@ export function CinematicHero() {
             {CINEMATIC_HERO.eyebrow}
           </motion.p>
 
-          {instant ? (
-            <h1 className="font-brand text-4xl tracking-[0.2em] text-cream md:text-5xl">
+          {instant || isMobile ? (
+            <h1
+              className={cn(
+                'font-brand tracking-[0.2em] text-cream',
+                isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'
+              )}
+            >
               {CINEMATIC_HERO.brandName}
             </h1>
           ) : (

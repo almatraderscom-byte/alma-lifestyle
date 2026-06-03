@@ -26,9 +26,9 @@ export function CustomCursor() {
   useEffect(() => {
     if (reduced) return;
 
-    const coarse = window.matchMedia('(pointer: coarse)').matches;
-    const narrow = window.innerWidth < 1024;
-    if (coarse || narrow) return;
+    const coarseMq = window.matchMedia('(pointer: coarse)');
+    const narrowMq = window.matchMedia('(max-width: 1023px)');
+    if (coarseMq.matches || narrowMq.matches) return;
 
     setActive(true);
     document.body.classList.add('cinematic-cursor-active');
