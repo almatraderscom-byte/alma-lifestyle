@@ -31,6 +31,8 @@
   --color-maroon: var(--color-maroon);
   --color-mustard: var(--color-mustard);
   --color-emerald: var(--color-emerald);
+  --color-maroon-deep: var(--maroon-deep);
+  --color-emerald-shadow: var(--emerald-shadow);
   --color-cream: var(--color-cream);
   --color-charcoal: var(--color-charcoal);
   --font-brand: var(--font-playfair);
