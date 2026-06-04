@@ -1,35 +1,55 @@
 import type { CinematicContent } from '@/lib/cinematic-content-types';
-import type { CardProduct } from '@/lib/products-data';
+import { resolveProductImageUrl } from '@/lib/default-images';
+import type { CardProduct, CatalogProduct } from '@/lib/products-data';
 import { toCardProduct } from '@/lib/products-data';
-import {
-  loadCatalogProductsServer,
-  loadProductBySlugServer,
-} from '@/lib/storefront/server-data';
-import {
-  CINEMATIC_CHAPTER_PRODUCTS,
-  CINEMATIC_FILM_STRIP_PRODUCTS,
-} from '@/lib/cinematic-config';
+import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
+import { CINEMATIC_FILM_STRIP_PRODUCTS } from '@/lib/cinematic-config';
 
-function resolveChapterSlug(
+const CHAPTER_IMAGE_STAGE_COUNT = 3;
+
+function configuredChapterSlug(
   stages: CinematicContent['chapters']['stages'],
   index: number
 ): string | undefined {
-  const fromDb = stages[index]?.productSlug?.trim();
-  if (fromDb) return fromDb;
-  return CINEMATIC_CHAPTER_PRODUCTS.find((p) => p.stageIndex === index)?.productSlug;
+  return stages[index]?.productSlug?.trim() || undefined;
 }
 
-function collectChapterSlugs(content?: Pick<CinematicContent, 'chapters'> | null): Set<string> {
+function toChapterCardProduct(product: CatalogProduct): CardProduct {
+  const card = toCardProduct(product);
+  return {
+    ...card,
+    galleryImages: card.galleryImages?.map((img) => ({
+      ...img,
+      url: resolveProductImageUrl(img.url, product.slug, product.categorySlug),
+    })),
+  };
+}
+
+function hasDisplayableImage(product: CatalogProduct): boolean {
+  const url = product.images?.[0]?.url ?? product.galleryImages?.[0]?.url;
+  return Boolean(url?.trim());
+}
+
+function buildChapterFallbackPool(products: CatalogProduct[]): CatalogProduct[] {
+  const panjabi = products.filter((p) => p.categorySlug === 'panjabi');
+  const pool = panjabi.length > 0 ? panjabi : products;
+  const withImages = pool.filter(hasDisplayableImage);
+  const ordered = (withImages.length > 0 ? withImages : pool).slice();
+  ordered.sort((a, b) => (b.popularScore ?? 0) - (a.popularScore ?? 0));
+  return ordered;
+}
+
+function collectChapterSlugs(
+  stages: CinematicContent['chapters']['stages'],
+  resolvedSlugs: string[]
+): Set<string> {
   const slugs = new Set<string>();
-  const stages = content?.chapters?.stages ?? [];
-  for (let i = 0; i < stages.length; i++) {
-    const slug = resolveChapterSlug(stages, i);
+  for (const slug of resolvedSlugs) {
     if (slug) slugs.add(slug);
   }
-  if (!slugs.size) {
-    for (const { productSlug } of CINEMATIC_CHAPTER_PRODUCTS) {
-      slugs.add(productSlug);
-    }
+  for (let i = 0; i < stages.length; i++) {
+    const slug = configuredChapterSlug(stages, i);
+    if (slug) slugs.add(slug);
   }
   return slugs;
 }
@@ -38,22 +58,49 @@ export async function loadCinematicChapterProducts(
   content?: Pick<CinematicContent, 'chapters'> | null
 ): Promise<(CardProduct | null)[]> {
   const stages = content?.chapters?.stages ?? [];
-  const count = stages.length || CINEMATIC_CHAPTER_PRODUCTS.length;
+  const count = stages.length;
+  if (!count) return [];
 
-  return Promise.all(
-    Array.from({ length: count }, async (_, index) => {
-      const slug = resolveChapterSlug(stages, index);
-      if (!slug) return null;
-      const catalog = await loadProductBySlugServer(slug);
-      return catalog ? toCardProduct(catalog) : null;
-    })
-  );
+  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
+  const bySlug = new Map(products.map((p) => [p.slug, p]));
+  const fallbackPool = buildChapterFallbackPool(products);
+  const usedFallbackSlugs = new Set<string>();
+  const resolvedSlugs: string[] = [];
+
+  const cards: (CardProduct | null)[] = [];
+
+  for (let index = 0; index < count; index++) {
+    if (index >= CHAPTER_IMAGE_STAGE_COUNT) {
+      cards.push(null);
+      resolvedSlugs.push('');
+      continue;
+    }
+
+    const configured = configuredChapterSlug(stages, index);
+    let catalog = configured ? bySlug.get(configured) : undefined;
+
+    if (!catalog) {
+      catalog = fallbackPool.find((p) => !usedFallbackSlugs.has(p.slug));
+      if (catalog) usedFallbackSlugs.add(catalog.slug);
+    }
+
+    resolvedSlugs.push(catalog?.slug ?? configured ?? '');
+    cards.push(catalog ? toChapterCardProduct(catalog) : null);
+  }
+
+  return cards;
 }
 
 export async function loadCinematicFilmStripProducts(
   content?: Pick<CinematicContent, 'chapters'> | null
 ): Promise<ReturnType<typeof toCardProduct>[]> {
-  const chapterSlugs = collectChapterSlugs(content);
+  const stages = content?.chapters?.stages ?? [];
+  const chapterProducts = await loadCinematicChapterProducts(content);
+  const chapterSlugs = collectChapterSlugs(
+    stages,
+    chapterProducts.map((p) => p?.slug ?? '')
+  );
+
   const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
 
   const preferred = CINEMATIC_FILM_STRIP_PRODUCTS.map((slug) => {

@@ -1,6 +1,5 @@
 import {
   CINEMATIC_CHAPTERS,
-  CINEMATIC_CHAPTER_PRODUCTS,
   CINEMATIC_CLOSING,
   CINEMATIC_HERO,
   type CinematicGradientToken,
@@ -62,10 +61,6 @@ const DEFAULT_FAQ_ITEMS = [
   },
 ] as const;
 
-function chapterProductSlugByIndex(index: number): string | undefined {
-  return CINEMATIC_CHAPTER_PRODUCTS.find((p) => p.stageIndex === index)?.productSlug;
-}
-
 export function getDefaultCinematicContent(): CinematicContent {
   return {
     hero: {
@@ -88,7 +83,6 @@ export function getDefaultCinematicContent(): CinematicContent {
         imageLabel: stage.imageLabel,
         gradientFrom: stage.gradientFrom as CinematicGradientToken,
         gradientTo: stage.gradientTo as CinematicGradientToken,
-        productSlug: chapterProductSlugByIndex(index),
         ...('cta' in stage && stage.cta ? { cta: { ...stage.cta } } : {}),
       })),
     },
@@ -124,10 +118,7 @@ export function mergeCinematicContent(
         saved.chapters?.stages?.length === defaults.chapters.stages.length
           ? defaults.chapters.stages.map((def, i) => {
               const savedStage = saved.chapters!.stages[i];
-              const productSlug =
-                savedStage?.productSlug?.trim() ||
-                def.productSlug ||
-                chapterProductSlugByIndex(i);
+              const productSlug = savedStage?.productSlug?.trim() || undefined;
               return {
                 ...def,
                 ...savedStage,
