@@ -26,7 +26,7 @@ HomePageRenderer (cinematic when cinematicMode ON and not preview-only editorial
 | Hero video/copy (cinematic) | `cinematic_content` | Homepage → Cinematic | `CinematicHero`, chapters, closing |
 | Cinematic on/off | `cinematic_mode_enabled` | Settings → Homepage | `HomePageRenderer` via merged `config.cinematicMode` |
 | Why ALMA / FAQ | `cinematic_content.whyAlma` / `.faq` | Cinematic tab | `CinematicWhyAlma` / `CinematicFAQ` + editorial fallbacks |
-| Final CTA | `homepage.extras.homepageCta` | (defaults; extend admin as needed) | `HomepageCTA` |
+| Final CTA | `homepage.extras.homepageCta` | Homepage → Homepage CTA | `HomepageCTA` |
 | Store settings | `settings` | Settings | Layout, checkout, header |
 
 ## Preview iframe

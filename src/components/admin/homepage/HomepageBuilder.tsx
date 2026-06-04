@@ -31,6 +31,7 @@ import {
   TrustEditor,
   FamilyMatchingEditor,
   OurProcessEditor,
+  HomepageCtaEditor,
   ToggleRow,
 } from '@/components/admin/homepage/HomepageSectionEditors';
 import {
@@ -137,9 +138,15 @@ export function HomepageBuilder() {
           return;
         }
 
-        if (sectionId === 'why-choose-alma' || sectionId === 'homepage-faq' || sectionId === 'homepage-cta') {
+        if (sectionId === 'why-choose-alma' || sectionId === 'homepage-faq') {
           setBuilderTab('cinematic');
           toast('Edit this content in the Cinematic tab.', 'info');
+          return;
+        }
+
+        if (sectionId === 'homepage-cta') {
+          setBuilderTab('sections');
+          openSectionPanel('homepage-cta');
           return;
         }
 
@@ -161,7 +168,6 @@ export function HomepageBuilder() {
     if (
       sectionId !== 'why-choose-alma' &&
       sectionId !== 'homepage-faq' &&
-      sectionId !== 'homepage-cta' &&
       sectionId !== 'bestSelling'
     ) {
       highlightPreviewSection(sectionId);
@@ -602,6 +608,39 @@ export function HomepageBuilder() {
                   onChange={(ourProcess) => updateExtras((e) => ({ ...e, ourProcess }))}
                   onResetToDefaults={() => void handleResetProcessSection()}
                   resetting={resettingProcess}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
+            id="section-homepage-cta"
+            className={cn(
+              'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
+              openSection === 'homepage-cta'
+                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                : 'border-neutral-200'
+            )}
+          >
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-neutral-50"
+              onClick={() =>
+                openSection === 'homepage-cta'
+                  ? setOpenSection(null)
+                  : openSectionPanel('homepage-cta')
+              }
+            >
+              <span className="text-sm font-semibold text-neutral-900">Homepage CTA</span>
+              <span className="text-neutral-400 text-sm">{openSection === 'homepage-cta' ? '▾' : '▸'}</span>
+            </button>
+            {openSection === 'homepage-cta' && (
+              <div className="px-3 pb-3 border-t border-neutral-100 pt-3">
+                <HomepageCtaEditor
+                  data={
+                    config.extras?.homepageCta ?? getDefaultHomepageExtras().homepageCta!
+                  }
+                  onChange={(homepageCta) => updateExtras((e) => ({ ...e, homepageCta }))}
                 />
               </div>
             )}

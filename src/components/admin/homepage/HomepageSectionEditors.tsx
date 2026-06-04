@@ -15,10 +15,12 @@ import type {
   HomepageImageSlot,
   HomepageSectionConfig,
   MarqueeSectionData,
+  HomepageCtaData,
   OurProcessSectionData,
   ReviewsSectionData,
   TrustSectionData,
 } from '@/lib/homepage-config-types';
+import { getDefaultHomepageCta } from '@/lib/homepage-extras';
 import { patchImageSlot } from '@/lib/homepage-image-slots';
 import { normalizeCommunityTiles } from '@/lib/homepage-migrations';
 import { ImageSlotFields } from '@/components/admin/homepage/ImageSlotFields';
@@ -572,6 +574,57 @@ export function OurProcessEditor({
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+
+export function HomepageCtaEditor({
+  data,
+  onChange,
+}: {
+  data: HomepageCtaData;
+  onChange: (data: HomepageCtaData) => void;
+}) {
+  const cta = { ...getDefaultHomepageCta(), ...data };
+  return (
+    <div id="homepage-cta-editor-top" className="scroll-mt-4 space-y-4">
+      <p className="text-xs text-neutral-600">
+        Closing band at the bottom of the homepage (editorial and cinematic layouts).
+      </p>
+      <Input
+        label="Heading"
+        value={cta.heading}
+        onChange={(e) => onChange({ ...cta, heading: e.target.value })}
+      />
+      <Textarea
+        label="Body"
+        rows={2}
+        value={cta.body}
+        onChange={(e) => onChange({ ...cta, body: e.target.value })}
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Input
+          label="Primary CTA text"
+          value={cta.primaryCta}
+          onChange={(e) => onChange({ ...cta, primaryCta: e.target.value })}
+        />
+        <Input
+          label="Primary CTA link"
+          value={cta.primaryHref}
+          onChange={(e) => onChange({ ...cta, primaryHref: e.target.value })}
+        />
+        <Input
+          label="Secondary CTA text"
+          value={cta.secondaryCta}
+          onChange={(e) => onChange({ ...cta, secondaryCta: e.target.value })}
+        />
+        <Input
+          label="Secondary CTA link (optional — blank uses store WhatsApp)"
+          value={cta.secondaryHref}
+          onChange={(e) => onChange({ ...cta, secondaryHref: e.target.value })}
+        />
+      </div>
     </div>
   );
 }
