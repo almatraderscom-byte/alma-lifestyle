@@ -36,9 +36,16 @@ interface CinematicContentEditorProps {
   onSaved?: () => void;
   /** Debounced draft sync for admin preview iframe */
   onDraftChange?: () => void;
+  /** Wire top-bar save to cinematic PUT */
+  onRegisterSave?: (save: () => Promise<void>) => void;
 }
 
-export function CinematicContentEditor({ cinematicModeOn = true, onSaved, onDraftChange }: CinematicContentEditorProps) {
+export function CinematicContentEditor({
+  cinematicModeOn = true,
+  onSaved,
+  onDraftChange,
+  onRegisterSave,
+}: CinematicContentEditorProps) {
   const { toast } = useAdminToast();
   const [content, setContent] = useState<CinematicContent>(() => getDefaultCinematicContent());
   const [loading, setLoading] = useState(true);
@@ -136,7 +143,7 @@ export function CinematicContentEditor({ cinematicModeOn = true, onSaved, onDraf
     }
   }
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     try {
       const saved = await saveCinematicContentApi(content);
@@ -146,10 +153,16 @@ export function CinematicContentEditor({ cinematicModeOn = true, onSaved, onDraf
       onSaved?.();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Save failed', 'error');
+      throw err;
     } finally {
       setSaving(false);
     }
-  }
+  }, [content, toast, onSaved]);
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave);
+    return () => onRegisterSave?.(async () => {});
+  }, [handleSave, onRegisterSave]);
 
   if (loading) {
     return <p className="text-sm text-neutral-500 p-4">Loading cinematic content…</p>;
