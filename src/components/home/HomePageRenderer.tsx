@@ -125,7 +125,7 @@ function buildInsertAfter(
       key: 'why-choose-alma',
       sectionId: 'why-choose-alma',
       sectionName: 'Why Choose ALMA',
-      node: cinematic ? <CinematicWhyAlma content={cinematicContent?.whyAlma} /> : <WhyChooseAlma />,
+      node: cinematic ? <CinematicWhyAlma content={cinematicContent?.whyAlma} /> : <WhyChooseAlma content={cinematicContent?.whyAlma} />,
     },
   ];
   if (extras.familyMatching.show !== false) {
@@ -155,7 +155,7 @@ function buildInsertAfter(
         key: 'homepage-faq',
         sectionId: 'homepage-faq',
         sectionName: 'FAQ',
-        node: cinematic ? <CinematicFAQ content={cinematicContent?.faq} /> : <HomepageFAQ />,
+        node: cinematic ? <CinematicFAQ content={cinematicContent?.faq} /> : <HomepageFAQ content={cinematicContent?.faq} />,
       },
     ],
     trust: [
@@ -163,7 +163,7 @@ function buildInsertAfter(
         key: 'homepage-cta',
         sectionId: 'homepage-cta',
         sectionName: 'Final CTA',
-        node: <HomepageCTA />,
+        node: <HomepageCTA data={extras.homepageCta} />,
       },
     ],
   };

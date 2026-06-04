@@ -2,8 +2,9 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { scrollViewport } from '@/lib/animation-variants';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
 
-const features = [
+const DEFAULT_FEATURES = [
   {
     icon: '✨',
     title: 'প্রিমিয়াম কোয়ালিটি',
@@ -36,10 +37,28 @@ const features = [
     title: 'বিশ্বস্ত সেবা',
     description: '১০০% অরিজিনাল পণ্যের গ্যারান্টি — পছন্দ না হলে সহজ রিটার্ন policy',
   },
-];
+] as const;
 
-export function WhyChooseAlma() {
+const PILLAR_ICONS = ['✨', '💎', '👨‍👩‍👧‍👦', '🚚', '💳', '🛡️'];
+
+interface WhyChooseAlmaProps {
+  content?: CinematicContent['whyAlma'];
+}
+
+export function WhyChooseAlma({ content }: WhyChooseAlmaProps) {
   const reduceMotion = useReducedMotion();
+  const features = content?.pillars?.length
+    ? content.pillars.map((p, i) => ({
+        icon: PILLAR_ICONS[i % PILLAR_ICONS.length],
+        title: p.title,
+        description: p.description,
+      }))
+    : DEFAULT_FEATURES;
+
+  const sectionTitle = content?.sectionTitle ?? 'কেন ALMA Lifestyle?';
+  const sectionSubtitle =
+    content?.sectionSubtitle ??
+    'আমরা শুধু পণ্য বিক্রি করি না — আপনার পরিবারের জন্য একটি সম্পূর্ণ lifestyle experience তৈরি করি';
 
   return (
     <section className="section-padding bg-white">
@@ -49,34 +68,34 @@ export function WhyChooseAlma() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={scrollViewport}
-          className="mb-12 text-center md:mb-16"
+          className="mb-10 text-center md:mb-14"
         >
-          <p className="editorial-label mb-3 text-terracotta">কেন ALMA</p>
-          <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-5xl">
-            আমাদের গর্ব, আপনার বিশ্বাস
+          <p className="editorial-label mb-3 text-terracotta">Why ALMA</p>
+          <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-4xl">
+            {sectionTitle}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl font-bn-body text-base text-text-light md:text-lg">
-            ALMA — যেখানে প্রিমিয়াম মিলে সাধ্যের সাথে। আমরা বাছাই করি, আপনি পান।
+          <p className="font-bn-body mx-auto mt-4 max-w-2xl text-base text-neutral-600 md:text-lg">
+            {sectionSubtitle}
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, idx) => (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature, i) => (
             <motion.div
-              key={feature.title}
-              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+              key={feature.title + i}
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.08, duration: 0.6 }}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
               viewport={scrollViewport}
-              className="rounded-lg p-6 text-center transition-colors hover:bg-cream"
+              className="rounded-xl border border-neutral-100 bg-cream/50 p-6"
             >
-              <div className="mb-4 text-5xl" aria-hidden>
+              <span className="text-2xl" aria-hidden>
                 {feature.icon}
-              </div>
-              <h3 className="font-bn-heading text-xl font-semibold text-charcoal mb-3">
+              </span>
+              <h3 className="font-bn-heading mt-3 text-lg font-semibold text-charcoal">
                 {feature.title}
               </h3>
-              <p className="font-bn-body text-text-light leading-relaxed">{feature.description}</p>
+              <p className="font-bn-body mt-2 text-sm text-neutral-600">{feature.description}</p>
             </motion.div>
           ))}
         </div>
