@@ -12,6 +12,7 @@ import {
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { CardProduct } from '@/lib/products-data';
+import type { CinematicChapterStageContent, CinematicContent } from '@/lib/cinematic-content-types';
 
 const GRADIENT_HEX: Record<CinematicGradientToken, string> = {
   maroon: '#6b2737',
@@ -27,7 +28,7 @@ function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken)
 }
 
 function stageBackground(
-  stage: (typeof CINEMATIC_CHAPTERS.stages)[number],
+  stage: CinematicChapterStageContent,
   index: number,
   product: CardProduct | null | undefined
 ) {
@@ -41,9 +42,11 @@ function stageBackground(
 
 interface PinnedChaptersSectionProps {
   chapterProducts?: (CardProduct | null)[];
+  content?: CinematicContent['chapters'];
 }
 
-export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSectionProps) {
+export function PinnedChaptersSection({ chapterProducts = [], content }: PinnedChaptersSectionProps) {
+  const chapters = content ?? CINEMATIC_CHAPTERS;
   const reduced = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -70,14 +73,14 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
     return () => unsub();
   }, [progress, isMobile, reduced]);
 
-  const stages = CINEMATIC_CHAPTERS.stages;
+  const stages = chapters.stages;
   const instant = !!reduced;
 
   if (isMobile) {
     return (
       <section className="bg-cream px-6 py-16 md:hidden">
         <p className="mb-10 text-center font-bn-body text-[10px] uppercase tracking-[0.4em] text-mustard">
-          {CINEMATIC_CHAPTERS.sectionNumber}
+          {chapters.sectionNumber}
         </p>
         <div className="space-y-16">
           {stages.map((stage, index) => (
@@ -186,7 +189,7 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
 
         <div className="relative flex w-1/2 flex-col justify-center px-12 lg:px-16">
           <p className="absolute top-10 right-12 font-bn-body text-[10px] uppercase tracking-[0.35em] text-text-light">
-            {CINEMATIC_CHAPTERS.sectionNumber} · 0{activeStage + 1}/04
+            {chapters.sectionNumber} · 0{activeStage + 1}/04
           </p>
 
           {stages.map((stage, index) => (

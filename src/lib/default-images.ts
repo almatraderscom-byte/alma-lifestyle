@@ -1,101 +1,73 @@
 /**
- * Curated Unsplash defaults when admin has not uploaded an image.
- * Direct URLs (whitelisted in next.config.ts); no API key required.
+ * Premium Alma SVG gradient placeholders when admin has not uploaded an image.
+ * No external stock photos — intentional "image coming soon" treatment.
  */
 
+import { createAlmaPlaceholderSvg, type PlaceholderTone } from '@/lib/placeholder-svg';
+
+function p(tone: PlaceholderTone, w = 800, h = 600) {
+  return createAlmaPlaceholderSvg(tone, w, h);
+}
+
 export const DEFAULT_IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1622445275576-721325763afe?w=1920&q=85',
-  collectionBanner:
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1920&q=85',
+  hero: p('warm', 1920, 1080),
+  collectionBanner: p('warm', 1920, 1080),
 
-  brandStoryMain:
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&q=85',
-  brandStoryDetail1:
-    'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=85',
-  brandStoryDetail2:
-    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=85',
+  brandStoryMain: p('warm', 1200, 800),
+  brandStoryDetail1: p('neutral', 800, 600),
+  brandStoryDetail2: p('family', 800, 600),
 
-  familyMatchingMain:
-    'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=1200&q=85',
-  familyMen: 'https://images.unsplash.com/photo-1622445275576-721325763afe?w=800&q=85',
-  familyWomen: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=85',
-  familyBoy: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?w=800&q=85',
-  familyGirl: 'https://images.unsplash.com/photo-1631193816258-28b44b21e78b?w=800&q=85',
+  familyMatchingMain: p('family', 1200, 800),
+  familyMen: p('family', 800, 600),
+  familyWomen: p('family', 800, 600),
+  familyBoy: p('family', 800, 600),
+  familyGirl: p('family', 800, 600),
 
-  categoryPanjabi:
-    'https://images.unsplash.com/photo-1622445275576-721325763afe?w=800&q=85',
-  categoryElectronics:
-    'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=800&q=85',
-  categoryAccessories:
-    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=85',
-  categoryHomeDecor:
-    'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=85',
+  categoryPanjabi: p('cool', 800, 600),
+  categoryElectronics: p('cool', 800, 600),
+  categoryAccessories: p('cool', 800, 600),
+  categoryHomeDecor: p('cool', 800, 600),
 
-  processCuration:
-    'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=85',
-  processQualityCheck:
-    'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800&q=85',
-  processPhotography:
-    'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=85',
-  processListing:
-    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=85',
-  processPackaging:
-    'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=85',
-  processDelivery:
-    'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=85',
+  processCuration: p('process', 800, 600),
+  processQualityCheck: p('process', 800, 600),
+  processPhotography: p('process', 800, 600),
+  processListing: p('process', 800, 600),
+  processPackaging: p('process', 800, 600),
+  processDelivery: p('process', 800, 600),
 
-  communityDefault:
-    'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=600&q=85',
+  communityDefault: p('sand', 600, 600),
 
-  productPanjabi:
-    'https://images.unsplash.com/photo-1622445275576-721325763afe?w=600&q=85',
-  productElectronics:
-    'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=600&q=85',
-  productAccessories:
-    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85',
-  productHomeDecor:
-    'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=85',
-  productGeneric:
-    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=85',
+  productPanjabi: p('neutral', 600, 800),
+  productElectronics: p('cool', 600, 800),
+  productAccessories: p('cool', 600, 800),
+  productHomeDecor: p('cool', 600, 800),
+  productGeneric: p('neutral', 600, 800),
 
-  productRoyalNavyPanjabi:
-    'https://images.unsplash.com/photo-1622445275576-721325763afe?w=600&q=85',
-  productClassicWhitePanjabi:
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=85',
-  productPremiumCottonPanjabi:
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=85',
-  productSilkPanjabi:
-    'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600&q=85',
-  productMaroonPanjabi:
-    'https://images.unsplash.com/photo-1622445275576-721325763afe?w=600&q=85',
-  productGreenPanjabi:
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=85',
+  productRoyalNavyPanjabi: p('neutral', 600, 800),
+  productClassicWhitePanjabi: p('neutral', 600, 800),
+  productPremiumCottonPanjabi: p('neutral', 600, 800),
+  productSilkPanjabi: p('neutral', 600, 800),
+  productMaroonPanjabi: p('warm', 600, 800),
+  productGreenPanjabi: p('neutral', 600, 800),
 
-  productBluetoothSpeaker:
-    'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=85',
-  productWirelessEarbuds:
-    'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=600&q=85',
-  productSmartWatch:
-    'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=85',
-  productDeskLamp:
-    'https://images.unsplash.com/photo-1565636192335-b8826ea0e74c?w=600&q=85',
+  productBluetoothSpeaker: p('cool', 600, 800),
+  productWirelessEarbuds: p('cool', 600, 800),
+  productSmartWatch: p('cool', 600, 800),
+  productDeskLamp: p('cool', 600, 800),
 
-  productLeatherBelt:
-    'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=600&q=85',
-  productLeatherWallet:
-    'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=85',
-  productJuteBag:
-    'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=600&q=85',
-  productSunglasses:
-    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&q=85',
+  productLeatherBelt: p('cool', 600, 800),
+  productLeatherWallet: p('cool', 600, 800),
+  productJuteBag: p('cool', 600, 800),
+  productSunglasses: p('cool', 600, 800),
 
-  productCeramicVase:
-    'https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?w=600&q=85',
-  productCushionSet:
-    'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=85',
+  productCeramicVase: p('sand', 600, 800),
+  productCushionSet: p('sand', 600, 800),
 
-  fallback: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=85',
+  fallback: p('neutral', 800, 600),
 } as const;
+
+/** Neutral product placeholder for empty galleries (no Unsplash). */
+export const PLACEHOLDER_PRODUCT_IMAGE = DEFAULT_IMAGES.productGeneric;
 
 export type DefaultImageKey = keyof typeof DEFAULT_IMAGES;
 

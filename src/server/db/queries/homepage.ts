@@ -13,7 +13,7 @@ import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 const HOMEPAGE_KEY = 'homepage';
 const SETTINGS_KEY = 'settings';
 
-async function getConfigRow(key: string): Promise<SiteConfigRow | null> {
+export async function getConfigRow(key: string): Promise<SiteConfigRow | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('site_config')
     .select('*')
@@ -104,6 +104,7 @@ export async function saveAppSettings(settings: AppSettings): Promise<AppSetting
     ...((data as unknown as { value: object }).value),
   };
 }
+
 
 
 export async function getSiteSetting(key: string): Promise<string | null> {

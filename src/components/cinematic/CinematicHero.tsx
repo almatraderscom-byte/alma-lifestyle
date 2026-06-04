@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
+import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
 import { useCinematicCapabilities } from '@/hooks/useCinematicCapabilities';
 import { cn } from '@/lib/utils';
 import { CinematicLink } from '@/components/cinematic/CinematicLink';
@@ -10,12 +11,12 @@ import { useMagneticHover } from '@/hooks/useMagneticHover';
 
 const PARALLAX_DEPTHS = [0.5, 1.5, 3, 5] as const;
 
-function AlmaInkWord({ instant }: { instant: boolean }) {
+function AlmaInkWord({ instant, brandName }: { instant: boolean; brandName: string }) {
   return (
     <svg
       viewBox="0 0 200 48"
       className="mx-auto h-12 w-auto max-w-[min(280px,80vw)] md:h-14"
-      aria-label={CINEMATIC_HERO.brandName}
+      aria-label={brandName}
       role="img"
     >
       <text
@@ -31,7 +32,7 @@ function AlmaInkWord({ instant }: { instant: boolean }) {
           animation: instant ? undefined : 'cinematic-ink-draw 3.5s ease-in-out 3.8s forwards',
         }}
       >
-        {CINEMATIC_HERO.brandName}
+        {brandName}
       </text>
       <text
         x="50%"
@@ -43,13 +44,18 @@ function AlmaInkWord({ instant }: { instant: boolean }) {
           animation: instant ? undefined : 'cinematic-ink-fill 0.6s ease-out 7s forwards',
         }}
       >
-        {CINEMATIC_HERO.brandName}
+        {brandName}
       </text>
     </svg>
   );
 }
 
-export function CinematicHero() {
+interface CinematicHeroProps {
+  content?: CinematicHeroContent;
+}
+
+export function CinematicHero({ content }: CinematicHeroProps) {
+  const hero = content ?? CINEMATIC_HERO;
   const ctaRef = useMagneticHover(0.25);
   const reduced = useReducedMotion();
   const { useVideo, isMobile, isReady } = useCinematicCapabilities();
@@ -85,9 +91,9 @@ export function CinematicHero() {
         ) : useVideo ? (
           <video
             className="cinematic-hero-media absolute inset-0 h-full w-full"
-            style={{ objectPosition: isMobile ? CINEMATIC_HERO.mediaObjectPositionMobile : CINEMATIC_HERO.mediaObjectPosition }}
-            src={CINEMATIC_HERO.videoSrc}
-            poster={CINEMATIC_HERO.posterSrc}
+            style={{ objectPosition: isMobile ? hero.mediaObjectPositionMobile : hero.mediaObjectPosition }}
+            src={hero.videoSrc}
+            poster={hero.posterSrc}
             autoPlay
             loop
             muted
@@ -98,10 +104,10 @@ export function CinematicHero() {
         ) : (
           // Native img — avoid next/image optimizer caching or wrong fallbacks
           <img
-            src={CINEMATIC_HERO.posterSrc}
+            src={hero.posterSrc}
             alt=""
             className="cinematic-hero-media absolute inset-0 h-full w-full"
-            style={{ objectPosition: isMobile ? CINEMATIC_HERO.mediaObjectPositionMobile : CINEMATIC_HERO.mediaObjectPosition }}
+            style={{ objectPosition: isMobile ? hero.mediaObjectPositionMobile : hero.mediaObjectPosition }}
             decoding="async"
             fetchPriority="high"
           />
@@ -171,7 +177,7 @@ export function CinematicHero() {
             animate={{ opacity: 1, filter: 'blur(0px)' }}
             transition={{ delay: instant ? 0 : 4.2, duration: 0.8 }}
           >
-            {CINEMATIC_HERO.eyebrow}
+            {hero.eyebrow}
           </motion.p>
 
           {instant || isMobile ? (
@@ -181,10 +187,10 @@ export function CinematicHero() {
                 isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'
               )}
             >
-              {CINEMATIC_HERO.brandName}
+              {hero.brandName}
             </h1>
           ) : (
-            <AlmaInkWord instant={false} />
+            <AlmaInkWord instant={false} brandName={hero.brandName} />
           )}
 
           <motion.p
@@ -196,7 +202,7 @@ export function CinematicHero() {
             animate={{ opacity: 1, filter: 'blur(0px)' }}
             transition={{ delay: instant ? 0 : 7.4, duration: 0.9 }}
           >
-            {CINEMATIC_HERO.subheading}
+            {hero.subheading}
           </motion.p>
           <motion.div
             className="mt-10"
@@ -222,8 +228,8 @@ export function CinematicHero() {
 
         {instant ? (
           <div className="flex items-end justify-between font-bn-body text-[10px] uppercase tracking-[0.3em] text-cream/60">
-            <span>{CINEMATIC_HERO.metaLeft}</span>
-            <span>{CINEMATIC_HERO.metaRight}</span>
+            <span>{hero.metaLeft}</span>
+            <span>{hero.metaRight}</span>
           </div>
         ) : null}
       </div>
@@ -232,9 +238,9 @@ export function CinematicHero() {
         <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between font-en-display text-[9px] uppercase tracking-[0.4em] text-cream/55 opacity-0 animate-fade-in-meta lg:left-16 lg:right-16">
           <span>
             <span className="mr-3 inline-block h-px w-7 align-middle bg-mustard" />
-            {CINEMATIC_HERO.metaLeft}
+            {hero.metaLeft}
           </span>
-          <span>{CINEMATIC_HERO.metaRight}</span>
+          <span>{hero.metaRight}</span>
         </div>
       )}
     </section>
