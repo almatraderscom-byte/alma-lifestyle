@@ -56,7 +56,8 @@ function applyFrameOptions(request: NextRequest, response: NextResponse): NextRe
   const { pathname, searchParams } = request.nextUrl;
   if (pathname.startsWith('/api')) return response;
 
-  const isPreview = searchParams.get('preview') === 'true';
+  const isPreview =
+    searchParams.get('preview') === 'true' || searchParams.get('cinematic') === '1';
   if (isPreview) {
     response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   } else {
