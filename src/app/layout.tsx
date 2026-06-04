@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import { FaviconSync } from '@/components/layout/FaviconSync';
+import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
 import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
@@ -87,6 +88,7 @@ export default async function RootLayout({
           {hasFavicon ? (
             <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
           ) : null}
+          <CinematicGlobalChrome />
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />
