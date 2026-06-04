@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 
 interface ProductImageGalleryProps {
@@ -11,7 +12,7 @@ interface ProductImageGalleryProps {
 
 export function ProductImageGallery({ images, title }: ProductImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const displayImages = images.length > 0 ? images : ['/placeholder-product.jpg'];
+  const displayImages = images.length > 0 ? images : [PLACEHOLDER_PRODUCT_IMAGE];
 
   return (
     <div className="flex flex-col gap-3">
