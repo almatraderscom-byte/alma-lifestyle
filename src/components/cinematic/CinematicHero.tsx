@@ -205,7 +205,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
             <h1
               className={cn(
                 'font-brand tracking-[0.2em] text-cream',
-                isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'
+                isMobile ? 'text-3xl cinematic-hero-brand' : 'text-4xl md:text-5xl'
               )}
             >
               {hero.brandName}
@@ -217,7 +217,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
           <motion.p
             className={cn(
               'mt-6 max-w-md font-bn-heading text-lg leading-relaxed text-cream/90 md:text-xl',
-              isMobile && 'text-base'
+              isMobile && 'text-base cinematic-hero-subheading'
             )}
             initial={instant ? { opacity: 1, filter: 'blur(0px)' } : { opacity: 0, filter: 'blur(8px)' }}
             animate={{ opacity: 1, filter: 'blur(0px)' }}

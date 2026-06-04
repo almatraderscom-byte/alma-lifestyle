@@ -509,3 +509,35 @@ section[id],
   animation: rippleExpand 600ms ease-out forwards;
 }
 
+/* Phase 4: premium cinematic mobile typography */
+@media (max-width: 767px) {
+  .cinematic-hero-brand {
+    font-size: 3rem !important;
+    line-height: 1.15;
+  }
+  .cinematic-hero-subheading {
+    font-size: 1.25rem !important;
+    line-height: 1.6;
+  }
+  .cinematic-chapter-heading {
+    font-size: 1.875rem !important;
+    line-height: 1.35;
+  }
+  .cinematic-chapter-body {
+    font-size: 1rem !important;
+    line-height: 1.6;
+  }
+  .cinematic-section-title {
+    font-size: 2.25rem !important;
+    line-height: 1.25;
+  }
+  .cinematic-quote-pause {
+    font-size: 1.875rem !important;
+    line-height: 1.45;
+  }
+  .font-bn-body,
+  .font-bn-heading {
+    line-height: 1.6;
+  }
+}
+
