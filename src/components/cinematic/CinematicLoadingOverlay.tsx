@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
-import { isCinematicPreviewMode } from '@/lib/homepage-config';
+import { isCinematicPreviewMode, isEmbedPreviewMode } from '@/lib/homepage-config';
 
 const SESSION_KEY = 'cinematic-overlay-seen';
 
 export function CinematicLoadingOverlay() {
-  if (isCinematicPreviewMode()) return null;
+  if (isCinematicPreviewMode() || isEmbedPreviewMode()) return null;
 
   const reduced = useReducedMotion();
   const [visible, setVisible] = useState(false);

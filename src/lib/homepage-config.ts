@@ -363,6 +363,13 @@ export function isCinematicPreviewMode(): boolean {
   return params.get('preview') === 'true' && params.get('cinematic') === '1';
 }
 
+/** Admin iframe: chromeless preview without storefront header/footer. */
+export function isEmbedPreviewMode(): boolean {
+  if (!isBrowser()) return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('preview') === 'true' && params.get('embed') === '1';
+}
+
 /** Whether the customer-facing cinematic homepage layout should render. */
 export function shouldShowCinematicHomepage(
   config: HomepageConfig,

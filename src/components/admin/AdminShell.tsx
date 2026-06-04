@@ -100,10 +100,10 @@ function AdminLayoutInner({
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 lg:ml-0">
         <OrderNotificationListener />
         <AdminHeader breadcrumbs={breadcrumbs} onMenuClick={() => setMobileOpen(true)} />
-        <main className={isHomepageBuilder ? 'flex-1 p-0' : 'flex-1 p-4 lg:p-6'}>
+        <main className={isHomepageBuilder ? 'flex-1 flex flex-col min-h-0 p-0' : 'flex-1 p-4 lg:p-6'}>
           {!isHomepageBuilder && (
             <div className="max-w-7xl mx-auto">
               <AdminStorageBanner />

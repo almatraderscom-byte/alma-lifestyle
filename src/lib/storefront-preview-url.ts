@@ -1,6 +1,6 @@
 /**
- * Build absolute storefront preview URLs for the admin homepage iframe.
- * Avoids apex → www redirects inside iframes (blank preview on almatraders.com).
+ * Build storefront preview URLs for the admin homepage iframe.
+ * Uses same-origin relative paths in the browser so the iframe always loads.
  */
 function normalizeSiteUrl(url: string): string {
   return url.replace(/\/$/, '');
@@ -30,6 +30,8 @@ export function buildHomepagePreviewUrl(options: {
   previewKey: number;
   edit?: boolean;
   cinematic?: boolean;
+  /** Strip site header/footer inside iframe (default true). */
+  embed?: boolean;
 }): string {
   const params = new URLSearchParams({
     preview: 'true',
@@ -37,7 +39,13 @@ export function buildHomepagePreviewUrl(options: {
   });
   if (options.edit !== false) params.set('edit', 'true');
   if (options.cinematic) params.set('cinematic', '1');
+  if (options.embed !== false) params.set('embed', '1');
+
+  const query = params.toString();
+  if (typeof window !== 'undefined') {
+    return `/?${query}`;
+  }
 
   const origin = getStorefrontPreviewOrigin();
-  return `${origin}/?${params.toString()}`;
+  return `${origin}/?${query}`;
 }
