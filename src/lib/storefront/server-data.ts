@@ -250,12 +250,15 @@ export async function loadCatalogProductsServer(options?: {
   page?: number;
   limit?: number;
   categoryId?: string;
-  /** Resolve category slug to DB filter (e.g. islamic, panjabi). */
   categorySlug?: CategorySlug;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
   if (!shouldLoadCatalogFromDatabase()) {
-    return { products: CATALOG_PRODUCTS, total: CATALOG_PRODUCTS.length };
+    let products = CATALOG_PRODUCTS;
+    if (options?.categorySlug) {
+      products = products.filter((p) => p.categorySlug === options.categorySlug);
+    }
+    return { products, total: products.length };
   }
 
   try {
@@ -265,7 +268,9 @@ export async function loadCatalogProductsServer(options?: {
     const categoryId =
       options?.categoryId ??
       (options?.categorySlug
-        ? categories.find((c) => c.slug === options.categorySlug)?.id
+        ? categories.find(
+            (c) => c.slug.toLowerCase() === options.categorySlug!.toLowerCase()
+          )?.id
         : undefined);
 
     const result = await getProducts({
@@ -276,19 +281,27 @@ export async function loadCatalogProductsServer(options?: {
       search: options?.search,
     });
 
-    const products = groupProductsForListing(result.data, catById);
+    const products = groupProductsForListing(result.data, catById).map(
+      mergeStaticProductOverrides
+    );
     const seen = new Set(products.map((p) => p.slug));
     for (const staticProduct of [
       ...getStaticIslamicProducts(),
       ...getStaticCustomLayoutProducts(),
     ]) {
       if (!seen.has(staticProduct.slug)) {
-        products.push(staticProduct);
+        products.push(mergeStaticProductOverrides(staticProduct));
         seen.add(staticProduct.slug);
       }
     }
 
-    return { products, total: products.length };
+    const filtered = options?.categorySlug
+      ? products.filter(
+          (p) => p.categorySlug.toLowerCase() === options.categorySlug!.toLowerCase()
+        )
+      : products;
+
+    return { products: filtered, total: filtered.length };
   } catch (err) {
     console.error('[storefront] loadCatalogProductsServer failed:', err);
     const fallback = [
@@ -296,11 +309,18 @@ export async function loadCatalogProductsServer(options?: {
       ...getStaticCustomLayoutProducts(),
     ];
     const seen = new Set<string>();
-    const products = fallback.filter((p) => {
-      if (seen.has(p.slug)) return false;
-      seen.add(p.slug);
-      return true;
-    });
+    let products = fallback
+      .filter((p) => {
+        if (seen.has(p.slug)) return false;
+        seen.add(p.slug);
+        return true;
+      })
+      .map(mergeStaticProductOverrides);
+    if (options?.categorySlug) {
+      products = products.filter(
+        (p) => p.categorySlug.toLowerCase() === options.categorySlug!.toLowerCase()
+      );
+    }
     return { products, total: products.length };
   }
 }
@@ -364,13 +384,13 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     const slugs = new Set(result.data.map((p) => p.slug));
-    for (const slug of getStaticSlugs()) {
+    for (const slug of [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()]) {
       slugs.add(slug);
     }
     return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return getStaticSlugs();
+    return [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()];
   }
 }
 

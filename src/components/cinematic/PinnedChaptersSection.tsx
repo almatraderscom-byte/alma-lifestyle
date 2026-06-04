@@ -31,7 +31,7 @@ function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken)
 function chapterImageUrl(product: CardProduct | null | undefined): string | undefined {
   if (!product?.slug) return undefined;
   const raw = product.galleryImages?.[0]?.url;
-  const resolved = resolveProductImageUrl(raw, product.slug);
+  const resolved = resolveProductImageUrl(raw, product.slug, product.categorySlug);
   return resolved.trim() ? resolved : undefined;
 }
 

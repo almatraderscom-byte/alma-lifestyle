@@ -153,7 +153,17 @@ export function getDefaultImageForHint(hint: string): string {
 }
 
 export function getDefaultProductImage(slug: string, category?: string): string {
+  const slugLower = slug.toLowerCase();
+  if (
+    slugLower.includes('murda') ||
+    slugLower.includes('moshari') ||
+    slugLower === 'smart-murda-moshari'
+  ) {
+    return '/products/murda-moshari/hero-black.jpg';
+  }
+
   const specificMap: Record<string, string> = {
+    'smart-murda-moshari': '/products/murda-moshari/hero-black.jpg',
     'royal-navy-panjabi': DEFAULT_IMAGES.productRoyalNavyPanjabi,
     'classic-white-panjabi': DEFAULT_IMAGES.productClassicWhitePanjabi,
     'classic-white-boy-panjabi': DEFAULT_IMAGES.familyBoy,

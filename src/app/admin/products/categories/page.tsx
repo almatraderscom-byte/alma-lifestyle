@@ -64,7 +64,7 @@ export default function AdminCategoriesPage() {
     if (!editing?.name.trim()) return;
     setSaving(true);
     try {
-      const slug = editing.slug.trim() || slugify(editing.name);
+      const slug = slugify(editing.slug.trim() || editing.name);
       const payload: AdminCategory = {
         ...editing,
         name: editing.name.trim(),

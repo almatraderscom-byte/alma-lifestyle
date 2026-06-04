@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const created = await createCategory({
-      slug: parsed.data.slug,
+      slug: parsed.data.slug.trim().toLowerCase(),
       name: parsed.data.name,
       description: parsed.data.description ?? null,
       image_url: parsed.data.image_url ?? null,
