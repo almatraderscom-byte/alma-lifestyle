@@ -32,9 +32,6 @@ export function RootShell({
       <NavMenuProvider items={navItems}>
         <CartProvider>
           <WishlistProvider>
-            <Suspense fallback={null}>
-              <RouteProgressBar />
-            </Suspense>
             <Suspense fallback={<header className="sticky top-0 z-40 h-16 border-b bg-white lg:h-20" />}>
               <Header />
             </Suspense>
