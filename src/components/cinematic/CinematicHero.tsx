@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import { useCinematicCapabilities } from '@/hooks/useCinematicCapabilities';
 import { cn } from '@/lib/utils';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
+import { useMagneticHover } from '@/hooks/useMagneticHover';
 
 const PARALLAX_DEPTHS = [0.5, 1.5, 3, 5] as const;
 
@@ -48,6 +50,7 @@ function AlmaInkWord({ instant }: { instant: boolean }) {
 }
 
 export function CinematicHero() {
+  const ctaRef = useMagneticHover(0.25);
   const reduced = useReducedMotion();
   const { useVideo, isMobile, isReady } = useCinematicCapabilities();
   const containerRef = useRef<HTMLElement>(null);
@@ -195,6 +198,26 @@ export function CinematicHero() {
           >
             {CINEMATIC_HERO.subheading}
           </motion.p>
+          <motion.div
+            className="mt-10"
+            initial={instant ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: instant ? 0 : 9, duration: 0.6 }}
+          >
+            <CinematicLink
+              ref={ctaRef as React.RefObject<HTMLAnchorElement>}
+              href="/products"
+              data-cursor="ring"
+              className={cn(
+                'inline-flex min-h-12 items-center rounded-sm border border-mustard px-10 font-bn-body text-sm font-semibold text-cream transition-colors hover:bg-mustard hover:text-charcoal',
+                !instant && 'cta-pulse'
+              )}
+              style={{ transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}
+            >
+              সংগ্রহ দেখুন →
+            </CinematicLink>
+          </motion.div>
+
         </div>
 
         {instant ? (
