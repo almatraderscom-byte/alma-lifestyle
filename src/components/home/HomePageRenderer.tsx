@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   getDraftHomepageConfig,
@@ -38,17 +39,14 @@ import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
 import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
 import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
 import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
-import { CinematicLoadingOverlay } from '@/components/cinematic/CinematicLoadingOverlay';
 import { CinematicHero } from '@/components/cinematic/CinematicHero';
 import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
-import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
 import { EditorialQuotePause } from '@/components/cinematic/EditorialQuotePause';
 import { HeroFilmStrip } from '@/components/cinematic/HeroFilmStrip';
 import { CinematicStoryStrip } from '@/components/cinematic/CinematicStoryStrip';
 import { CinematicCategoryReel } from '@/components/cinematic/CinematicCategoryReel';
-import { MagneticConstellation } from '@/components/cinematic/MagneticConstellation';
 import { CinematicBrandNarrative } from '@/components/cinematic/CinematicBrandNarrative';
 import { CinematicTestimonialPin } from '@/components/cinematic/CinematicTestimonialPin';
 import { CinematicCollectionDivider } from '@/components/cinematic/CinematicCollectionDivider';
@@ -56,6 +54,19 @@ import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommun
 import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
 import { CinematicFeaturedScroll } from '@/components/cinematic/CinematicFeaturedScroll';
 import { CinematicFamilyShowcase } from '@/components/cinematic/CinematicFamilyShowcase';
+
+const CinematicLoadingOverlay = dynamic(
+  () => import('@/components/cinematic/CinematicLoadingOverlay').then((m) => m.CinematicLoadingOverlay),
+  { ssr: false }
+);
+const PinnedChaptersSection = dynamic(
+  () => import('@/components/cinematic/PinnedChaptersSection').then((m) => m.PinnedChaptersSection),
+  { ssr: true }
+);
+const MagneticConstellation = dynamic(
+  () => import('@/components/cinematic/MagneticConstellation').then((m) => m.MagneticConstellation),
+  { ssr: true }
+);
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
