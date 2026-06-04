@@ -18,6 +18,7 @@ import {
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { WhyChooseAlma } from '@/components/home/WhyChooseAlma';
 import { CinematicWhyAlma } from '@/components/cinematic/CinematicWhyAlma';
+import { CinematicProcessTimeline } from '@/components/cinematic/CinematicProcessTimeline';
 import { FamilyMatchingShowcase } from '@/components/home/FamilyMatchingShowcase';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { BrandStory } from '@/components/home/BrandStory';
@@ -109,7 +110,7 @@ function buildInsertAfter(
       key: 'our-process',
       sectionId: 'our-process',
       sectionName: 'Our Process',
-      node: <OurProcess data={extras.ourProcess} />,
+      node: cinematic ? <CinematicProcessTimeline data={extras.ourProcess} /> : <OurProcess data={extras.ourProcess} />,
     });
   }
 
