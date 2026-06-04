@@ -9,6 +9,7 @@ import {
   CINEMATIC_GRADIENT_CSS,
   type CinematicGradientToken,
 } from '@/lib/cinematic-config';
+import { resolveProductImageUrl } from '@/lib/default-images';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
 import type { CardProduct } from '@/lib/products-data';
@@ -27,6 +28,13 @@ function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken)
   return `linear-gradient(135deg, ${CINEMATIC_GRADIENT_CSS[from]}, ${CINEMATIC_GRADIENT_CSS[to]})`;
 }
 
+function chapterImageUrl(product: CardProduct | null | undefined): string | undefined {
+  if (!product?.slug) return undefined;
+  const raw = product.galleryImages?.[0]?.url;
+  const resolved = resolveProductImageUrl(raw, product.slug);
+  return resolved.trim() ? resolved : undefined;
+}
+
 function stageBackground(
   stage: CinematicChapterStageContent,
   index: number,
@@ -34,10 +42,11 @@ function stageBackground(
 ) {
   const from = stage.gradientFrom as CinematicGradientToken;
   const to = stage.gradientTo as CinematicGradientToken;
-  if (index === 3 || !product?.galleryImages?.[0]?.url) {
+  const imageUrl = chapterImageUrl(product);
+  if (index === 3 || !imageUrl) {
     return stageGradient(from, to);
   }
-  return `linear-gradient(135deg, ${GRADIENT_HEX[from]}88, ${GRADIENT_HEX[to]}88), url(${product.galleryImages[0].url})`;
+  return `linear-gradient(135deg, ${GRADIENT_HEX[from]}88, ${GRADIENT_HEX[to]}88), url(${imageUrl})`;
 }
 
 interface PinnedChaptersSectionProps {
@@ -115,9 +124,9 @@ export function PinnedChaptersSection({ chapterProducts = [], content }: PinnedC
               }}
               aria-hidden={activeStage !== index}
             >
-              {chapterProducts[index]?.galleryImages?.[0]?.url && index !== 3 && (
+              {chapterImageUrl(chapterProducts[index]) && index !== 3 && (
                 <Image
-                  src={chapterProducts[index]!.galleryImages![0].url!}
+                  src={chapterImageUrl(chapterProducts[index])!}
                   alt=""
                   fill
                   className="object-cover"
