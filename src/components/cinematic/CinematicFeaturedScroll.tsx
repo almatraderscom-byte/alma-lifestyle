@@ -1,7 +1,7 @@
 'use client';
 
 
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { AutoRotateProductImage } from '@/components/product/AutoRotateProductImage';
 import type { FeaturedProduct } from '@/lib/content';
@@ -10,7 +10,9 @@ import type { FeaturedSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { resolveProductImageUrl } from '@/lib/default-images';
+import { createAlmaPlaceholderSvg } from '@/lib/placeholder-svg';
 import { getProductBySlug } from '@/lib/products-data';
+import type { ProductCardGalleryImage } from '@/components/product/ProductCard';
 import { cardDisplayToCartItem } from '@/lib/cart-helpers';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/components/ui/Toast';
@@ -18,9 +20,13 @@ import { cn } from '@/lib/utils';
 import { TiltSurface } from '@/components/cinematic/TiltSurface';
 import { CinematicLink } from '@/components/cinematic/CinematicLink';
 
+type FeaturedScrollProduct = FeaturedProduct & {
+  galleryImages?: ProductCardGalleryImage[];
+};
+
 interface CinematicFeaturedScrollProps {
   data?: FeaturedSectionData;
-  products?: FeaturedProduct[];
+  products?: FeaturedScrollProduct[];
 }
 
 function FeaturedScrollCard({
@@ -28,15 +34,31 @@ function FeaturedScrollCard({
   index,
   reduced,
 }: {
-  product: FeaturedProduct;
+  product: FeaturedScrollProduct;
   index: number;
   reduced: boolean;
 }) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const productSlug = product.slug ?? product.href.replace('/products/', '').replace(/\/$/, '');
+
+  const gallery = useMemo(() => {
+    const catalog = getProductBySlug(productSlug);
+    const categorySlug = catalog?.categorySlug;
+    const imgs = product.galleryImages;
+    const base =
+      imgs && imgs.length > 0
+        ? imgs
+        : [{ id: product.id, bgClass: product.bgClass }];
+    return base.map((img) => ({
+      ...img,
+      url: img.url?.trim()
+        ? resolveProductImageUrl(img.url, productSlug, categorySlug)
+        : createAlmaPlaceholderSvg('neutral'),
+    }));
+  }, [product.galleryImages, product.id, product.bgClass, productSlug]);
+
   const catalog = getProductBySlug(productSlug);
-  const imageUrl = resolveProductImageUrl(undefined, productSlug, catalog?.categorySlug);
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -62,7 +84,7 @@ function FeaturedScrollCard({
       <CinematicLink href={product.href} className="block h-full w-full">
         <div className="absolute inset-0 overflow-hidden">
           <AutoRotateProductImage
-            images={[{ id: product.id, url: imageUrl, bgClass: product.bgClass }]}
+            images={gallery}
             alt={product.title}
             className={cn(
               'cinematic-image-reveal h-full w-full object-cover transition-transform duration-[8s] ease-out',
