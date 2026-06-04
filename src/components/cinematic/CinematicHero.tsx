@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import { useCinematicCapabilities } from '@/hooks/useCinematicCapabilities';

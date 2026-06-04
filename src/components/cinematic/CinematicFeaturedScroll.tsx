@@ -1,7 +1,6 @@
 'use client';
 
 
-import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { AutoRotateProductImage } from '@/components/product/AutoRotateProductImage';
@@ -33,7 +32,6 @@ function FeaturedScrollCard({
   index: number;
   reduced: boolean;
 }) {
-  const router = useRouter();
   const { addItem } = useCart();
   const { showToast } = useToast();
   const productSlug = product.slug ?? product.href.replace('/products/', '').replace(/\/$/, '');

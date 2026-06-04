@@ -1,7 +1,6 @@
 'use client';
 
 import { CinematicLink } from '@/components/cinematic/CinematicLink';
-import { useMagneticHover } from '@/hooks/useMagneticHover';
 import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useReducedMotion, useScroll, useTransform } from 'framer-motion';
