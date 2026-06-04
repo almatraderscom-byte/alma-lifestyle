@@ -13,6 +13,7 @@ import { CART, CHECKOUT } from '@/lib/content';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { formatBdtPrice, formatVariantLabel } from '@/lib/format-bn';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
+import { isDatabaseUuid } from '@/lib/admin-ids';
 import { shouldUseApi } from '@/lib/data-source';
 import { createOrderApi } from '@/lib/admin-api';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
@@ -105,8 +106,11 @@ export function CheckoutPageContent() {
         customerId = session?.user?.id ?? null;
       }
 
-      if (shouldUseApi()) {
-        try {
+      if (!shouldUseApi()) {
+        throw new Error('Store API is not configured — orders cannot be saved.');
+      }
+
+      try {
           const created = await createOrderApi({
             customerId,
             customerName,
@@ -116,7 +120,9 @@ export function CheckoutPageContent() {
             shippingCity: districtLabel,
             paymentMethod,
             items: pricedItems.map((item) => ({
-              productId: item.productId,
+              ...(isDatabaseUuid(item.productId)
+                ? { productId: item.productId }
+                : {}),
               productSlug: item.slug,
               quantity: item.quantity,
               unitPriceBdt: item.unitPriceBdt,
@@ -128,11 +134,13 @@ export function CheckoutPageContent() {
             totalBdt: orderTotal,
           });
           orderNumber = created.orderNumber;
+          if (!orderNumber) {
+            throw new Error('Order API did not return an order number');
+          }
         } catch (apiErr) {
           console.error('[Checkout] API order failed:', apiErr);
           throw apiErr;
         }
-      }
 
       const order = createPlacedOrder({
         items: pricedItems.map((item) => ({

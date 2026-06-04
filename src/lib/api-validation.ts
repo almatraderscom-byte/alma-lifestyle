@@ -112,8 +112,8 @@ export const CreateOrderBodySchema = z.object({
   items: z
     .array(
       z.object({
-        productId: z.string().uuid().optional(),
-        productSlug: z.string().optional(),
+        productId: z.string().min(1).optional(),
+        productSlug: z.string().min(1).optional(),
         variantId: z.string().uuid().nullable().optional(),
         quantity: z.number().int().positive(),
         unitPriceBdt: z.number().min(0),

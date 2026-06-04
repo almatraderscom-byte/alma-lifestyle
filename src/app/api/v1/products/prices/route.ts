@@ -6,7 +6,8 @@ import { withPublicDb } from '@/server/api/handler';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 
 const BodySchema = z.object({
-  ids: z.array(z.string().uuid()).max(50),
+  /** Cart line ids: Supabase UUID or static catalog slug id (e.g. islamic-seven-books-bundle). */
+  ids: z.array(z.string().min(1)).max(50),
 });
 
 export async function POST(request: NextRequest) {
