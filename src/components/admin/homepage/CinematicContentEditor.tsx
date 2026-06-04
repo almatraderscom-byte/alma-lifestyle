@@ -16,6 +16,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
+import { getProducts, type AdminProduct } from '@/lib/admin-store';
 import { CinematicModeBanner } from '@/components/admin/homepage/CinematicModeBanner';
 import {
   clearDraftCinematicContent,
@@ -51,6 +52,7 @@ export function CinematicContentEditor({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [publishedProducts, setPublishedProducts] = useState<AdminProduct[]>([]);
 
   useEffect(() => {
     fetchCinematicContentApi()
@@ -61,6 +63,16 @@ export function CinematicContentEditor({
       .catch(() => toast('Could not load cinematic content — showing defaults', 'error'))
       .finally(() => setLoading(false));
   }, [toast]);
+
+  useEffect(() => {
+    void getProducts().then((list) =>
+      setPublishedProducts(
+        list
+          .filter((p) => p.status === 'published')
+          .sort((a, b) => a.title.localeCompare(b.title, 'bn'))
+      )
+    );
+  }, []);
 
   const updateHero = useCallback(
     (patch: Partial<CinematicContent['hero']>) => {
@@ -278,6 +290,7 @@ export function CinematicContentEditor({
       imageLabel: '',
       gradientFrom: 'maroon' as const,
       gradientTo: 'terracotta' as const,
+      productSlug: undefined,
     };
     setContent((prev) => ({
       ...prev,
@@ -310,6 +323,29 @@ export function CinematicContentEditor({
   value={stage.imageLabel}
   onChange={(e) => updateStage(index, { imageLabel: e.target.value })}
 />
+
+            {!stage.cta && (
+              <Select
+                label={`Stage ${index + 1} product (image source)`}
+                value={stage.productSlug ?? ''}
+                onChange={(e) =>
+                  updateStage(index, { productSlug: e.target.value || undefined })
+                }
+                options={[
+                  { value: '', label: '— No product (gradient only) —' },
+                  ...publishedProducts.map((prod) => ({
+                    value: prod.slug,
+                    label: `${prod.title} (${prod.slug})`,
+                  })),
+                ]}
+              />
+            )}
+            {stage.cta && (
+              <p className="text-xs text-neutral-500">
+                CTA stage — product image is not used (gradient + button only).
+              </p>
+            )}
+
 <div className="flex flex-wrap gap-2">
   <button
     type="button"
