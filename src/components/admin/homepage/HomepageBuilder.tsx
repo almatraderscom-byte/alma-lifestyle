@@ -263,10 +263,13 @@ export function HomepageBuilder() {
       setConfig(saved);
       saveDraftHomepageConfig(saved);
       dispatchDraftUpdated();
-      toast('Homepage saved successfully', 'success');
+      const savedAt = saved.lastSaved
+        ? new Date(saved.lastSaved).toLocaleString('en-GB')
+        : 'just now';
+      toast(`Saved successfully — last saved ${savedAt}`, 'success');
       setPreviewKey((k) => k + 1);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+      toast(err instanceof Error ? err.message : 'Save failed — check network and API mode', 'error');
     } finally {
       setSaving(false);
     }
@@ -278,6 +281,7 @@ export function HomepageBuilder() {
         return (
           <HeroEditor
             data={section.data}
+            cinematicModeOn={config.cinematicMode ?? true}
             onChange={(data) => updateConfig((c) => updateSection(c, 'hero', { data }))}
           />
         );
@@ -449,6 +453,7 @@ export function HomepageBuilder() {
         >
           {builderTab === 'cinematic' ? (
             <CinematicContentEditor
+              cinematicModeOn={config.cinematicMode ?? true}
               onSaved={() => setPreviewKey((k) => k + 1)}
               onDraftChange={() => setPreviewKey((k) => k + 1)}
             />

@@ -108,6 +108,12 @@ export async function saveAppSettings(settings: AppSettings): Promise<AppSetting
 
 
 
+export async function getSiteConfigUpdatedAt(key: string): Promise<string | null> {
+  if (!isSupabaseAdminConfigured()) return null;
+  const row = await getConfigRow(key);
+  return row?.updated_at ?? null;
+}
+
 export async function getSiteSetting(key: string): Promise<string | null> {
   const row = await getConfigRow(key);
   if (row?.value == null) return null;

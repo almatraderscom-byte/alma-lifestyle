@@ -16,6 +16,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
+import { CinematicModeBanner } from '@/components/admin/homepage/CinematicModeBanner';
 import {
   clearDraftCinematicContent,
   saveDraftCinematicContent,
@@ -31,12 +32,13 @@ const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
 ];
 
 interface CinematicContentEditorProps {
+  cinematicModeOn?: boolean;
   onSaved?: () => void;
   /** Debounced draft sync for admin preview iframe */
   onDraftChange?: () => void;
 }
 
-export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicContentEditorProps) {
+export function CinematicContentEditor({ cinematicModeOn = true, onSaved, onDraftChange }: CinematicContentEditorProps) {
   const { toast } = useAdminToast();
   const [content, setContent] = useState<CinematicContent>(() => getDefaultCinematicContent());
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
       const saved = await saveCinematicContentApi(content);
       setContent(saved);
       saveDraftCinematicContent(saved);
-      toast('Cinematic content saved — homepage revalidates within 60s', 'success');
+      toast('Saved successfully — cinematic content will appear on site within 60s', 'success');
       onSaved?.();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Save failed', 'error');
@@ -155,6 +157,7 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
 
   return (
     <div className="space-y-6">
+      <CinematicModeBanner variant="cinematic-tab" cinematicOn={cinematicModeOn ?? true} />
       <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
         Edit cinematic-only copy and media. Changes appear on the live homepage after save (60s
         revalidate).
