@@ -572,5 +572,11 @@ section[id],
 
 .cinematic-hero-media {
   object-fit: cover;
-  object-position: center 35%;
+  object-position: 46% 18%;
+}
+
+@media (max-width: 767px) {
+  .cinematic-hero-media {
+    object-position: center 22%;
+  }
 }

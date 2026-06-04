@@ -8,6 +8,9 @@ export const CINEMATIC_HERO = {
   subheading: 'পরিবারের ঐতিহ্যে — বোনা প্রতিটি গল্প',
   metaLeft: 'SCROLL TO DISCOVER',
   metaRight: 'CHAPTER 01',
+  /** Video/poster object-position — x% y% (lower y = more headroom) */
+  mediaObjectPosition: '46% 18%',
+  mediaObjectPositionMobile: 'center 22%',
 } as const;
 
 export const CINEMATIC_CHAPTERS = {
