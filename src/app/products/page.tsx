@@ -1,8 +1,9 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ProductsListing } from '@/components/product/ProductsListing';
+import { CATEGORY_LABELS, type CategorySlug } from '@/lib/products-data';
+import { buildCategoryListingMetadata } from '@/lib/seo/category-metadata';
 import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
-import type { CategorySlug } from '@/lib/products-data';
-import { CATEGORY_LABELS } from '@/lib/products-data';
 
 export const revalidate = 60;
 
@@ -14,20 +15,19 @@ function ProductsFallback() {
   );
 }
 
-export default async function ProductsPage({
+export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
-}) {
-  const { category } = await searchParams;
-  const categorySlug =
-    category && category in CATEGORY_LABELS ? (category as CategorySlug) : undefined;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const category = params.category as CategorySlug | undefined;
+  const valid = category && category in CATEGORY_LABELS ? category : null;
+  return buildCategoryListingMetadata(valid);
+}
 
-  const { products } = await loadCatalogProductsServer({
-    limit: 200,
-    categorySlug,
-  });
-
+export default async function ProductsPage() {
+  const { products } = await loadCatalogProductsServer({ limit: 200 });
   return (
     <Suspense fallback={<ProductsFallback />}>
       <ProductsListing initialProducts={products} />
