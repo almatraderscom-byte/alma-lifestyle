@@ -148,7 +148,7 @@ export function migrateCommunitySection(data: CommunitySectionData): CommunitySe
     caption: tile.caption ?? '',
     alt: tile.alt ?? tile.hint,
   }));
-  return { ...data, tiles };
+  return { hideUntilPhotosAdded: data.hideUntilPhotosAdded ?? false, ...data, tiles };
 }
 
 export function normalizeCommunityTiles(

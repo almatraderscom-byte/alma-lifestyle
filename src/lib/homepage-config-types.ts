@@ -134,6 +134,8 @@ export interface CommunitySectionData {
   title: string;
   subtitle: string;
   instagramUrl: string;
+  /** When true, cinematic mode hides this section until at least one tile has a real photo */
+  hideUntilPhotosAdded?: boolean;
   tiles: CommunityTileConfig[];
 }
 
