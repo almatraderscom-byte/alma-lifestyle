@@ -28,6 +28,7 @@ import { ReviewsSection } from '@/components/home/ReviewsSection';
 import { CollectionBannerEditorial } from '@/components/home/CollectionBannerEditorial';
 import { CommunityGrid } from '@/components/home/CommunityGrid';
 import { HomepageFAQ } from '@/components/home/HomepageFAQ';
+import { CinematicFAQ } from '@/components/cinematic/CinematicFAQ';
 import { TrustStrip } from '@/components/home/TrustStrip';
 import { HomepageCTA } from '@/components/home/HomepageCTA';
 import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
@@ -122,7 +123,7 @@ function buildInsertAfter(
         key: 'homepage-faq',
         sectionId: 'homepage-faq',
         sectionName: 'FAQ',
-        node: <HomepageFAQ />,
+        node: cinematic ? <CinematicFAQ /> : <HomepageFAQ />,
       },
     ],
     trust: [
