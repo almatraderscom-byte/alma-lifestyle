@@ -3,6 +3,7 @@ import {
   loadHomepageConfigServer,
   loadOceanProductsServer,
   resolveFeaturedProductsServer,
+  loadCinematicContentServer,
 } from '@/lib/storefront/server-data';
 import {
   loadCinematicChapterProducts,
@@ -21,13 +22,14 @@ export default async function HomePage({
 
   const config = await loadHomepageConfigServer();
   const featuredSection = config.sections.find((s) => s.id === 'featured');
-  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts] = await Promise.all([
+  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts, cinematicContent] = await Promise.all([
     featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
       ? resolveFeaturedProductsServer(featuredSection.data)
       : Promise.resolve([]),
     loadOceanProductsServer(12),
     loadCinematicChapterProducts(),
     loadCinematicFilmStripProducts(),
+    loadCinematicContentServer(),
   ]);
 
   const hero = config.sections.find((s) => s.id === 'hero');
@@ -43,6 +45,7 @@ export default async function HomePage({
       chapterProducts={chapterProducts}
       filmStripProducts={filmStripProducts}
       editMode={isEditMode}
+      cinematicContent={cinematicContent}
     />
   );
 }

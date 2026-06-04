@@ -9,6 +9,7 @@ import {
 } from '@/lib/homepage-config';
 import type { HomepageConfig, HomepageSectionConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
 import type { CardProduct } from '@/lib/products-data';
 import { EditorialHero } from '@/components/home/EditorialHero';
 import {
@@ -63,6 +64,7 @@ interface HomePageRendererProps {
   chapterProducts?: (CardProduct | null)[];
   filmStripProducts?: CardProduct[];
   editMode?: boolean;
+  cinematicContent?: CinematicContent;
 }
 
 const sectionLabels: Record<HomepageSectionId, string> = {
@@ -86,7 +88,8 @@ type ExtraBlock = {
 
 function buildInsertAfter(
   extras: NonNullable<HomepageConfig['extras']>,
-  cinematic = false
+  cinematic = false,
+  cinematicContent?: CinematicContent
 ): Partial<
   Record<HomepageSectionId, ExtraBlock[]>
 > {
@@ -95,7 +98,7 @@ function buildInsertAfter(
       key: 'why-choose-alma',
       sectionId: 'why-choose-alma',
       sectionName: 'Why Choose ALMA',
-      node: cinematic ? <CinematicWhyAlma /> : <WhyChooseAlma />,
+      node: cinematic ? <CinematicWhyAlma content={cinematicContent?.whyAlma} /> : <WhyChooseAlma />,
     },
   ];
   if (extras.familyMatching.show !== false) {
@@ -125,7 +128,7 @@ function buildInsertAfter(
         key: 'homepage-faq',
         sectionId: 'homepage-faq',
         sectionName: 'FAQ',
-        node: cinematic ? <CinematicFAQ /> : <HomepageFAQ />,
+        node: cinematic ? <CinematicFAQ content={cinematicContent?.faq} /> : <HomepageFAQ />,
       },
     ],
     trust: [
@@ -280,6 +283,7 @@ export function HomePageRenderer({
   chapterProducts = [],
   filmStripProducts = [],
   editMode = false,
+  cinematicContent,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
 
@@ -310,7 +314,7 @@ export function HomePageRenderer({
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
   const cinematicActive = (config.cinematicMode ?? true) && !editMode && !preview;
-  const insertAfter = buildInsertAfter(extras, cinematicActive);
+  const insertAfter = buildInsertAfter(extras, cinematicActive, cinematicContent);
   const byId = sectionMap(sections);
   const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
 
@@ -362,7 +366,7 @@ export function HomePageRenderer({
     cinematicBlocks.push(
       <CinematicAssetPreload key="cinematic-preload" />,
       <CinematicLoadingOverlay key="cinematic-overlay" />,
-      <CinematicHero key="cinematic-hero" />
+      <CinematicHero key="cinematic-hero" content={cinematicContent?.hero} />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-hero-marquee" from="charcoal" to="cream" />);
 
@@ -379,7 +383,7 @@ export function HomePageRenderer({
 
     cinematicBlocks.push(<ColorWashBridge key="wash-ocean-chapters" from="warm-white" to="warm-white" />);
     cinematicBlocks.push(
-      <PinnedChaptersSection key="pinned-chapters" chapterProducts={chapterProducts} />
+      <PinnedChaptersSection key="pinned-chapters" chapterProducts={chapterProducts} content={cinematicContent?.chapters} />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-chapters-brand" from="warm-white" to="cream" />);
 
@@ -398,7 +402,7 @@ export function HomePageRenderer({
     renderCinematicEnabledSection(cinematicBlocks, 'trust');
 
     cinematicBlocks.push(<ColorWashBridge key="wash-trust-closing" from="cream" to="charcoal" />);
-    cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" />);
+    cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" content={cinematicContent?.closing} />);
 
     return (
       <HomepageEditModeProvider editMode={false}>{cinematicBlocks}</HomepageEditModeProvider>

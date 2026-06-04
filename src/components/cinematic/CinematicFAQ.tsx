@@ -5,33 +5,10 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { scrollViewport } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
+import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
 
-const faqs = [
-  {
-    q: 'ডেলিভারি কতদিনে পাব?',
-    a: 'ঢাকার মধ্যে ১-২ দিন, ঢাকার বাইরে ৩-৫ দিন।',
-  },
-  {
-    q: 'কীভাবে পেমেন্ট করব?',
-    a: 'bKash, Nagad, অথবা ক্যাশ অন ডেলিভারি।',
-  },
-  {
-    q: 'সাইজ পরিবর্তন করতে পারব?',
-    a: 'হ্যাঁ, ডেলিভারি পাওয়ার ৭ দিনের মধ্যে সাইজ পরিবর্তন বা ফেরত দিতে পারবেন।',
-  },
-  {
-    q: 'কাপড়ের কোয়ালিটি কেমন?',
-    a: '১০০% প্রিমিয়াম কাপড়। আমরা trusted manufacturer থেকে carefully selected products নিয়ে আসি। প্রতিটি পণ্য কোয়ালিটি যাচাই করে stock করি।',
-  },
-  {
-    q: 'ফ্যামিলি সেট মানে কী?',
-    a: 'একই ডিজাইন এবং রঙের পোশাক বাবা, মা, ছেলে, মেয়ে — সবার জন্য মিলিয়ে।',
-  },
-  {
-    q: 'কাস্টম ডিজাইন করা যাবে?',
-    a: 'হ্যাঁ, বিশেষ অর্ডারের জন্য আমাদের WhatsApp এ যোগাযোগ করুন।',
-  },
-];
+
 
 function PlusIcon({ open }: { open: boolean }) {
   return (
@@ -48,7 +25,12 @@ function PlusIcon({ open }: { open: boolean }) {
   );
 }
 
-export function CinematicFAQ() {
+interface CinematicFAQProps {
+  content?: CinematicContent['faq'];
+}
+
+export function CinematicFAQ({ content }: CinematicFAQProps) {
+  const faqContent = content ?? getDefaultCinematicContent().faq;
   const reduceMotion = useReducedMotion();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const instant = !!reduceMotion;
@@ -63,11 +45,11 @@ export function CinematicFAQ() {
           transition={{ duration: 0.6 }}
           viewport={scrollViewport}
         >
-          সাধারণ প্রশ্ন
+          {faqContent.sectionTitle}
         </motion.h2>
 
         <div>
-          {faqs.map((faq, idx) => {
+          {faqContent.items.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
               <motion.div

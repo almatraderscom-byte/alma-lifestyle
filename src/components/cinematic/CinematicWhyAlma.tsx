@@ -3,6 +3,8 @@
 import { useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import type { CinematicContent, CinematicPillarContent } from '@/lib/cinematic-content-types';
+import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
 
 const FEATURES = [
   {
@@ -42,6 +44,7 @@ const FEATURES = [
     Icon: ShieldIcon,
   },
 ] as const;
+
 
 function IconDraw({ children, draw }: { children: React.ReactNode; draw: boolean }) {
   return (
@@ -159,12 +162,30 @@ function ShieldIcon({ draw }: { draw: boolean }) {
   );
 }
 
+const PILLAR_ICONS: Record<string, React.ComponentType<{ draw: boolean }>> = {
+  quality: DiamondIcon,
+  design: WeaveIcon,
+  family: FamilyIcon,
+  delivery: DeliveryIcon,
+  payment: PaymentIcon,
+  trust: ShieldIcon,
+};
+
+type PillarFeature = CinematicPillarContent & { Icon: React.ComponentType<{ draw: boolean }> };
+
+function pillarsToFeatures(pillars: CinematicPillarContent[]): PillarFeature[] {
+  return pillars.map((pillar) => ({
+    ...pillar,
+    Icon: PILLAR_ICONS[pillar.id] ?? DiamondIcon,
+  }));
+}
+
 function PillarCard({
   feature,
   index,
   instant,
 }: {
-  feature: (typeof FEATURES)[number];
+  feature: PillarFeature;
   index: number;
   instant: boolean;
 }) {
@@ -196,7 +217,13 @@ function PillarCard({
   );
 }
 
-export function CinematicWhyAlma() {
+interface CinematicWhyAlmaProps {
+  content?: CinematicContent['whyAlma'];
+}
+
+export function CinematicWhyAlma({ content }: CinematicWhyAlmaProps) {
+  const whyAlma = content ?? getDefaultCinematicContent().whyAlma;
+  const features = pillarsToFeatures(whyAlma.pillars);
   const reduced = useReducedMotion();
   const instant = !!reduced;
 
@@ -205,14 +232,14 @@ export function CinematicWhyAlma() {
       <div className="mx-auto max-w-6xl text-center">
         <p className="font-bn-body text-[10px] uppercase tracking-[0.4em] text-mustard">কেন ALMA</p>
         <h2 id="why-alma-heading" className="mt-4 font-bn-heading text-4xl font-bold text-charcoal md:text-5xl">
-          আমাদের গর্ব, আপনার বিশ্বাস
+          {whyAlma.sectionTitle}
         </h2>
         <p className="mx-auto mt-4 max-w-2xl font-bn-body text-base text-charcoal/70 md:text-lg">
-          ALMA — যেখানে প্রিমিয়াম মিলে সাধ্যের সাথে। আমরা বাছাই করি, আপনি পান।
+          {whyAlma.sectionSubtitle}
         </p>
       </div>
       <div className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((feature, index) => (
+        {features.map((feature, index) => (
           <PillarCard key={feature.id} feature={feature} index={index} instant={instant} />
         ))}
       </div>

@@ -105,6 +105,33 @@ export async function saveAppSettings(settings: AppSettings): Promise<AppSetting
   };
 }
 
+
+
+export async function getSiteSetting(key: string): Promise<string | null> {
+  const row = await getConfigRow(key);
+  if (row?.value == null) return null;
+  if (typeof row.value === 'string') return row.value;
+  if (typeof row.value === 'boolean') return row.value ? 'true' : 'false';
+  return JSON.stringify(row.value).replace(/^"|"$/g, '');
+}
+
+export async function saveSiteSetting(key: string, value: string): Promise<void> {
+  const jsonValue = JSON.parse(JSON.stringify(value)) as Json;
+  const existing = await getConfigRow(key);
+  if (existing) {
+    const { error } = await getSupabaseAdmin()
+      .from('site_config')
+      .update({ value: jsonValue } as never)
+      .eq('key', key);
+    assertNoError(error, 'saveSiteSetting.update');
+    return;
+  }
+  const { error } = await getSupabaseAdmin()
+    .from('site_config')
+    .insert({ key, value: jsonValue } as never);
+  assertNoError(error, 'saveSiteSetting.insert');
+}
+
 export async function getHomepageConfigOrDefault(): Promise<HomepageConfig> {
   const stored = await getHomepageConfig();
   return stored ? ensureHomepageConfig(stored) : getDefaultHomepageConfig();
