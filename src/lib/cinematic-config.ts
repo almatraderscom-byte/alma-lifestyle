@@ -78,3 +78,8 @@ export const CINEMATIC_CHAPTER_PRODUCTS = [
   { stageIndex: 2, productSlug: 'silk-premium-panjabi' },
   { stageIndex: 3, productSlug: 'premium-cotton-panjabi' },
 ] as const;
+
+export const CINEMATIC_FILM_STRIP_PRODUCTS = [
+  'classic-white-panjabi',
+  'green-casual-panjabi',
+] as const;

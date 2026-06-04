@@ -71,7 +71,7 @@ export function CinematicHero() {
   return (
     <section
       ref={containerRef}
-      className="relative h-screen min-h-[700px] max-h-[900px] overflow-hidden bg-charcoal"
+      className="relative h-screen min-h-[620px] max-h-[760px] overflow-hidden bg-charcoal"
       onMouseMove={onMouseMove}
       data-cursor="ring"
     >
@@ -81,7 +81,8 @@ export function CinematicHero() {
           <div className="absolute inset-0 bg-charcoal" aria-hidden />
         ) : useVideo ? (
           <video
-            className="absolute inset-0 h-full w-full object-cover"
+            className="cinematic-hero-media absolute inset-0 h-full w-full"
+            style={{ objectFit: 'cover', objectPosition: 'center 35%' }}
             src={CINEMATIC_HERO.videoSrc}
             poster={CINEMATIC_HERO.posterSrc}
             autoPlay
@@ -96,7 +97,8 @@ export function CinematicHero() {
           <img
             src={CINEMATIC_HERO.posterSrc}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="cinematic-hero-media absolute inset-0 h-full w-full"
+            style={{ objectFit: 'cover', objectPosition: 'center 35%' }}
             decoding="async"
             fetchPriority="high"
           />
