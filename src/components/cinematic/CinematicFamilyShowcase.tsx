@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
@@ -113,12 +113,12 @@ export function CinematicFamilyShowcase({ data: dataProp }: CinematicFamilyShowc
           {data.title}
         </h2>
         <p className="mt-4 max-w-xl font-bn-body text-base text-cream/80 md:text-lg">{data.body}</p>
-        <Link
+        <CinematicLink
           href={data.ctaHref}
           className="mt-8 inline-flex min-h-12 items-center font-bn-body text-base font-semibold text-cream underline decoration-mustard decoration-2 underline-offset-[6px] transition-colors hover:text-mustard"
         >
           {data.ctaText}
-        </Link>
+        </CinematicLink>
 
         <div className="absolute bottom-8 flex gap-3 md:bottom-10">
           {SWATCH_COLORS.map((swatch, i) => (

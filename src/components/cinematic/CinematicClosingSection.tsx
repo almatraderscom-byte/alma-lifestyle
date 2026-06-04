@@ -1,10 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
+import { useMagneticHover } from '@/hooks/useMagneticHover';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CINEMATIC_CLOSING } from '@/lib/cinematic-config';
 
 export function CinematicClosingSection() {
+  const ctaRef = useMagneticHover(0.25);
   const reduced = useReducedMotion();
   const lines = CINEMATIC_CLOSING.heading.split('\n');
 
@@ -38,13 +40,15 @@ export function CinematicClosingSection() {
             </span>
           ))}
         </h2>
-        <Link
+        <CinematicLink
+          ref={ctaRef}
           href={CINEMATIC_CLOSING.cta.href}
           data-cursor="ring"
           className="mt-10 inline-flex min-h-12 items-center rounded-sm border border-mustard px-10 font-bn-body text-sm font-semibold text-cream transition-colors hover:bg-mustard hover:text-charcoal"
+          style={{ transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}
         >
           {CINEMATIC_CLOSING.cta.label}
-        </Link>
+        </CinematicLink>
       </motion.div>
     </section>
   );
