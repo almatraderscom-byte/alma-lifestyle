@@ -569,3 +569,8 @@ section[id],
     opacity: 1;
   }
 }
+
+.cinematic-hero-media {
+  object-fit: cover;
+  object-position: center 35%;
+}
