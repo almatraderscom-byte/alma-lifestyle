@@ -48,10 +48,10 @@ import {
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
+import type { Category, ProductWithRelations } from '@/server/db/schema';
 import type { CinematicContent } from '@/lib/cinematic-content-types';
 import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
 import { getCinematicContentOrDefault } from '@/server/db/queries/cinematic-content';
-import type { Category, ProductWithRelations } from '@/server/db/schema';
 
 export const STOREFRONT_REVALIDATE = 60;
 
@@ -334,18 +334,10 @@ export async function loadProductBySlugServer(
       );
     }
 
-    return (
-      getStaticIslamicProductBySlug(slug) ??
-      getStaticCustomLayoutProductBySlug(slug) ??
-      null
-    );
+    return getStaticProductBySlug(slug) ?? null;
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
-    return (
-      getStaticIslamicProductBySlug(slug) ??
-      getStaticCustomLayoutProductBySlug(slug) ??
-      null
-    );
+    return getStaticProductBySlug(slug) ?? null;
   }
 }
 
@@ -443,7 +435,8 @@ export async function loadCinematicContentServer(): Promise<CinematicContent> {
   }
   try {
     return await getCinematicContentOrDefault();
-  } catch {
+  } catch (err) {
+    console.error('[storefront] loadCinematicContentServer failed:', err);
     return getDefaultCinematicContent();
   }
 }
