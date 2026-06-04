@@ -21,15 +21,15 @@ export default async function HomePage({
   const isEditMode = params.preview === 'true' && params.edit === 'true';
 
   const config = await loadHomepageConfigServer();
+  const cinematicContent = await loadCinematicContentServer();
   const featuredSection = config.sections.find((s) => s.id === 'featured');
-  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts, cinematicContent] = await Promise.all([
+  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts] = await Promise.all([
     featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
       ? resolveFeaturedProductsServer(featuredSection.data)
       : Promise.resolve([]),
     loadOceanProductsServer(12),
-    loadCinematicChapterProducts(),
-    loadCinematicFilmStripProducts(),
-    loadCinematicContentServer(),
+    loadCinematicChapterProducts(cinematicContent),
+    loadCinematicFilmStripProducts(cinematicContent),
   ]);
 
   return (

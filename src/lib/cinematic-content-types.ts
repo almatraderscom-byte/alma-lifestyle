@@ -7,6 +7,8 @@ export interface CinematicChapterStageContent {
   imageLabel: string;
   gradientFrom: CinematicGradientToken;
   gradientTo: CinematicGradientToken;
+  /** Published product slug for stage background image (stages 1–3). */
+  productSlug?: string;
   cta?: { label: string; href: string };
 }
 

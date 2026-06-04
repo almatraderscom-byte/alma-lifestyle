@@ -1,5 +1,6 @@
 import {
   CINEMATIC_CHAPTERS,
+  CINEMATIC_CHAPTER_PRODUCTS,
   CINEMATIC_CLOSING,
   CINEMATIC_HERO,
   type CinematicGradientToken,
@@ -61,6 +62,10 @@ const DEFAULT_FAQ_ITEMS = [
   },
 ] as const;
 
+function chapterProductSlugByIndex(index: number): string | undefined {
+  return CINEMATIC_CHAPTER_PRODUCTS.find((p) => p.stageIndex === index)?.productSlug;
+}
+
 export function getDefaultCinematicContent(): CinematicContent {
   return {
     hero: {
@@ -76,13 +81,14 @@ export function getDefaultCinematicContent(): CinematicContent {
     },
     chapters: {
       sectionNumber: CINEMATIC_CHAPTERS.sectionNumber,
-      stages: CINEMATIC_CHAPTERS.stages.map((stage) => ({
+      stages: CINEMATIC_CHAPTERS.stages.map((stage, index) => ({
         eyebrow: stage.eyebrow,
         heading: stage.heading,
         body: stage.body,
         imageLabel: stage.imageLabel,
         gradientFrom: stage.gradientFrom as CinematicGradientToken,
         gradientTo: stage.gradientTo as CinematicGradientToken,
+        productSlug: chapterProductSlugByIndex(index),
         ...('cta' in stage && stage.cta ? { cta: { ...stage.cta } } : {}),
       })),
     },
@@ -116,11 +122,19 @@ export function mergeCinematicContent(
       sectionNumber: saved.chapters?.sectionNumber ?? defaults.chapters.sectionNumber,
       stages:
         saved.chapters?.stages?.length === defaults.chapters.stages.length
-          ? defaults.chapters.stages.map((def, i) => ({
-              ...def,
-              ...saved.chapters!.stages[i],
-              cta: saved.chapters!.stages[i]?.cta ?? def.cta,
-            }))
+          ? defaults.chapters.stages.map((def, i) => {
+              const savedStage = saved.chapters!.stages[i];
+              const productSlug =
+                savedStage?.productSlug?.trim() ||
+                def.productSlug ||
+                chapterProductSlugByIndex(i);
+              return {
+                ...def,
+                ...savedStage,
+                ...(productSlug ? { productSlug } : {}),
+                cta: savedStage?.cta ?? def.cta,
+              };
+            })
           : defaults.chapters.stages,
     },
     closing: {
