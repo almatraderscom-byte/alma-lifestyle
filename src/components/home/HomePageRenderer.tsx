@@ -53,6 +53,7 @@ import { CinematicTestimonialPin } from '@/components/cinematic/CinematicTestimo
 import { CinematicCollectionDivider } from '@/components/cinematic/CinematicCollectionDivider';
 import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommunityMosaic';
 import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
+import { CinematicFeaturedScroll } from '@/components/cinematic/CinematicFeaturedScroll';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -245,7 +246,7 @@ function renderCinematicSectionContent(
       return <CinematicCategoryReel data={section.data} />;
     case 'featured':
       return (
-        <FeaturedProductsSection
+        <CinematicFeaturedScroll
           data={section.data}
           products={preview ? resolveFeaturedProducts(section.data) : featuredProducts}
         />
