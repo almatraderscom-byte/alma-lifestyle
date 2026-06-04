@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -16,6 +16,8 @@ import { cardDisplayToCartItem } from '@/lib/cart-helpers';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
+import { TiltSurface } from '@/components/cinematic/TiltSurface';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 
 interface CinematicFeaturedScrollProps {
   data?: FeaturedSectionData;
@@ -50,6 +52,7 @@ function FeaturedScrollCard({
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
 
   return (
+    <TiltSurface>
     <article
       className={cn(
         'group relative mx-3 h-[480px] w-[320px] shrink-0 snap-center overflow-hidden rounded-sm bg-charcoal/5',
@@ -58,13 +61,13 @@ function FeaturedScrollCard({
       )}
       style={{ transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}
     >
-      <Link href={product.href} className="block h-full w-full">
+      <CinematicLink href={product.href} className="block h-full w-full">
         <div className="absolute inset-0 overflow-hidden">
           <AutoRotateProductImage
             images={[{ id: product.id, url: imageUrl, bgClass: product.bgClass }]}
             alt={product.title}
             className={cn(
-              'h-full w-full object-cover transition-transform duration-[8s] ease-out',
+              'cinematic-image-reveal h-full w-full object-cover transition-transform duration-[8s] ease-out',
               !reduced && 'md:group-hover:scale-110'
             )}
             rotationInterval={4000}
@@ -101,8 +104,9 @@ function FeaturedScrollCard({
             {PDP.addToBag}
           </button>
         </div>
-      </Link>
+      </CinematicLink>
     </article>
+    </TiltSurface>
   );
 }
 
@@ -125,12 +129,12 @@ export function CinematicFeaturedScroll({
         </p>
         <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="font-bn-heading text-3xl font-bold text-charcoal md:text-4xl">{data.title}</h2>
-          <Link
+          <CinematicLink
             href={data.viewAllHref}
             className="font-bn-body text-sm font-semibold text-charcoal underline decoration-mustard decoration-2 underline-offset-4"
           >
             {data.viewAllText}
-          </Link>
+          </CinematicLink>
         </div>
       </div>
 

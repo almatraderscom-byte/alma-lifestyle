@@ -28,6 +28,7 @@ import {
   formatTotalProducts,
 } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import { TiltSurface } from '@/components/cinematic/TiltSurface';
 
 interface ProductsListingProps {
   initialProducts?: CatalogProduct[];
@@ -213,11 +214,12 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                   {pagination.items.map((product, idx) => (
-                    <ProductCard
-                      key={product.id}
-                      product={toCardProduct(product)}
-                      index={idx}
-                    />
+                    <TiltSurface key={product.id}>
+                      <ProductCard
+                        product={toCardProduct(product)}
+                        index={idx}
+                      />
+                    </TiltSurface>
                   ))}
                 </div>
                 <Pagination
