@@ -16,19 +16,21 @@ import {
   sortCatalogProducts,
   paginateProducts,
   toCardProduct,
+  LISTING_TYPE_PARAM_VALUES,
   type CatalogProduct,
+  type ListingProductTypeFilter,
   type CategorySlug,
   type ProductFilters,
   type ListingSetFilter,
   type SortKey,
 } from '@/lib/products-data';
+import { PRODUCT_TYPE_LABELS_BN } from '@/lib/product-design-types';
 import {
   formatPageNumber,
   formatProductRange,
   formatTotalProducts,
 } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
-import { TiltSurface } from '@/components/cinematic/TiltSurface';
 
 interface ProductsListingProps {
   initialProducts?: CatalogProduct[];
@@ -46,14 +48,24 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const router = useRouter();
 
   const categoryParam = searchParams.get('category') as CategorySlug | null;
+  const typeParam = searchParams.get('type');
+  const productTypeFilter: ListingProductTypeFilter | null =
+    typeParam &&
+    (LISTING_TYPE_PARAM_VALUES as readonly string[]).includes(typeParam)
+      ? (typeParam as ListingProductTypeFilter)
+      : null;
   const sortParam = (searchParams.get('sort') as SortKey) || 'newest';
   const pageParam = Number(searchParams.get('page') ?? '1');
 
-  const [filters, setFilters] = useState<ProductFilters>(() => ({
+  const filtersFromParams = (): ProductFilters => ({
     ...DEFAULT_FILTERS,
     categories: categoryParam && categoryParam in CATEGORY_LABELS ? [categoryParam] : [],
-  }));
-  const [appliedFilters, setAppliedFilters] = useState<ProductFilters>(filters);
+    productType: productTypeFilter,
+    listingSet: productTypeFilter === 'family-set' ? 'matching' : 'all',
+  });
+
+  const [filters, setFilters] = useState<ProductFilters>(filtersFromParams);
+  const [appliedFilters, setAppliedFilters] = useState<ProductFilters>(filtersFromParams);
   const [sort, setSort] = useState<SortKey>(
     sortParam in PRODUCTS_PAGE.sortOptions ? sortParam : 'newest'
   );
@@ -61,19 +73,23 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
-    if (categoryParam && categoryParam in CATEGORY_LABELS) {
-      const next = { ...DEFAULT_FILTERS, categories: [categoryParam] };
-      setFilters(next);
-      setAppliedFilters(next);
-    }
-  }, [categoryParam]);
+    const next = filtersFromParams();
+    setFilters(next);
+    setAppliedFilters(next);
+  }, [categoryParam, typeParam]);
 
   const pageTitle = useMemo(() => {
+    if (appliedFilters.productType) {
+      if (appliedFilters.productType === 'family-set') {
+        return PRODUCTS_PAGE.filterMatchingSet;
+      }
+      return PRODUCT_TYPE_LABELS_BN[appliedFilters.productType];
+    }
     if (appliedFilters.categories.length === 1) {
       return CATEGORY_LABELS[appliedFilters.categories[0]];
     }
     return PRODUCTS_PAGE.titleAll;
-  }, [appliedFilters.categories]);
+  }, [appliedFilters.categories, appliedFilters.productType]);
 
   const filtered = useMemo(() => {
     const list = filterCatalogProducts(catalogSource, appliedFilters);
@@ -214,12 +230,11 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                   {pagination.items.map((product, idx) => (
-                    <TiltSurface key={product.id}>
-                      <ProductCard
-                        product={toCardProduct(product)}
-                        index={idx}
-                      />
-                    </TiltSurface>
+                    <ProductCard
+                      key={product.id}
+                      product={toCardProduct(product)}
+                      index={idx}
+                    />
                   ))}
                 </div>
                 <Pagination

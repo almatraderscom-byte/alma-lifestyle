@@ -39,7 +39,6 @@ import { EditableHomeBlock } from '@/components/home/EditableHomeBlock';
 import { HomepageEditBanner } from '@/components/home/HomepageEditBanner';
 import { HomepageEditModeProvider } from '@/context/HomepageEditModeContext';
 import { getDefaultHomepageExtras } from '@/lib/homepage-extras';
-import { CinematicHero } from '@/components/cinematic/CinematicHero';
 import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
@@ -52,8 +51,6 @@ import { CinematicTestimonialPin } from '@/components/cinematic/CinematicTestimo
 import { CinematicCollectionDivider } from '@/components/cinematic/CinematicCollectionDivider';
 import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommunityMosaic';
 import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
-import { CinematicFeaturedScroll } from '@/components/cinematic/CinematicFeaturedScroll';
-import { CinematicFamilyShowcase } from '@/components/cinematic/CinematicFamilyShowcase';
 
 const CinematicLoadingOverlay = dynamic(
   () => import('@/components/cinematic/CinematicLoadingOverlay').then((m) => m.CinematicLoadingOverlay),
@@ -63,6 +60,19 @@ const PinnedChaptersSection = dynamic(
   () => import('@/components/cinematic/PinnedChaptersSection').then((m) => m.PinnedChaptersSection),
   { ssr: true }
 );
+const CinematicFeaturedScroll = dynamic(
+  () => import('@/components/cinematic/CinematicFeaturedScroll').then((m) => m.CinematicFeaturedScroll),
+  { ssr: true }
+);
+const CinematicFamilyShowcase = dynamic(
+  () => import('@/components/cinematic/CinematicFamilyShowcase').then((m) => m.CinematicFamilyShowcase),
+  { ssr: true }
+);
+const CinematicHero = dynamic(
+  () => import('@/components/cinematic/CinematicHero').then((m) => m.CinematicHero),
+  { ssr: true }
+);
+
 const MagneticConstellation = dynamic(
   () => import('@/components/cinematic/MagneticConstellation').then((m) => m.MagneticConstellation),
   { ssr: true }

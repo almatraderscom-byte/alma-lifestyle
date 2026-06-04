@@ -48,10 +48,10 @@ import {
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
+import type { Category, ProductWithRelations } from '@/server/db/schema';
 import type { CinematicContent } from '@/lib/cinematic-content-types';
 import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
 import { getCinematicContentOrDefault } from '@/server/db/queries/cinematic-content';
-import type { Category, ProductWithRelations } from '@/server/db/schema';
 
 export const STOREFRONT_REVALIDATE = 60;
 
@@ -250,6 +250,8 @@ export async function loadCatalogProductsServer(options?: {
   page?: number;
   limit?: number;
   categoryId?: string;
+  /** Resolve category slug to DB filter (e.g. islamic, panjabi). */
+  categorySlug?: CategorySlug;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
   if (!shouldLoadCatalogFromDatabase()) {
@@ -260,11 +262,16 @@ export async function loadCatalogProductsServer(options?: {
     const brandId = await getBrandId();
     const categories = await getCategories(brandId);
     const catById = new Map(categories.map((c) => [c.id, c]));
+    const categoryId =
+      options?.categoryId ??
+      (options?.categorySlug
+        ? categories.find((c) => c.slug === options.categorySlug)?.id
+        : undefined);
 
     const result = await getProducts({
       page: options?.page ?? 1,
       limit: options?.limit ?? 100,
-      categoryId: options?.categoryId,
+      categoryId,
       published: true,
       search: options?.search,
     });
@@ -357,13 +364,13 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     const slugs = new Set(result.data.map((p) => p.slug));
-    for (const slug of [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()]) {
+    for (const slug of getStaticSlugs()) {
       slugs.add(slug);
     }
     return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()];
+    return getStaticSlugs();
   }
 }
 
@@ -443,7 +450,8 @@ export async function loadCinematicContentServer(): Promise<CinematicContent> {
   }
   try {
     return await getCinematicContentOrDefault();
-  } catch {
+  } catch (err) {
+    console.error('[storefront] loadCinematicContentServer failed:', err);
     return getDefaultCinematicContent();
   }
 }

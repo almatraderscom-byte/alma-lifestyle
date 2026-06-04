@@ -1,5 +1,16 @@
 import type { FeaturedProduct } from '@/lib/content';
 import type { ProductType } from '@/lib/product-design-types';
+
+/** URL `?type=` values for /products listing (includes design-group alias). */
+export type ListingProductTypeFilter = ProductType | 'family-set';
+
+export const LISTING_TYPE_PARAM_VALUES: readonly ListingProductTypeFilter[] = [
+  'family-set',
+  'men_panjabi',
+  'boy_panjabi',
+  'women_three_piece',
+  'girl_two_piece',
+] as const;
 import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
 import { getDefaultProductImage } from '@/lib/default-images';
 import { buildListingCardGallery } from '@/lib/product-gallery';
@@ -284,6 +295,7 @@ export interface ProductFilters {
   colors: string[];
   sizes: string[];
   listingSet: ListingSetFilter;
+  productType?: ListingProductTypeFilter | null;
 }
 
 export const DEFAULT_FILTERS: ProductFilters = {
@@ -293,7 +305,21 @@ export const DEFAULT_FILTERS: ProductFilters = {
   colors: [],
   sizes: [],
   listingSet: 'all',
+  productType: null,
 };
+
+export function catalogMatchesProductTypeFilter(
+  product: CatalogProduct,
+  type: ListingProductTypeFilter
+): boolean {
+  if (type === 'family-set') {
+    return catalogIsDesignGroupCard(product);
+  }
+  if (product.productType === type) return true;
+  if (product.availableTypes?.includes(type)) return true;
+  if (product.designGroupMembers?.some((m) => m.productType === type)) return true;
+  return false;
+}
 
 export function filterCatalogProducts(
   products: CatalogProduct[],
@@ -318,6 +344,9 @@ export function filterCatalogProducts(
       return false;
     }
     if (filters.listingSet === 'single' && catalogIsDesignGroupCard(p)) {
+      return false;
+    }
+    if (filters.productType && !catalogMatchesProductTypeFilter(p, filters.productType)) {
       return false;
     }
     return true;
