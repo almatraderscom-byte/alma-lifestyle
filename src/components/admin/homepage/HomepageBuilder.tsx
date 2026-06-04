@@ -342,7 +342,16 @@ export function HomepageBuilder() {
     }
   }
 
-  const previewSrc = `/?preview=true&edit=true&_=${previewKey}`;
+  const cinematicPreviewOn = config.cinematicMode ?? true;
+  const previewSrc = (() => {
+    const params = new URLSearchParams({
+      preview: 'true',
+      edit: 'true',
+      _: String(previewKey),
+    });
+    if (cinematicPreviewOn) params.set('cinematic', '1');
+    return `/?${params.toString()}`;
+  })();
 
   return (
     <div className="-m-4 lg:-m-6 flex flex-col min-h-[calc(100vh-4rem)]">
@@ -393,7 +402,11 @@ export function HomepageBuilder() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => window.open(`/?preview=true&_=${Date.now()}`, '_blank')}
+            onClick={() => {
+              const params = new URLSearchParams({ preview: 'true', _: String(Date.now()) });
+              if (cinematicPreviewOn) params.set('cinematic', '1');
+              window.open(`/?${params.toString()}`, '_blank');
+            }}
           >
             Preview in New Tab
           </Button>
@@ -435,7 +448,10 @@ export function HomepageBuilder() {
           )}
         >
           {builderTab === 'cinematic' ? (
-            <CinematicContentEditor onSaved={() => setPreviewKey((k) => k + 1)} />
+            <CinematicContentEditor
+              onSaved={() => setPreviewKey((k) => k + 1)}
+              onDraftChange={() => setPreviewKey((k) => k + 1)}
+            />
           ) : (
             <>
           <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">

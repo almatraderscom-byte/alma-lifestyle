@@ -16,6 +16,10 @@ import { Button } from '@/components/admin/ui/Button';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
+import {
+  clearDraftCinematicContent,
+  saveDraftCinematicContent,
+} from '@/lib/cinematic-preview-draft';
 
 const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
   { value: 'maroon', label: 'Maroon' },
@@ -28,9 +32,11 @@ const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
 
 interface CinematicContentEditorProps {
   onSaved?: () => void;
+  /** Debounced draft sync for admin preview iframe */
+  onDraftChange?: () => void;
 }
 
-export function CinematicContentEditor({ onSaved }: CinematicContentEditorProps) {
+export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicContentEditorProps) {
   const { toast } = useAdminToast();
   const [content, setContent] = useState<CinematicContent>(() => getDefaultCinematicContent());
   const [loading, setLoading] = useState(true);
@@ -39,7 +45,10 @@ export function CinematicContentEditor({ onSaved }: CinematicContentEditorProps)
 
   useEffect(() => {
     fetchCinematicContentApi()
-      .then(setContent)
+      .then((loaded) => {
+        setContent(loaded);
+        saveDraftCinematicContent(loaded);
+      })
       .catch(() => toast('Could not load cinematic content — showing defaults', 'error'))
       .finally(() => setLoading(false));
   }, [toast]);
@@ -102,6 +111,16 @@ export function CinematicContentEditor({ onSaved }: CinematicContentEditorProps)
     []
   );
 
+
+  useEffect(() => {
+    if (loading) return;
+    const timer = setTimeout(() => {
+      saveDraftCinematicContent(content);
+      onDraftChange?.();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [content, loading, onDraftChange]);
+
   async function handleVideoUpload(file: File) {
     setUploadingVideo(true);
     try {
@@ -120,6 +139,7 @@ export function CinematicContentEditor({ onSaved }: CinematicContentEditorProps)
     try {
       const saved = await saveCinematicContentApi(content);
       setContent(saved);
+      saveDraftCinematicContent(saved);
       toast('Cinematic content saved — homepage revalidates within 60s', 'success');
       onSaved?.();
     } catch (err) {
