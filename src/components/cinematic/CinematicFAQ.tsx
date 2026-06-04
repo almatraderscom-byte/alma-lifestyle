@@ -39,7 +39,7 @@ export function CinematicFAQ({ content }: CinematicFAQProps) {
     <section className="section-padding bg-cream">
       <div className="mx-auto max-w-3xl px-4">
         <motion.h2
-          className="mb-12 text-center font-bn-heading text-4xl font-bold text-charcoal"
+          className="cinematic-section-title mb-12 text-center font-bn-heading text-4xl font-bold text-charcoal"
           initial={instant ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}

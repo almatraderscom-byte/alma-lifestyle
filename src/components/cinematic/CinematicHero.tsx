@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { useMobileScrollParallax } from '@/hooks/useMobileScrollParallax';
 import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
 import { useCinematicCapabilities } from '@/hooks/useCinematicCapabilities';
@@ -60,6 +61,14 @@ export function CinematicHero({ content }: CinematicHeroProps) {
   const reduced = useReducedMotion();
   const { useVideo, isMobile, isReady } = useCinematicCapabilities();
   const containerRef = useRef<HTMLElement>(null);
+  const { ref: parallaxRef, y: scrollY } = useMobileScrollParallax(
+    ['-12%', '12%'],
+    ['start start', 'end start']
+  );
+  const setSectionRef = (el: HTMLElement | null) => {
+    containerRef.current = el;
+    (parallaxRef as React.MutableRefObject<HTMLElement | null>).current = el;
+  };
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const instant = !!reduced;
   const letterboxH = isMobile ? 24 : 32;
@@ -79,13 +88,13 @@ export function CinematicHero({ content }: CinematicHeroProps) {
 
   return (
     <section
-      ref={containerRef}
+      ref={setSectionRef}
       className="relative h-screen min-h-[640px] max-h-[820px] overflow-hidden bg-charcoal"
       onMouseMove={onMouseMove}
       data-cursor="ring"
     >
       <h1 className="sr-only">Alma Lifestyle — পরিবারের ঐতিহ্যে বোনা প্রতিটি গল্প</h1>
-      <div className="absolute inset-0">
+      <motion.div className="absolute inset-0" style={scrollY ? { y: scrollY } : undefined}>
         {!isReady ? (
           <div className="absolute inset-0 bg-charcoal" aria-hidden />
         ) : useVideo ? (
@@ -112,7 +121,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
             fetchPriority="high"
           />
         )}
-      </div>
+      </motion.div>
 
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
@@ -124,23 +133,35 @@ export function CinematicHero({ content }: CinematicHeroProps) {
       />
 
       {!reduced &&
-        !isMobile &&
-        PARALLAX_DEPTHS.map((depth, i) => (
-          <div
-            key={depth}
-            className="pointer-events-none absolute inset-0 z-[2] opacity-[0.08]"
-            data-depth={depth}
-            style={{
-              background:
-                i % 2 === 0
-                  ? 'radial-gradient(circle at 30% 40%, var(--color-mustard), transparent 55%)'
-                  : 'radial-gradient(circle at 70% 60%, var(--color-terracotta), transparent 50%)',
-              transform: `translate(${-parallax.x * depth * 6}px, ${-parallax.y * depth * 4}px)`,
-              transition: 'transform 0.15s ease-out',
-            }}
-            aria-hidden
-          />
-        ))}
+        PARALLAX_DEPTHS.map((depth, i) => {
+          const bg =
+            i % 2 === 0
+              ? 'radial-gradient(circle at 30% 40%, var(--color-mustard), transparent 55%)'
+              : 'radial-gradient(circle at 70% 60%, var(--color-terracotta), transparent 50%)';
+          if (isMobile && scrollY) {
+            return (
+              <motion.div
+                key={depth}
+                className="pointer-events-none absolute inset-0 z-[2] opacity-[0.08]"
+                style={{ background: bg, y: scrollY }}
+                aria-hidden
+              />
+            );
+          }
+          return (
+            <div
+              key={depth}
+              className="pointer-events-none absolute inset-0 z-[2] opacity-[0.08]"
+              data-depth={depth}
+              style={{
+                background: bg,
+                transform: `translate(${-parallax.x * depth * 6}px, ${-parallax.y * depth * 4}px)`,
+                transition: 'transform 0.15s ease-out',
+              }}
+              aria-hidden
+            />
+          );
+        })}
 
       <motion.div
         className="absolute top-0 left-0 right-0 z-20 bg-charcoal"
@@ -184,7 +205,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
             <h1
               className={cn(
                 'font-brand tracking-[0.2em] text-cream',
-                isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'
+                isMobile ? 'text-3xl cinematic-hero-brand' : 'text-4xl md:text-5xl'
               )}
             >
               {hero.brandName}
@@ -196,7 +217,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
           <motion.p
             className={cn(
               'mt-6 max-w-md font-bn-heading text-lg leading-relaxed text-cream/90 md:text-xl',
-              isMobile && 'text-base'
+              isMobile && 'text-base cinematic-hero-subheading'
             )}
             initial={instant ? { opacity: 1, filter: 'blur(0px)' } : { opacity: 0, filter: 'blur(8px)' }}
             animate={{ opacity: 1, filter: 'blur(0px)' }}

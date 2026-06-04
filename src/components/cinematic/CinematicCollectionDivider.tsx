@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { useMobileScrollParallax } from '@/hooks/useMobileScrollParallax';
 import type { CollectionBannerSectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
@@ -17,6 +18,7 @@ interface CinematicCollectionDividerProps {
 export function CinematicCollectionDivider({ data: dataProp }: CinematicCollectionDividerProps) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
+  const { ref: parallaxRef, y: scrollY } = useMobileScrollParallax(['-16px', '16px']);
   const inView = useInView(ref, { once: true, margin: '-10% 0px' });
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
@@ -52,19 +54,26 @@ export function CinematicCollectionDivider({ data: dataProp }: CinematicCollecti
 
   return (
     <section
-      ref={ref}
+      ref={(el) => {
+        (ref as React.MutableRefObject<HTMLElement | null>).current = el;
+        (parallaxRef as React.MutableRefObject<HTMLElement | null>).current = el;
+      }}
       className="relative h-[480px] w-full overflow-hidden"
       onMouseMove={onMouseMove}
       aria-label={data.title}
     >
-      <div
+      <motion.div
         className="absolute inset-0 scale-110"
-        style={{
-          transform: instant || isMobile ? undefined : `translate(${parallax.x}px, ${parallax.y}px) scale(1.1)`,
-        }}
+        style={
+          scrollY
+            ? { y: scrollY, scale: 1.1 }
+            : instant || isMobile
+              ? { scale: 1.1 }
+              : { x: parallax.x, y: parallax.y, scale: 1.1 }
+        }
       >
         <HomepageSectionImage src={imageUrl} alt={data.title} sizes="100vw" priority />
-      </div>
+      </motion.div>
 
       <div
         className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/25"

@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/Toast';
 import { resolveProductImageUrl } from '@/lib/default-images';
 import { getProductBySlug } from '@/lib/products-data';
 import { cardDisplayToCartItem } from '@/lib/cart-helpers';
+import { haptic } from '@/lib/haptic';
 import {
   AutoRotateProductImage,
   type ProductCardGalleryImage,
@@ -42,6 +43,7 @@ interface ProductCardProps {
   editorial?: boolean;
   /** Stagger auto-rotation start across a grid */
   index?: number;
+  imagePriority?: boolean;
 }
 
 const BADGE_BY_LABEL: Record<string, { type: Exclude<ProductType, 'simple'> }> = {
@@ -56,6 +58,7 @@ export function ProductCard({
   layout = 'normal',
   editorial = false,
   index = 0,
+  imagePriority = false,
 }: ProductCardProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -121,12 +124,14 @@ export function ProductCard({
   }
 
   function handleAddToBag(e: React.MouseEvent) {
+    haptic.medium();
     e.preventDefault();
     e.stopPropagation();
     if (addProductToCart()) showToast(PDP.toastAdded);
   }
 
   function handleBuyNow(e: React.MouseEvent) {
+    haptic.medium();
     e.preventDefault();
     e.stopPropagation();
     if (addProductToCart()) router.push('/cart');
@@ -142,6 +147,7 @@ export function ProductCard({
     >
       <Link
         href={product.href}
+        onClick={() => haptic.light()}
         className={cn(
           'block relative overflow-hidden rounded-sm bg-cream pattern-overlay-dark',
           'shadow-md transition-shadow duration-[400ms] ease-out',

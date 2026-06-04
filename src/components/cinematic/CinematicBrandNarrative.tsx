@@ -65,7 +65,7 @@ export function CinematicBrandNarrative({ data: dataProp }: CinematicBrandNarrat
   }, []);
 
   useEffect(() => {
-    if (isMobile || reduced) return;
+    if (reduced) return;
     const unsub = progress.on('change', (v) => {
       setActiveStage(Math.min(2, Math.max(0, Math.floor(v))));
     });
@@ -73,27 +73,6 @@ export function CinematicBrandNarrative({ data: dataProp }: CinematicBrandNarrat
   }, [progress, isMobile, reduced]);
 
   const instant = !!reduced;
-
-  if (!instant && isMobile) {
-    return (
-      <section className="bg-[#f0ebe3] px-6 py-16 md:hidden">
-        <div className="space-y-12">
-          {phases.map((phase, i) => (
-            <article key={i} className="space-y-4">
-              {phase.image && isUsableImageUrl(phase.image.url) && (
-                <div className="relative aspect-[4/3] overflow-hidden rounded-sm">
-                  <HomepageSectionImage src={phase.image.url} alt={phase.image.alt || phase.heading} sizes="100vw" />
-                </div>
-              )}
-              <p className="font-bn-body text-[10px] uppercase tracking-[0.4em] text-mustard">{phase.eyebrow}</p>
-              <h2 className="font-bn-heading text-xl font-semibold text-charcoal">{phase.heading}</h2>
-              <p className="font-bn-body text-sm leading-relaxed text-charcoal/80">{phase.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   if (instant) {
     return (

@@ -19,6 +19,7 @@ export interface AutoRotateProductImageProps {
   rotationInterval?: number;
   staggerOffset?: number;
   priority?: boolean;
+  sizes?: string;
   productSlug?: string;
   categorySlug?: string;
 }
