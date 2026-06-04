@@ -71,15 +71,17 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
       if (reduced || isMobile) return;
       const rect = sectionRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      setMouse({ x: mx, y: my });
 
       const next = cardRefs.current.map((el) => {
         if (!el) return { x: 0, y: 0 };
         const cr = el.getBoundingClientRect();
         const cx = cr.left + cr.width / 2 - rect.left;
         const cy = cr.top + cr.height / 2 - rect.top;
-        const dx = mouse.x - cx;
-        const dy = mouse.y - cy;
+        const dx = mx - cx;
+        const dy = my - cy;
         const dist = Math.hypot(dx, dy);
         if (dist > 200) return { x: 0, y: 0 };
         const pull = Math.min(12, ((200 - dist) / 200) * 12);
@@ -88,7 +90,7 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
       });
       setOffsets(next);
     },
-    [reduced, isMobile, mouse.x, mouse.y]
+    [reduced, isMobile]
   );
 
   const pairs = useMemo(() => nearestPairs(slots.length), [slots.length]);

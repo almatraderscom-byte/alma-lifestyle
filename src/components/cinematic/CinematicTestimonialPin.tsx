@@ -62,9 +62,29 @@ export function CinematicTestimonialPin({ data: dataProp }: CinematicTestimonial
     return () => unsub();
   }, [progress, isMobile, reduced, items.length]);
 
-  const instant = !!reduced || isMobile;
+  const instant = !!reduced;
 
-  if (instant) {
+  if (!instant && isMobile) {
+    return (
+      <section className="bg-cream px-6 py-16 md:hidden">
+        <h2 className="mb-10 text-center font-bn-heading text-2xl font-bold text-charcoal">{data.title}</h2>
+        <div className="space-y-8">
+          {items.map((item, i) => (
+            <article key={item.id} className="min-h-[400px] rounded-sm border border-border-subtle p-6">
+              <p className="font-bn-body text-[10px] uppercase tracking-[0.35em] text-mustard">
+                TESTIMONIAL · 0{i + 1}/{String(items.length).padStart(2, '0')}
+              </p>
+              <p className="mt-3 text-mustard" aria-label={`${item.rating} stars`}>{'★'.repeat(item.rating)}</p>
+              <blockquote className="mt-4 font-bn-heading text-xl text-charcoal">&ldquo;{item.text}&rdquo;</blockquote>
+              <p className="mt-4 font-bn-body text-sm italic text-charcoal/70">{item.name} · {item.city}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (instant || isMobile) {
     return (
       <section className="bg-cream px-6 py-16 md:px-12">
         <h2 className="mb-10 text-center font-bn-heading text-3xl font-bold text-charcoal">{data.title}</h2>
