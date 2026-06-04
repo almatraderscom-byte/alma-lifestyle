@@ -200,7 +200,6 @@ export function getDefaultHomepageConfig(): HomepageConfig {
         title: COMMUNITY_SECTION.title,
         subtitle: COMMUNITY_SECTION.subtitle,
         instagramUrl: COMMUNITY_SECTION.instagramUrl,
-        hideUntilPhotosAdded: false,
         tiles: COMMUNITY_SECTION.tiles.map((t) => ({
           id: t.id,
           bgClass: t.bg as CategoryColorClass,
@@ -355,6 +354,24 @@ export function saveDraftHomepageConfig(config: HomepageConfig): void {
 export function isPreviewMode(): boolean {
   if (!isBrowser()) return false;
   return new URLSearchParams(window.location.search).get('preview') === 'true';
+}
+
+/** Admin iframe preview with `?preview=true&cinematic=1` — renders cinematic layout. */
+export function isCinematicPreviewMode(): boolean {
+  if (!isBrowser()) return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('preview') === 'true' && params.get('cinematic') === '1';
+}
+
+/** Whether the customer-facing cinematic homepage layout should render. */
+export function shouldShowCinematicHomepage(
+  config: HomepageConfig,
+  options: { editMode: boolean; preview: boolean }
+): boolean {
+  const modeOn = config.cinematicMode ?? true;
+  if (!modeOn) return false;
+  if (isCinematicPreviewMode()) return true;
+  return !options.editMode && !options.preview;
 }
 
 /** Config for storefront: draft when ?preview=true, else saved, else defaults */

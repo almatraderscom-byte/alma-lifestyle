@@ -5,9 +5,15 @@ import { useEffect, useState, type ReactNode } from 'react';
 import {
   getDraftHomepageConfig,
   getSortedEnabledSections,
+  isCinematicPreviewMode,
   isPreviewMode,
   resolveFeaturedProducts,
+  shouldShowCinematicHomepage,
 } from '@/lib/homepage-config';
+import {
+  CINEMATIC_DRAFT_EVENT,
+  getDraftCinematicContent,
+} from '@/lib/cinematic-preview-draft';
 import type { HomepageConfig, HomepageSectionConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
 import type { CinematicContent } from '@/lib/cinematic-content-types';
@@ -307,10 +313,15 @@ export function HomePageRenderer({
   cinematicContent,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
+  const [liveCinematicContent, setLiveCinematicContent] = useState(cinematicContent);
 
   useEffect(() => {
     setConfig(initialConfig);
   }, [initialConfig]);
+
+  useEffect(() => {
+    setLiveCinematicContent(cinematicContent);
+  }, [cinematicContent]);
 
   useEffect(() => {
     if (!isPreviewMode()) return;
@@ -331,11 +342,29 @@ export function HomePageRenderer({
     };
   }, [initialConfig]);
 
+  useEffect(() => {
+    if (!isCinematicPreviewMode()) return;
+
+    function refreshCinematicDraft() {
+      const draft = getDraftCinematicContent();
+      setLiveCinematicContent(draft ?? cinematicContent);
+    }
+
+    refreshCinematicDraft();
+    window.addEventListener(CINEMATIC_DRAFT_EVENT, refreshCinematicDraft);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'alma-cinematic-draft') refreshCinematicDraft();
+    });
+    return () => {
+      window.removeEventListener(CINEMATIC_DRAFT_EVENT, refreshCinematicDraft);
+    };
+  }, [cinematicContent]);
+
   const sections = getSortedEnabledSections(config);
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
-  const cinematicActive = (config.cinematicMode ?? true) && !editMode && !preview;
-  const insertAfter = buildInsertAfter(extras, cinematicActive, cinematicContent);
+  const showCinematic = shouldShowCinematicHomepage(config, { editMode, preview });
+  const insertAfter = buildInsertAfter(extras, showCinematic, liveCinematicContent);
   const byId = sectionMap(sections);
   const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
 
@@ -381,13 +410,13 @@ export function HomePageRenderer({
     appendExtras(blocks, sectionId);
   }
 
-  if ((config.cinematicMode ?? true) && !editMode && !preview) {
+  if (showCinematic) {
     const cinematicBlocks: ReactNode[] = [];
 
     cinematicBlocks.push(
       <CinematicAssetPreload key="cinematic-preload" />,
       <CinematicLoadingOverlay key="cinematic-overlay" />,
-      <CinematicHero key="cinematic-hero" content={cinematicContent?.hero} />
+      <CinematicHero key="cinematic-hero" content={liveCinematicContent?.hero} />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-hero-marquee" from="charcoal" to="cream" />);
 
@@ -404,7 +433,11 @@ export function HomePageRenderer({
 
     cinematicBlocks.push(<ColorWashBridge key="wash-ocean-chapters" from="warm-white" to="warm-white" />);
     cinematicBlocks.push(
-      <PinnedChaptersSection key="pinned-chapters" chapterProducts={chapterProducts} content={cinematicContent?.chapters} />
+      <PinnedChaptersSection
+        key="pinned-chapters"
+        chapterProducts={chapterProducts}
+        content={liveCinematicContent?.chapters}
+      />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-chapters-brand" from="warm-white" to="cream" />);
 
@@ -423,10 +456,13 @@ export function HomePageRenderer({
     renderCinematicEnabledSection(cinematicBlocks, 'trust');
 
     cinematicBlocks.push(<ColorWashBridge key="wash-trust-closing" from="cream" to="charcoal" />);
-    cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" content={cinematicContent?.closing} />);
+    cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" content={liveCinematicContent?.closing} />);
 
     return (
-      <HomepageEditModeProvider editMode={false}>{cinematicBlocks}</HomepageEditModeProvider>
+      <HomepageEditModeProvider editMode={isCinematicPreviewMode() ? editMode : false}>
+        {isCinematicPreviewMode() && editMode && <HomepageEditBanner />}
+        {cinematicBlocks}
+      </HomepageEditModeProvider>
     );
   }
 
