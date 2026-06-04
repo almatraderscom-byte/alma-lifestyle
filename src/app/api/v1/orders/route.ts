@@ -18,7 +18,9 @@ import {
   generateOrderNumber,
   getOrders,
 } from '@/server/db/queries/orders';
-import { getProductBySlug, getProductById } from '@/server/db/queries/products';
+import { getProductById } from '@/server/db/queries/products';
+import { isDatabaseUuid } from '@/lib/admin-ids';
+import { ensureCatalogProductForOrder } from '@/server/db/queries/catalog-order-products';
 import { getProductsLivePrices } from '@/server/db/queries/product-prices';
 import { getBrandId } from '@/server/db/brand';
 import { apiError, apiSuccess, apiUnauthorized } from '@/server/api/response';
@@ -107,16 +109,33 @@ export async function POST(request: NextRequest) {
     const brandId = await getBrandId();
     const orderNumber = await generateOrderNumber();
 
+    const cartKeys = parsed.data.items.map((item) => {
+      if (item.productId && !isDatabaseUuid(item.productId)) {
+        return item.productId;
+      }
+      return item.productSlug ?? item.productId ?? '';
+    });
+
+    const livePricesByCartKey = await getProductsLivePrices(cartKeys.filter(Boolean));
+
     const resolvedItems = await Promise.all(
-      parsed.data.items.map(async (item) => {
-        let productId = item.productId;
-        if (!productId && item.productSlug) {
-          const p = await getProductBySlug(item.productSlug);
-          productId = p?.id;
+      parsed.data.items.map(async (item, index) => {
+        const cartKey = cartKeys[index];
+        const slug =
+          item.productSlug ??
+          (item.productId && !isDatabaseUuid(item.productId) ? item.productId : undefined);
+
+        let productId =
+          item.productId && isDatabaseUuid(item.productId) ? item.productId : undefined;
+
+        if (!productId && slug) {
+          productId = await ensureCatalogProductForOrder(slug);
         }
+
         if (!productId) {
           throw new Error(`Product not found: ${item.productTitle}`);
         }
+
         const product = await getProductById(productId);
         if (!product) throw new Error(`Product not found: ${productId}`);
 
@@ -124,12 +143,14 @@ export async function POST(request: NextRequest) {
           ? product.product_variants?.find((v) => v.id === item.variantId)
           : product.product_variants?.[0];
 
+        const live = livePricesByCartKey[cartKey];
+
         return {
           productId,
           variantId: variant?.id ?? null,
           quantity: item.quantity,
-          unitPriceBdt: item.unitPriceBdt,
-          productTitle: item.productTitle || product.title,
+          unitPriceBdt: live?.price ?? item.unitPriceBdt,
+          productTitle: live?.title ?? (item.productTitle || product.title),
           productSku: item.productSku || product.sku,
           variantSize: variant?.size ?? null,
           variantColor: variant?.color ?? null,

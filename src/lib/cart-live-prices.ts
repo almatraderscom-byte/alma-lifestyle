@@ -1,4 +1,5 @@
 import type { CartItem } from '@/context/CartContext';
+import { getStorefrontPreviewOrigin } from '@/lib/storefront-preview-url';
 
 export interface LivePriceEntry {
   price: number;
@@ -17,10 +18,11 @@ export async function fetchLiveCartPrices(
 
   const unique = [...new Set(productIds)];
   try {
-    const res = await fetch('/api/v1/products/prices', {
+    const res = await fetch(`${getStorefrontPreviewOrigin()}/api/v1/products/prices`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: unique }),
+      cache: 'no-store',
     });
     if (!res.ok) return {};
     const json = (await res.json()) as { data?: { prices?: LivePriceMap }; prices?: LivePriceMap };

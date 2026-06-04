@@ -79,7 +79,22 @@ function applyCacheHeaders(pathname: string, response: NextResponse): NextRespon
   return response;
 }
 
+/** Canonical host — avoids apex SSL issues and keeps admin preview on www. */
+function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
+  const host = request.headers.get('host')?.split(':')[0]?.toLowerCase();
+  if (host === 'almatraders.com') {
+    const url = request.nextUrl.clone();
+    url.hostname = 'www.almatraders.com';
+    url.protocol = 'https:';
+    return NextResponse.redirect(url, 308);
+  }
+  return null;
+}
+
 export function middleware(request: NextRequest) {
+  const canonical = redirectToCanonicalHost(request);
+  if (canonical) return canonical;
+
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/v1')) {
