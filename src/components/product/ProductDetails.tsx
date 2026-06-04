@@ -6,6 +6,7 @@ import { PDP } from '@/lib/content';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
+import { fbPixel } from '@/lib/analytics/fb-pixel';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
   formatBdtPrice,

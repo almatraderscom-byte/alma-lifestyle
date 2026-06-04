@@ -1,5 +1,6 @@
 'use client';
 
+import { fbPixel } from '@/lib/analytics/fb-pixel';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -22,7 +23,14 @@ export function ConfirmationPageContent() {
     setReady(true);
     if (!loaded) {
       router.replace('/cart');
+      return;
     }
+    fbPixel.track('Purchase', {
+      value: loaded.total,
+      currency: 'BDT',
+      content_ids: loaded.items.map((i) => i.slug),
+      num_items: loaded.items.reduce((n, i) => n + i.quantity, 0),
+    });
   }, [router]);
 
   if (!ready || !order) {
