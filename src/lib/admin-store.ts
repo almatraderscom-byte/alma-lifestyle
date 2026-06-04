@@ -458,7 +458,10 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function saveCategory(cat: AdminCategory): Promise<AdminCategory> {
-  if (shouldUseApi()) return adminApi.saveCategoryApi(cat, !UUID_RE.test(cat.id));
+  if (shouldUseApi()) {
+    const existing = (await getCategories()).some((c) => c.id === cat.id);
+    return adminApi.saveCategoryApi(cat, !existing);
+  }
   const items = getCategoriesLocal();
   items.push(cat);
   writeJson(KEYS.categories, items);

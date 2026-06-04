@@ -33,6 +33,7 @@ export type ProductCardExtras = {
   typeLabels?: string[];
   galleryImages?: ProductCardGalleryImage[];
   aspectRatio?: '3/4' | '1/1';
+  categorySlug?: string;
 };
 
 interface ProductCardProps {
@@ -76,7 +77,7 @@ export function ProductCard({
 
   const gallery = useMemo(() => {
     const catalog = getProductBySlug(productSlug);
-    const categorySlug = catalog?.categorySlug;
+    const categorySlug = product.categorySlug ?? catalog?.categorySlug;
     const imgs = product.galleryImages;
     const base =
       imgs && imgs.length > 0
@@ -86,7 +87,7 @@ export function ProductCard({
       ...img,
       url: resolveProductImageUrl(img.url, productSlug, categorySlug),
     }));
-  }, [product.galleryImages, product.id, product.bgClass, productSlug]);
+  }, [product.galleryImages, product.id, product.bgClass, productSlug, product.categorySlug]);
 
   const catalogProduct = useMemo(
     () => getProductBySlug(productSlug),
@@ -163,7 +164,7 @@ export function ProductCard({
             staggerOffset={staggerOffset}
             priority={index < 4}
             productSlug={productSlug}
-            categorySlug={catalogProduct?.categorySlug}
+            categorySlug={product.categorySlug ?? catalogProduct?.categorySlug}
           />
         </div>
 
@@ -208,7 +209,7 @@ export function ProductCard({
       </Link>
 
       <div className="pt-4 flex flex-col flex-1 gap-2">
-        <Link href={product.href} prefetch={index < 4}>
+        <Link href={product.href}>
           <h3
             className={cn(
               'line-clamp-2 leading-snug transition-colors duration-[400ms] ease-out',

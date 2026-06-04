@@ -225,13 +225,44 @@ export function getProductBySlug(slug: string): CatalogProduct | undefined {
   return CATALOG_PRODUCTS.find((p) => p.slug === slug);
 }
 
-/** Apply static catalog fields (e.g. customLayout) when the live DB row omits them. */
+function findStaticCatalogMatch(product: CatalogProduct): CatalogProduct | undefined {
+  const bySlug = getProductBySlug(product.slug);
+  if (bySlug) return bySlug;
+  const title = product.title.toLowerCase();
+  if (
+    title.includes('মুর্দা') ||
+    title.includes('মশারি') ||
+    title.includes('murda') ||
+    title.includes('moshari')
+  ) {
+    return getProductBySlug('smart-murda-moshari');
+  }
+  return undefined;
+}
+
+/** Apply static catalog fields (images, layout) when the live DB row omits them. */
 export function mergeStaticProductOverrides(product: CatalogProduct): CatalogProduct {
-  const staticProduct = getProductBySlug(product.slug);
+  const staticProduct = findStaticCatalogMatch(product);
   if (!staticProduct) return product;
+
+  const hasUploadedImage = (product.images ?? []).some((img) => {
+    const url = img.url?.trim() ?? '';
+    return (
+      url.startsWith('/') ||
+      url.includes('.storage.') ||
+      url.includes('supabase.co')
+    );
+  });
+
   return {
     ...product,
     ...(staticProduct.customLayout ? { customLayout: staticProduct.customLayout } : {}),
+    ...(staticProduct.categorySlug && product.categorySlug !== staticProduct.categorySlug
+      ? { categorySlug: staticProduct.categorySlug, categoryName: staticProduct.categoryName }
+      : {}),
+    ...(!hasUploadedImage && staticProduct.images?.length
+      ? { images: staticProduct.images }
+      : {}),
   };
 }
 
@@ -399,6 +430,7 @@ export function toCardProduct(
   typeLabels?: string[];
   galleryImages?: { id: string; bgClass: string; url?: string }[];
   aspectRatio?: '3/4' | '1/1';
+  categorySlug?: CategorySlug;
 } {
   const isDesignGroup = catalogIsDesignGroupCard(product);
   return {
@@ -423,6 +455,7 @@ export function toCardProduct(
       url,
     })),
     aspectRatio: product.aspectRatio,
+    categorySlug: product.categorySlug,
   };
 }
 
