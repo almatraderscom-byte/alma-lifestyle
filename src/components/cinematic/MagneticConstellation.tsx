@@ -7,6 +7,8 @@ import { AutoRotateProductImage } from '@/components/product/AutoRotateProductIm
 import type { OceanProduct } from '@/components/home/FloatingCollectionOcean';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { cn } from '@/lib/utils';
+import { TiltSurface } from '@/components/cinematic/TiltSurface';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 
 interface MagneticConstellationProps {
   products: OceanProduct[];
@@ -113,7 +115,7 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
                 <AutoRotateProductImage
                   images={product.galleryImages ?? [{ id: product.id, bgClass: product.bgClass }]}
                   alt={product.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover cinematic-image-reveal"
                   productSlug={product.slug}
                 />
               </div>
@@ -189,7 +191,8 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
                 x: { duration: 0.15 },
               }}
             >
-              <Link
+              <TiltSurface>
+              <CinematicLink
                 href={product.href}
                 data-cursor="ring"
                 className={cn(
@@ -205,7 +208,7 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
                   <AutoRotateProductImage
                     images={product.galleryImages ?? [{ id: product.id, bgClass: product.bgClass }]}
                     alt={product.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover cinematic-image-reveal"
                     productSlug={product.slug}
                   />
                 </div>
@@ -213,7 +216,8 @@ export function MagneticConstellation({ products }: MagneticConstellationProps) 
                   <p className="font-bn-body text-xs text-charcoal line-clamp-1">{product.title}</p>
                   <p className="font-bn-heading text-sm">{formatBdtPrice(product.price)}</p>
                 </div>
-              </Link>
+              </CinematicLink>
+            </TiltSurface>
             </motion.div>
           );
         })}

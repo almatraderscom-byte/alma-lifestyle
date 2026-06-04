@@ -386,6 +386,14 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
       <Input label="Section title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
       <Input label="Subtitle" value={data.subtitle} onChange={(e) => onChange({ ...data, subtitle: e.target.value })} />
       <Input label="Instagram URL" value={data.instagramUrl} onChange={(e) => onChange({ ...data, instagramUrl: e.target.value })} />
+      <label className="flex items-center gap-2 text-sm text-neutral-700">
+        <input
+          type="checkbox"
+          checked={data.hideUntilPhotosAdded ?? false}
+          onChange={(e) => onChange({ ...data, hideUntilPhotosAdded: e.target.checked })}
+        />
+        Hide Community section until photos are added
+      </label>
       <p className="text-sm font-medium text-neutral-800">
         Community photos ({tiles.length} slots — grid order left-to-right)
       </p>

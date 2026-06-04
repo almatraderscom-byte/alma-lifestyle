@@ -200,6 +200,7 @@ export function getDefaultHomepageConfig(): HomepageConfig {
         title: COMMUNITY_SECTION.title,
         subtitle: COMMUNITY_SECTION.subtitle,
         instagramUrl: COMMUNITY_SECTION.instagramUrl,
+        hideUntilPhotosAdded: false,
         tiles: COMMUNITY_SECTION.tiles.map((t) => ({
           id: t.id,
           bgClass: t.bg as CategoryColorClass,

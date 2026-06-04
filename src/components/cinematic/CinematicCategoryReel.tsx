@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { CategoriesSectionData, CategoryCardConfig } from '@/lib/homepage-config-types';
@@ -8,6 +8,8 @@ import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { getDefaultImageForHint } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
+import { TiltSurface } from '@/components/cinematic/TiltSurface';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 
 interface CinematicCategoryReelProps {
   data?: CategoriesSectionData;
@@ -31,6 +33,7 @@ function CategoryCard({
   const imageUrl = category.imageUrl || getDefaultImageForHint(category.imageHint);
 
   return (
+    <TiltSurface>
     <article
       className={cn(
         'group relative mx-3 h-[520px] shrink-0 snap-center overflow-hidden rounded-sm md:h-[600px]',
@@ -46,7 +49,7 @@ function CategoryCard({
           alt={category.displayName}
           sizes="(max-width:768px) 85vw, 42vw"
           className={cn(
-            'h-full w-full object-cover transition-transform duration-700 ease-out',
+            'cinematic-image-reveal h-full w-full object-cover transition-transform duration-700 ease-out',
             !isMobile && !reduced && 'group-hover:scale-105'
           )}
         />
@@ -55,7 +58,7 @@ function CategoryCard({
         className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/55 transition-opacity duration-500 group-hover:to-black/65"
         aria-hidden
       />
-      <div className="relative flex h-full flex-col justify-between p-8">
+      <div className="relative flex h-full flex-col justify-between p-8 transition-all duration-500 md:group-hover:rounded-sm md:group-hover:border md:group-hover:border-[rgba(245,235,221,0.25)] md:group-hover:bg-[rgba(245,235,221,0.15)] md:group-hover:backdrop-blur-[12px] md:group-hover:saturate-[180%]">
         <p className="font-bn-body text-[10px] uppercase tracking-[0.4em] text-mustard">
           0{index + 1} · CATEGORY
         </p>
@@ -64,16 +67,17 @@ function CategoryCard({
             {category.displayName}
           </h2>
           <p className="max-w-sm font-bn-body text-sm leading-relaxed text-cream/85">{category.subtitle}</p>
-          <Link
+          <CinematicLink
             href={category.href}
             data-cursor="ring"
             className="inline-flex min-h-11 items-center font-bn-body text-sm text-cream underline decoration-mustard decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-mustard"
           >
             দেখুন →
-          </Link>
+          </CinematicLink>
         </div>
       </div>
     </article>
+    </TiltSurface>
   );
 }
 

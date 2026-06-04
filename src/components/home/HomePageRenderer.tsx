@@ -17,6 +17,8 @@ import {
 } from '@/components/home/FloatingCollectionOcean';
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { WhyChooseAlma } from '@/components/home/WhyChooseAlma';
+import { CinematicWhyAlma } from '@/components/cinematic/CinematicWhyAlma';
+import { CinematicProcessTimeline } from '@/components/cinematic/CinematicProcessTimeline';
 import { FamilyMatchingShowcase } from '@/components/home/FamilyMatchingShowcase';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { BrandStory } from '@/components/home/BrandStory';
@@ -26,6 +28,7 @@ import { ReviewsSection } from '@/components/home/ReviewsSection';
 import { CollectionBannerEditorial } from '@/components/home/CollectionBannerEditorial';
 import { CommunityGrid } from '@/components/home/CommunityGrid';
 import { HomepageFAQ } from '@/components/home/HomepageFAQ';
+import { CinematicFAQ } from '@/components/cinematic/CinematicFAQ';
 import { TrustStrip } from '@/components/home/TrustStrip';
 import { HomepageCTA } from '@/components/home/HomepageCTA';
 import { CustomerErrorBoundary } from '@/components/ui/CustomerErrorBoundary';
@@ -50,6 +53,8 @@ import { CinematicTestimonialPin } from '@/components/cinematic/CinematicTestimo
 import { CinematicCollectionDivider } from '@/components/cinematic/CinematicCollectionDivider';
 import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommunityMosaic';
 import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
+import { CinematicFeaturedScroll } from '@/components/cinematic/CinematicFeaturedScroll';
+import { CinematicFamilyShowcase } from '@/components/cinematic/CinematicFamilyShowcase';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -79,7 +84,10 @@ type ExtraBlock = {
   node: ReactNode;
 };
 
-function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partial<
+function buildInsertAfter(
+  extras: NonNullable<HomepageConfig['extras']>,
+  cinematic = false
+): Partial<
   Record<HomepageSectionId, ExtraBlock[]>
 > {
   const marqueeExtras: ExtraBlock[] = [
@@ -87,7 +95,7 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
       key: 'why-choose-alma',
       sectionId: 'why-choose-alma',
       sectionName: 'Why Choose ALMA',
-      node: <WhyChooseAlma />,
+      node: cinematic ? <CinematicWhyAlma /> : <WhyChooseAlma />,
     },
   ];
   if (extras.familyMatching.show !== false) {
@@ -95,7 +103,7 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
       key: 'family-matching',
       sectionId: 'family-matching',
       sectionName: 'Family Matching',
-      node: <FamilyMatchingShowcase data={extras.familyMatching} />,
+      node: cinematic ? <CinematicFamilyShowcase data={extras.familyMatching} /> : <FamilyMatchingShowcase data={extras.familyMatching} />,
     });
   }
 
@@ -105,7 +113,7 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
       key: 'our-process',
       sectionId: 'our-process',
       sectionName: 'Our Process',
-      node: <OurProcess data={extras.ourProcess} />,
+      node: cinematic ? <CinematicProcessTimeline data={extras.ourProcess} /> : <OurProcess data={extras.ourProcess} />,
     });
   }
 
@@ -117,7 +125,7 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
         key: 'homepage-faq',
         sectionId: 'homepage-faq',
         sectionName: 'FAQ',
-        node: <HomepageFAQ />,
+        node: cinematic ? <CinematicFAQ /> : <HomepageFAQ />,
       },
     ],
     trust: [
@@ -239,7 +247,7 @@ function renderCinematicSectionContent(
       return <CinematicCategoryReel data={section.data} />;
     case 'featured':
       return (
-        <FeaturedProductsSection
+        <CinematicFeaturedScroll
           data={section.data}
           products={preview ? resolveFeaturedProducts(section.data) : featuredProducts}
         />
@@ -301,7 +309,8 @@ export function HomePageRenderer({
   const sections = getSortedEnabledSections(config);
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
-  const insertAfter = buildInsertAfter(extras);
+  const cinematicActive = (config.cinematicMode ?? true) && !editMode && !preview;
+  const insertAfter = buildInsertAfter(extras, cinematicActive);
   const byId = sectionMap(sections);
   const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
 

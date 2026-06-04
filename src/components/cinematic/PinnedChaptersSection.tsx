@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useReducedMotion, useScroll, useTransform } from 'framer-motion';
@@ -109,13 +109,13 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                   </div>
                 )}
                 {'cta' in stage && stage.cta && (
-                  <Link
+                  <CinematicLink
                     href={stage.cta.href}
                     data-cursor="ring"
                     className="mt-6 inline-flex min-h-12 items-center rounded-sm border border-cream px-6 font-bn-body text-sm font-semibold text-cream transition-colors hover:bg-cream hover:text-charcoal"
                   >
                     {stage.cta.label}
-                  </Link>
+                  </CinematicLink>
                 )}
                 <p className="mt-6 font-bn-heading text-sm text-cream/90">{stage.imageLabel}</p>
               </div>
@@ -173,7 +173,7 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                 )}
               </div>
               {activeStage === index && chapterProducts[index] && index !== 3 && (
-                <Link
+                <CinematicLink
                   href={`/products/${chapterProducts[index]!.slug}`}
                   data-cursor="ring"
                   className="absolute inset-0 z-10"
@@ -212,13 +212,13 @@ export function PinnedChaptersSection({ chapterProducts = [] }: PinnedChaptersSe
                 {stage.body}
               </p>
               {'cta' in stage && stage.cta && (
-                <Link
+                <CinematicLink
                   href={stage.cta.href}
                   data-cursor="ring"
                   className="mt-8 inline-flex min-h-12 items-center rounded-sm border-2 border-mustard px-8 font-bn-body text-sm font-semibold text-charcoal transition-colors hover:bg-mustard hover:text-charcoal focus-visible:outline-2 focus-visible:outline-mustard"
                 >
                   {stage.cta.label}
-                </Link>
+                </CinematicLink>
               )}
             </div>
           ))}

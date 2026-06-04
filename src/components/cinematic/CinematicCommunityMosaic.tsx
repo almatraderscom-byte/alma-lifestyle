@@ -6,11 +6,102 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import type { CommunitySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
-import { getDefaultImageForHint } from '@/lib/default-images';
+import { isUsableImageUrl } from '@/lib/homepage-image';
 import { cn } from '@/lib/utils';
 
 interface CinematicCommunityMosaicProps {
   data?: CommunitySectionData;
+}
+
+function hasRealPhotos(data: CommunitySectionData): boolean {
+  return data.tiles.some((tile) => isUsableImageUrl(tile.imageUrl));
+}
+
+function ComingSoonIllustration() {
+  return (
+    <svg viewBox="0 0 320 200" className="mx-auto h-40 w-full max-w-md text-mustard" aria-hidden>
+      <motion.rect
+        x="40"
+        y="30"
+        width="120"
+        height="90"
+        rx="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        initial={{ pathLength: 0, opacity: 0.5 }}
+        whileInView={{ pathLength: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
+      />
+      <motion.rect
+        x="110"
+        y="50"
+        width="120"
+        height="90"
+        rx="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        initial={{ pathLength: 0, opacity: 0.5 }}
+        whileInView={{ pathLength: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1, delay: 0.15 }}
+      />
+      <motion.rect
+        x="170"
+        y="20"
+        width="110"
+        height="85"
+        rx="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        initial={{ pathLength: 0, opacity: 0.5 }}
+        whileInView={{ pathLength: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1, delay: 0.3 }}
+      />
+    </svg>
+  );
+}
+
+function CommunityComingSoon({ data }: { data: CommunitySectionData }) {
+  const reduced = useReducedMotion();
+  const instant = !!reduced;
+
+  return (
+    <section className="relative overflow-hidden bg-cream px-6 py-24 md:px-12" aria-label="Community coming soon">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(45deg, var(--color-mustard), var(--color-mustard) 1px, transparent 1px, transparent 12px)',
+        }}
+        aria-hidden
+      />
+      <motion.div
+        className="relative mx-auto max-w-3xl text-center"
+        initial={instant ? false : { opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.7 }}
+      >
+        <ComingSoonIllustration />
+        <p className="mt-8 font-bn-body text-[10px] uppercase tracking-[0.4em] text-mustard">COMING SOON</p>
+        <h2 className="mt-4 font-bn-heading text-3xl font-bold text-charcoal md:text-4xl">
+          শীঘ্রই আসছে — Alma Community Wall
+        </h2>
+        <p className="mt-4 font-bn-body text-base text-charcoal/70">{data.subtitle}</p>
+        <Link
+          href={data.instagramUrl || '#'}
+          className="mt-8 inline-flex min-h-12 items-center font-bn-body text-sm font-semibold text-charcoal underline decoration-mustard decoration-2 underline-offset-4"
+        >
+          #ALMALifestyle দিয়ে শেয়ার করুন →
+        </Link>
+      </motion.div>
+    </section>
+  );
 }
 
 const ROTATIONS = [-2, 1, 0, 2, -1, 1, -2, 0] as const;
@@ -35,8 +126,16 @@ export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityM
     return () => mq.removeEventListener('change', update);
   }, []);
 
+  const realPhotos = hasRealPhotos(data);
+  if (!realPhotos && data.hideUntilPhotosAdded) {
+    return null;
+  }
+  if (!realPhotos) {
+    return <CommunityComingSoon data={data} />;
+  }
+
   const instant = !!reduced;
-  const tiles = data.tiles;
+  const tiles = data.tiles.filter((tile) => isUsableImageUrl(tile.imageUrl) || tile.caption);
 
   return (
     <section ref={ref} className="bg-cream px-6 py-20 md:px-12" aria-label={data.title}>
@@ -55,7 +154,6 @@ export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityM
         )}
       >
         {tiles.map((tile, index) => {
-          const imageUrl = tile.imageUrl || getDefaultImageForHint(tile.hint);
           const row = Math.floor(index / (isMobile ? 2 : 4));
           const col = index % (isMobile ? 2 : 4);
           const delay = instant ? 0 : (row + col) * 0.08;
@@ -86,7 +184,7 @@ export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityM
               >
                 <div className="relative h-full w-full overflow-hidden">
                   <HomepageSectionImage
-                    src={imageUrl}
+                    src={tile.imageUrl}
                     alt={tile.alt || tile.caption}
                     sizes="(max-width:768px) 50vw, 25vw"
                     className={cn(
@@ -95,9 +193,11 @@ export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityM
                     )}
                   />
                 </div>
-                <div className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-charcoal/80 to-transparent p-4 transition-transform duration-300 group-hover:translate-y-0">
-                  <p className="font-bn-body text-sm text-cream">{tile.caption}</p>
-                </div>
+                {tile.caption && (
+                  <div className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-charcoal/80 to-transparent p-4 transition-transform duration-300 group-hover:translate-y-0">
+                    <p className="font-bn-body text-sm text-cream">{tile.caption}</p>
+                  </div>
+                )}
               </Link>
             </motion.div>
           );

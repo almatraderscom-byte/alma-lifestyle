@@ -11,58 +11,114 @@ interface CinematicTrustPillarsProps {
   data?: TrustSectionData;
 }
 
-function ShieldIcon({ draw }: { draw: boolean }) {
+const DRAW_TRANSITION = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
+
+function TruckIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="mx-auto h-[60px] w-[60px]" aria-hidden>
-      <path
-        d="M30 6 L50 14 V28 C50 40 42 50 30 54 C18 50 10 40 10 28 V14 Z"
+    <svg viewBox="0 0 80 80" className="mx-auto h-20 w-20 text-mustard" aria-hidden>
+      <motion.path
+        d="M12 52 H48 V28 H12 Z M48 38 H62 L72 48 V52 H48 M18 56 A5 5 0 1 0 18 56 M58 56 A5 5 0 1 0 58 56"
         fill="none"
-        stroke="var(--color-mustard)"
+        stroke="currentColor"
         strokeWidth="1.5"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={draw ? 0 : 1}
-        style={{ transition: draw ? 'stroke-dashoffset 1.2s ease-out' : undefined }}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={DRAW_TRANSITION}
+      />
+      <motion.path
+        d="M8 52 H12 M72 52 H76"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ ...DRAW_TRANSITION, delay: 0.3 }}
       />
     </svg>
   );
 }
 
-function TruckIcon({ draw }: { draw: boolean }) {
+function CashIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="mx-auto h-[60px] w-[60px]" aria-hidden>
-      <path
-        d="M8 38 H38 V18 H8 Z M38 28 H48 L54 34 V38 H38 M14 42 A4 4 0 1 0 14 42 M46 42 A4 4 0 1 0 46 42"
+    <svg viewBox="0 0 80 80" className="mx-auto h-20 w-20 text-mustard" aria-hidden>
+      <motion.rect
+        x="14"
+        y="24"
+        width="52"
+        height="32"
+        rx="4"
         fill="none"
-        stroke="var(--color-mustard)"
+        stroke="currentColor"
         strokeWidth="1.5"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={draw ? 0 : 1}
-        style={{ transition: draw ? 'stroke-dashoffset 1.2s ease-out 0.2s' : undefined }}
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={DRAW_TRANSITION}
+      />
+      <motion.circle
+        cx="40"
+        cy="40"
+        r="8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ ...DRAW_TRANSITION, delay: 0.25 }}
+      />
+      <motion.path
+        d="M22 32 H30 M50 48 H58"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ ...DRAW_TRANSITION, delay: 0.4 }}
       />
     </svg>
   );
 }
 
-function HeartIcon({ draw }: { draw: boolean }) {
+function ReturnIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="mx-auto h-[60px] w-[60px]" aria-hidden>
-      <path
-        d="M30 48 C18 38 8 30 8 20 C8 14 12 10 18 10 C22 10 26 12 30 16 C34 12 38 10 42 10 C48 10 52 14 52 20 C52 30 42 38 30 48 Z"
+    <svg viewBox="0 0 80 80" className="mx-auto h-20 w-20 text-mustard" aria-hidden>
+      <motion.path
+        d="M52 24 H28 C20 24 14 30 14 38 V44 M14 44 L8 38 M14 44 L20 38"
         fill="none"
-        stroke="var(--color-mustard)"
+        stroke="currentColor"
         strokeWidth="1.5"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={draw ? 0 : 1}
-        style={{ transition: draw ? 'stroke-dashoffset 1.2s ease-out 0.4s' : undefined }}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={DRAW_TRANSITION}
+      />
+      <motion.path
+        d="M28 56 H52 C60 56 66 50 66 42 V36 M66 36 L72 42 M66 36 L60 42"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ ...DRAW_TRANSITION, delay: 0.35 }}
       />
     </svg>
   );
 }
 
-const ICONS = [ShieldIcon, TruckIcon, HeartIcon] as const;
+const ICONS = [TruckIcon, CashIcon, ReturnIcon] as const;
 
 export function CinematicTrustPillars({ data: dataProp }: CinematicTrustPillarsProps) {
   const reduced = useReducedMotion();
@@ -75,7 +131,6 @@ export function CinematicTrustPillars({ data: dataProp }: CinematicTrustPillarsP
 
   const items = data.items.slice(0, 3);
   const instant = !!reduced;
-  const draw = instant || inView;
 
   return (
     <section
@@ -96,7 +151,7 @@ export function CinematicTrustPillars({ data: dataProp }: CinematicTrustPillarsP
               className="group relative text-center"
               initial={instant ? false : { opacity: 0, y: 24 }}
               animate={instant || inView ? { opacity: 1, y: 0 } : undefined}
-              transition={{ delay: instant ? 0 : i * 0.2, duration: 0.6 }}
+              transition={{ delay: instant ? 0 : i * 0.12, duration: 0.6 }}
             >
               {i > 0 && (
                 <span
@@ -104,16 +159,22 @@ export function CinematicTrustPillars({ data: dataProp }: CinematicTrustPillarsP
                   aria-hidden
                 />
               )}
-              <div className="transition-transform duration-300 md:group-hover:-translate-y-1">
-                <Icon draw={draw} />
+              <div
+                className={cn(
+                  'relative transition-transform duration-300 md:group-hover:-translate-y-1',
+                  'md:group-hover:drop-shadow-[0_12px_24px_rgba(200,155,60,0.25)]'
+                )}
+              >
+                <Icon />
                 <h3 className="mt-6 font-bn-heading text-2xl font-semibold text-charcoal">
                   {formatBnText(item.title)}
                 </h3>
                 <motion.span
                   className="mx-auto mt-3 block h-0.5 w-6 bg-mustard"
                   initial={instant ? { scaleX: 1 } : { scaleX: 0 }}
-                  animate={draw ? { scaleX: 1 } : undefined}
-                  transition={{ delay: instant ? 0 : 1 + i * 0.15, duration: 0.5 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: instant ? 0 : 1.2 + i * 0.1, duration: 0.5 }}
                 />
                 <p className="mx-auto mt-4 max-w-xs font-bn-body text-base leading-relaxed text-charcoal/70">
                   {formatBnText(item.text)}

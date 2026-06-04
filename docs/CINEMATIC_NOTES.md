@@ -1,79 +1,58 @@
-# Cinematic Homepage — Engineering Notes
+# Cinematic Homepage Notes
 
-## Architecture
-- Branch where built: feat/cinematic-homepage (merged to main on 2026-06-03)
-- Entry point: HomePageRenderer.tsx checks `config.cinematicMode`
-- All cinematic components: src/components/cinematic/
-- Config: src/lib/cinematic-config.ts
+## Overview
 
-## Toggle
-- Database key: site_config.cinematic_mode_enabled
-- Admin UI: /admin/settings → Homepage tab → "Cinematic Homepage" toggle
-- Revalidation: homepage revalidates every 60s
+The Alma Lifestyle cinematic homepage is toggled via **Admin → Settings → Homepage → Cinematic Homepage** (`site_config.cinematic_mode_enabled`). When enabled, the storefront renders cinematic variants from `src/components/cinematic/` without modifying editorial components in `src/components/home/`.
 
-## Hero Video
-- Source: AI-generated via Kling 2.0 from family pink panjabi image
-- File: /public/videos/hero/hero-family-pink-loop.mp4 (~1.3 MB)
-- Poster fallback: /public/videos/hero/hero-poster.jpg (~421 KB)
-- Mobile/slow connection: poster only, no video
+## Phase 3 — WOW-Breakers + Next-Level 3D (feat/cinematic-phase-3)
 
-## Pinned Chapters
-- Outer: 2400px height (4 stages × 600px scroll)
-- Inner: position: sticky, h-screen
-- Active stage driven by useScroll progress
-- Each stage maps to a product via CINEMATIC_CHAPTER_PRODUCTS config
-- Stages clickable → product page
+### Part A — Emoji elimination
 
-## Known Pitfalls
-- Bangla text: never split by character (breaks conjuncts) — only by word
-- Above-fold: never use whileInView (IntersectionObserver miss on first paint) — use animate on mount
-- Pinned scroll: needs sufficient outer height + position: sticky inner with h-screen
-- Asset paths: use /videos/hero/* directly, NOT through next/image (Next/Image caches and can serve wrong file)
-- Vignette intensity: keep below 0.3 opacity max, otherwise product invisible
+| Section | Cinematic component | Notes |
+|---------|---------------------|-------|
+| Why Choose ALMA | `CinematicWhyAlma.tsx` | 6 custom SVG line-art icons with `pathLength` draw animation |
+| Our Process | `CinematicProcessTimeline.tsx` | Scroll-bound vertical timeline, 6 SVG step illustrations |
 
-## Performance Targets
-- Lighthouse mobile: > 65
-- Lighthouse desktop: > 80
-- First Contentful Paint: < 1.5s on 4G
-- Largest Contentful Paint: < 2.5s on 4G
+### Part B — Section elevation
 
-## Elevated Section Variants (feat/cinematic-sections-elevation)
+| Section | Cinematic component | Notes |
+|---------|---------------------|-------|
+| FAQ | `CinematicFAQ.tsx` | Editorial large typography, AnimatePresence expand |
+| Trust strip | `CinematicTrustPillars.tsx` | Truck / cash / return SVG icons, mustard underlines |
+| Featured products | `CinematicFeaturedScroll.tsx` | Horizontal scroll-snap, no pagination dots |
+| Family matching | `CinematicFamilyShowcase.tsx` | Full-bleed banner, color swatch cross-fade |
+| Community | `CinematicCommunityMosaic.tsx` | Real-photo mosaic; empty state shows “Coming soon”; `hideUntilPhotosAdded` admin toggle |
 
-When `config.cinematicMode === true`, HomePageRenderer swaps editorial components for cinematic variants. Original components in `src/components/home/` are untouched.
+### Part C — 3D / WOW amplifiers
 
-| Editorial | Cinematic Variant | Props |
-|-----------|-------------------|-------|
-| StoryMarquee | CinematicStoryStrip | `data: MarqueeSectionData` |
-| CategoryShowcase | CinematicCategoryReel | `data: CategoriesSectionData` |
-| FloatingCollectionOcean | MagneticConstellation | `products: OceanProduct[]` |
-| BrandStory | CinematicBrandNarrative | `data: BrandStorySectionData` |
-| ReviewsSection | CinematicTestimonialPin | `data: ReviewsSectionData` |
-| CollectionBannerEditorial | CinematicCollectionDivider | `data: CollectionBannerSectionData` |
-| CommunityGrid | CinematicCommunityMosaic | `data: CommunitySectionData` |
-| TrustStrip | CinematicTrustPillars | `data: TrustSectionData` |
+| Feature | Location | Desktop only |
+|---------|----------|--------------|
+| 3D card tilt | `use3DTilt.ts` + `TiltSurface.tsx` | Yes (`pointer: fine`) |
+| Page transitions | `src/app/template.tsx` + `CinematicLink.tsx` | Blur-fade; reduced motion skips |
+| Particle atmosphere | `ParticleAtmosphere.tsx` in `CinematicGlobalChrome` | Yes; disabled on mobile / slow connection |
+| Glassmorphism category overlays | `CinematicCategoryReel.tsx` | Hover on desktop |
+| Hero CTA pulse | `CinematicHero.tsx` | After 9s reveal sequence |
+| Magnetic CTAs | `useMagneticHover.ts` | Hero, closing section CTAs |
+| Image clip-path reveal | `CinematicImageRevealInit.tsx` + `.cinematic-image-reveal` | Respects reduced motion |
 
-### Cinematic flow order
-1. CinematicHero + loading overlay
-2. ColorWashBridge (charcoal → cream)
-3. CinematicStoryStrip
-4. CinematicCategoryReel
-5. ColorWashBridge (cream → warm-white)
-6. MagneticConstellation
-7. FeaturedProductsSection (if enabled)
-8. PinnedChaptersSection
-9. ColorWashBridge (warm-white → cream)
-10. CinematicBrandNarrative
-11. EditorialQuotePause
-12. CinematicCommunityMosaic
-13. CinematicTestimonialPin
-14. HeroFilmStrip
-15. CinematicCollectionDivider
-16. CinematicTrustPillars
-17. ColorWashBridge (cream → charcoal)
-18. CinematicClosingSection
+### Wiring
 
-### Mobile fallbacks
-- Sticky scroll sections (BrandNarrative, TestimonialPin) → vertical stacks on <768px
-- MagneticConstellation → 2-column product grid
-- CategoryReel → 85vw horizontal snap cards
-- All sections respect `useReducedMotion()` with static fallbacks
+- `HomePageRenderer.tsx` — `buildInsertAfter(extras, cinematicActive)` swaps FAQ, Why ALMA, Process, Family Matching
+- `renderCinematicSectionContent()` — featured, community, trust, etc.
+
+### Mobile / a11y
+
+- All cinematic components use `useReducedMotion()` where animations apply
+- 3D tilt, magnetic hover, and particles disabled on coarse pointers / mobile
+- Process timeline: vertical stack, no sticky line on mobile
+
+### QA commands
+
+```bash
+npm run build
+npm run type-check
+```
+
+### Killswitch
+
+Disable **Cinematic Homepage** in admin settings to revert to the full editorial homepage instantly.
