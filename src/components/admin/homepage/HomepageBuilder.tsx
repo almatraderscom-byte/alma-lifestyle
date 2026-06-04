@@ -43,13 +43,16 @@ import {
 } from '@/components/admin/homepage/homepage-builder-utils';
 import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/HomepageSectionErrorBoundary';
 import { HomepageUploadDiagnostics } from '@/components/admin/homepage/HomepageUploadDiagnostics';
+import { CinematicContentEditor } from '@/components/admin/homepage/CinematicContentEditor';
 import { isHomepageEditMessage } from '@/lib/homepage-edit-messages';
 
 type MobileTab = 'editor' | 'preview';
+type BuilderTab = 'sections' | 'cinematic';
 
 export function HomepageBuilder() {
   const { toast } = useAdminToast();
   const [config, setConfig] = useState<HomepageConfig>(() => getDefaultHomepageConfig());
+  const [builderTab, setBuilderTab] = useState<BuilderTab>('sections');
   const [openSection, setOpenSection] = useState<HomepageEditorSectionId | null>('hero');
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor');
   const [previewKey, setPreviewKey] = useState(0);
@@ -135,7 +138,8 @@ export function HomepageBuilder() {
         }
 
         if (sectionId === 'why-choose-alma' || sectionId === 'homepage-faq' || sectionId === 'homepage-cta') {
-          toast('This section uses fixed content (no image uploads in builder yet).', 'info');
+          setBuilderTab('cinematic');
+          toast('Edit this content in the Cinematic tab.', 'info');
           return;
         }
 
@@ -349,6 +353,34 @@ export function HomepageBuilder() {
             Last saved: {formatLastSaved(config.lastSaved)}
           </p>
         </div>
+
+        <div className="flex rounded-lg border border-neutral-200 p-0.5 text-sm">
+          <button
+            type="button"
+            className={cn(
+              'rounded-md px-3 py-1.5 font-medium transition-colors',
+              builderTab === 'sections'
+                ? 'bg-[#C97D5D] text-white'
+                : 'text-neutral-600 hover:text-neutral-900'
+            )}
+            onClick={() => setBuilderTab('sections')}
+          >
+            Sections
+          </button>
+          <button
+            type="button"
+            className={cn(
+              'rounded-md px-3 py-1.5 font-medium transition-colors',
+              builderTab === 'cinematic'
+                ? 'bg-[#C97D5D] text-white'
+                : 'text-neutral-600 hover:text-neutral-900'
+            )}
+            onClick={() => setBuilderTab('cinematic')}
+          >
+            Cinematic
+          </button>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="secondary"
@@ -402,6 +434,10 @@ export function HomepageBuilder() {
             mobileTab === 'preview' && 'hidden lg:block'
           )}
         >
+          {builderTab === 'cinematic' ? (
+            <CinematicContentEditor onSaved={() => setPreviewKey((k) => k + 1)} />
+          ) : (
+            <>
           <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
             <span className="font-semibold text-[#C97D5D]">Visual editor:</span> click any block in the
             preview (desktop) or use the panels below.
@@ -551,6 +587,8 @@ export function HomepageBuilder() {
           </div>
 
           <HomepageUploadDiagnostics />
+            </>
+          )}
         </div>
 
         <div className="hidden lg:flex flex-col w-[60%] bg-neutral-100">

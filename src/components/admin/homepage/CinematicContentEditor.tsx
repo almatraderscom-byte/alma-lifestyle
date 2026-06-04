@@ -1,0 +1,402 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
+import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
+import type { CinematicGradientToken } from '@/lib/cinematic-config';
+import {
+  fetchCinematicContentApi,
+  saveCinematicContentApi,
+  uploadVideoApi,
+} from '@/lib/admin-api';
+import { Input } from '@/components/admin/ui/Input';
+import { Textarea } from '@/components/admin/ui/Textarea';
+import { Select } from '@/components/admin/ui/Select';
+import { Button } from '@/components/admin/ui/Button';
+import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
+import { useAdminToast } from '@/context/AdminToastContext';
+import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
+
+const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
+  { value: 'maroon', label: 'Maroon' },
+  { value: 'terracotta', label: 'Terracotta' },
+  { value: 'mustard', label: 'Mustard' },
+  { value: 'emerald', label: 'Emerald' },
+  { value: 'emerald-deep', label: 'Emerald deep' },
+  { value: 'charcoal', label: 'Charcoal' },
+];
+
+interface CinematicContentEditorProps {
+  onSaved?: () => void;
+}
+
+export function CinematicContentEditor({ onSaved }: CinematicContentEditorProps) {
+  const { toast } = useAdminToast();
+  const [content, setContent] = useState<CinematicContent>(() => getDefaultCinematicContent());
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  useEffect(() => {
+    fetchCinematicContentApi()
+      .then(setContent)
+      .catch(() => toast('Could not load cinematic content — showing defaults', 'error'))
+      .finally(() => setLoading(false));
+  }, [toast]);
+
+  const updateHero = useCallback(
+    (patch: Partial<CinematicContent['hero']>) => {
+      setContent((prev) => ({ ...prev, hero: { ...prev.hero, ...patch } }));
+    },
+    []
+  );
+
+  const updateClosing = useCallback(
+    (patch: Partial<CinematicContent['closing']>) => {
+      setContent((prev) => ({
+        ...prev,
+        closing: {
+          ...prev.closing,
+          ...patch,
+          cta: { ...prev.closing.cta, ...patch.cta },
+        },
+      }));
+    },
+    []
+  );
+
+  const updateStage = useCallback(
+    (index: number, patch: Partial<CinematicContent['chapters']['stages'][number]>) => {
+      setContent((prev) => {
+        const stages = [...prev.chapters.stages];
+        stages[index] = {
+          ...stages[index],
+          ...patch,
+          cta: patch.cta ? { ...stages[index].cta, ...patch.cta } : stages[index].cta,
+        };
+        return { ...prev, chapters: { ...prev.chapters, stages } };
+      });
+    },
+    []
+  );
+
+  const updatePillar = useCallback(
+    (index: number, patch: Partial<CinematicContent['whyAlma']['pillars'][number]>) => {
+      setContent((prev) => {
+        const pillars = [...prev.whyAlma.pillars];
+        pillars[index] = { ...pillars[index], ...patch };
+        return { ...prev, whyAlma: { ...prev.whyAlma, pillars } };
+      });
+    },
+    []
+  );
+
+  const updateFaqItem = useCallback(
+    (index: number, patch: Partial<CinematicContent['faq']['items'][number]>) => {
+      setContent((prev) => {
+        const items = [...prev.faq.items];
+        items[index] = { ...items[index], ...patch };
+        return { ...prev, faq: { ...prev.faq, items } };
+      });
+    },
+    []
+  );
+
+  async function handleVideoUpload(file: File) {
+    setUploadingVideo(true);
+    try {
+      const url = await uploadVideoApi(file, 'cinematic/hero');
+      updateHero({ videoSrc: url });
+      toast('Hero video uploaded', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Video upload failed', 'error');
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const saved = await saveCinematicContentApi(content);
+      setContent(saved);
+      toast('Cinematic content saved — homepage revalidates within 60s', 'success');
+      onSaved?.();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Save failed', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-neutral-500 p-4">Loading cinematic content…</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
+        Edit cinematic-only copy and media. Changes appear on the live homepage after save (60s
+        revalidate).
+      </div>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Hero</h2>
+        <Input
+          label="Eyebrow"
+          value={content.hero.eyebrow}
+          onChange={(e) => updateHero({ eyebrow: e.target.value })}
+        />
+        <Textarea
+          label="Subheading"
+          rows={2}
+          value={content.hero.subheading}
+          onChange={(e) => updateHero({ subheading: e.target.value })}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="Meta left"
+            value={content.hero.metaLeft}
+            onChange={(e) => updateHero({ metaLeft: e.target.value })}
+          />
+          <Input
+            label="Meta right"
+            value={content.hero.metaRight}
+            onChange={(e) => updateHero({ metaRight: e.target.value })}
+          />
+        </div>
+        <Input
+          label="Video URL"
+          value={content.hero.videoSrc}
+          onChange={(e) => updateHero({ videoSrc: e.target.value })}
+        />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-neutral-700">Hero video file (MP4)</p>
+          <input
+            type="file"
+            accept="video/mp4"
+            disabled={uploadingVideo}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleVideoUpload(file);
+              e.target.value = '';
+            }}
+            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded file:border-0 file:bg-[#C97D5D] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
+          />
+          {uploadingVideo && <p className="text-xs text-neutral-500">Uploading video…</p>}
+        </div>
+        <HomepageImageUpload
+          specKey="heroImage"
+          label="Poster image"
+          folder="cinematic/hero"
+          value={content.hero.posterSrc}
+          onChange={(url) => updateHero({ posterSrc: url })}
+          onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
+        />
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
+          Pinned chapters
+        </h2>
+        <Input
+          label="Section number label"
+          value={content.chapters.sectionNumber}
+          onChange={(e) =>
+            setContent((prev) => ({
+              ...prev,
+              chapters: { ...prev.chapters, sectionNumber: e.target.value },
+            }))
+          }
+        />
+        {content.chapters.stages.map((stage, index) => (
+          <div key={index} className="rounded-lg border border-neutral-100 p-4 space-y-3">
+            <p className="text-xs font-semibold text-[#C97D5D]">Stage {index + 1}</p>
+            <Input
+              label="Eyebrow"
+              value={stage.eyebrow}
+              onChange={(e) => updateStage(index, { eyebrow: e.target.value })}
+            />
+            <Input
+              label="Heading"
+              value={stage.heading}
+              onChange={(e) => updateStage(index, { heading: e.target.value })}
+            />
+            <Textarea
+              label="Body"
+              rows={2}
+              value={stage.body}
+              onChange={(e) => updateStage(index, { body: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Select
+                label="Gradient from"
+                value={stage.gradientFrom}
+                onChange={(e) =>
+                  updateStage(index, { gradientFrom: e.target.value as CinematicGradientToken })
+                }
+                options={GRADIENT_OPTIONS}
+              />
+              <Select
+                label="Gradient to"
+                value={stage.gradientTo}
+                onChange={(e) =>
+                  updateStage(index, { gradientTo: e.target.value as CinematicGradientToken })
+                }
+                options={GRADIENT_OPTIONS}
+              />
+            </div>
+            {stage.cta && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="CTA label"
+                  value={stage.cta.label}
+                  onChange={(e) => updateStage(index, { cta: { ...stage.cta!, label: e.target.value } })}
+                />
+                <Input
+                  label="CTA href"
+                  value={stage.cta.href}
+                  onChange={(e) => updateStage(index, { cta: { ...stage.cta!, href: e.target.value } })}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
+          Closing CTA
+        </h2>
+        <Input
+          label="Eyebrow"
+          value={content.closing.eyebrow}
+          onChange={(e) => updateClosing({ eyebrow: e.target.value })}
+        />
+        <Textarea
+          label="Heading (use newline for line break)"
+          rows={2}
+          value={content.closing.heading}
+          onChange={(e) => updateClosing({ heading: e.target.value })}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="CTA label"
+            value={content.closing.cta.label}
+            onChange={(e) => updateClosing({ cta: { ...content.closing.cta, label: e.target.value } })}
+          />
+          <Input
+            label="CTA href"
+            value={content.closing.cta.href}
+            onChange={(e) => updateClosing({ cta: { ...content.closing.cta, href: e.target.value } })}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
+          Why ALMA
+        </h2>
+        <Input
+          label="Section title"
+          value={content.whyAlma.sectionTitle}
+          onChange={(e) =>
+            setContent((prev) => ({
+              ...prev,
+              whyAlma: { ...prev.whyAlma, sectionTitle: e.target.value },
+            }))
+          }
+        />
+        <Textarea
+          label="Section subtitle"
+          rows={2}
+          value={content.whyAlma.sectionSubtitle}
+          onChange={(e) =>
+            setContent((prev) => ({
+              ...prev,
+              whyAlma: { ...prev.whyAlma, sectionSubtitle: e.target.value },
+            }))
+          }
+        />
+        {content.whyAlma.pillars.map((pillar, index) => (
+          <div key={pillar.id} className="rounded-lg border border-neutral-100 p-4 space-y-3">
+            <p className="text-xs font-semibold text-neutral-500">Pillar {index + 1}</p>
+            <Input
+              label="Title"
+              value={pillar.title}
+              onChange={(e) => updatePillar(index, { title: e.target.value })}
+            />
+            <Textarea
+              label="Description"
+              rows={2}
+              value={pillar.description}
+              onChange={(e) => updatePillar(index, { description: e.target.value })}
+            />
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">FAQ</h2>
+        <Input
+          label="Section title"
+          value={content.faq.sectionTitle}
+          onChange={(e) =>
+            setContent((prev) => ({ ...prev, faq: { ...prev.faq, sectionTitle: e.target.value } }))
+          }
+        />
+        {content.faq.items.map((item, index) => (
+          <div key={index} className="rounded-lg border border-neutral-100 p-4 space-y-3">
+            <p className="text-xs font-semibold text-neutral-500">Item {index + 1}</p>
+            <Input
+              label="Question"
+              value={item.q}
+              onChange={(e) => updateFaqItem(index, { q: e.target.value })}
+            />
+            <Textarea
+              label="Answer"
+              rows={2}
+              value={item.a}
+              onChange={(e) => updateFaqItem(index, { a: e.target.value })}
+            />
+          </div>
+        ))}
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              setContent((prev) => ({
+                ...prev,
+                faq: {
+                  ...prev.faq,
+                  items: [...prev.faq.items, { q: 'New question', a: 'Answer' }],
+                },
+              }))
+            }
+          >
+            + Add FAQ
+          </Button>
+          {content.faq.items.length > 1 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                setContent((prev) => ({
+                  ...prev,
+                  faq: { ...prev.faq, items: prev.faq.items.slice(0, -1) },
+                }))
+              }
+            >
+              Remove last
+            </Button>
+          )}
+        </div>
+      </section>
+
+      <Button onClick={() => void handleSave()} loading={saving}>
+        Save cinematic content
+      </Button>
+    </div>
+  );
+}

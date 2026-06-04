@@ -7,6 +7,7 @@ import type {
 } from '@/lib/admin-store';
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
 
 type ApiSuccess<T> = { status: 'success'; data: T };
 type ApiError = { status: 'error'; error: string };
@@ -331,3 +332,40 @@ export async function createOrderApi(payload: unknown): Promise<{
     body: JSON.stringify(payload),
   });
 }
+
+export async function fetchCinematicContentApi(): Promise<CinematicContent> {
+  return request<CinematicContent>('/api/v1/cinematic-content');
+}
+
+export async function saveCinematicContentApi(content: CinematicContent): Promise<CinematicContent> {
+  return request<CinematicContent>('/api/v1/cinematic-content', {
+    method: 'PUT',
+    body: JSON.stringify(content),
+  });
+}
+
+export async function uploadVideoApi(
+  file: File,
+  folder: string,
+  bucket: 'product-images' | 'homepage-images' = 'homepage-images'
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', folder);
+  formData.append('bucket', bucket);
+  formData.append('mediaType', 'video');
+
+  const res = await fetch('/api/v1/upload', {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+  });
+
+  const json = (await res.json()) as ApiSuccess<{ url: string }> | ApiError;
+  if (json.status === 'error' || !res.ok) {
+    const message = 'error' in json ? json.error : `Upload failed (${res.status})`;
+    throw new Error(message);
+  }
+  return json.data.url;
+}
+

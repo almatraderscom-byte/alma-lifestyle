@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { ensureStorageBuckets } from '@/server/storage/ensure-buckets';
-import { uploadImage, validateImageFile } from '@/server/storage/upload';
+import { uploadImage, uploadVideo, validateImageFile, validateVideoFile } from '@/server/storage/upload';
 import { apiError, apiSuccess } from '@/server/api/response';
 import { withAdmin } from '@/server/api/handler';
 import { revalidateAfterUpload } from '@/lib/storefront/revalidate';
@@ -35,13 +35,18 @@ export async function POST(request: NextRequest) {
       bucket,
     });
 
-    const validationError = validateImageFile(file);
+    const mediaType = String(formData.get('mediaType') ?? 'image');
+    const isVideo = mediaType === 'video';
+
+    const validationError = isVideo ? validateVideoFile(file) : validateImageFile(file);
     if (validationError) {
       console.error('[Upload API] Validation failed:', validationError);
       return apiError(validationError, 400, 'VALIDATION_ERROR');
     }
 
-    const url = await uploadImage(file, folder, bucket);
+    const url = isVideo
+      ? await uploadVideo(file, folder, bucket)
+      : await uploadImage(file, folder, bucket);
     console.log('[Upload API] Public URL:', url);
     revalidateAfterUpload(bucket);
     return apiSuccess({ url });
