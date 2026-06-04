@@ -54,6 +54,7 @@ import { CinematicCollectionDivider } from '@/components/cinematic/CinematicColl
 import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommunityMosaic';
 import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
 import { CinematicFeaturedScroll } from '@/components/cinematic/CinematicFeaturedScroll';
+import { CinematicFamilyShowcase } from '@/components/cinematic/CinematicFamilyShowcase';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -102,7 +103,7 @@ function buildInsertAfter(
       key: 'family-matching',
       sectionId: 'family-matching',
       sectionName: 'Family Matching',
-      node: <FamilyMatchingShowcase data={extras.familyMatching} />,
+      node: cinematic ? <CinematicFamilyShowcase data={extras.familyMatching} /> : <FamilyMatchingShowcase data={extras.familyMatching} />,
     });
   }
 
