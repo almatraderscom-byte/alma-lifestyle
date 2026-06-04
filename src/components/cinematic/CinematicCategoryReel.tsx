@@ -2,13 +2,14 @@
 
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, type MotionValue } from 'framer-motion';
 import type { CategoriesSectionData, CategoryCardConfig } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
 import { getDefaultImageForHint } from '@/lib/default-images';
 import { cn } from '@/lib/utils';
 import { TiltSurface } from '@/components/cinematic/TiltSurface';
+import { useMobileScrollParallax } from '@/hooks/useMobileScrollParallax';
 import { CinematicLink } from '@/components/cinematic/CinematicLink';
 
 interface CinematicCategoryReelProps {
@@ -22,6 +23,7 @@ function CategoryCard({
   onMouseMove,
   isMobile,
   reduced,
+  scrollParallaxY,
 }: {
   category: CategoryCardConfig;
   index: number;
@@ -29,6 +31,7 @@ function CategoryCard({
   onMouseMove?: (e: React.MouseEvent<HTMLElement>) => void;
   isMobile: boolean;
   reduced: boolean;
+  scrollParallaxY?: MotionValue<string>;
 }) {
   const imageUrl = category.imageUrl || getDefaultImageForHint(category.imageHint);
 
@@ -43,7 +46,7 @@ function CategoryCard({
       )}
       onMouseMove={onMouseMove}
     >
-      <div className="absolute inset-0 overflow-hidden">
+      <motion.div className="absolute inset-0 overflow-hidden" style={scrollParallaxY ? { y: scrollParallaxY } : undefined}>
         <HomepageSectionImage
           src={imageUrl}
           alt={category.displayName}
@@ -53,7 +56,7 @@ function CategoryCard({
             !isMobile && !reduced && 'group-hover:scale-105'
           )}
         />
-      </div>
+      </motion.div>
       <div
         className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/55 transition-opacity duration-500 group-hover:to-black/65"
         aria-hidden
@@ -84,6 +87,8 @@ function CategoryCard({
 export function CinematicCategoryReel({ data: dataProp }: CinematicCategoryReelProps) {
   const reduced = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const { ref: parallaxRef, y: scrollParallaxY } = useMobileScrollParallax();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
@@ -135,7 +140,10 @@ export function CinematicCategoryReel({ data: dataProp }: CinematicCategoryReelP
 
   if (reduced) {
     return (
-      <section className="bg-cream px-6 py-16 md:px-12">
+      <section ref={(el) => {
+        (sectionRef as React.MutableRefObject<HTMLElement | null>).current = el;
+        (parallaxRef as React.MutableRefObject<HTMLElement | null>).current = el;
+      }} className="bg-cream px-6 py-16 md:px-12">
         <div className="mx-auto mb-10 max-w-7xl">
           <p className="font-bn-body text-[10px] uppercase tracking-[0.35em] text-mustard">{data.label}</p>
           <h2 className="mt-3 font-bn-heading text-3xl font-bold text-charcoal">{data.title}</h2>
