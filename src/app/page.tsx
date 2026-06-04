@@ -4,7 +4,10 @@ import {
   loadOceanProductsServer,
   resolveFeaturedProductsServer,
 } from '@/lib/storefront/server-data';
-import { loadCinematicChapterProducts } from '@/server/db/queries/cinematic-stage-products';
+import {
+  loadCinematicChapterProducts,
+  loadCinematicFilmStripProducts,
+} from '@/server/db/queries/cinematic-stage-products';
 
 export const revalidate = 60;
 
@@ -18,12 +21,13 @@ export default async function HomePage({
 
   const config = await loadHomepageConfigServer();
   const featuredSection = config.sections.find((s) => s.id === 'featured');
-  const [featuredProducts, oceanProducts, chapterProducts] = await Promise.all([
+  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts] = await Promise.all([
     featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
       ? resolveFeaturedProductsServer(featuredSection.data)
       : Promise.resolve([]),
     loadOceanProductsServer(12),
     loadCinematicChapterProducts(),
+    loadCinematicFilmStripProducts(),
   ]);
 
   const hero = config.sections.find((s) => s.id === 'hero');
@@ -37,6 +41,7 @@ export default async function HomePage({
       featuredProducts={featuredProducts}
       oceanProducts={oceanProducts}
       chapterProducts={chapterProducts}
+      filmStripProducts={filmStripProducts}
       editMode={isEditMode}
     />
   );

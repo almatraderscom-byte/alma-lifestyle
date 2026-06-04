@@ -41,12 +41,14 @@ import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSect
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
 import { EditorialQuotePause } from '@/components/cinematic/EditorialQuotePause';
+import { HeroFilmStrip } from '@/components/cinematic/HeroFilmStrip';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
   featuredProducts?: FeaturedProduct[];
   oceanProducts?: OceanProduct[];
   chapterProducts?: (CardProduct | null)[];
+  filmStripProducts?: CardProduct[];
   editMode?: boolean;
 }
 
@@ -226,6 +228,7 @@ export function HomePageRenderer({
   featuredProducts = [],
   oceanProducts = [],
   chapterProducts = [],
+  filmStripProducts = [],
   editMode = false,
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
@@ -324,6 +327,12 @@ export function HomePageRenderer({
     cinematicBlocks.push(<EditorialQuotePause key="editorial-quote" />);
     renderEnabledSection(cinematicBlocks, 'community');
     renderEnabledSection(cinematicBlocks, 'reviews');
+
+    if (filmStripProducts.length > 0) {
+      cinematicBlocks.push(
+        <HeroFilmStrip key="hero-film-strip" products={filmStripProducts} />
+      );
+    }
 
     renderEnabledSection(cinematicBlocks, 'collectionBanner');
     renderEnabledSection(cinematicBlocks, 'trust');
