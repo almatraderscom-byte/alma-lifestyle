@@ -368,9 +368,11 @@ export function shouldShowCinematicHomepage(
   config: HomepageConfig,
   options: { editMode: boolean; preview: boolean }
 ): boolean {
+  // Admin iframe (?preview=true&cinematic=1) always shows cinematic layout
+  if (isCinematicPreviewMode()) return true;
+
   const modeOn = config.cinematicMode ?? true;
   if (!modeOn) return false;
-  if (isCinematicPreviewMode()) return true;
   return !options.editMode && !options.preview;
 }
 

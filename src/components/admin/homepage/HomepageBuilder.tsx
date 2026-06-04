@@ -353,13 +353,15 @@ export function HomepageBuilder() {
   }
 
   const cinematicPreviewOn = config.cinematicMode ?? true;
+  /** Cinematic tab always previews cinematic layout; Sections tab follows mode toggle. */
+  const previewUsesCinematic = builderTab === 'cinematic' || cinematicPreviewOn;
   const previewSrc = (() => {
     const params = new URLSearchParams({
       preview: 'true',
       edit: 'true',
       _: String(previewKey),
     });
-    if (cinematicPreviewOn) params.set('cinematic', '1');
+    if (previewUsesCinematic) params.set('cinematic', '1');
     return `/?${params.toString()}`;
   })();
 
@@ -414,7 +416,7 @@ export function HomepageBuilder() {
             size="sm"
             onClick={() => {
               const params = new URLSearchParams({ preview: 'true', _: String(Date.now()) });
-              if (cinematicPreviewOn) params.set('cinematic', '1');
+              if (previewUsesCinematic) params.set('cinematic', '1');
               window.open(`/?${params.toString()}`, '_blank');
             }}
           >
@@ -651,15 +653,19 @@ export function HomepageBuilder() {
           )}
         </div>
 
-        <div className="hidden lg:flex flex-col w-[60%] bg-neutral-100">
-          <div className="flex items-center gap-3 border-b border-[#C97D5D]/40 bg-cream px-4 py-2.5">
+        <div className="hidden lg:flex flex-1 min-h-0 flex-col w-[60%] bg-neutral-100">
+          <div className="flex shrink-0 items-center gap-3 border-b border-[#C97D5D]/40 bg-cream px-4 py-2.5">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C97D5D] text-white text-xs">
               💡
             </span>
             <div>
-              <p className="text-sm font-medium text-neutral-900">Visual Editor Mode</p>
+              <p className="text-sm font-medium text-neutral-900">
+                {builderTab === 'cinematic' ? 'Cinematic preview' : 'Visual Editor Mode'}
+              </p>
               <p className="text-xs text-neutral-600">
-                Click any section in the preview to edit · Hover for options
+                {builderTab === 'cinematic'
+                  ? 'Live preview of cinematic homepage · Draft updates as you type'
+                  : 'Click any section in the preview to edit · Hover for options'}
               </p>
             </div>
           </div>
@@ -668,7 +674,7 @@ export function HomepageBuilder() {
             key={previewSrc}
             title="Homepage preview"
             src={previewSrc}
-            className="flex-1 w-full border-0 bg-white"
+            className="min-h-0 flex-1 w-full border-0 bg-white"
           />
         </div>
 
