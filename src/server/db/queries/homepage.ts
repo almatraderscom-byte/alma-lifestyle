@@ -2,6 +2,7 @@
  * Homepage and settings in `site_config` (JSONB keys: homepage, settings).
  * RLS allows public SELECT; mutations use service role via API routes only.
  */
+import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import { getSupabaseAdmin } from '../client';
 import type { Json, SiteConfigRow } from '../schema';
 import { assertNoError } from './errors';
@@ -107,6 +108,12 @@ export async function saveAppSettings(settings: AppSettings): Promise<AppSetting
 
 
 
+export async function getSiteConfigUpdatedAt(key: string): Promise<string | null> {
+  if (!isSupabaseAdminConfigured()) return null;
+  const row = await getConfigRow(key);
+  return row?.updated_at ?? null;
+}
+
 export async function getSiteSetting(key: string): Promise<string | null> {
   const row = await getConfigRow(key);
   if (row?.value == null) return null;
@@ -132,7 +139,24 @@ export async function saveSiteSetting(key: string, value: string): Promise<void>
   assertNoError(error, 'saveSiteSetting.insert');
 }
 
+export async function getCinematicModeFromSiteSetting(): Promise<boolean | null> {
+  if (!isSupabaseAdminConfigured()) return null;
+  const value = await getSiteSetting('cinematic_mode_enabled');
+  if (value === null) return null;
+  return value === 'true';
+}
+
+/** Site setting `cinematic_mode_enabled` overrides homepage JSON when present. */
+export async function mergeHomepageConfigWithSiteCinematicMode(
+  config: HomepageConfig
+): Promise<HomepageConfig> {
+  const siteMode = await getCinematicModeFromSiteSetting();
+  if (siteMode === null) return config;
+  return { ...config, cinematicMode: siteMode };
+}
+
 export async function getHomepageConfigOrDefault(): Promise<HomepageConfig> {
   const stored = await getHomepageConfig();
-  return stored ? ensureHomepageConfig(stored) : getDefaultHomepageConfig();
+  const base = stored ? ensureHomepageConfig(stored) : getDefaultHomepageConfig();
+  return mergeHomepageConfigWithSiteCinematicMode(base);
 }

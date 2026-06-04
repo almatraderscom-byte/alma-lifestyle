@@ -134,7 +134,6 @@ export interface CommunitySectionData {
   title: string;
   subtitle: string;
   instagramUrl: string;
-  /** When true, cinematic mode hides this section until at least one tile has a real photo */
   hideUntilPhotosAdded?: boolean;
   tiles: CommunityTileConfig[];
 }
@@ -192,9 +191,19 @@ export interface OurProcessSectionData {
   steps: OurProcessStepConfig[];
 }
 
+export interface HomepageCtaData {
+  heading: string;
+  body: string;
+  primaryCta: string;
+  primaryHref: string;
+  secondaryCta: string;
+  secondaryHref: string;
+}
+
 export interface HomepageExtras {
   familyMatching: FamilyMatchingSectionData;
   ourProcess: OurProcessSectionData;
+  homepageCta?: HomepageCtaData;
 }
 
 export interface SectionDataMap {
@@ -219,10 +228,11 @@ export type HomepageSectionConfig = {
 }[HomepageSectionId];
 
 export interface HomepageConfig {
-  cinematicMode?: boolean;
   sections: HomepageSectionConfig[];
   extras?: HomepageExtras;
   lastSaved: string;
+  /** Overridden by site_config.cinematic_mode_enabled when set */
+  cinematicMode?: boolean;
 }
 
 /** Accordion / visual-editor ids for blocks outside `sections` */

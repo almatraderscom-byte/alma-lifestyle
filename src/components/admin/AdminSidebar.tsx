@@ -8,6 +8,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext';
 import { canManageAdminUsers } from '@/lib/admin-roles';
 import { exportAllData, getOrders, importData } from '@/lib/admin-store';
 import { useAdminToast } from '@/context/AdminToastContext';
+import { SyncStatusWidget } from '@/components/admin/SyncStatusWidget';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },

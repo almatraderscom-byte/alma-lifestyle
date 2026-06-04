@@ -2,6 +2,7 @@ import type {
   CategoryColorClass,
   FamilyMatchingCardConfig,
   FamilyMatchingSectionData,
+  HomepageCtaData,
   HomepageExtras,
   OurProcessSectionData,
 } from '@/lib/homepage-config-types';
@@ -164,8 +165,20 @@ function mergeOurProcessWithDefaults(
   );
 }
 
+export function getDefaultHomepageCta(): HomepageCtaData {
+  return {
+    heading: 'এবার আপনার পরিবারের পালা',
+    body: 'আজই অর্ডার করুন এবং ALMA পরিবারের অংশ হয়ে যান',
+    primaryCta: 'কালেকশন দেখুন →',
+    primaryHref: '/products',
+    secondaryCta: 'WhatsApp এ মেসেজ করুন',
+    secondaryHref: '',
+  };
+}
+
 export function getDefaultHomepageExtras(): HomepageExtras {
   return {
+    homepageCta: getDefaultHomepageCta(),
     familyMatching: {
       show: true,
       label: 'ফ্যামিলি ম্যাচিং',
@@ -213,5 +226,9 @@ export function mergeHomepageExtras(
 
   const ourProcess = mergeOurProcessWithDefaults(savedOp, defaults.ourProcess);
 
-  return { familyMatching, ourProcess };
+  return {
+    familyMatching,
+    ourProcess,
+    homepageCta: { ...getDefaultHomepageCta(), ...saved?.homepageCta },
+  };
 }

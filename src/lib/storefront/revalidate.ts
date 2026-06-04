@@ -11,7 +11,9 @@ export function revalidateStorefrontAll(): void {
 }
 
 export function revalidateHomepage(): void {
+  revalidatePath('/', 'layout');
   revalidatePath('/');
+  revalidatePath('/admin/homepage');
 }
 
 export function revalidateProductPages(slug?: string): void {

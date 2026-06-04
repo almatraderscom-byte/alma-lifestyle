@@ -29,6 +29,8 @@ import { ColorSwatchPicker } from '@/components/admin/ui/ColorSwatchPicker';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
 import { useAdminToast } from '@/context/AdminToastContext';
+import { CinematicModeBanner } from '@/components/admin/homepage/CinematicModeBanner';
+import { cn } from '@/lib/utils';
 
 type SectionData = HomepageSectionConfig['data'];
 
@@ -52,10 +54,16 @@ function ToggleRow({
   );
 }
 
-export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
+export function HeroEditor({
+  data,
+  onChange,
+  cinematicModeOn = true,
+}: EditorProps<HeroSectionData> & { cinematicModeOn?: boolean }) {
   const { toast } = useAdminToast();
   return (
     <div className="space-y-4">
+      <CinematicModeBanner variant="sections-hero" cinematicOn={cinematicModeOn} />
+      <div className={cn(cinematicModeOn && 'opacity-50 pointer-events-none select-none')}>
       <Input label="Caption" value={data.caption} onChange={(e) => onChange({ ...data, caption: e.target.value })} />
       <Input label="Title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
       <Textarea label="Subtitle" rows={3} value={data.subtitle} onChange={(e) => onChange({ ...data, subtitle: e.target.value })} />
@@ -90,6 +98,7 @@ export function HeroEditor({ data, onChange }: EditorProps<HeroSectionData>) {
           </div>
         ))}
         <button type="button" className="text-sm text-[#C97D5D] font-medium" onClick={() => onChange({ ...data, badges: [...data.badges, 'New badge'] })}>+ Add badge</button>
+      </div>
       </div>
     </div>
   );
@@ -386,14 +395,6 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
       <Input label="Section title" value={data.title} onChange={(e) => onChange({ ...data, title: e.target.value })} />
       <Input label="Subtitle" value={data.subtitle} onChange={(e) => onChange({ ...data, subtitle: e.target.value })} />
       <Input label="Instagram URL" value={data.instagramUrl} onChange={(e) => onChange({ ...data, instagramUrl: e.target.value })} />
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <input
-          type="checkbox"
-          checked={data.hideUntilPhotosAdded ?? false}
-          onChange={(e) => onChange({ ...data, hideUntilPhotosAdded: e.target.checked })}
-        />
-        Hide Community section until photos are added
-      </label>
       <p className="text-sm font-medium text-neutral-800">
         Community photos ({tiles.length} slots — grid order left-to-right)
       </p>

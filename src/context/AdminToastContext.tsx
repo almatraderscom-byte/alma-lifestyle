@@ -44,7 +44,8 @@ export function AdminToastProvider({ children }: { children: ReactNode }) {
             role="status"
             className={cn(
               'rounded-lg px-4 py-3 text-sm font-medium shadow-lg border',
-              item.type === 'success' && 'bg-green-50 text-green-800 border-green-200',
+              item.type === 'success' &&
+                'bg-[#FAFAFA] text-neutral-900 border-[#C97D5D] border-2',
               item.type === 'error' && 'bg-red-50 text-red-800 border-red-200',
               item.type === 'info' && 'bg-white text-neutral-800 border-neutral-200'
             )}

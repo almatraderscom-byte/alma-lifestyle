@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-/** Wishlist is client-localStorage only; route exists for bookmarks and legacy links. */
+/** Wishlist UI is client-only; route customers to catalog. */
 export default function WishlistPage() {
   redirect('/products');
 }

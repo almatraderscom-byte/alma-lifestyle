@@ -16,6 +16,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
+import { CinematicModeBanner } from '@/components/admin/homepage/CinematicModeBanner';
 import {
   clearDraftCinematicContent,
   saveDraftCinematicContent,
@@ -31,12 +32,13 @@ const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
 ];
 
 interface CinematicContentEditorProps {
+  cinematicModeOn?: boolean;
   onSaved?: () => void;
   /** Debounced draft sync for admin preview iframe */
   onDraftChange?: () => void;
 }
 
-export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicContentEditorProps) {
+export function CinematicContentEditor({ cinematicModeOn = true, onSaved, onDraftChange }: CinematicContentEditorProps) {
   const { toast } = useAdminToast();
   const [content, setContent] = useState<CinematicContent>(() => getDefaultCinematicContent());
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
       const saved = await saveCinematicContentApi(content);
       setContent(saved);
       saveDraftCinematicContent(saved);
-      toast('Cinematic content saved — homepage revalidates within 60s', 'success');
+      toast('Saved successfully — cinematic content will appear on site within 60s', 'success');
       onSaved?.();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Save failed', 'error');
@@ -155,6 +157,7 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
 
   return (
     <div className="space-y-6">
+      <CinematicModeBanner variant="cinematic-tab" cinematicOn={cinematicModeOn ?? true} />
       <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
         Edit cinematic-only copy and media. Changes appear on the live homepage after save (60s
         revalidate).
@@ -162,6 +165,26 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
 
       <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
         <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Hero</h2>
+
+<Input
+  label="Brand name"
+  value={content.hero.brandName}
+  onChange={(e) => updateHero({ brandName: e.target.value })}
+/>
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <Input
+    label="Video object position (desktop)"
+    value={content.hero.mediaObjectPosition}
+    onChange={(e) => updateHero({ mediaObjectPosition: e.target.value })}
+    placeholder="46% 18%"
+  />
+  <Input
+    label="Video object position (mobile)"
+    value={content.hero.mediaObjectPositionMobile}
+    onChange={(e) => updateHero({ mediaObjectPositionMobile: e.target.value })}
+    placeholder="center 22%"
+  />
+</div>
         <Input
           label="Eyebrow"
           value={content.hero.eyebrow}
@@ -229,6 +252,32 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
             }))
           }
         />
+
+<button
+  type="button"
+  className="text-sm font-medium text-[#C97D5D]"
+  onClick={() => {
+    const defaults = getDefaultCinematicContent();
+    const template = defaults.chapters.stages[0] ?? {
+      eyebrow: 'CHAPTER',
+      heading: 'New chapter',
+      body: '',
+      imageLabel: '',
+      gradientFrom: 'maroon' as const,
+      gradientTo: 'terracotta' as const,
+    };
+    setContent((prev) => ({
+      ...prev,
+      chapters: {
+        ...prev.chapters,
+        stages: [...prev.chapters.stages, { ...template }],
+      },
+    }));
+  }}
+>
+  + Add chapter stage
+</button>
+
         {content.chapters.stages.map((stage, index) => (
           <div key={index} className="rounded-lg border border-neutral-100 p-4 space-y-3">
             <p className="text-xs font-semibold text-[#C97D5D]">Stage {index + 1}</p>
@@ -242,6 +291,59 @@ export function CinematicContentEditor({ onSaved, onDraftChange }: CinematicCont
               value={stage.heading}
               onChange={(e) => updateStage(index, { heading: e.target.value })}
             />
+
+<Input
+  label="Image label"
+  value={stage.imageLabel}
+  onChange={(e) => updateStage(index, { imageLabel: e.target.value })}
+/>
+<div className="flex flex-wrap gap-2">
+  <button
+    type="button"
+    className="text-xs font-medium text-neutral-600 disabled:opacity-40"
+    disabled={index === 0}
+    onClick={() => {
+      setContent((prev) => {
+        const stages = [...prev.chapters.stages];
+        [stages[index - 1], stages[index]] = [stages[index], stages[index - 1]];
+        return { ...prev, chapters: { ...prev.chapters, stages } };
+      });
+    }}
+  >
+    Move up
+  </button>
+  <button
+    type="button"
+    className="text-xs font-medium text-neutral-600 disabled:opacity-40"
+    disabled={index >= content.chapters.stages.length - 1}
+    onClick={() => {
+      setContent((prev) => {
+        const stages = [...prev.chapters.stages];
+        [stages[index], stages[index + 1]] = [stages[index + 1], stages[index]];
+        return { ...prev, chapters: { ...prev.chapters, stages } };
+      });
+    }}
+  >
+    Move down
+  </button>
+  {content.chapters.stages.length > 1 && (
+    <button
+      type="button"
+      className="text-xs font-medium text-red-600"
+      onClick={() => {
+        setContent((prev) => ({
+          ...prev,
+          chapters: {
+            ...prev.chapters,
+            stages: prev.chapters.stages.filter((_, i) => i !== index),
+          },
+        }));
+      }}
+    >
+      Remove stage
+    </button>
+  )}
+</div>
             <Textarea
               label="Body"
               rows={2}

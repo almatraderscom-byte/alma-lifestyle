@@ -7,10 +7,15 @@ import { Button } from '@/components/admin/ui/Button';
 type SyncStatus = {
   useApi: boolean;
   homepageLastSaved: string;
+  cinematicContentUpdatedAt?: string;
   settingsUpdatedAt: string;
   storefrontRevalidateSeconds: number;
   cacheStatus: string;
 };
+
+interface SyncStatusWidgetProps {
+  compact?: boolean;
+}
 
 function formatRelative(iso: string): string {
   const then = new Date(iso).getTime();
@@ -22,7 +27,7 @@ function formatRelative(iso: string): string {
   return new Date(iso).toLocaleString('en-GB');
 }
 
-export function SyncStatusWidget() {
+export function SyncStatusWidget({ compact = false }: SyncStatusWidgetProps) {
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,6 +73,34 @@ export function SyncStatusWidget() {
     }
   }
 
+  if (compact) {
+    return (
+      <div className="rounded-lg border border-white/15 bg-white/5 p-2.5 space-y-2 text-[11px] text-white/80">
+        <p className="font-semibold text-white/90">Sync status</p>
+        {loading && <p>Loading…</p>}
+        {error && <p className="text-red-300">{error}</p>}
+        {status && !loading && (
+          <ul className="space-y-1">
+            <li>Homepage: {formatRelative(status.homepageLastSaved)}</li>
+            <li>
+              Cinematic:{' '}
+              {formatRelative(status.cinematicContentUpdatedAt ?? status.homepageLastSaved)}
+            </li>
+            <li>Settings: {formatRelative(status.settingsUpdatedAt)}</li>
+          </ul>
+        )}
+        <button
+          type="button"
+          disabled={refreshing}
+          onClick={() => void forceRefresh()}
+          className="w-full rounded-md bg-white/10 py-1.5 text-[11px] font-medium hover:bg-white/15 disabled:opacity-50"
+        >
+          {refreshing ? 'Refreshing…' : 'Force refresh all'}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -94,8 +127,12 @@ export function SyncStatusWidget() {
       {status && !loading && (
         <ul className="text-sm text-neutral-700 space-y-2">
           <li>
-            <span className="text-neutral-500">Homepage config saved:</span>{' '}
+            <span className="text-neutral-500">Homepage sections saved:</span>{' '}
             {formatRelative(status.homepageLastSaved)}
+          </li>
+          <li>
+            <span className="text-neutral-500">Cinematic content saved:</span>{' '}
+            {formatRelative(status.cinematicContentUpdatedAt ?? status.homepageLastSaved)}
           </li>
           <li>
             <span className="text-neutral-500">Settings updated:</span>{' '}
@@ -115,7 +152,7 @@ export function SyncStatusWidget() {
           loading={refreshing}
           onClick={() => void forceRefresh()}
         >
-          Force refresh customer site
+          Force refresh all
         </Button>
         <Button
           type="button"
