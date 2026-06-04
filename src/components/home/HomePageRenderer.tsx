@@ -17,6 +17,7 @@ import {
 } from '@/components/home/FloatingCollectionOcean';
 import { StoryMarquee } from '@/components/home/StoryMarquee';
 import { WhyChooseAlma } from '@/components/home/WhyChooseAlma';
+import { CinematicWhyAlma } from '@/components/cinematic/CinematicWhyAlma';
 import { FamilyMatchingShowcase } from '@/components/home/FamilyMatchingShowcase';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { BrandStory } from '@/components/home/BrandStory';
@@ -79,7 +80,10 @@ type ExtraBlock = {
   node: ReactNode;
 };
 
-function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partial<
+function buildInsertAfter(
+  extras: NonNullable<HomepageConfig['extras']>,
+  cinematic = false
+): Partial<
   Record<HomepageSectionId, ExtraBlock[]>
 > {
   const marqueeExtras: ExtraBlock[] = [
@@ -87,7 +91,7 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
       key: 'why-choose-alma',
       sectionId: 'why-choose-alma',
       sectionName: 'Why Choose ALMA',
-      node: <WhyChooseAlma />,
+      node: cinematic ? <CinematicWhyAlma /> : <WhyChooseAlma />,
     },
   ];
   if (extras.familyMatching.show !== false) {
@@ -301,7 +305,8 @@ export function HomePageRenderer({
   const sections = getSortedEnabledSections(config);
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
-  const insertAfter = buildInsertAfter(extras);
+  const cinematicActive = (config.cinematicMode ?? true) && !editMode && !preview;
+  const insertAfter = buildInsertAfter(extras, cinematicActive);
   const byId = sectionMap(sections);
   const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
 
