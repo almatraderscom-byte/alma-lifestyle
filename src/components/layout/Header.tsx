@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CinematicLink } from '@/components/cinematic/CinematicLink';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -190,12 +191,12 @@ export function Header() {
               className="mx-auto flex items-center gap-6 xl:gap-8"
               aria-label={HEADER.mainNav}
             >
-              <Link href={NAV.shop.href} className={navLinkClass(shopActive)}>
+              <CinematicLink href={NAV.shop.href} className={navLinkClass(shopActive)}>
                 {NAV.shop.label}
-              </Link>
-              <Link href={NAV.newArrivals.href} className={navLinkClass(newActive)}>
+              </CinematicLink>
+              <CinematicLink href={NAV.newArrivals.href} className={navLinkClass(newActive)}>
                 {NAV.newArrivals.label}
-              </Link>
+              </CinematicLink>
 
               <div className="relative group">
                 <button
@@ -226,7 +227,7 @@ export function Header() {
                 </div>
               </div>
 
-              <Link href={NAV.islamic.href} className={navLinkClass(islamicActive)}>
+              <CinematicLink href={NAV.islamic.href} className={navLinkClass(islamicActive)}>
                 <span className="inline-flex items-center">
                   <span
                     className="mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-mustard"
@@ -234,11 +235,11 @@ export function Header() {
                   />
                   {NAV.islamic.label}
                 </span>
-              </Link>
+              </CinematicLink>
 
-              <Link href={NAV.about.href} className={navLinkClass(pathname === NAV.about.href)}>
+              <CinematicLink href={NAV.about.href} className={navLinkClass(pathname === NAV.about.href)}>
                 {NAV.about.label}
-              </Link>
+              </CinematicLink>
             </nav>
 
             <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
