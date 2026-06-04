@@ -7,7 +7,7 @@ import {
   isPreviewMode,
   resolveFeaturedProducts,
 } from '@/lib/homepage-config';
-import type { HomepageConfig, HomepageSectionId } from '@/lib/homepage-config-types';
+import type { HomepageConfig, HomepageSectionConfig, HomepageSectionId } from '@/lib/homepage-config-types';
 import type { FeaturedProduct } from '@/lib/content';
 import type { CardProduct } from '@/lib/products-data';
 import { EditorialHero } from '@/components/home/EditorialHero';
@@ -40,9 +40,6 @@ import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
 import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
-
-/** Toggle V2 cinematic homepage (admin toggle later). */
-
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -123,6 +120,106 @@ function buildInsertAfter(extras: NonNullable<HomepageConfig['extras']>): Partia
   };
 }
 
+type RenderCtx = {
+  editMode: boolean;
+  preview: boolean;
+  featuredProducts: FeaturedProduct[];
+  oceanProducts: OceanProduct[];
+};
+
+function renderSectionContent(
+  section: HomepageSectionConfig,
+  ctx: RenderCtx,
+  options?: { skipEditorialHero?: boolean; oceanOnly?: boolean }
+): ReactNode | null {
+  const { editMode, preview, featuredProducts, oceanProducts } = ctx;
+
+  switch (section.id) {
+    case 'hero':
+      if (options?.oceanOnly) {
+        return (
+          <EditableHomeBlock editMode={editMode} sectionId="bestSelling" sectionName="Best Selling">
+            <FloatingCollectionOcean products={oceanProducts} />
+          </EditableHomeBlock>
+        );
+      }
+      if (options?.skipEditorialHero) return null;
+      return (
+        <>
+          <EditableHomeBlock editMode={editMode} sectionId="hero" sectionName="Hero Section">
+            <EditorialHero data={section.data} />
+          </EditableHomeBlock>
+          <EditableHomeBlock editMode={editMode} sectionId="bestSelling" sectionName="Best Selling">
+            <FloatingCollectionOcean products={oceanProducts} />
+          </EditableHomeBlock>
+        </>
+      );
+    case 'marquee':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="marquee" sectionName="Story Marquee">
+          <StoryMarquee data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'categories':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="categories" sectionName="Categories">
+          <CategoryShowcase data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'featured':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="featured" sectionName="Featured Products">
+          <FeaturedProductsSection
+            data={section.data}
+            products={preview ? resolveFeaturedProducts(section.data) : featuredProducts}
+          />
+        </EditableHomeBlock>
+      );
+    case 'brandStory':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="brandStory" sectionName="Brand Story">
+          <BrandStory data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'reviews':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="reviews" sectionName="Reviews">
+          <ReviewsSection data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'collectionBanner':
+      return (
+        <EditableHomeBlock
+          editMode={editMode}
+          sectionId="collectionBanner"
+          sectionName="Collection Banner"
+        >
+          <CollectionBannerEditorial data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'community':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="community" sectionName="Community Grid">
+          <CommunityGrid data={section.data} />
+        </EditableHomeBlock>
+      );
+    case 'trust':
+      return (
+        <EditableHomeBlock editMode={editMode} sectionId="trust" sectionName="Trust Strip">
+          <TrustStrip data={section.data} />
+        </EditableHomeBlock>
+      );
+    default:
+      return null;
+  }
+}
+
+function sectionMap(sections: HomepageSectionConfig[]) {
+  return Object.fromEntries(sections.map((s) => [s.id, s])) as Partial<
+    Record<HomepageSectionId, HomepageSectionConfig>
+  >;
+}
+
 export function HomePageRenderer({
   initialConfig,
   featuredProducts = [],
@@ -159,29 +256,85 @@ export function HomePageRenderer({
   const preview = isPreviewMode();
   const extras = config.extras ?? getDefaultHomepageExtras();
   const insertAfter = buildInsertAfter(extras);
+  const byId = sectionMap(sections);
+  const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
 
-  if ((config.cinematicMode ?? true) && !editMode && !preview) {
-    return (
-      <HomepageEditModeProvider editMode={false}>
-        <CinematicAssetPreload />
-        <CinematicLoadingOverlay />
-        <CinematicHero />
-        <ColorWashBridge from="charcoal" to="cream" />
-        <PinnedChaptersSection chapterProducts={chapterProducts} />
-        <CinematicClosingSection />
-      </HomepageEditModeProvider>
-    );
-  }
-
-  const blocks: ReactNode[] = [];
-
-  function pushBlock(key: string, label: string, content: ReactNode) {
+  function pushBlock(blocks: ReactNode[], key: string, label: string, content: ReactNode) {
     blocks.push(
       <CustomerErrorBoundary key={key} sectionLabel={label}>
         {content}
       </CustomerErrorBoundary>
     );
   }
+
+  function appendExtras(blocks: ReactNode[], sectionId: HomepageSectionId) {
+    const extrasBlocks = insertAfter[sectionId];
+    if (!extrasBlocks?.length) return;
+    for (const extra of extrasBlocks) {
+      pushBlock(
+        blocks,
+        extra.key,
+        extra.sectionName,
+        <EditableHomeBlock editMode={editMode} sectionId={extra.sectionId} sectionName={extra.sectionName}>
+          {extra.node}
+        </EditableHomeBlock>
+      );
+    }
+  }
+
+  function renderEnabledSection(blocks: ReactNode[], sectionId: HomepageSectionId, options?: Parameters<typeof renderSectionContent>[2]) {
+    const section = byId[sectionId];
+    if (!section) return;
+    const content = renderSectionContent(section, ctx, options);
+    if (!content) return;
+    pushBlock(blocks, sectionId, sectionLabels[sectionId] ?? sectionId, content);
+    appendExtras(blocks, sectionId);
+  }
+
+  if ((config.cinematicMode ?? true) && !editMode && !preview) {
+    const cinematicBlocks: ReactNode[] = [];
+
+    cinematicBlocks.push(
+      <CinematicAssetPreload key="cinematic-preload" />,
+      <CinematicLoadingOverlay key="cinematic-overlay" />,
+      <CinematicHero key="cinematic-hero" />
+    );
+    cinematicBlocks.push(<ColorWashBridge key="wash-hero-marquee" from="charcoal" to="cream" />);
+
+    renderEnabledSection(cinematicBlocks, 'marquee');
+    renderEnabledSection(cinematicBlocks, 'categories');
+    renderEnabledSection(cinematicBlocks, 'featured');
+
+    const heroSection = byId.hero;
+    if (heroSection) {
+      const ocean = renderSectionContent(heroSection, ctx, { oceanOnly: true });
+      if (ocean) {
+        pushBlock(cinematicBlocks, 'bestSelling', 'Best Selling', ocean);
+      }
+    }
+
+    cinematicBlocks.push(<ColorWashBridge key="wash-ocean-chapters" from="cream" to="warm-white" />);
+    cinematicBlocks.push(
+      <PinnedChaptersSection key="pinned-chapters" chapterProducts={chapterProducts} />
+    );
+    cinematicBlocks.push(<ColorWashBridge key="wash-chapters-brand" from="warm-white" to="cream" />);
+
+    renderEnabledSection(cinematicBlocks, 'brandStory');
+    renderEnabledSection(cinematicBlocks, 'community');
+    renderEnabledSection(cinematicBlocks, 'reviews');
+
+    renderEnabledSection(cinematicBlocks, 'collectionBanner');
+    renderEnabledSection(cinematicBlocks, 'trust');
+
+    cinematicBlocks.push(<ColorWashBridge key="wash-trust-closing" from="cream" to="charcoal" />);
+    cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" />);
+
+    return (
+      <HomepageEditModeProvider editMode={false}>{cinematicBlocks}</HomepageEditModeProvider>
+    );
+  }
+
+  const blocks: ReactNode[] = [];
 
   function maybeDivider(beforeId: HomepageSectionId, afterId?: HomepageSectionId) {
     if (!afterId || beforeId === 'marquee' || afterId === 'marquee') return;
@@ -191,102 +344,11 @@ export function HomePageRenderer({
   sections.forEach((section, index) => {
     const label = sectionLabels[section.id] ?? 'সেকশন';
     const next = sections[index + 1];
-
-    const content = (() => {
-      switch (section.id) {
-        case 'hero':
-          return (
-            <>
-              <EditableHomeBlock editMode={editMode} sectionId="hero" sectionName="Hero Section">
-                <EditorialHero data={section.data} />
-              </EditableHomeBlock>
-              <EditableHomeBlock editMode={editMode} sectionId="bestSelling" sectionName="Best Selling">
-                <FloatingCollectionOcean products={oceanProducts} />
-              </EditableHomeBlock>
-            </>
-          );
-        case 'marquee':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="marquee" sectionName="Story Marquee">
-              <StoryMarquee data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'categories':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="categories" sectionName="Categories">
-              <CategoryShowcase data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'featured':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="featured" sectionName="Featured Products">
-              <FeaturedProductsSection
-                data={section.data}
-                products={
-                  preview ? resolveFeaturedProducts(section.data) : featuredProducts
-                }
-              />
-            </EditableHomeBlock>
-          );
-        case 'brandStory':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="brandStory" sectionName="Brand Story">
-              <BrandStory data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'reviews':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="reviews" sectionName="Reviews">
-              <ReviewsSection data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'collectionBanner':
-          return (
-            <EditableHomeBlock
-              editMode={editMode}
-              sectionId="collectionBanner"
-              sectionName="Collection Banner"
-            >
-              <CollectionBannerEditorial data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'community':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="community" sectionName="Community Grid">
-              <CommunityGrid data={section.data} />
-            </EditableHomeBlock>
-          );
-        case 'trust':
-          return (
-            <EditableHomeBlock editMode={editMode} sectionId="trust" sectionName="Trust Strip">
-              <TrustStrip data={section.data} />
-            </EditableHomeBlock>
-          );
-        default:
-          return null;
-      }
-    })();
-
+    const content = renderSectionContent(section, ctx);
     if (!content) return;
 
-    pushBlock(section.id, label, content);
-
-    const extrasBlocks = insertAfter[section.id];
-    if (extrasBlocks?.length) {
-      for (const extra of extrasBlocks) {
-        pushBlock(
-          extra.key,
-          extra.sectionName,
-          <EditableHomeBlock
-            editMode={editMode}
-            sectionId={extra.sectionId}
-            sectionName={extra.sectionName}
-          >
-            {extra.node}
-          </EditableHomeBlock>
-        );
-      }
-    }
+    pushBlock(blocks, section.id, label, content);
+    appendExtras(blocks, section.id);
 
     if (next) {
       maybeDivider(section.id, next.id);
