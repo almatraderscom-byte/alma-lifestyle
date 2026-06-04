@@ -46,6 +46,8 @@ import { HomepageSectionErrorBoundary } from '@/components/admin/homepage/Homepa
 import { HomepageUploadDiagnostics } from '@/components/admin/homepage/HomepageUploadDiagnostics';
 import { CinematicContentEditor } from '@/components/admin/homepage/CinematicContentEditor';
 import { isHomepageEditMessage } from '@/lib/homepage-edit-messages';
+import { buildHomepagePreviewUrl } from '@/lib/storefront-preview-url';
+import { isLocalStorageMode } from '@/lib/data-source';
 
 type MobileTab = 'editor' | 'preview';
 type BuilderTab = 'sections' | 'cinematic';
@@ -64,6 +66,7 @@ export function HomepageBuilder() {
   const desktopIframeRef = useRef<HTMLIFrameElement>(null);
   const mobileIframeRef = useRef<HTMLIFrameElement>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cinematicSaveRef = useRef<(() => Promise<void>) | null>(null);
 
   function postToPreview(data: unknown) {
     desktopIframeRef.current?.contentWindow?.postMessage(data, '*');
@@ -258,6 +261,23 @@ export function HomepageBuilder() {
   }
 
   async function handleSave() {
+    if (builderTab === 'cinematic') {
+      if (!cinematicSaveRef.current) {
+        toast('Cinematic editor is still loading — try again', 'error');
+        return;
+      }
+      setSaving(true);
+      try {
+        await cinematicSaveRef.current();
+        setPreviewKey((k) => k + 1);
+      } catch {
+        /* toast from cinematic editor */
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     setSaving(true);
     try {
       const hero = config.sections.find((s) => s.id === 'hero');
@@ -355,18 +375,22 @@ export function HomepageBuilder() {
   const cinematicPreviewOn = config.cinematicMode ?? true;
   /** Cinematic tab always previews cinematic layout; Sections tab follows mode toggle. */
   const previewUsesCinematic = builderTab === 'cinematic' || cinematicPreviewOn;
-  const previewSrc = (() => {
-    const params = new URLSearchParams({
-      preview: 'true',
-      edit: 'true',
-      _: String(previewKey),
-    });
-    if (previewUsesCinematic) params.set('cinematic', '1');
-    return `/?${params.toString()}`;
-  })();
+  const previewSrc = buildHomepagePreviewUrl({
+    previewKey,
+    edit: true,
+    cinematic: previewUsesCinematic,
+  });
 
   return (
     <div className="-m-4 lg:-m-6 flex flex-col min-h-[calc(100vh-4rem)]">
+      {isLocalStorageMode() && (
+        <div className="mx-4 lg:mx-6 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <strong>Not connected to Supabase.</strong> Saves in this browser only — the live site and refresh
+          will not show your edits. In Vercel set <code className="text-xs">NEXT_PUBLIC_USE_API=true</code>{' '}
+          (or remove <code className="text-xs">false</code>) and redeploy.
+        </div>
+      )}
+
       <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 py-3 lg:px-6">
         <div>
           <h1 className="text-xl font-semibold text-neutral-900">Homepage Builder</h1>
@@ -415,9 +439,14 @@ export function HomepageBuilder() {
             variant="secondary"
             size="sm"
             onClick={() => {
-              const params = new URLSearchParams({ preview: 'true', _: String(Date.now()) });
-              if (previewUsesCinematic) params.set('cinematic', '1');
-              window.open(`/?${params.toString()}`, '_blank');
+              window.open(
+                buildHomepagePreviewUrl({
+                  previewKey: Date.now(),
+                  edit: false,
+                  cinematic: previewUsesCinematic,
+                }),
+                '_blank'
+              );
             }}
           >
             Preview in New Tab
@@ -431,7 +460,7 @@ export function HomepageBuilder() {
             {mobileTab === 'preview' ? 'Editor' : 'Preview'}
           </Button>
           <Button onClick={handleSave} loading={saving}>
-            Save Changes
+            {builderTab === 'cinematic' ? 'Save cinematic content' : 'Save Changes'}
           </Button>
         </div>
       </div>
@@ -464,6 +493,9 @@ export function HomepageBuilder() {
               cinematicModeOn={config.cinematicMode ?? true}
               onSaved={() => setPreviewKey((k) => k + 1)}
               onDraftChange={() => setPreviewKey((k) => k + 1)}
+              onRegisterSave={(save) => {
+                cinematicSaveRef.current = save;
+              }}
             />
           ) : (
             <>
