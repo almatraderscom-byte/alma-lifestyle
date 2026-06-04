@@ -1,12 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
+
+type NetworkInformation = {
+  effectiveType?: string;
+  saveData?: boolean;
+};
 
 export function useCinematicCapabilities() {
   const reduced = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
+  const [saveData, setSaveData] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -14,20 +20,29 @@ export function useCinematicCapabilities() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    const nav = navigator as Navigator & { connection?: { effectiveType?: string } };
-    const conn = nav.connection?.effectiveType;
-    if (conn === '2g' || conn === 'slow-2g') setIsSlowConnection(true);
+    const nav = navigator as Navigator & { connection?: NetworkInformation };
+    const conn = nav.connection;
+    const effectiveType = conn?.effectiveType;
+    if (effectiveType === '2g' || effectiveType === 'slow-2g') {
+      setIsSlowConnection(true);
+    }
+    if (conn?.saveData) setSaveData(true);
 
     setIsReady(true);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const useVideo = useMemo(() => {
+    if (reduced || isSlowConnection || saveData) return false;
+    return true;
+  }, [reduced, isSlowConnection, saveData]);
+
   return {
     reduced: !!reduced,
     isMobile,
     isSlowConnection,
-    /** Video when desktop + capable; `isReady` only gates layout, not video eligibility */
-    useVideo: !isMobile && !isSlowConnection && !reduced,
+    saveData,
+    useVideo,
     isReady,
   };
 }
