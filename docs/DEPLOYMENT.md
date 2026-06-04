@@ -82,9 +82,12 @@ Add variables from `vercel.env.production.example` for **Production** (and **Pre
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Secret** — server only |
 | `NEXT_PUBLIC_APP_URL` | `https://your-domain.com` |
+| `ADMIN_SESSION_SECRET` | Min 32 characters; unique per environment |
 | `NEXT_PUBLIC_BRAND_SLUG` | Usually `alma-lifestyle` |
 
 Do **not** set `NODE_ENV` manually; Vercel sets `production` automatically.
+
+On **Production**, missing or invalid required variables cause the Node server to fail at boot (`validateEnvOrThrow` in `src/instrumentation.ts`). See [`vercel.env.production.example`](../vercel.env.production.example).
 
 ### Deploy
 
