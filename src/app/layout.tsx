@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import { FaviconSync } from '@/components/layout/FaviconSync';
 import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
+import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
 import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
