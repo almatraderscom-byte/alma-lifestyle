@@ -36,3 +36,44 @@
 - Lighthouse desktop: > 80
 - First Contentful Paint: < 1.5s on 4G
 - Largest Contentful Paint: < 2.5s on 4G
+
+## Elevated Section Variants (feat/cinematic-sections-elevation)
+
+When `config.cinematicMode === true`, HomePageRenderer swaps editorial components for cinematic variants. Original components in `src/components/home/` are untouched.
+
+| Editorial | Cinematic Variant | Props |
+|-----------|-------------------|-------|
+| StoryMarquee | CinematicStoryStrip | `data: MarqueeSectionData` |
+| CategoryShowcase | CinematicCategoryReel | `data: CategoriesSectionData` |
+| FloatingCollectionOcean | MagneticConstellation | `products: OceanProduct[]` |
+| BrandStory | CinematicBrandNarrative | `data: BrandStorySectionData` |
+| ReviewsSection | CinematicTestimonialPin | `data: ReviewsSectionData` |
+| CollectionBannerEditorial | CinematicCollectionDivider | `data: CollectionBannerSectionData` |
+| CommunityGrid | CinematicCommunityMosaic | `data: CommunitySectionData` |
+| TrustStrip | CinematicTrustPillars | `data: TrustSectionData` |
+
+### Cinematic flow order
+1. CinematicHero + loading overlay
+2. ColorWashBridge (charcoal → cream)
+3. CinematicStoryStrip
+4. CinematicCategoryReel
+5. ColorWashBridge (cream → warm-white)
+6. MagneticConstellation
+7. FeaturedProductsSection (if enabled)
+8. PinnedChaptersSection
+9. ColorWashBridge (warm-white → cream)
+10. CinematicBrandNarrative
+11. EditorialQuotePause
+12. CinematicCommunityMosaic
+13. CinematicTestimonialPin
+14. HeroFilmStrip
+15. CinematicCollectionDivider
+16. CinematicTrustPillars
+17. ColorWashBridge (cream → charcoal)
+18. CinematicClosingSection
+
+### Mobile fallbacks
+- Sticky scroll sections (BrandNarrative, TestimonialPin) → vertical stacks on <768px
+- MagneticConstellation → 2-column product grid
+- CategoryReel → 85vw horizontal snap cards
+- All sections respect `useReducedMotion()` with static fallbacks
