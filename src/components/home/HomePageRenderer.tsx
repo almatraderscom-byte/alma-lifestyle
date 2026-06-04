@@ -42,6 +42,14 @@ import { CinematicClosingSection } from '@/components/cinematic/CinematicClosing
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
 import { EditorialQuotePause } from '@/components/cinematic/EditorialQuotePause';
 import { HeroFilmStrip } from '@/components/cinematic/HeroFilmStrip';
+import { CinematicStoryStrip } from '@/components/cinematic/CinematicStoryStrip';
+import { CinematicCategoryReel } from '@/components/cinematic/CinematicCategoryReel';
+import { MagneticConstellation } from '@/components/cinematic/MagneticConstellation';
+import { CinematicBrandNarrative } from '@/components/cinematic/CinematicBrandNarrative';
+import { CinematicTestimonialPin } from '@/components/cinematic/CinematicTestimonialPin';
+import { CinematicCollectionDivider } from '@/components/cinematic/CinematicCollectionDivider';
+import { CinematicCommunityMosaic } from '@/components/cinematic/CinematicCommunityMosaic';
+import { CinematicTrustPillars } from '@/components/cinematic/CinematicTrustPillars';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -217,6 +225,40 @@ function renderSectionContent(
   }
 }
 
+
+function renderCinematicSectionContent(
+  section: HomepageSectionConfig,
+  ctx: RenderCtx
+): ReactNode | null {
+  const { preview, featuredProducts, oceanProducts } = ctx;
+
+  switch (section.id) {
+    case 'marquee':
+      return <CinematicStoryStrip data={section.data} />;
+    case 'categories':
+      return <CinematicCategoryReel data={section.data} />;
+    case 'featured':
+      return (
+        <FeaturedProductsSection
+          data={section.data}
+          products={preview ? resolveFeaturedProducts(section.data) : featuredProducts}
+        />
+      );
+    case 'brandStory':
+      return <CinematicBrandNarrative data={section.data} />;
+    case 'reviews':
+      return <CinematicTestimonialPin data={section.data} />;
+    case 'collectionBanner':
+      return <CinematicCollectionDivider data={section.data} />;
+    case 'community':
+      return <CinematicCommunityMosaic data={section.data} />;
+    case 'trust':
+      return <CinematicTrustPillars data={section.data} />;
+    default:
+      return null;
+  }
+}
+
 function sectionMap(sections: HomepageSectionConfig[]) {
   return Object.fromEntries(sections.map((s) => [s.id, s])) as Partial<
     Record<HomepageSectionId, HomepageSectionConfig>
@@ -286,6 +328,16 @@ export function HomePageRenderer({
     }
   }
 
+
+  function renderCinematicEnabledSection(blocks: ReactNode[], sectionId: HomepageSectionId) {
+    const section = byId[sectionId];
+    if (!section) return;
+    const content = renderCinematicSectionContent(section, ctx);
+    if (!content) return;
+    pushBlock(blocks, sectionId, sectionLabels[sectionId] ?? sectionId, content);
+    appendExtras(blocks, sectionId);
+  }
+
   function renderEnabledSection(blocks: ReactNode[], sectionId: HomepageSectionId, options?: Parameters<typeof renderSectionContent>[2]) {
     const section = byId[sectionId];
     if (!section) return;
@@ -305,28 +357,27 @@ export function HomePageRenderer({
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-hero-marquee" from="charcoal" to="cream" />);
 
-    renderEnabledSection(cinematicBlocks, 'marquee');
-    renderEnabledSection(cinematicBlocks, 'categories');
-    renderEnabledSection(cinematicBlocks, 'featured');
+    renderCinematicEnabledSection(cinematicBlocks, 'marquee');
+    renderCinematicEnabledSection(cinematicBlocks, 'categories');
+    cinematicBlocks.push(<ColorWashBridge key="wash-categories-constellation" from="cream" to="warm-white" />);
+    pushBlock(
+      cinematicBlocks,
+      'constellation',
+      'Best Selling',
+      <MagneticConstellation products={oceanProducts} />
+    );
+    renderCinematicEnabledSection(cinematicBlocks, 'featured');
 
-    const heroSection = byId.hero;
-    if (heroSection) {
-      const ocean = renderSectionContent(heroSection, ctx, { oceanOnly: true });
-      if (ocean) {
-        pushBlock(cinematicBlocks, 'bestSelling', 'Best Selling', ocean);
-      }
-    }
-
-    cinematicBlocks.push(<ColorWashBridge key="wash-ocean-chapters" from="cream" to="warm-white" />);
+    cinematicBlocks.push(<ColorWashBridge key="wash-ocean-chapters" from="warm-white" to="warm-white" />);
     cinematicBlocks.push(
       <PinnedChaptersSection key="pinned-chapters" chapterProducts={chapterProducts} />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-chapters-brand" from="warm-white" to="cream" />);
 
-    renderEnabledSection(cinematicBlocks, 'brandStory');
+    renderCinematicEnabledSection(cinematicBlocks, 'brandStory');
     cinematicBlocks.push(<EditorialQuotePause key="editorial-quote" />);
-    renderEnabledSection(cinematicBlocks, 'community');
-    renderEnabledSection(cinematicBlocks, 'reviews');
+    renderCinematicEnabledSection(cinematicBlocks, 'community');
+    renderCinematicEnabledSection(cinematicBlocks, 'reviews');
 
     if (filmStripProducts.length > 0) {
       cinematicBlocks.push(
@@ -334,8 +385,8 @@ export function HomePageRenderer({
       );
     }
 
-    renderEnabledSection(cinematicBlocks, 'collectionBanner');
-    renderEnabledSection(cinematicBlocks, 'trust');
+    renderCinematicEnabledSection(cinematicBlocks, 'collectionBanner');
+    renderCinematicEnabledSection(cinematicBlocks, 'trust');
 
     cinematicBlocks.push(<ColorWashBridge key="wash-trust-closing" from="cream" to="charcoal" />);
     cinematicBlocks.push(<CinematicClosingSection key="cinematic-closing" />);
