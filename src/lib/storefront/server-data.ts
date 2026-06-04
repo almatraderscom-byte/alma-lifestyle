@@ -250,6 +250,8 @@ export async function loadCatalogProductsServer(options?: {
   page?: number;
   limit?: number;
   categoryId?: string;
+  /** Resolve category slug to DB filter (e.g. islamic, panjabi). */
+  categorySlug?: CategorySlug;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
   if (!shouldLoadCatalogFromDatabase()) {
@@ -260,11 +262,16 @@ export async function loadCatalogProductsServer(options?: {
     const brandId = await getBrandId();
     const categories = await getCategories(brandId);
     const catById = new Map(categories.map((c) => [c.id, c]));
+    const categoryId =
+      options?.categoryId ??
+      (options?.categorySlug
+        ? categories.find((c) => c.slug === options.categorySlug)?.id
+        : undefined);
 
     const result = await getProducts({
       page: options?.page ?? 1,
       limit: options?.limit ?? 100,
-      categoryId: options?.categoryId,
+      categoryId,
       published: true,
       search: options?.search,
     });
@@ -334,10 +341,18 @@ export async function loadProductBySlugServer(
       );
     }
 
-    return getStaticProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
-    return getStaticProductBySlug(slug) ?? null;
+    return (
+      getStaticIslamicProductBySlug(slug) ??
+      getStaticCustomLayoutProductBySlug(slug) ??
+      null
+    );
   }
 }
 
@@ -349,13 +364,13 @@ export async function loadAllProductSlugsServer(): Promise<string[]> {
   try {
     const result = await getProducts({ page: 1, limit: 500, published: true });
     const slugs = new Set(result.data.map((p) => p.slug));
-    for (const slug of [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()]) {
+    for (const slug of getStaticSlugs()) {
       slugs.add(slug);
     }
     return [...slugs];
   } catch (err) {
     console.error('[storefront] loadAllProductSlugsServer failed:', err);
-    return [...getStaticIslamicSlugs(), ...getStaticCustomLayoutSlugs()];
+    return getStaticSlugs();
   }
 }
 

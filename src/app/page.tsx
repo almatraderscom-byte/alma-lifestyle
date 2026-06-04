@@ -32,11 +32,6 @@ export default async function HomePage({
     loadCinematicContentServer(),
   ]);
 
-  const hero = config.sections.find((s) => s.id === 'hero');
-  const heroUrl = hero?.id === 'hero' ? hero.data.backgroundImageUrl : '';
-  console.log('[Homepage] Config source: database');
-  console.log('[Homepage] Hero backgroundImageUrl:', heroUrl || '(empty)');
-
   return (
     <HomePageRenderer
       initialConfig={config}

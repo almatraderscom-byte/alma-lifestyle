@@ -3,7 +3,6 @@ import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/g
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
-import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
 import { FaviconSync } from '@/components/layout/FaviconSync';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
@@ -83,12 +82,11 @@ export default async function RootLayout({
       lang="bn"
       className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col font-bn-body antialiased bg-warm-white text-primary">
+      <body className="min-h-full flex flex-col overflow-x-hidden font-bn-body antialiased bg-warm-white text-primary">
         <StoreSettingsProvider settings={settings}>
           {hasFavicon ? (
             <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
           ) : null}
-          <CinematicGlobalChrome />
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <Analytics />

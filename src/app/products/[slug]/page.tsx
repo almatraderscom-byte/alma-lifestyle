@@ -12,7 +12,7 @@ import {
   loadProductBySlugServer,
 } from '@/lib/storefront/server-data';
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 const MURDA_SLUG = 'smart-murda-moshari';
 
