@@ -6,6 +6,7 @@ import type {
   SortOption,
   ProductFilters,
 } from '@/types/shop';
+import { DEFAULT_IMAGES } from '@/lib/default-images';
 
 export const CATEGORIES: ShopCategory[] = [
   { slug: 'kurtis', name: 'Kurtis', nameBn: 'কুর্তি', productCount: 24 },
@@ -25,32 +26,28 @@ export const COLLECTIONS: ShopCollection[] = [
     slug: 'summer-essentials',
     name: 'Summer Essentials',
     description: 'Light fabrics for warm days',
-    imageUrl:
-      'https://images.unsplash.com/photo-1583391733981-5a958b142a7c?w=600&h=400&fit=crop',
+    imageUrl: DEFAULT_IMAGES.categoryPanjabi,
     productCount: 16,
   },
   {
     slug: 'wedding-special',
     name: 'Wedding Special',
     description: 'Festive looks for celebrations',
-    imageUrl:
-      'https://images.unsplash.com/photo-1610030469983-98e550797fb4?w=600&h=400&fit=crop',
+    imageUrl: DEFAULT_IMAGES.categoryAccessories,
     productCount: 22,
   },
   {
     slug: 'everyday-elegance',
     name: 'Everyday Elegance',
     description: 'Comfortable premium daily wear',
-    imageUrl:
-      'https://images.unsplash.com/photo-1595777457583-95e059ee5811?w=600&h=400&fit=crop',
+    imageUrl: DEFAULT_IMAGES.categoryHomeDecor,
     productCount: 28,
   },
   {
     slug: 'eid-collection',
     name: 'Eid Collection',
     description: 'Curated festive outfits',
-    imageUrl:
-      'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&h=400&fit=crop',
+    imageUrl: DEFAULT_IMAGES.familyMatchingMain,
     productCount: 19,
   },
 ];
@@ -245,25 +242,6 @@ const PRODUCT_SEEDS: Omit<
   },
 ];
 
-const IMAGE_IDS = [
-  '1583391733981',
-  '1610030469983',
-  '1595777457583',
-  '1566174053879',
-  '1581047135770',
-  '1515372039744',
-  '1496747610174',
-  '1469334031218',
-  '1558618666',
-  '1485968579570',
-  '1572804013309',
-  '1539008750456',
-  '1558171813',
-  '1509633759637',
-  '1525502f47f1',
-  '1558171813',
-];
-
 function slugifyTitle(title: string): string {
   return title
     .toLowerCase()
@@ -284,7 +262,7 @@ export const PRODUCTS: ShopProduct[] = PRODUCT_SEEDS.map((seed, index) => {
     ...seed,
     id: `prod-${index + 1}`,
     slug,
-    imageUrl: `https://images.unsplash.com/photo-${IMAGE_IDS[index % IMAGE_IDS.length]}?w=600&h=800&fit=crop`,
+    imageUrl: DEFAULT_IMAGES.productGeneric,
     badge: badges[index % badges.length],
   };
 });
