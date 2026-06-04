@@ -40,6 +40,7 @@ import { ColorWashBridge } from '@/components/cinematic/ColorWashBridge';
 import { PinnedChaptersSection } from '@/components/cinematic/PinnedChaptersSection';
 import { CinematicClosingSection } from '@/components/cinematic/CinematicClosingSection';
 import { CinematicAssetPreload } from '@/components/cinematic/CinematicAssetPreload';
+import { EditorialQuotePause } from '@/components/cinematic/EditorialQuotePause';
 
 interface HomePageRendererProps {
   initialConfig: HomepageConfig;
@@ -320,6 +321,7 @@ export function HomePageRenderer({
     cinematicBlocks.push(<ColorWashBridge key="wash-chapters-brand" from="warm-white" to="cream" />);
 
     renderEnabledSection(cinematicBlocks, 'brandStory');
+    cinematicBlocks.push(<EditorialQuotePause key="editorial-quote" />);
     renderEnabledSection(cinematicBlocks, 'community');
     renderEnabledSection(cinematicBlocks, 'reviews');
 
