@@ -89,6 +89,10 @@ export function HomepageBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
+  useEffect(() => {
+    setPreviewKey((k) => k + 1);
+  }, [builderTab]);
+
   const sortedSections = useMemo(
     () => [...config.sections].sort((a, b) => a.order - b.order),
     [config.sections]
@@ -382,7 +386,7 @@ export function HomepageBuilder() {
   });
 
   return (
-    <div className="-m-4 lg:-m-6 flex flex-col min-h-[calc(100vh-4rem)]">
+    <div className="-m-4 lg:-m-6 flex flex-1 flex-col min-h-0 min-h-[calc(100vh-4rem)]">
       {isLocalStorageMode() && (
         <div className="mx-4 lg:mx-6 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
           <strong>Not connected to Supabase.</strong> Saves in this browser only — the live site and refresh
@@ -706,7 +710,7 @@ export function HomepageBuilder() {
             key={previewSrc}
             title="Homepage preview"
             src={previewSrc}
-            className="min-h-0 flex-1 w-full border-0 bg-white"
+            className="min-h-[480px] min-h-0 flex-1 w-full h-full border-0 bg-white"
           />
         </div>
 
