@@ -12,7 +12,8 @@ import {
   getFeaturedProducts,
 } from '@/server/db/queries/products';
 import { shouldLoadCatalogFromDatabase } from '@/lib/storefront/catalog-source';
-import { getHomepageConfigOrDefault, getAppSettings, getSiteSetting } from '@/server/db/queries/homepage';
+import { getHomepageConfigOrDefault } from '@/server/db/queries/homepage';
+import { getAppSettings } from '@/server/db/queries/homepage';
 import {
   groupProductsForListing,
   mapDbProductToCatalog,
@@ -47,6 +48,9 @@ import {
 import { toCardProduct } from '@/lib/products-data';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
+import type { CinematicContent } from '@/lib/cinematic-content-types';
+import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
+import { getCinematicContentOrDefault } from '@/server/db/queries/cinematic-content';
 import type { Category, ProductWithRelations } from '@/server/db/schema';
 
 export const STOREFRONT_REVALIDATE = 60;
@@ -117,7 +121,7 @@ async function enrichHomepageCategories(
 
 export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
   if (!isSupabaseAdminConfigured()) {
-    return { ...getDefaultHomepageConfig(), cinematicMode: true };
+    return getDefaultHomepageConfig();
   }
   try {
     const stored = await getHomepageConfigOrDefault();
@@ -125,11 +129,9 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
     const categories = await loadCategoriesServer();
     const { products } = await loadCatalogProductsServer({ limit: 200 });
     config = await enrichHomepageCategories(config, categories, products);
-    const cinematicMode = await getSiteSetting('cinematic_mode_enabled');
-    config.cinematicMode = cinematicMode === null ? true : cinematicMode === 'true';
     return config;
   } catch {
-    return { ...getDefaultHomepageConfig(), cinematicMode: true };
+    return getDefaultHomepageConfig();
   }
 }
 
@@ -433,4 +435,15 @@ export async function loadOceanProductsServer(
   }
 
   return out;
+}
+
+export async function loadCinematicContentServer(): Promise<CinematicContent> {
+  if (!isSupabaseAdminConfigured()) {
+    return getDefaultCinematicContent();
+  }
+  try {
+    return await getCinematicContentOrDefault();
+  } catch {
+    return getDefaultCinematicContent();
+  }
 }
