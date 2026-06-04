@@ -623,3 +623,17 @@ section[id],
     animation: none;
   }
 }
+
+@keyframes constellation-line-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.animate-constellation-line {
+  animation: constellation-line-pulse 4s ease-in-out infinite;
+}
