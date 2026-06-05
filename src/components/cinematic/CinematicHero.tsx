@@ -95,8 +95,15 @@ export function CinematicHero({ content }: CinematicHeroProps) {
     >
       <h1 className="sr-only">Alma Lifestyle — পরিবারের ঐতিহ্যে বোনা প্রতিটি গল্প</h1>
       <motion.div className="absolute inset-0" style={scrollY ? { y: scrollY } : undefined}>
-        {!isReady ? (
-          <div className="absolute inset-0 bg-charcoal" aria-hidden />
+        {!isReady || !useVideo ? (
+          <img
+            src={hero.posterSrc}
+            alt=""
+            className="cinematic-hero-media absolute inset-0 h-full w-full"
+            style={{ objectPosition: isMobile ? hero.mediaObjectPositionMobile : hero.mediaObjectPosition }}
+            decoding="async"
+            fetchPriority="high"
+          />
         ) : useVideo ? (
           <video
             className="cinematic-hero-media absolute inset-0 h-full w-full"
@@ -110,17 +117,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
             preload="metadata"
             aria-hidden
           />
-        ) : (
-          // Native img — avoid next/image optimizer caching or wrong fallbacks
-          <img
-            src={hero.posterSrc}
-            alt=""
-            className="cinematic-hero-media absolute inset-0 h-full w-full"
-            style={{ objectPosition: isMobile ? hero.mediaObjectPositionMobile : hero.mediaObjectPosition }}
-            decoding="async"
-            fetchPriority="high"
-          />
-        )}
+        ) : null}
       </motion.div>
 
       <div

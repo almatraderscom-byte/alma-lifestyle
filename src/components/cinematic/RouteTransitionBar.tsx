@@ -27,6 +27,7 @@ export function RouteTransitionBar() {
   const rafRef = useRef(0);
   const activeRef = useRef(false);
   const mountedRef = useRef(false);
+  const safetyTimerRef = useRef<number | null>(null);
 
   const cancelAnim = useCallback(() => {
     if (rafRef.current) {
@@ -59,15 +60,11 @@ export function RouteTransitionBar() {
     [cancelAnim]
   );
 
-  const startNavigation = useCallback(() => {
-    widthRef.current = 0;
-    setWidth(0);
-    animateTo(0, 70, 600, () => {
-      animateTo(70, 90, 1500);
-    });
-  }, [animateTo]);
-
   const finishNavigation = useCallback(() => {
+    if (safetyTimerRef.current) {
+      window.clearTimeout(safetyTimerRef.current);
+      safetyTimerRef.current = null;
+    }
     cancelAnim();
     const from = widthRef.current;
     if (from < 90) {
@@ -82,6 +79,18 @@ export function RouteTransitionBar() {
       }, 300);
     });
   }, [animateTo, cancelAnim]);
+
+  const startNavigation = useCallback(() => {
+    if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
+    widthRef.current = 0;
+    setWidth(0);
+    animateTo(0, 70, 600, () => {
+      animateTo(70, 90, 1500);
+    });
+    safetyTimerRef.current = window.setTimeout(() => {
+      finishNavigation();
+    }, 8000);
+  }, [animateTo, finishNavigation]);
 
   useEffect(() => {
     if (reduced) return;
@@ -101,7 +110,10 @@ export function RouteTransitionBar() {
     }
   }, [pathname, searchKey, reduced, finishNavigation]);
 
-  useEffect(() => () => cancelAnim(), [cancelAnim]);
+  useEffect(() => () => {
+    cancelAnim();
+    if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
+  }, [cancelAnim]);
 
   if (reduced) return null;
 

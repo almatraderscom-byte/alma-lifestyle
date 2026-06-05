@@ -422,7 +422,6 @@ export function HomePageRenderer({
 
     cinematicBlocks.push(
       <CinematicAssetPreload key="cinematic-preload" />,
-      <CinematicLoadingOverlay key="cinematic-overlay" />,
       <CinematicHero key="cinematic-hero" content={liveCinematicContent?.hero} />
     );
     cinematicBlocks.push(<ColorWashBridge key="wash-hero-marquee" from="charcoal" to="cream" />);

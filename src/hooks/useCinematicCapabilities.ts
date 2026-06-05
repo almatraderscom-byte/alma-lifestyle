@@ -13,7 +13,7 @@ export function useCinematicCapabilities() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
   const [saveData, setSaveData] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);

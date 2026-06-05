@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { forwardRef, useCallback } from 'react';
 import { dispatchRouteTransitionStart } from '@/components/cinematic/RouteTransitionBar';
-import { dispatchHomeNavigationStart } from '@/lib/cinematic-navigation';
 import { haptic } from '@/lib/haptic';
 import { cn } from '@/lib/utils';
 
@@ -39,8 +38,7 @@ export const CinematicHomeLink = forwardRef<HTMLAnchorElement, CinematicHomeLink
         }
 
         e.preventDefault();
-        dispatchHomeNavigationStart();
-        dispatchRouteTransitionStart();
+          dispatchRouteTransitionStart();
         router.push('/');
       },
       [onClick, pathname, rest.target, router]
