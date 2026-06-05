@@ -1,12 +1,10 @@
+import { unstable_cache } from 'next/cache';
 import { getBrandSlug } from '@/lib/supabase/config';
+import { CACHE_TAGS, STOREFRONT_CACHE_SECONDS } from '@/lib/storefront/cache-tags';
 import { getSupabaseAdmin } from './client';
 import { assertNoError } from './queries/errors';
 
-let cachedBrandId: string | null = null;
-
-export async function getBrandId(): Promise<string> {
-  if (cachedBrandId) return cachedBrandId;
-
+async function fetchBrandIdFromDb(): Promise<string> {
   const slug = getBrandSlug();
   const { data, error } = await getSupabaseAdmin()
     .from('brands')
@@ -22,10 +20,19 @@ export async function getBrandId(): Promise<string> {
     throw new Error(`Brand not found for slug: ${slug}`);
   }
 
-  cachedBrandId = row.id;
   return row.id;
 }
 
+const getCachedBrandId = unstable_cache(fetchBrandIdFromDb, ['storefront-brand-id'], {
+  revalidate: STOREFRONT_CACHE_SECONDS,
+  tags: [CACHE_TAGS.brand],
+});
+
+export async function getBrandId(): Promise<string> {
+  return getCachedBrandId();
+}
+
+/** @deprecated Tag revalidation handles cache busting. */
 export function clearBrandIdCache(): void {
-  cachedBrandId = null;
+  /* no-op */
 }

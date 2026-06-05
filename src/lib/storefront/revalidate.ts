@@ -1,8 +1,23 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CACHE_TAGS } from '@/lib/storefront/cache-tags';
 
-/** Full storefront cache bust (admin "Force refresh"). */
+function revalidateTags(...tags: string[]): void {
+  for (const tag of tags) {
+    revalidateTag(tag, 'max');
+  }
+}
+
+/** Full storefront cache bust (admin "Force refresh"). Uses tags — not layout-wide invalidation. */
 export function revalidateStorefrontAll(): void {
-  revalidatePath('/', 'layout');
+  revalidateTags(
+    CACHE_TAGS.brand,
+    CACHE_TAGS.settings,
+    CACHE_TAGS.nav,
+    CACHE_TAGS.categories,
+    CACHE_TAGS.catalog,
+    CACHE_TAGS.homepage,
+    CACHE_TAGS.cinematic
+  );
   revalidatePath('/');
   revalidatePath('/products');
   revalidatePath('/collections');
@@ -11,35 +26,37 @@ export function revalidateStorefrontAll(): void {
 }
 
 export function revalidateHomepage(): void {
-  revalidatePath('/', 'layout');
+  revalidateTags(CACHE_TAGS.homepage, CACHE_TAGS.cinematic);
   revalidatePath('/');
   revalidatePath('/admin/homepage');
 }
 
 export function revalidateProductPages(slug?: string): void {
-  revalidateHomepage();
+  revalidateTags(CACHE_TAGS.catalog, CACHE_TAGS.homepage);
   revalidatePath('/products');
+  revalidatePath('/');
   if (slug) {
     revalidatePath(`/products/${slug}`);
   }
 }
 
 export function revalidateCategoryPages(): void {
-  revalidatePath('/', 'layout');
-  revalidateHomepage();
+  revalidateTags(CACHE_TAGS.categories, CACHE_TAGS.nav, CACHE_TAGS.catalog, CACHE_TAGS.homepage);
   revalidatePath('/products');
+  revalidatePath('/');
 }
 
 export function revalidateCollectionPages(slug?: string): void {
-  revalidateHomepage();
+  revalidateTags(CACHE_TAGS.catalog, CACHE_TAGS.homepage);
   revalidatePath('/collections');
+  revalidatePath('/');
   if (slug) {
     revalidatePath(`/collections/${slug}`);
   }
 }
 
 export function revalidateSettingsPages(): void {
-  revalidatePath('/', 'layout');
+  revalidateTags(CACHE_TAGS.settings, CACHE_TAGS.nav);
   revalidatePath('/checkout');
   revalidatePath('/cart');
   revalidatePath('/api/favicon');

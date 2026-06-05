@@ -7,48 +7,34 @@ import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import { CINEMATIC_HOME_NAV_START } from '@/lib/cinematic-navigation';
 import { isEmbedPreviewMode } from '@/lib/homepage-config';
 
-const DISMISS_DELAY_MS = 450;
-const MAX_VISIBLE_MS = 8000;
+const DISMISS_DELAY_MS = 300;
+const MAX_VISIBLE_MS = 3500;
 
+/** Non-blocking top banner — feedback without covering the whole page. */
 export function HomeNavigationOverlay() {
   const pathname = usePathname();
   const reduced = useReducedMotion();
   const [visible, setVisible] = useState(false);
-  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (isEmbedPreviewMode()) return;
 
-    const onStart = () => {
-      setPending(true);
-      setVisible(true);
-    };
-
+    const onStart = () => setVisible(true);
     window.addEventListener(CINEMATIC_HOME_NAV_START, onStart);
     return () => window.removeEventListener(CINEMATIC_HOME_NAV_START, onStart);
   }, []);
 
   useEffect(() => {
-    if (!pending || pathname !== '/') return;
-
-    const timer = window.setTimeout(() => {
-      setVisible(false);
-      setPending(false);
-    }, DISMISS_DELAY_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [pathname, pending]);
-
-  useEffect(() => {
     if (!visible) return;
 
-    const timer = window.setTimeout(() => {
-      setVisible(false);
-      setPending(false);
-    }, MAX_VISIBLE_MS);
+    if (pathname === '/') {
+      const timer = window.setTimeout(() => setVisible(false), DISMISS_DELAY_MS);
+      return () => window.clearTimeout(timer);
+    }
 
+    const timer = window.setTimeout(() => setVisible(false), MAX_VISIBLE_MS);
     return () => window.clearTimeout(timer);
-  }, [visible]);
+  }, [pathname, visible]);
 
   if (reduced) return null;
 
@@ -56,61 +42,36 @@ export function HomeNavigationOverlay() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-charcoal/96 backdrop-blur-[2px]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.32, ease: 'easeOut' }}
+          className="pointer-events-none fixed inset-x-0 top-0 z-[9999] overflow-hidden border-b border-mustard/30 bg-charcoal/95 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-sm"
+          initial={{ y: '-100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '-100%', opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           role="status"
           aria-live="polite"
           aria-label="Returning to ALMA homepage"
         >
-          <motion.div
-            className="flex h-[64px] w-[64px] items-center justify-center rounded-full border border-mustard"
-            initial={{ opacity: 0, scale: 0.72 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="font-brand text-2xl text-mustard">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-center gap-4 px-4">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-mustard font-brand text-lg text-mustard">
               {CINEMATIC_HERO.overlayBrandMark}
             </span>
-          </motion.div>
-
-          <motion.p
-            className="mt-5 font-brand text-sm uppercase tracking-[0.28em] text-cream"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.08 }}
-          >
-            {CINEMATIC_HERO.overlayTagline}
-          </motion.p>
-
-          <motion.p
-            className="mt-2 font-bn-body text-xs uppercase tracking-[0.35em] text-cream/55"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, delay: 0.16 }}
-          >
-            Returning home
-          </motion.p>
-
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden bg-charcoal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            aria-hidden
-          >
+            <div className="text-left">
+              <p className="font-brand text-xs uppercase tracking-[0.28em] text-cream">
+                {CINEMATIC_HERO.overlayTagline}
+              </p>
+              <p className="font-bn-body text-[11px] text-cream/60">Loading homepage…</p>
+            </div>
+          </div>
+          <motion.div className="h-[2px] w-full bg-charcoal" aria-hidden>
             <motion.div
               className="h-full w-1/3 rounded-r-full"
               style={{
                 background:
                   'linear-gradient(90deg, var(--color-mustard), var(--color-terracotta), var(--color-mustard))',
-                boxShadow: '0 0 14px rgba(200, 155, 60, 0.55)',
               }}
               initial={{ x: '-100%' }}
               animate={{ x: '400%' }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
             />
           </motion.div>
         </motion.div>

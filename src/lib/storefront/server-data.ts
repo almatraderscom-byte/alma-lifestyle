@@ -52,8 +52,17 @@ import type { Category, ProductWithRelations } from '@/server/db/schema';
 import type { CinematicContent } from '@/lib/cinematic-content-types';
 import { getDefaultCinematicContent } from '@/lib/cinematic-content-defaults';
 import { getCinematicContentOrDefault } from '@/server/db/queries/cinematic-content';
+import { STOREFRONT_CACHE_SECONDS } from '@/lib/storefront/cache-tags';
+import {
+  getCachedCatalogProducts,
+  getCachedCategories,
+  getCachedCinematicContent,
+  getCachedHeaderNavItems,
+  getCachedPublicSettings,
+  getCachedStoredHomepageConfig,
+} from '@/lib/storefront/cached-loaders';
 
-export const STOREFRONT_REVALIDATE = 60;
+export const STOREFRONT_REVALIDATE = STOREFRONT_CACHE_SECONDS;
 
 async function loadRawPublishedProductRows(): Promise<{
   rows: ProductWithRelations[];
@@ -126,8 +135,7 @@ export async function loadHomepageConfigServer(
     return getDefaultHomepageConfig();
   }
   try {
-    const stored = await getHomepageConfigOrDefault();
-    let config = ensureHomepageConfig(stored);
+    let config = await getCachedStoredHomepageConfig();
     const categories = await loadCategoriesServer();
     const products =
       preloadedCatalog ??
@@ -216,41 +224,16 @@ export async function resolveFeaturedProductsServer(
 }
 
 export async function loadPublicSettingsServer(): Promise<AppSettings> {
-  if (!isSupabaseAdminConfigured()) {
-    return getDefaultAppSettings();
-  }
-  try {
-    return (await getAppSettings()) ?? getDefaultAppSettings();
-  } catch {
-    return getDefaultAppSettings();
-  }
+  return getCachedPublicSettings();
 }
 
 export async function loadCategoriesServer(): Promise<Category[]> {
-  if (!isSupabaseAdminConfigured()) return [];
-  try {
-    const brandId = await getBrandId();
-    return getCategories(brandId);
-  } catch {
-    return [];
-  }
+  return getCachedCategories();
 }
 
 /** Header category dropdown: up to 12 menu categories from DB, or static fallback. */
 export async function loadHeaderNavItemsServer(): Promise<HeaderNavItem[]> {
-  if (!isSupabaseAdminConfigured()) {
-    return getStaticCategoryNavItems();
-  }
-  try {
-    const brandId = await getBrandId();
-    const menuCategories = await getMenuCategories(brandId, 12);
-    if (!menuCategories.length) {
-      return getStaticCategoryNavItems();
-    }
-    return menuCategories.map(categoryToNavItem);
-  } catch {
-    return getStaticCategoryNavItems();
-  }
+  return getCachedHeaderNavItems();
 }
 
 export async function loadCatalogProductsServer(options?: {
@@ -260,78 +243,8 @@ export async function loadCatalogProductsServer(options?: {
   categorySlug?: CategorySlug;
   search?: string;
 }): Promise<{ products: CatalogProduct[]; total: number }> {
-  if (!shouldLoadCatalogFromDatabase()) {
-    let products = CATALOG_PRODUCTS;
-    if (options?.categorySlug) {
-      products = products.filter((p) => p.categorySlug === options.categorySlug);
-    }
-    return { products, total: products.length };
-  }
-
-  try {
-    const brandId = await getBrandId();
-    const categories = await getCategories(brandId);
-    const catById = new Map(categories.map((c) => [c.id, c]));
-    const categoryId =
-      options?.categoryId ??
-      (options?.categorySlug
-        ? categories.find(
-            (c) => c.slug.toLowerCase() === options.categorySlug!.toLowerCase()
-          )?.id
-        : undefined);
-
-    const result = await getProducts({
-      page: options?.page ?? 1,
-      limit: options?.limit ?? 100,
-      categoryId,
-      published: true,
-      search: options?.search,
-    });
-
-    const products = groupProductsForListing(result.data, catById).map(
-      mergeStaticProductOverrides
-    );
-    const seen = new Set(products.map((p) => p.slug));
-    for (const staticProduct of [
-      ...getStaticIslamicProducts(),
-      ...getStaticCustomLayoutProducts(),
-    ]) {
-      if (!seen.has(staticProduct.slug)) {
-        products.push(mergeStaticProductOverrides(staticProduct));
-        seen.add(staticProduct.slug);
-      }
-    }
-
-    const filtered = options?.categorySlug
-      ? products.filter(
-          (p) => p.categorySlug.toLowerCase() === options.categorySlug!.toLowerCase()
-        )
-      : products;
-
-    return { products: filtered, total: filtered.length };
-  } catch (err) {
-    console.error('[storefront] loadCatalogProductsServer failed:', err);
-    const fallback = [
-      ...getStaticIslamicProducts(),
-      ...getStaticCustomLayoutProducts(),
-    ];
-    const seen = new Set<string>();
-    let products = fallback
-      .filter((p) => {
-        if (seen.has(p.slug)) return false;
-        seen.add(p.slug);
-        return true;
-      })
-      .map(mergeStaticProductOverrides);
-    if (options?.categorySlug) {
-      products = products.filter(
-        (p) => p.categorySlug.toLowerCase() === options.categorySlug!.toLowerCase()
-      );
-    }
-    return { products, total: products.length };
-  }
+  return getCachedCatalogProducts(options);
 }
-
 export async function loadProductBySlugServer(
   slug: string
 ): Promise<CatalogProduct | null> {
@@ -478,13 +391,5 @@ export async function loadOceanProductsServer(
 }
 
 export async function loadCinematicContentServer(): Promise<CinematicContent> {
-  if (!isSupabaseAdminConfigured()) {
-    return getDefaultCinematicContent();
-  }
-  try {
-    return await getCinematicContentOrDefault();
-  } catch (err) {
-    console.error('[storefront] loadCinematicContentServer failed:', err);
-    return getDefaultCinematicContent();
-  }
+  return getCachedCinematicContent();
 }
