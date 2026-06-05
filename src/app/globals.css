@@ -51,6 +51,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.cinematic-cursor-active {
+  cursor: none;
+}
+
+body.cinematic-cursor-active a,
+body.cinematic-cursor-active button {
+  cursor: none;
+}
+
 section[id],
 .section-anchor {
   scroll-margin-top: 80px;
@@ -77,11 +86,6 @@ section[id],
 ::selection {
   background-color: rgba(201, 125, 93, 0.35);
   color: var(--text-dark);
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-mustard);
-  outline-offset: 2px;
 }
 
 .line-clamp-2 {
