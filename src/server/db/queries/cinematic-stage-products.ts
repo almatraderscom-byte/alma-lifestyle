@@ -2,7 +2,10 @@ import type { CinematicContent } from '@/lib/cinematic-content-types';
 import { resolveProductImageUrl } from '@/lib/default-images';
 import type { CardProduct, CatalogProduct } from '@/lib/products-data';
 import { toCardProduct } from '@/lib/products-data';
-import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
+import {
+  loadCatalogProductsServer,
+  loadProductBySlugServer,
+} from '@/lib/storefront/server-data';
 import { CINEMATIC_FILM_STRIP_PRODUCTS } from '@/lib/cinematic-config';
 
 const CHAPTER_IMAGE_STAGE_COUNT = 3;
@@ -18,7 +21,24 @@ function isPanjabiProduct(product: CatalogProduct): boolean {
   const category = product.categorySlug?.trim().toLowerCase();
   if (category === 'panjabi') return true;
   const type = product.productType;
-  return type === 'men_panjabi' || type === 'boy_panjabi';
+  return (
+    type === 'men_panjabi' ||
+    type === 'boy_panjabi' ||
+    type === 'girl_two_piece' ||
+    type === 'women_three_piece'
+  );
+}
+
+/** Listing cards use anchor slugs; admin may pick any family member slug (e.g. *-boy). */
+function buildCatalogSlugMap(products: CatalogProduct[]): Map<string, CatalogProduct> {
+  const map = new Map<string, CatalogProduct>();
+  for (const product of products) {
+    map.set(product.slug, product);
+    for (const member of product.designGroupMembers ?? []) {
+      map.set(member.slug, member);
+    }
+  }
+  return map;
 }
 
 function toChapterCardProduct(product: CatalogProduct): CardProduct {
@@ -54,6 +74,23 @@ function collectChapterSlugs(
   return slugs;
 }
 
+async function resolveChapterCatalogProduct(
+  configured: string | undefined,
+  bySlug: Map<string, CatalogProduct>,
+  fallbackPool: CatalogProduct[],
+  usedFallbackSlugs: Set<string>
+): Promise<CatalogProduct | undefined> {
+  if (configured) {
+    let catalog = bySlug.get(configured);
+    if (!catalog) {
+      catalog = (await loadProductBySlugServer(configured)) ?? undefined;
+    }
+    if (catalog) return catalog;
+  }
+
+  return fallbackPool.find((p) => !usedFallbackSlugs.has(p.slug));
+}
+
 export async function loadCinematicChapterProducts(
   content?: Pick<CinematicContent, 'chapters'> | null
 ): Promise<(CardProduct | null)[]> {
@@ -62,7 +99,7 @@ export async function loadCinematicChapterProducts(
   if (!count) return [];
 
   const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
-  const bySlug = new Map(products.map((p) => [p.slug, p]));
+  const bySlug = buildCatalogSlugMap(products);
   const fallbackPool = buildChapterFallbackPool(products);
   const usedFallbackSlugs = new Set<string>();
 
@@ -75,14 +112,15 @@ export async function loadCinematicChapterProducts(
     }
 
     const configured = configuredChapterSlug(stages, index);
-    let catalog = configured ? bySlug.get(configured) : undefined;
-    if (catalog && !isPanjabiProduct(catalog)) {
-      catalog = undefined;
-    }
+    const catalog = await resolveChapterCatalogProduct(
+      configured,
+      bySlug,
+      fallbackPool,
+      usedFallbackSlugs
+    );
 
-    if (!catalog) {
-      catalog = fallbackPool.find((p) => !usedFallbackSlugs.has(p.slug));
-      if (catalog) usedFallbackSlugs.add(catalog.slug);
+    if (catalog && !configured) {
+      usedFallbackSlugs.add(catalog.slug);
     }
 
     cards.push(catalog ? toChapterCardProduct(catalog) : null);
