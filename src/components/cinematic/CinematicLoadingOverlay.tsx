@@ -6,6 +6,7 @@ import { CINEMATIC_HERO } from '@/lib/cinematic-config';
 import { isCinematicPreviewMode, isEmbedPreviewMode } from '@/lib/homepage-config';
 
 const SESSION_KEY = 'cinematic-overlay-seen';
+const OVERLAY_DURATION_MS = 900;
 
 export function CinematicLoadingOverlay() {
   if (isCinematicPreviewMode() || isEmbedPreviewMode()) return null;
@@ -22,7 +23,7 @@ export function CinematicLoadingOverlay() {
   });
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || dismissed) return;
     const nav = navigator as Navigator & { connection?: { effectiveType?: string } };
     const conn = nav.connection?.effectiveType;
     if (conn === '2g' || conn === 'slow-2g') return;
@@ -31,50 +32,39 @@ export function CinematicLoadingOverlay() {
     } catch {
       return;
     }
-    setDismissed(false);
+
     setVisible(true);
     const timer = window.setTimeout(() => {
       setVisible(false);
+      setDismissed(true);
       try {
         sessionStorage.setItem(SESSION_KEY, '1');
       } catch {
         /* ignore */
       }
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [reduced]);
+    }, OVERLAY_DURATION_MS);
 
-  if (reduced || dismissed) return null;
+    return () => window.clearTimeout(timer);
+  }, [reduced, dismissed]);
+
+  if (reduced || dismissed || !visible) return null;
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-charcoal"
-      initial={{ opacity: 1, y: 0 }}
-      animate={
-        visible
-          ? { opacity: 1, y: 0 }
-          : { opacity: 0, y: '-100%' }
-      }
-      transition={{
-        opacity: { duration: 0.5, ease: 'easeInOut' },
-        y: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-      }}
-      onAnimationComplete={() => {
-        if (!visible) setDismissed(true);
-      }}
+      className="pointer-events-none fixed inset-0 z-[100] flex flex-col items-center justify-center bg-charcoal"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       role="status"
       aria-live="polite"
       aria-label="Loading Alma Lifestyle"
-      aria-hidden={!visible}
     >
       <motion.div
         className="flex h-[60px] w-[60px] items-center justify-center rounded-full border border-mustard"
         initial={{ opacity: 0, scale: 0.6 }}
-        animate={{
-          opacity: [0, 1, 1, 0],
-          scale: [0.6, 1, 1, 1.4],
-        }}
-        transition={{ duration: 2.4, times: [0, 0.25, 0.7, 1], ease: 'easeInOut' }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <span className="font-brand text-2xl text-mustard">
           {CINEMATIC_HERO.overlayBrandMark}
@@ -82,13 +72,9 @@ export function CinematicLoadingOverlay() {
       </motion.div>
       <motion.p
         className="mt-6 font-brand text-sm uppercase tracking-[0.1em] text-cream"
-        initial={{ opacity: 0, filter: 'blur(8px)', letterSpacing: '0.5em' }}
-        animate={{
-          opacity: [0, 1, 1, 0],
-          filter: ['blur(8px)', 'blur(0px)', 'blur(0px)', 'blur(4px)'],
-          letterSpacing: ['0.5em', '0.1em', '0.1em', '0.3em'],
-        }}
-        transition={{ duration: 2.4, times: [0, 0.35, 0.75, 1], ease: 'easeOut' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35, delay: 0.08 }}
       >
         {CINEMATIC_HERO.overlayTagline}
       </motion.p>

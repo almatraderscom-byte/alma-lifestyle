@@ -314,10 +314,17 @@ export function HomePageRenderer({
 }: HomePageRendererProps) {
   const [config, setConfig] = useState<HomepageConfig>(initialConfig);
   const [liveCinematicContent, setLiveCinematicContent] = useState(cinematicContent);
+  const [activeEditMode, setActiveEditMode] = useState(editMode);
 
   useEffect(() => {
     setConfig(initialConfig);
   }, [initialConfig]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    setActiveEditMode(params.get('preview') === 'true' && params.get('edit') === 'true');
+  }, []);
 
   useEffect(() => {
     setLiveCinematicContent(cinematicContent);
@@ -366,7 +373,7 @@ export function HomePageRenderer({
   const showCinematic = shouldShowCinematicHomepage(config, { editMode, preview });
   const insertAfter = buildInsertAfter(extras, showCinematic, liveCinematicContent);
   const byId = sectionMap(sections);
-  const ctx: RenderCtx = { editMode, preview, featuredProducts, oceanProducts };
+  const ctx: RenderCtx = { editMode: activeEditMode, preview, featuredProducts, oceanProducts };
 
   function pushBlock(blocks: ReactNode[], key: string, label: string, content: ReactNode) {
     blocks.push(
@@ -488,8 +495,8 @@ export function HomePageRenderer({
   });
 
   return (
-    <HomepageEditModeProvider editMode={editMode}>
-      {editMode && <HomepageEditBanner />}
+    <HomepageEditModeProvider editMode={activeEditMode}>
+      {activeEditMode && <HomepageEditBanner />}
       {blocks}
     </HomepageEditModeProvider>
   );
