@@ -16,15 +16,12 @@ import {
   sortCatalogProducts,
   paginateProducts,
   toCardProduct,
-  LISTING_TYPE_PARAM_VALUES,
   type CatalogProduct,
-  type ListingProductTypeFilter,
   type CategorySlug,
   type ProductFilters,
   type ListingSetFilter,
   type SortKey,
 } from '@/lib/products-data';
-import { PRODUCT_TYPE_LABELS_BN } from '@/lib/product-design-types';
 import {
   formatPageNumber,
   formatProductRange,
@@ -48,24 +45,14 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const router = useRouter();
 
   const categoryParam = searchParams.get('category') as CategorySlug | null;
-  const typeParam = searchParams.get('type');
-  const productTypeFilter: ListingProductTypeFilter | null =
-    typeParam &&
-    (LISTING_TYPE_PARAM_VALUES as readonly string[]).includes(typeParam)
-      ? (typeParam as ListingProductTypeFilter)
-      : null;
   const sortParam = (searchParams.get('sort') as SortKey) || 'newest';
   const pageParam = Number(searchParams.get('page') ?? '1');
 
-  const filtersFromParams = (): ProductFilters => ({
+  const [filters, setFilters] = useState<ProductFilters>(() => ({
     ...DEFAULT_FILTERS,
     categories: categoryParam && categoryParam in CATEGORY_LABELS ? [categoryParam] : [],
-    productType: productTypeFilter,
-    listingSet: productTypeFilter === 'family-set' ? 'matching' : 'all',
-  });
-
-  const [filters, setFilters] = useState<ProductFilters>(filtersFromParams);
-  const [appliedFilters, setAppliedFilters] = useState<ProductFilters>(filtersFromParams);
+  }));
+  const [appliedFilters, setAppliedFilters] = useState<ProductFilters>(filters);
   const [sort, setSort] = useState<SortKey>(
     sortParam in PRODUCTS_PAGE.sortOptions ? sortParam : 'newest'
   );
@@ -73,23 +60,39 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
   const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
-    const next = filtersFromParams();
+    if (categoryParam && categoryParam in CATEGORY_LABELS) {
+      setFilters((prev) => ({ ...prev, categories: [categoryParam] }));
+      setAppliedFilters((prev) => ({ ...prev, categories: [categoryParam] }));
+    } else if (!categoryParam) {
+      setFilters((prev) =>
+        prev.categories.length === 0 ? prev : { ...prev, categories: [] }
+      );
+      setAppliedFilters((prev) =>
+        prev.categories.length === 0 ? prev : { ...prev, categories: [] }
+      );
+    }
+  }, [categoryParam]);
+
+  function syncCategoryUrl(categories: CategorySlug[]) {
+    if (categories.length === 1) {
+      router.replace(`/products?category=${categories[0]}`, { scroll: false });
+    } else if (categories.length === 0 && categoryParam) {
+      router.replace('/products', { scroll: false });
+    }
+  }
+
+  function handleFiltersChange(next: ProductFilters) {
     setFilters(next);
     setAppliedFilters(next);
-  }, [categoryParam, typeParam]);
+    syncCategoryUrl(next.categories);
+  }
 
   const pageTitle = useMemo(() => {
-    if (appliedFilters.productType) {
-      if (appliedFilters.productType === 'family-set') {
-        return PRODUCTS_PAGE.filterMatchingSet;
-      }
-      return PRODUCT_TYPE_LABELS_BN[appliedFilters.productType];
-    }
     if (appliedFilters.categories.length === 1) {
       return CATEGORY_LABELS[appliedFilters.categories[0]];
     }
     return PRODUCTS_PAGE.titleAll;
-  }, [appliedFilters.categories, appliedFilters.productType]);
+  }, [appliedFilters.categories]);
 
   const filtered = useMemo(() => {
     const list = filterCatalogProducts(catalogSource, appliedFilters);
@@ -113,6 +116,7 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
 
   function applyFilters() {
     setAppliedFilters(filters);
+    syncCategoryUrl(filters.categories);
     setFilterOpen(false);
   }
 
@@ -216,7 +220,7 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
             <div className="sticky top-36 rounded-xl border border-border-subtle bg-background p-5">
               <ProductFiltersPanel
                 filters={filters}
-                onChange={setFilters}
+                onChange={handleFiltersChange}
                 onApply={applyFilters}
                 onReset={resetFilters}
               />
@@ -279,7 +283,7 @@ export function ProductsListing({ initialProducts }: ProductsListingProps) {
               <div className="flex-1 overflow-y-auto p-4">
                 <ProductFiltersPanel
                   filters={filters}
-                  onChange={setFilters}
+                  onChange={handleFiltersChange}
                   onApply={applyFilters}
                   onReset={resetFilters}
                 />
