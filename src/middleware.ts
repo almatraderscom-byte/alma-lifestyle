@@ -56,8 +56,7 @@ function applyFrameOptions(request: NextRequest, response: NextResponse): NextRe
   const { pathname, searchParams } = request.nextUrl;
   if (pathname.startsWith('/api')) return response;
 
-  const isPreview =
-    searchParams.get('preview') === 'true' || searchParams.get('cinematic') === '1';
+  const isPreview = searchParams.get('preview') === 'true';
   if (isPreview) {
     response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   } else {
@@ -72,29 +71,16 @@ function applyCacheHeaders(pathname: string, response: NextResponse): NextRespon
     return response;
   }
 
-  if (pathname === '/' || pathname.startsWith('/products') || pathname.startsWith('/collections')) {
-    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate');
-  }
+  // Storefront HTML: browsers must revalidate (fixes WiFi/router stale page cache after deploys).
+  response.headers.set(
+    'Cache-Control',
+    'no-cache, must-revalidate, s-maxage=60, stale-while-revalidate=300'
+  );
 
   return response;
 }
 
-/** Canonical host — avoids apex SSL issues and keeps admin preview on www. */
-function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
-  const host = request.headers.get('host')?.split(':')[0]?.toLowerCase();
-  if (host === 'almatraders.com') {
-    const url = request.nextUrl.clone();
-    url.hostname = 'www.almatraders.com';
-    url.protocol = 'https:';
-    return NextResponse.redirect(url, 308);
-  }
-  return null;
-}
-
 export function middleware(request: NextRequest) {
-  const canonical = redirectToCanonicalHost(request);
-  if (canonical) return canonical;
-
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/v1')) {
