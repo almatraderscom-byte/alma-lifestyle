@@ -16,7 +16,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { HomepageImageUpload } from '@/components/admin/homepage/HomepageImageUpload';
 import { useAdminToast } from '@/context/AdminToastContext';
 import { reportHomepageBuilderUploadError } from '@/lib/homepage-upload-error';
-import { getProducts, type AdminProduct } from '@/lib/admin-store';
+import { getCategories, getProducts, type AdminProduct } from '@/lib/admin-store';
 import { CinematicModeBanner } from '@/components/admin/homepage/CinematicModeBanner';
 import {
   clearDraftCinematicContent,
@@ -31,6 +31,22 @@ const GRADIENT_OPTIONS: { value: CinematicGradientToken; label: string }[] = [
   { value: 'emerald-deep', label: 'Emerald deep' },
   { value: 'charcoal', label: 'Charcoal' },
 ];
+
+
+function isPanjabiAdminProduct(
+  product: AdminProduct,
+  panjabiCategoryIds: Set<string>
+): boolean {
+  if (panjabiCategoryIds.has(product.categoryId)) return true;
+  const type = product.productType;
+  return type === 'men_panjabi' || type === 'boy_panjabi';
+}
+
+function productFeaturedImageUrl(product: AdminProduct): string | undefined {
+  const imgs = [...(product.images ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  const featured = imgs.find((i) => i.isFeatured) ?? imgs[0];
+  return featured?.url?.trim() || undefined;
+}
 
 interface CinematicContentEditorProps {
   cinematicModeOn?: boolean;
@@ -65,13 +81,20 @@ export function CinematicContentEditor({
   }, [toast]);
 
   useEffect(() => {
-    void getProducts().then((list) =>
+    void Promise.all([getProducts(), getCategories()]).then(([list, categories]) => {
+      const panjabiCategoryIds = new Set(
+        categories
+          .filter((c) => c.slug.trim().toLowerCase() === 'panjabi')
+          .map((c) => c.id)
+      );
       setPublishedProducts(
         list
-          .filter((p) => p.status === 'published')
+          .filter(
+            (p) => p.status === 'published' && isPanjabiAdminProduct(p, panjabiCategoryIds)
+          )
           .sort((a, b) => a.title.localeCompare(b.title, 'bn'))
-      )
-    );
+      );
+    });
   }, []);
 
   const updateHero = useCallback(
@@ -188,85 +211,23 @@ export function CinematicContentEditor({
         revalidate).
       </div>
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
-        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Hero</h2>
 
-<Input
-  label="Brand name"
-  value={content.hero.brandName}
-  onChange={(e) => updateHero({ brandName: e.target.value })}
-/>
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-  <Input
-    label="Video object position (desktop)"
-    value={content.hero.mediaObjectPosition}
-    onChange={(e) => updateHero({ mediaObjectPosition: e.target.value })}
-    placeholder="46% 18%"
-  />
-  <Input
-    label="Video object position (mobile)"
-    value={content.hero.mediaObjectPositionMobile}
-    onChange={(e) => updateHero({ mediaObjectPositionMobile: e.target.value })}
-    placeholder="center 22%"
-  />
-</div>
-        <Input
-          label="Eyebrow"
-          value={content.hero.eyebrow}
-          onChange={(e) => updateHero({ eyebrow: e.target.value })}
-        />
-        <Textarea
-          label="Subheading"
-          rows={2}
-          value={content.hero.subheading}
-          onChange={(e) => updateHero({ subheading: e.target.value })}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            label="Meta left"
-            value={content.hero.metaLeft}
-            onChange={(e) => updateHero({ metaLeft: e.target.value })}
-          />
-          <Input
-            label="Meta right"
-            value={content.hero.metaRight}
-            onChange={(e) => updateHero({ metaRight: e.target.value })}
-          />
+      <section
+        id="pinned-chapters-editor"
+        className="rounded-xl border-2 border-[#C97D5D]/50 bg-[#FFF9F5] p-4 space-y-4 shadow-sm"
+      >
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold text-neutral-900">
+            পিন করা চ্যাপ্টার — বাম পাশের ছবি (Pinned chapters)
+          </h2>
+          <p className="text-sm text-neutral-600">
+            এখানে আলাদা ছবি আপলোড নেই। প্রতিটি স্টেজে (১–৩) একটি <strong>পাঞ্জাবি পণ্য</strong> বেছে নিন —
+            সেই পণ্যের মেইন ইমেজ চ্যাপ্টারে দেখাবে। পণ্যের ছবি Products → Edit → Images থেকে আপলোড করুন।
+          </p>
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+            সেভ করতে উপরে <strong>Save cinematic content</strong> বাটনে ক্লিক করুন (Sections ট্যাব নয়)।
+          </p>
         </div>
-        <Input
-          label="Video URL"
-          value={content.hero.videoSrc}
-          onChange={(e) => updateHero({ videoSrc: e.target.value })}
-        />
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-neutral-700">Hero video file (MP4)</p>
-          <input
-            type="file"
-            accept="video/mp4"
-            disabled={uploadingVideo}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void handleVideoUpload(file);
-              e.target.value = '';
-            }}
-            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded file:border-0 file:bg-[#C97D5D] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
-          />
-          {uploadingVideo && <p className="text-xs text-neutral-500">Uploading video…</p>}
-        </div>
-        <HomepageImageUpload
-          specKey="heroImage"
-          label="Poster image"
-          folder="cinematic/hero"
-          value={content.hero.posterSrc}
-          onChange={(url) => updateHero({ posterSrc: url })}
-          onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
-        />
-      </section>
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
-        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
-          Pinned chapters
-        </h2>
         <Input
           label="Section number label"
           value={content.chapters.sectionNumber}
@@ -325,20 +286,55 @@ export function CinematicContentEditor({
 />
 
             {!stage.cta && (
-              <Select
-                label={`Stage ${index + 1} product (image source)`}
-                value={stage.productSlug ?? ''}
-                onChange={(e) =>
-                  updateStage(index, { productSlug: e.target.value || undefined })
-                }
-                options={[
-                  { value: '', label: '— No product (gradient only) —' },
-                  ...publishedProducts.map((prod) => ({
-                    value: prod.slug,
-                    label: `${prod.title} (${prod.slug})`,
-                  })),
-                ]}
-              />
+              <div className="space-y-2 rounded-lg border border-[#C97D5D]/30 bg-white p-3">
+                <Select
+                  label={`স্টেজ ${index + 1} — পাঞ্জাবি পণ্য (ছবির উৎস) / Stage ${index + 1} panjabi product`}
+                  value={stage.productSlug ?? ''}
+                  onChange={(e) =>
+                    updateStage(index, { productSlug: e.target.value || undefined })
+                  }
+                  options={[
+                    { value: '', label: '— পণ্য বেছে নিন (অটো পাঞ্জাবি) —' },
+                    ...publishedProducts.map((prod) => {
+                      const thumb = productFeaturedImageUrl(prod);
+                      const thumbNote = thumb ? ' ✓ ছবি আছে' : ' ⚠ ছবি নেই';
+                      return {
+                        value: prod.slug,
+                        label: `${prod.title}${thumbNote}`,
+                      };
+                    }),
+                  ]}
+                />
+                {stage.productSlug ? (
+                  (() => {
+                    const picked = publishedProducts.find((p) => p.slug === stage.productSlug);
+                    const thumb = picked ? productFeaturedImageUrl(picked) : undefined;
+                    return thumb ? (
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={thumb}
+                          alt=""
+                          className="h-20 w-16 rounded object-cover border border-neutral-200"
+                        />
+                        <p className="text-xs text-neutral-600">
+                          প্রিভিউ: {picked?.title ?? stage.productSlug}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-amber-700">
+                        এই পণ্যের কোনো ইমেজ নেই — Products এ গিয়ে Main Image আপলোড করুন।
+                      </p>
+                    );
+                  })()
+                ) : (
+                  <p className="text-xs text-neutral-500">
+                    {publishedProducts.length === 0
+                      ? 'কোনো প্রকাশিত পাঞ্জাবি পণ্য নেই। আগে Products থেকে পাঞ্জাবি যোগ করুন।'
+                      : `${publishedProducts.length}টি পাঞ্জাবি পণ্য উপলব্ধ।`}
+                  </p>
+                )}
+              </div>
             )}
             {stage.cta && (
               <p className="text-xs text-neutral-500">
@@ -435,6 +431,80 @@ export function CinematicContentEditor({
         ))}
       </section>
 
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Hero</h2>
+
+<Input
+  label="Brand name"
+  value={content.hero.brandName}
+  onChange={(e) => updateHero({ brandName: e.target.value })}
+/>
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <Input
+    label="Video object position (desktop)"
+    value={content.hero.mediaObjectPosition}
+    onChange={(e) => updateHero({ mediaObjectPosition: e.target.value })}
+    placeholder="46% 18%"
+  />
+  <Input
+    label="Video object position (mobile)"
+    value={content.hero.mediaObjectPositionMobile}
+    onChange={(e) => updateHero({ mediaObjectPositionMobile: e.target.value })}
+    placeholder="center 22%"
+  />
+</div>
+        <Input
+          label="Eyebrow"
+          value={content.hero.eyebrow}
+          onChange={(e) => updateHero({ eyebrow: e.target.value })}
+        />
+        <Textarea
+          label="Subheading"
+          rows={2}
+          value={content.hero.subheading}
+          onChange={(e) => updateHero({ subheading: e.target.value })}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="Meta left"
+            value={content.hero.metaLeft}
+            onChange={(e) => updateHero({ metaLeft: e.target.value })}
+          />
+          <Input
+            label="Meta right"
+            value={content.hero.metaRight}
+            onChange={(e) => updateHero({ metaRight: e.target.value })}
+          />
+        </div>
+        <Input
+          label="Video URL"
+          value={content.hero.videoSrc}
+          onChange={(e) => updateHero({ videoSrc: e.target.value })}
+        />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-neutral-700">Hero video file (MP4)</p>
+          <input
+            type="file"
+            accept="video/mp4"
+            disabled={uploadingVideo}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleVideoUpload(file);
+              e.target.value = '';
+            }}
+            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded file:border-0 file:bg-[#C97D5D] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
+          />
+          {uploadingVideo && <p className="text-xs text-neutral-500">Uploading video…</p>}
+        </div>
+        <HomepageImageUpload
+          specKey="heroImage"
+          label="Poster image"
+          folder="cinematic/hero"
+          value={content.hero.posterSrc}
+          onChange={(url) => updateHero({ posterSrc: url })}
+          onError={(msg) => reportHomepageBuilderUploadError(msg, toast)}
+        />
+      </section>
       <section className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
         <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
           Closing CTA

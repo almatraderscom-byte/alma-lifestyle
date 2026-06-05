@@ -28,11 +28,20 @@ function stageGradient(from: CinematicGradientToken, to: CinematicGradientToken)
   return `linear-gradient(135deg, ${CINEMATIC_GRADIENT_CSS[from]}, ${CINEMATIC_GRADIENT_CSS[to]})`;
 }
 
+
+function isDisplayableChapterImage(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  // Cream SVG placeholders look blank on the cinematic panel — treat as no image.
+  if (trimmed.startsWith('data:image/svg')) return false;
+  return true;
+}
+
 function chapterImageUrl(product: CardProduct | null | undefined): string | undefined {
   if (!product?.slug) return undefined;
   const raw = product.galleryImages?.[0]?.url;
   const resolved = resolveProductImageUrl(raw, product.slug, product.categorySlug);
-  return resolved.trim() ? resolved : undefined;
+  return isDisplayableChapterImage(resolved) ? resolved : undefined;
 }
 
 function stageBackground(
@@ -46,7 +55,7 @@ function stageBackground(
   if (index === 3 || !imageUrl) {
     return stageGradient(from, to);
   }
-  return `linear-gradient(135deg, ${GRADIENT_HEX[from]}88, ${GRADIENT_HEX[to]}88), url(${imageUrl})`;
+  return `linear-gradient(135deg, ${GRADIENT_HEX[from]}55, ${GRADIENT_HEX[to]}55), url(${imageUrl})`;
 }
 
 interface PinnedChaptersSectionProps {
@@ -133,11 +142,14 @@ export function PinnedChaptersSection({ chapterProducts = [], content }: PinnedC
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority={index < 2}
                   loading={index < 2 ? 'eager' : 'lazy'}
+                  unoptimized={chapterImageUrl(chapterProducts[index])!.startsWith('data:')}
                   aria-hidden
                 />
               )}
               <div className="relative z-[1] space-y-3 text-center text-cream">
-                <p className="font-bn-heading text-base md:text-lg">{stage.imageLabel}</p>
+                {!chapterImageUrl(chapterProducts[index]) && (
+                  <p className="font-bn-heading text-base md:text-lg">{stage.imageLabel}</p>
+                )}
                 {chapterProducts[index] && index !== 3 && (
                   <div className="space-y-1">
                     <p className="font-bn-body text-sm opacity-85">{chapterProducts[index]!.title}</p>
