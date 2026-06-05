@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { CinematicLink } from '@/components/cinematic/CinematicLink';
+import { CinematicHomeLink } from '@/components/cinematic/CinematicHomeLink';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -159,9 +160,9 @@ export function Header() {
               <Menu className="h-6 w-6" aria-hidden />
             </button>
 
-            <Link href="/" className="font-brand text-xl text-charcoal whitespace-nowrap">
+            <CinematicHomeLink href="/" className="font-brand text-xl text-charcoal whitespace-nowrap">
               ALMA
-            </Link>
+            </CinematicHomeLink>
 
             <div className="flex items-center gap-1">
               <IconLink href={MOBILE_NAV_ICONS.search.href} title={UI.search}>
@@ -177,14 +178,14 @@ export function Header() {
           {/* Desktop bar */}
           <div className="hidden h-20 items-center justify-between lg:flex">
             <div className="flex-shrink-0">
-              <Link href="/" className="flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+              <CinematicHomeLink href="/" className="flex items-center gap-1" onClick={() => setMenuOpen(false)}>
                 <span className="font-brand text-2xl tracking-wider text-charcoal whitespace-nowrap">
                   ALMA
                 </span>
                 <span className="font-brand mt-1 hidden text-xs text-text-light xl:inline whitespace-nowrap">
                   Lifestyle
                 </span>
-              </Link>
+              </CinematicHomeLink>
             </div>
 
             <nav
@@ -337,7 +338,9 @@ export function Header() {
               aria-label={HEADER.mobileMenu}
             >
               <div className="flex items-center justify-between border-b border-border-subtle p-4">
-                <span className="font-brand text-2xl text-charcoal">ALMA</span>
+                <CinematicHomeLink href="/" className="font-brand text-2xl text-charcoal" onClick={() => setMenuOpen(false)}>
+                  ALMA
+                </CinematicHomeLink>
                 <button
                   type="button"
                   className="rounded-full p-2 hover:bg-cream"
