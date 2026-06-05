@@ -5,8 +5,12 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
 import { FaviconSync } from '@/components/layout/FaviconSync';
 import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
+import { GlobalJsonLd } from '@/components/seo/GlobalJsonLd';
+import { FacebookPixel } from '@/components/analytics/FacebookPixel';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
+import { buildRootMetadata } from '@/lib/seo/default-metadata';
 import { loadHeaderNavItemsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import './globals.css';
 
@@ -14,26 +18,25 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
   subsets: ['latin'],
   weight: ['400', '600'],
+  display: 'swap',
 });
 
 const notoSerifBengali = Noto_Serif_Bengali({
   variable: '--font-noto-serif-bengali',
   subsets: ['bengali'],
   weight: ['400', '600', '700'],
+  display: 'swap',
 });
 
 const hindSiliguri = Hind_Siliguri({
   variable: '--font-hind-siliguri',
   subsets: ['bengali'],
   weight: ['400', '500', '600'],
+  display: 'swap',
 });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await loadPublicSettingsServer();
-  const title = settings.seoSiteTitleTemplate.includes('%s')
-    ? settings.seoSiteTitleTemplate.replace('%s', settings.storeName)
-    : `${settings.storeName} | প্রিমিয়াম ফ্যাশন ও লাইফস্টাইল`;
-
   const faviconHref = buildFaviconHref(settings.faviconUrl, settings.updatedAt);
 
   if (process.env.NODE_ENV === 'development') {
@@ -42,28 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
     console.log('[layout] settings.updatedAt:', settings.updatedAt);
   }
 
-  const metadata: Metadata = {
-    title,
-    description: settings.seoSiteDescription,
-    openGraph: {
-      title,
-      description: settings.seoSiteDescription,
-      locale: 'bn_BD',
-      ...(settings.seoDefaultOgImageUrl
-        ? { images: [{ url: settings.seoDefaultOgImageUrl }] }
-        : {}),
-    },
-  };
-
-  if (faviconHref) {
-    metadata.icons = {
-      icon: [{ url: faviconHref, type: 'image/png' }],
-      apple: [{ url: faviconHref }],
-      shortcut: [{ url: faviconHref }],
-    };
-  }
-
-  return metadata;
+  return buildRootMetadata(settings, faviconHref);
 }
 
 export default async function RootLayout({
@@ -83,7 +65,11 @@ export default async function RootLayout({
       lang="bn"
       className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
     >
+      <head>
+        <link rel="preload" as="image" href="/videos/hero/hero-poster.jpg" />
+      </head>
       <body className="min-h-full flex flex-col overflow-x-hidden font-bn-body antialiased bg-warm-white text-primary">
+        <GlobalJsonLd />
         <StoreSettingsProvider settings={settings}>
           {hasFavicon ? (
             <FaviconSync faviconUrl={settings.faviconUrl} version={settings.updatedAt} />
@@ -91,6 +77,8 @@ export default async function RootLayout({
           <CinematicGlobalChrome />
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
+        <FacebookPixel pixelId={process.env.NEXT_PUBLIC_FB_PIXEL_ID} />
+        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         <Analytics />
         <SpeedInsights />
       </body>
