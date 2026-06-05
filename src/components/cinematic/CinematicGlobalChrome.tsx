@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useState } from 'react';
 import { ScrollProgressBar } from '@/components/cinematic/ScrollProgressBar';
 import { RouteTransitionBar } from '@/components/cinematic/RouteTransitionBar';
-import { HomeNavigationOverlay } from '@/components/cinematic/HomeNavigationOverlay';
 import { CinematicImageRevealInit } from '@/components/cinematic/CinematicImageRevealInit';
 import { isEmbedPreviewMode } from '@/lib/homepage-config';
 
@@ -43,7 +42,6 @@ export function CinematicGlobalChrome() {
       <Suspense fallback={null}>
         <RouteTransitionBar />
       </Suspense>
-      <HomeNavigationOverlay />
       <ParticleAtmosphere />
       <ScrollProgressBar />
       <CinematicImageRevealInit />
