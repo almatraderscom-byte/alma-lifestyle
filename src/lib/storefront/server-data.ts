@@ -119,7 +119,9 @@ async function enrichHomepageCategories(
   };
 }
 
-export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
+export async function loadHomepageConfigServer(
+  preloadedCatalog?: CatalogProduct[]
+): Promise<HomepageConfig> {
   if (!isSupabaseAdminConfigured()) {
     return getDefaultHomepageConfig();
   }
@@ -127,7 +129,9 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
     const stored = await getHomepageConfigOrDefault();
     let config = ensureHomepageConfig(stored);
     const categories = await loadCategoriesServer();
-    const { products } = await loadCatalogProductsServer({ limit: 200 });
+    const products =
+      preloadedCatalog ??
+      (await loadCatalogProductsServer({ limit: 200 })).products;
     config = await enrichHomepageCategories(config, categories, products);
     return config;
   } catch {
@@ -136,7 +140,8 @@ export async function loadHomepageConfigServer(): Promise<HomepageConfig> {
 }
 
 export async function resolveFeaturedProductsServer(
-  data: FeaturedSectionData
+  data: FeaturedSectionData,
+  preloadedCatalog?: CatalogProduct[]
 ): Promise<FeaturedProduct[]> {
   const section = sanitizeFeaturedSectionData(data);
   const limit = section.productCount;
@@ -150,7 +155,9 @@ export async function resolveFeaturedProductsServer(
   }
 
   try {
-    const { products } = await loadCatalogProductsServer({ limit: 200 });
+    const products =
+      preloadedCatalog ??
+      (await loadCatalogProductsServer({ limit: 200 })).products;
     let list = [...products];
 
     if (section.source === 'latest') {
@@ -422,15 +429,12 @@ function isBestsellerProduct(product: CatalogProduct): boolean {
   return tags.some((t) => BESTSELLER_TAGS.has(t.toLowerCase()));
 }
 
-/** Distinct published products for the floating ocean (bestseller-tagged or top popular). */
-export async function loadOceanProductsServer(
+/** Pick ocean carousel products from an already-loaded catalog (avoids duplicate DB fetch). */
+export function pickOceanProductsFromCatalog(
+  products: CatalogProduct[],
   limit = 12,
   categorySlugs: readonly CategorySlug[] = ['panjabi']
-): Promise<OceanCardProduct[]> {
-  // Pull a larger pool so after category-filtering we still have enough to fill `limit` slots
-  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
-
-  // Filter to allowed categories (default: panjabi only — homepage hero is clothing-focused)
+): OceanCardProduct[] {
   const allowedSet = new Set<CategorySlug>(categorySlugs);
   const filtered = products.filter((p) => allowedSet.has(p.categorySlug));
 
@@ -462,6 +466,15 @@ export async function loadOceanProductsServer(
   }
 
   return out;
+}
+
+/** Distinct published products for the floating ocean (bestseller-tagged or top popular). */
+export async function loadOceanProductsServer(
+  limit = 12,
+  categorySlugs: readonly CategorySlug[] = ['panjabi']
+): Promise<OceanCardProduct[]> {
+  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
+  return pickOceanProductsFromCatalog(products, limit, categorySlugs);
 }
 
 export async function loadCinematicContentServer(): Promise<CinematicContent> {

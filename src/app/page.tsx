@@ -1,14 +1,12 @@
 import { HomePageRenderer } from '@/components/home/HomePageRenderer';
 import {
   loadHomepageConfigServer,
-  loadOceanProductsServer,
+  loadCatalogProductsServer,
+  pickOceanProductsFromCatalog,
   resolveFeaturedProductsServer,
   loadCinematicContentServer,
 } from '@/lib/storefront/server-data';
-import {
-  loadCinematicChapterProducts,
-  loadCinematicFilmStripProducts,
-} from '@/server/db/queries/cinematic-stage-products';
+import { loadCinematicStageProducts } from '@/server/db/queries/cinematic-stage-products';
 
 export const revalidate = 60;
 
@@ -20,17 +18,20 @@ export default async function HomePage({
   const params = await searchParams;
   const isEditMode = params.preview === 'true' && params.edit === 'true';
 
-  const config = await loadHomepageConfigServer();
-  const cinematicContent = await loadCinematicContentServer();
-  const featuredSection = config.sections.find((s) => s.id === 'featured');
-  const [featuredProducts, oceanProducts, chapterProducts, filmStripProducts] = await Promise.all([
-    featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
-      ? resolveFeaturedProductsServer(featuredSection.data)
-      : Promise.resolve([]),
-    loadOceanProductsServer(12),
-    loadCinematicChapterProducts(cinematicContent),
-    loadCinematicFilmStripProducts(cinematicContent),
+  const [cinematicContent, { products: catalog }] = await Promise.all([
+    loadCinematicContentServer(),
+    loadCatalogProductsServer({ limit: 200, page: 1 }),
   ]);
+  const config = await loadHomepageConfigServer(catalog);
+  const featuredSection = config.sections.find((s) => s.id === 'featured');
+  const [featuredProducts, oceanProducts, { chapterProducts, filmStripProducts }] =
+    await Promise.all([
+      featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
+        ? resolveFeaturedProductsServer(featuredSection.data, catalog)
+        : Promise.resolve([]),
+      Promise.resolve(pickOceanProductsFromCatalog(catalog, 12)),
+      loadCinematicStageProducts(cinematicContent, catalog),
+    ]);
 
   return (
     <HomePageRenderer

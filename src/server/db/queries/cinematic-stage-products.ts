@@ -10,6 +10,11 @@ import { CINEMATIC_FILM_STRIP_PRODUCTS } from '@/lib/cinematic-config';
 
 const CHAPTER_IMAGE_STAGE_COUNT = 3;
 
+export type CinematicStageProducts = {
+  chapterProducts: (CardProduct | null)[];
+  filmStripProducts: ReturnType<typeof toCardProduct>[];
+};
+
 function configuredChapterSlug(
   stages: CinematicContent['chapters']['stages'],
   index: number
@@ -78,12 +83,16 @@ async function resolveChapterCatalogProduct(
   configured: string | undefined,
   bySlug: Map<string, CatalogProduct>,
   fallbackPool: CatalogProduct[],
-  usedFallbackSlugs: Set<string>
+  usedFallbackSlugs: Set<string>,
+  slugLoadCache: Map<string, CatalogProduct | null>
 ): Promise<CatalogProduct | undefined> {
   if (configured) {
     let catalog = bySlug.get(configured);
     if (!catalog) {
-      catalog = (await loadProductBySlugServer(configured)) ?? undefined;
+      if (!slugLoadCache.has(configured)) {
+        slugLoadCache.set(configured, (await loadProductBySlugServer(configured)) ?? null);
+      }
+      catalog = slugLoadCache.get(configured) ?? undefined;
     }
     if (catalog) return catalog;
   }
@@ -91,70 +100,97 @@ async function resolveChapterCatalogProduct(
   return fallbackPool.find((p) => !usedFallbackSlugs.has(p.slug));
 }
 
-export async function loadCinematicChapterProducts(
-  content?: Pick<CinematicContent, 'chapters'> | null
-): Promise<(CardProduct | null)[]> {
+async function loadCatalogPool(): Promise<CatalogProduct[]> {
+  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
+  return products;
+}
+
+export async function loadCinematicStageProducts(
+  content?: Pick<CinematicContent, 'chapters'> | null,
+  catalogProducts?: CatalogProduct[]
+): Promise<CinematicStageProducts> {
   const stages = content?.chapters?.stages ?? [];
   const count = stages.length;
-  if (!count) return [];
-
-  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
+  const products = catalogProducts ?? (await loadCatalogPool());
   const bySlug = buildCatalogSlugMap(products);
   const fallbackPool = buildChapterFallbackPool(products);
   const usedFallbackSlugs = new Set<string>();
+  const slugLoadCache = new Map<string, CatalogProduct | null>();
 
-  const cards: (CardProduct | null)[] = [];
+  const chapterProducts: (CardProduct | null)[] = [];
 
-  for (let index = 0; index < count; index++) {
-    if (index >= CHAPTER_IMAGE_STAGE_COUNT) {
-      cards.push(null);
-      continue;
-    }
-
-    const configured = configuredChapterSlug(stages, index);
-    const catalog = await resolveChapterCatalogProduct(
-      configured,
-      bySlug,
-      fallbackPool,
-      usedFallbackSlugs
+  if (count > 0) {
+    const imageStageResolutions = await Promise.all(
+      Array.from({ length: Math.min(count, CHAPTER_IMAGE_STAGE_COUNT) }, (_, index) =>
+        resolveChapterCatalogProduct(
+          configuredChapterSlug(stages, index),
+          bySlug,
+          fallbackPool,
+          usedFallbackSlugs,
+          slugLoadCache
+        )
+      )
     );
 
-    if (catalog && !configured) {
-      usedFallbackSlugs.add(catalog.slug);
-    }
+    for (let index = 0; index < count; index++) {
+      if (index >= CHAPTER_IMAGE_STAGE_COUNT) {
+        chapterProducts.push(null);
+        continue;
+      }
 
-    cards.push(catalog ? toChapterCardProduct(catalog) : null);
+      const configured = configuredChapterSlug(stages, index);
+      const catalog = imageStageResolutions[index];
+
+      if (catalog && !configured) {
+        usedFallbackSlugs.add(catalog.slug);
+      }
+
+      chapterProducts.push(catalog ? toChapterCardProduct(catalog) : null);
+    }
   }
 
-  return cards;
-}
-
-export async function loadCinematicFilmStripProducts(
-  content?: Pick<CinematicContent, 'chapters'> | null
-): Promise<ReturnType<typeof toCardProduct>[]> {
-  const stages = content?.chapters?.stages ?? [];
-  const chapterProducts = await loadCinematicChapterProducts(content);
   const chapterSlugs = collectChapterSlugs(
     stages,
     chapterProducts.map((p) => p?.slug ?? '')
   );
-
-  const { products } = await loadCatalogProductsServer({ limit: 200, page: 1 });
 
   const preferred = CINEMATIC_FILM_STRIP_PRODUCTS.map((slug) => {
     const product = products.find((p) => p.slug === slug);
     return product && !chapterSlugs.has(slug) ? toCardProduct(product) : null;
   }).filter((p): p is ReturnType<typeof toCardProduct> => p !== null);
 
-  if (preferred.length >= 4) return preferred.slice(0, 4);
+  const filmStripProducts = [...preferred];
+  const seen = new Set(filmStripProducts.map((p) => p.slug));
 
-  const seen = new Set(preferred.map((p) => p.slug));
-  for (const product of products) {
-    if (preferred.length >= 4) break;
-    if (chapterSlugs.has(product.slug) || seen.has(product.slug)) continue;
-    preferred.push(toCardProduct(product));
-    seen.add(product.slug);
+  if (filmStripProducts.length < 4) {
+    for (const product of products) {
+      if (filmStripProducts.length >= 4) break;
+      if (chapterSlugs.has(product.slug) || seen.has(product.slug)) continue;
+      filmStripProducts.push(toCardProduct(product));
+      seen.add(product.slug);
+    }
   }
 
-  return preferred.slice(0, 4);
+  return {
+    chapterProducts,
+    filmStripProducts: filmStripProducts.slice(0, 4),
+  };
+}
+
+/** @deprecated Use loadCinematicStageProducts for a single catalog fetch. */
+export async function loadCinematicChapterProducts(
+  content?: Pick<CinematicContent, 'chapters'> | null,
+  catalogProducts?: CatalogProduct[]
+): Promise<(CardProduct | null)[]> {
+  const { chapterProducts } = await loadCinematicStageProducts(content, catalogProducts);
+  return chapterProducts;
+}
+
+/** @deprecated Use loadCinematicStageProducts for a single catalog fetch. */
+export async function loadCinematicFilmStripProducts(
+  content?: Pick<CinematicContent, 'chapters'> | null,
+  catalogProducts?: CatalogProduct[]
+): Promise<ReturnType<typeof toCardProduct>[]> {
+  const { filmStripProducts } = await loadCinematicStageProducts(content, catalogProducts);
+  return filmStripProducts;
 }

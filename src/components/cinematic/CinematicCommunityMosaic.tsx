@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { CommunitySectionData } from '@/lib/homepage-config-types';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { HomepageSectionImage } from '@/components/home/HomepageSectionImage';
@@ -110,7 +110,6 @@ const SPANS = ['', 'row-span-2', '', 'col-span-2', '', 'row-span-2', '', ''] as 
 export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityMosaicProps) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-5% 0px' });
   const [hovered, setHovered] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -169,7 +168,9 @@ export function CinematicCommunityMosaic({ data: dataProp }: CinematicCommunityM
               )}
               style={{ rotate: instant || isMobile ? 0 : `${ROTATIONS[index % ROTATIONS.length]}deg` }}
               initial={instant ? false : { opacity: 0, y: 24 }}
-              animate={instant || inView ? { opacity: dimmed ? 0.7 : 1, y: 0 } : undefined}
+              whileInView={instant ? undefined : { opacity: dimmed ? 0.7 : 1, y: 0 }}
+              viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+              animate={instant ? { opacity: dimmed ? 0.7 : 1, y: 0 } : undefined}
               transition={{ delay, duration: 0.55, ease: 'easeOut' }}
               onMouseEnter={() => !isMobile && setHovered(tile.id)}
               onMouseLeave={() => setHovered(null)}
