@@ -40,7 +40,7 @@ export function CinematicLoadingOverlay() {
       } catch {
         /* ignore */
       }
-    }, 3000);
+    }, 1200);
     return () => window.clearTimeout(timer);
   }, [reduced]);
 

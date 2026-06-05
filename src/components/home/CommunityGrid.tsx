@@ -27,7 +27,7 @@ export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
         <motion.div
           className="text-center mb-10 md:mb-12"
           initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-          animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
+          animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE_PREMIUM }}
         >
           <h2 className="font-bn-heading text-[1.75rem] md:text-4xl font-bold text-charcoal">
@@ -36,7 +36,7 @@ export function CommunityGrid({ data: dataProp }: CommunityGridProps) {
           <motion.p
             className="font-bn-body text-base text-text-light mt-3"
             initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : undefined}
+            animate={isInView || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15, ease: EASE_PREMIUM }}
           >
             {data.subtitle}
