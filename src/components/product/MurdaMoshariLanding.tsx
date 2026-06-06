@@ -28,6 +28,7 @@ import { StorySection } from '@/components/product/murda-moshari/sections/StoryS
 import { TrustFooterSection } from '@/components/product/murda-moshari/sections/TrustFooterSection';
 import { BREADCRUMB } from '@/lib/content';
 import type { MurdaMoshariContent } from '@/lib/landing-content-types';
+import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { catalogToCartItem, getDefaultSize } from '@/lib/cart-helpers';
 import type { CatalogProduct } from '@/lib/products-data';
 
@@ -43,7 +44,7 @@ function MurdaProductJsonLd({ product }: { product: CatalogProduct }) {
     sku: product.sku ?? 'ALM-ISL-001',
     offers: {
       '@type': 'Offer',
-      price: page.pricing.offerPrice,
+      price: product.price,
       priceCurrency: 'BDT',
       availability: 'https://schema.org/InStock',
       url: `https://almatraders.com${product.href}`,
@@ -147,8 +148,13 @@ export interface MurdaMoshariLandingProps {
 }
 
 export function MurdaMoshariLanding({ product, content }: MurdaMoshariLandingProps) {
+  const page = useMemo(
+    () => syncMurdaPricingFromProduct(content, product),
+    [content, product.price, product.compareAtPrice]
+  );
+
   return (
-    <MurdaPageProvider page={content}>
+    <MurdaPageProvider page={page}>
       <MurdaMoshariLandingInner product={product} />
     </MurdaPageProvider>
   );
