@@ -48,12 +48,16 @@ interface LandingContentEditorProps {
   slug: string;
   productTitle: string;
   initialContent: MurdaMoshariContent;
+  catalogOfferPrice?: number;
+  catalogCompareAtPrice?: number;
 }
 
 export function LandingContentEditor({
   slug,
   productTitle,
   initialContent,
+  catalogOfferPrice,
+  catalogCompareAtPrice,
 }: LandingContentEditorProps) {
   const { toast } = useAdminToast();
   const [content, setContent] = useState<MurdaMoshariContent>(initialContent);
@@ -63,7 +67,11 @@ export function LandingContentEditor({
 
   const dirty = JSON.stringify(content) !== baseline;
   const emptyCount = countEmptyRequired(content);
-  const priceWarning = content.pricing.offerPrice > content.pricing.originalPrice;
+  const liveOfferPrice = catalogOfferPrice ?? content.pricing.offerPrice;
+  const liveCompareAt =
+    catalogCompareAtPrice != null && catalogCompareAtPrice > liveOfferPrice
+      ? catalogCompareAtPrice
+      : liveOfferPrice;
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -274,12 +282,29 @@ export function LandingContentEditor({
       ),
       pricing: (
         <div className="space-y-4">
+          <div className="rounded-lg border border-emerald/25 bg-emerald/5 p-4 text-sm text-charcoal">
+            <p className="font-medium">মূল্য Products admin থেকে আসে</p>
+            <p className="mt-1 text-charcoal/75">
+              Landing page, sticky button ও checkout সব একই দাম দেখাবে। দাম বদলাতে{' '}
+              <a href="/admin/products" className="font-medium text-emerald underline">
+                Products
+              </a>{' '}
+              থেকে Murda Moshari product edit করুন — এখানে শুধু copy (CTA, urgency) edit হয়।
+            </p>
+            <dl className="mt-3 grid gap-1 font-mono text-xs sm:grid-cols-2">
+              <div>
+                <dt className="text-charcoal/60">Offer (live)</dt>
+                <dd>৳ {liveOfferPrice.toLocaleString('en-US')}</dd>
+              </div>
+              <div>
+                <dt className="text-charcoal/60">Compare-at (live)</dt>
+                <dd>৳ {liveCompareAt.toLocaleString('en-US')}</dd>
+              </div>
+            </dl>
+          </div>
           <Input label="Lead line" value={content.pricing.leadLine} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, leadLine: e.target.value } }))} />
           <Input label="Original label" value={content.pricing.originalLabel} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, originalLabel: e.target.value } }))} />
-          <Input type="number" label="Original price (BDT)" value={content.pricing.originalPrice} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, originalPrice: Number(e.target.value) || 0 } }))} />
           <Input label="Offer label" value={content.pricing.offerLabel} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, offerLabel: e.target.value } }))} />
-          <Input type="number" label="Offer price (BDT)" value={content.pricing.offerPrice} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, offerPrice: Number(e.target.value) || 0 } }))} />
-          {priceWarning && <p className="text-sm text-amber-700">Offer price is higher than original price.</p>}
           <Input label="Savings label" value={content.pricing.savingsLabel} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, savingsLabel: e.target.value } }))} />
           <Input label="Urgency" value={content.pricing.urgency} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, urgency: e.target.value } }))} />
           <Input label="CTA" value={content.pricing.cta} onChange={(e) => setContent((c) => ({ ...c, pricing: { ...c.pricing, cta: e.target.value } }))} />
@@ -333,7 +358,7 @@ export function LandingContentEditor({
         </div>
       ),
     }),
-    [content, priceWarning]
+    [content, liveOfferPrice, liveCompareAt]
   );
 
   return (
