@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useInView, useReducedMotion } from 'framer-motion';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { useToast } from '@/components/ui/Toast';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +11,7 @@ import {
   readMurdaOverlaySeen,
 } from '@/components/product/murda-moshari/CinematicOverlay';
 import { MurdaPageProvider, useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
-import { MobileStickyWhatsApp } from '@/components/product/murda-moshari/MobileStickyWhatsApp';
+import { MurdaStickyOrderBar } from '@/components/product/murda-moshari/MurdaStickyOrderBar';
 import { ScrollProgressBar } from '@/components/product/murda-moshari/ScrollProgressBar';
 import { SectionBridge } from '@/components/product/murda-moshari/SectionBridge';
 import { SectionDivider } from '@/components/product/murda-moshari/SectionDivider';
@@ -65,8 +65,6 @@ function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
   const { showToast } = useToast();
   const [qty, setQty] = useState(1);
   const reduced = useReducedMotion();
-  const pricingRef = useRef<HTMLDivElement>(null);
-  const pricingInView = useInView(pricingRef, { amount: 0.35 });
   const [overlayDone, setOverlayDone] = useState(true);
 
   useLayoutEffect(() => {
@@ -109,7 +107,7 @@ function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
   );
 
   return (
-    <div className="overflow-x-clip bg-warm-white">
+    <div className="overflow-x-clip bg-warm-white pb-24 md:pb-12">
       <ScrollProgressBar />
       <MurdaProductJsonLd product={product} />
       {!overlayDone && <CinematicOverlay onComplete={() => setOverlayDone(true)} />}
@@ -132,15 +130,13 @@ function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
         <SectionDivider />
         <DonationSection onOrderClick={scrollToOrder} />
         <SectionBridge from="from-emerald" to="to-cream" />
-        <div ref={pricingRef}>
-          <PricingSection qty={qty} setQty={setQty} onAddToCart={handleAddToCart} />
-        </div>
+        <PricingSection qty={qty} setQty={setQty} onAddToCart={handleAddToCart} />
         <SectionDivider />
         <ReviewGallerySection />
         <SectionBridge from="from-white" to="to-cream" />
         <TrustFooterSection />
       </div>
-      <MobileStickyWhatsApp pricingInView={pricingInView} pageRevealed={overlayDone} />
+      <MurdaStickyOrderBar onCheckout={handleAddToCart} pageRevealed={overlayDone} />
     </div>
   );
 }
