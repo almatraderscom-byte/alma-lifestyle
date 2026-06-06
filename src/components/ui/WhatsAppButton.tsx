@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { SITE, WHATSAPP } from '@/lib/content';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
@@ -9,8 +10,10 @@ import { cn } from '@/lib/utils';
 
 export function WhatsAppButton() {
   const reduceMotion = useReducedMotion();
+  const pathname = usePathname();
   const settings = useStoreSettings();
   const href = buildWhatsAppHref(settings, SITE.whatsappPrefill);
+  const isMurdaLanding = pathname === '/products/smart-murda-moshari';
 
   return (
     <motion.a
@@ -22,7 +25,8 @@ export function WhatsAppButton() {
         'fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-2',
         'rounded-full bg-[#25D366] text-white shadow-lg',
         'px-4 py-3 md:px-5 md:py-3.5',
-        'hover:bg-[#20bd5a] transition-colors'
+        'hover:bg-[#20bd5a] transition-colors',
+        isMurdaLanding && 'hidden md:flex'
       )}
       initial={{ scale: 0.85, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -42,4 +46,3 @@ export function WhatsAppButton() {
     </motion.a>
   );
 }
-
