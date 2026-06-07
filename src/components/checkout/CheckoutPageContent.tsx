@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { CartItemThumbnail } from '@/components/cart/CartItemThumbnail';
 import { CheckoutForm, type CheckoutFormData } from '@/components/checkout/CheckoutForm';
 import { OrderSummary, useOrderTotals } from '@/components/checkout/OrderSummary';
 import { OrderSubmittingAnimation } from '@/components/checkout/OrderSubmittingAnimation';
@@ -264,12 +265,11 @@ export function CheckoutPageContent() {
                         key={item.variantId}
                         className="flex gap-4 p-4 md:p-5 hover:bg-cream/40 transition"
                       >
-                        <div
-                          className={cn(
-                            'h-20 w-16 md:h-24 md:w-20 shrink-0 rounded-lg',
-                            item.image
-                          )}
-                          aria-hidden
+                        <CartItemThumbnail
+                          image={item.image}
+                          slug={item.slug}
+                          title={title}
+                          className="h-20 w-16 md:h-24 md:w-20"
                         />
                         <div className="flex-1 min-w-0">
                           <Link
