@@ -20,6 +20,9 @@
     "test:pixel:ui": "playwright test --ui tests/pixel-events.spec.ts",
     "test:pixel:report": "playwright show-report",
     "test:pixel:debug": "playwright test --debug tests/pixel-events.spec.ts",
+    "test:pixel:prod": "playwright test tests/pixel-production.spec.ts --config=playwright.production.config.ts",
+    "verify:pixel:prod": "tsx scripts/verify-pixel-production.ts",
+    "pre-launch-check": "tsx scripts/pre-ad-launch-check.ts",
     "check-assets": "tsx scripts/check-no-demo-assets.ts",
     "check": "npm run type-check && npm run check-assets",
     "prebuild": "npm run check-assets"

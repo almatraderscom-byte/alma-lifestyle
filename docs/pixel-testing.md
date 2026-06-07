@@ -253,7 +253,93 @@ After each step, confirm in:
 
 ---
 
-## Automated testing with Playwright
+## Production smoke testing
+
+After deploying to production, run **read-only** checks against the live site. These tests never submit checkout forms or place orders.
+
+### Commands
+
+```bash
+npm run verify:pixel:prod     # Colored CLI report (recommended)
+npm run test:pixel:prod       # Playwright spec (same checks, CI-friendly)
+npm run pre-launch-check      # Smoke test + pre-ad launch gate summary
+```
+
+Optional override:
+
+```bash
+PIXEL_PROD_BASE_URL=https://www.almatraders.com npm run verify:pixel:prod
+```
+
+### What is verified (automated)
+
+For each captured pixel event, the smoke test confirms:
+
+1. Request URL is `https://www.facebook.com/tr/`
+2. Pixel ID in the URL matches `NEXT_PUBLIC_FB_PIXEL_ID`
+3. Event name matches expected (`PageView`, `ViewContent`, `InitiateCheckout`, etc.)
+4. HTTP response status is **200**
+
+| Check | URL | Events |
+|-------|-----|--------|
+| Homepage | `/` | Pixel script loaded, **PageView** |
+| Product list | `/products` | **PageView** |
+| Sample PDP | First product from sitemap | **PageView**, **ViewContent** |
+| Murda landing | `/products/smart-murda-moshari` | **PageView**, **ViewContent** |
+| Checkout (mock cart) | `/checkout` | **InitiateCheckout** (localStorage cart only) |
+
+Legacy URL `/murda-moshari` is reported separately if it returns 404 — use the canonical Murda path above for ads.
+
+### File structure
+
+```
+playwright.production.config.ts
+scripts/
+├── verify-pixel-production.ts
+├── pre-ad-launch-check.ts
+└── lib/pixel-production-verify.ts
+tests/
+├── pixel-production.spec.ts
+└── helpers/
+    ├── pixel-production-env.ts
+    └── pixel-production-monitor.ts
+docs/pixel-fb-verify-checklist.md
+```
+
+### Pre-launch checklist
+
+Before spending on ads, run:
+
+```bash
+npm run pre-launch-check
+```
+
+This runs the full production smoke test and prints a go/no-go summary. Optional manual confirmations can be recorded in `.pixel-prelaunch-manual.json`:
+
+```json
+{
+  "purchaseActive": true,
+  "mobileCheckoutVerified": true,
+  "testOrdersPlaced": 7
+}
+```
+
+See **docs/pixel-fb-verify-checklist.md** for the printable Events Manager checklist.
+
+### What CANNOT be automated (manual only)
+
+| Item | Why manual |
+|------|------------|
+| Events Manager **Overview** Active status | Requires Meta Business login |
+| **Purchase** event on real orders | Must not automate production checkout |
+| **AddToCart** / **Lead** on every surface | Optional spot checks; smoke test covers core paths |
+| **Search** event | No search UI on site yet |
+| Mobile device checkout | Real device + Meta login verification |
+| Ad account / campaign setup | Outside codebase |
+
+---
+
+## Automated testing with Playwright (local dev)
 
 The repo includes a Playwright suite that runs all 12 sequential pixel checks automatically.
 
