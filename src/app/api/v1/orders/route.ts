@@ -30,6 +30,7 @@ import {
   buildOrderNotificationData,
   sendOrderCreationNotifications,
 } from '@/server/notifications';
+import { syncOrderToErp } from '@/server/integrations/erp-order-sync';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -221,8 +222,32 @@ export async function POST(request: NextRequest) {
     console.log('[Order API] Sending notifications (await before response)...');
 
     const notificationsPromise = sendOrderCreationNotifications(notificationPayload);
-    waitUntil(notificationsPromise);
-    const notifications = await notificationsPromise;
+    const erpSyncPromise = syncOrderToErp({
+      websiteOrderId: created.order_number,
+      orderUuid: created.id,
+      customerName: created.customer_name,
+      customerPhone: created.customer_phone,
+      customerEmail: created.customer_email,
+      deliveryAddress: created.shipping_address,
+      deliveryCity: created.shipping_city,
+      deliveryCountry: created.shipping_country,
+      deliveryPostal: created.shipping_postal_code,
+      notes: created.notes,
+      totalBdt: serverTotal,
+      items: pricedItems.map((i) => ({
+        product_name: i.productTitle,
+        collection_name: i.productSku || 'Website',
+        size: i.variantSize,
+        color: i.variantColor,
+        quantity: i.quantity,
+        unit_price: i.unitPriceBdt,
+      })),
+    });
+
+    waitUntil(Promise.all([notificationsPromise, erpSyncPromise]));
+    const [notifications, erpSync] = await Promise.all([notificationsPromise, erpSyncPromise]);
+
+    console.log('[Order API] ERP sync:', erpSync);
 
     console.log('[Order API] Notification results:', {
       adminSuccess: notifications.admin.success,
@@ -243,6 +268,11 @@ export async function POST(request: NextRequest) {
         orderNumber: created.order_number,
         status: created.status,
         totalBdt: serverTotal,
+        erpSync: erpSync.ok
+          ? { ok: true, erpOrderId: erpSync.erpOrderId }
+          : erpSync.skipped
+            ? { ok: false, skipped: true, error: erpSync.error }
+            : { ok: false, error: erpSync.error },
         notifications: {
           admin: {
             success: notifications.admin.success,
