@@ -15,6 +15,7 @@ import { typeLabelsForDesignGroup } from '@/lib/product-design-types';
 import { getDefaultProductImage } from '@/lib/default-images';
 import { buildListingCardGallery } from '@/lib/product-gallery';
 import { ISLAMIC_CATALOG_PRODUCTS } from '@/lib/islamic-catalog-products';
+import { PRODUCT_COLOR_PRESETS } from '@/lib/product-color-presets';
 
 export type CategorySlug =
   | 'panjabi'
@@ -71,14 +72,7 @@ export const CATEGORY_LABELS: Record<CategorySlug, string> = {
   islamic: 'ইসলামিক',
 };
 
-const COLOR_PRESETS = [
-  { id: 'white', name: 'সাদা', hex: '#f5f5f5' },
-  { id: 'black', name: 'কালো', hex: '#1a1a1a' },
-  { id: 'navy', name: 'নেভি', hex: '#2c3e5c' },
-  { id: 'maroon', name: 'মেরুন', hex: '#6b2c3e' },
-  { id: 'cream', name: 'ক্রিম', hex: '#f5f0eb' },
-  { id: 'green', name: 'সবুজ', hex: '#4a7c59' },
-] as const;
+const COLOR_PRESETS = PRODUCT_COLOR_PRESETS;
 
 export const FILTER_COLORS = COLOR_PRESETS;
 

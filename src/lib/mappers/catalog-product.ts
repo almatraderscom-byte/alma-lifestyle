@@ -1,4 +1,8 @@
 import { getDefaultProductImage, resolveProductImageUrl } from '@/lib/default-images';
+import {
+  variantsToCatalogColors,
+  variantsToCatalogSizes,
+} from '@/lib/product-color-presets';
 import type { ProductType } from '@/lib/product-design-types';
 import type { CatalogProduct, CategorySlug } from '@/lib/products-data';
 import type { Category, ProductWithRelations } from '@/server/db/schema';
@@ -69,6 +73,9 @@ export function mapDbProductToCatalog(
   };
 
   const categorySlug = (category?.slug ?? 'panjabi') as CategorySlug;
+  const variantRows = product.product_variants ?? [];
+  const catalogColors = variantsToCatalogColors(variantRows);
+  const catalogSizes = variantsToCatalogSizes(variantRows);
 
   return {
     id: product.id,
@@ -88,10 +95,15 @@ export function mapDbProductToCatalog(
       product.published_at &&
         Date.now() - new Date(product.published_at).getTime() < 86400000 * 14
     ),
-    colors: [],
-    sizes: product.product_variants?.map((v) => v.size ?? 'M').filter(Boolean) ?? [
-      'M',
-    ],
+    colors: catalogColors,
+    sizes:
+      catalogSizes.length > 0
+        ? catalogSizes
+        : catalogColors.length > 0
+          ? []
+          : variantRows.map((v) => v.size ?? 'M').filter(Boolean).length > 0
+            ? [...new Set(variantRows.map((v) => v.size ?? 'M').filter(Boolean))]
+            : ['M'],
     rating: 4.5,
     reviewCount: 0,
     aspectRatio:

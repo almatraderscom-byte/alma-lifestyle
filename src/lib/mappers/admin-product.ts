@@ -15,6 +15,11 @@ import type {
 import type { HomepageConfig } from '@/lib/homepage-config-types';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import { getDefaultAppSettings } from '@/lib/admin-settings-types';
+import {
+  colorHexForName,
+  hasColorVariants,
+  isOneSizeLabel,
+} from '@/lib/product-color-presets';
 
 const DEFAULT_USD_RATE = 110;
 const DEFAULT_AED_RATE = 30;
@@ -33,7 +38,11 @@ export function mapDbProductToAdmin(
 ): AdminProduct {
   const images = [...(row.product_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const variants = row.product_variants ?? [];
-  const hasVariants = variants.length > 0;
+  const isSingleDefaultRow =
+    variants.length === 1 &&
+    (variants[0].color ?? 'Default') === 'Default' &&
+    isOneSizeLabel(variants[0].size);
+  const hasVariants = hasColorVariants(variants) || (!isSingleDefaultRow && variants.length > 0);
   const ext = row as Product & {
     title_bn?: string | null;
     short_description?: string | null;
@@ -68,8 +77,9 @@ export function mapDbProductToAdmin(
     variants: hasVariants
       ? variants.map((v) => ({
           id: v.id,
-          size: v.size ?? 'M',
+          size: v.size ?? 'One Size',
           color: v.color ?? 'Default',
+          colorHex: colorHexForName(v.color ?? 'Default'),
           stock: v.stock_quantity,
           sku: v.sku,
         }))
@@ -177,7 +187,10 @@ export function mapAdminProductToDbInsert({
           stock_quantity: v.stock,
           reserved_quantity: 0,
           sku_variant: v.sku,
-          display_name: `${v.size} / ${v.color}`,
+          display_name:
+            v.size === 'One Size' || isOneSizeLabel(v.size)
+              ? v.color
+              : `${v.size} / ${v.color}`,
         }))
       : [
           {

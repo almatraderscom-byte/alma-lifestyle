@@ -68,7 +68,11 @@ export function ProductTypeSection({
     };
 
     if (type === 'simple') {
-      onChange({ ...next, designGroupId: undefined, designGroupName: undefined, variants: undefined });
+      onChange({
+        ...next,
+        designGroupId: undefined,
+        designGroupName: undefined,
+      });
       return;
     }
 
