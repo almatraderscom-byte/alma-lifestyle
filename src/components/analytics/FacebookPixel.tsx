@@ -1,10 +1,32 @@
 'use client';
 
+import { useEffect } from 'react';
 import Script from 'next/script';
 
 export function FacebookPixel({ pixelId }: { pixelId?: string }) {
   const id = pixelId?.trim();
   if (!id) return null;
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      if (!window.fbq?.loaded) {
+        if (attempts > 80) window.clearInterval(timer);
+        return;
+      }
+
+      window.clearInterval(timer);
+      void import('@/lib/pixel-dev').then(({ recordPixelEvent }) => {
+        recordPixelEvent('Init', { pixel_id: id }, 'fbq');
+        recordPixelEvent('PageView', {}, 'fbq');
+      });
+    }, 50);
+
+    return () => window.clearInterval(timer);
+  }, [id]);
 
   return (
     <>
@@ -34,4 +56,10 @@ export function FacebookPixel({ pixelId }: { pixelId?: string }) {
       </noscript>
     </>
   );
+}
+
+declare global {
+  interface Window {
+    fbq?: ((...args: unknown[]) => void) & { loaded?: boolean };
+  }
 }
