@@ -5,6 +5,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
 import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
+import { trackLead } from '@/lib/pixel';
 
 interface MobileStickyWhatsAppProps {
   pricingInView: boolean;
@@ -35,6 +36,7 @@ export function MobileStickyWhatsApp({
       href={murdaWhatsAppHref()}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackLead()}
       className="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-center gap-3 rounded-full bg-[#25D366] px-6 py-4 text-cream shadow-2xl md:hidden"
       initial={{ y: 80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}

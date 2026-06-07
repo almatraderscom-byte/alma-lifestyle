@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { SITE, WHATSAPP } from '@/lib/content';
+import { trackLead } from '@/lib/pixel';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
@@ -20,6 +21,7 @@ export function WhatsAppButton() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackLead()}
       aria-label={WHATSAPP.label}
       className={cn(
         'fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-2',

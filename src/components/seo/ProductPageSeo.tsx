@@ -19,7 +19,7 @@ export function ProductPageSeo({
         data={[buildProductJsonLd(product, slug), buildProductBreadcrumbJsonLd(slug, product.title)]}
       />
       <ProductViewTracker
-        slug={slug}
+        productId={product.id}
         price={product.price}
         title={product.title}
       />

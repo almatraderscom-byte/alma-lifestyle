@@ -29,6 +29,7 @@ import { TrustFooterSection } from '@/components/product/murda-moshari/sections/
 import { BREADCRUMB } from '@/lib/content';
 import type { MurdaMoshariContent } from '@/lib/landing-content-types';
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
+import { trackAddToCartLine, trackViewContent } from '@/lib/pixel';
 import { catalogToCartItem, getDefaultSize } from '@/lib/cart-helpers';
 import type { CatalogProduct } from '@/lib/products-data';
 
@@ -83,17 +84,31 @@ function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
     setOverlayDone(readMurdaOverlaySeen());
   }, [reduced]);
 
+  useEffect(() => {
+    trackViewContent({
+      content_id: product.id,
+      content_name: product.title,
+      value: product.price,
+      currency: 'BDT',
+      content_type: 'product',
+    });
+  }, [product.id, product.price, product.title]);
+
   const scrollToOrder = useCallback(() => {
     document.getElementById('order')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   const handleAddToCart = useCallback(() => {
-    addItem(
-      catalogToCartItem(product, {
-        size: getDefaultSize(product),
-        quantity: qty,
-      })
-    );
+    const payload = catalogToCartItem(product, {
+      size: getDefaultSize(product),
+      quantity: qty,
+    });
+    addItem(payload);
+    trackAddToCartLine({
+      productId: product.id,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? product.price,
+    });
     showToast(page.pricing.toastAdded);
     router.push('/checkout');
   }, [addItem, page.pricing.toastAdded, product, qty, router, showToast]);

@@ -9,6 +9,7 @@ import {
   murdaViewport,
   useMurdaMotionTiming,
 } from '@/components/product/murda-moshari/animation-config';
+import { trackLead } from '@/lib/pixel';
 
 export function TrustFooterSection() {
   const page = useMurdaPage();
@@ -41,6 +42,7 @@ export function TrustFooterSection() {
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackLead()}
             className="relative mt-6 inline-flex min-h-[52px] min-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-8 font-bn-body text-lg font-semibold text-cream transition-colors hover:bg-[#20bd5a]"
           >
             <WhatsAppIcon className="h-6 w-6" />

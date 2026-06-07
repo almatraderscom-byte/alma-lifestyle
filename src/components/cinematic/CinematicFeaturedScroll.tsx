@@ -12,8 +12,9 @@ import { formatBdtPrice } from '@/lib/format-bn';
 import { resolveProductImageUrl } from '@/lib/default-images';
 import { createAlmaPlaceholderSvg } from '@/lib/placeholder-svg';
 import { getProductBySlug } from '@/lib/products-data';
-import type { ProductCardGalleryImage } from '@/components/product/ProductCard';
 import { cardDisplayToCartItem } from '@/lib/cart-helpers';
+import type { ProductCardGalleryImage } from '@/components/product/ProductCard';
+import { trackAddToCartLine } from '@/lib/pixel';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
@@ -66,6 +67,11 @@ function FeaturedScrollCard({
     const payload = cardDisplayToCartItem(product, productSlug, catalog?.categorySlug);
     if (!payload) return;
     addItem(payload);
+    trackAddToCartLine({
+      productId: payload.productId,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? product.price,
+    });
     showToast(PDP.toastAdded);
   }
 

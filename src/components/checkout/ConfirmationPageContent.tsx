@@ -1,6 +1,5 @@
 'use client';
 
-import { fbPixel } from '@/lib/analytics/fb-pixel';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,7 +8,12 @@ import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { loadLastOrder, type PlacedOrder } from '@/lib/orders';
+import { trackLead, trackPurchaseOnce } from '@/lib/pixel';
 import { cn } from '@/lib/utils';
+
+function lineUnitPrice(item: PlacedOrder['items'][number]): number {
+  return item.priceSnapshot ?? item.price ?? 0;
+}
 
 export function ConfirmationPageContent() {
   const router = useRouter();
@@ -25,11 +29,18 @@ export function ConfirmationPageContent() {
       router.replace('/cart');
       return;
     }
-    fbPixel.track('Purchase', {
+
+    trackPurchaseOnce({
+      orderNumber: loaded.orderNumber,
       value: loaded.total,
       currency: 'BDT',
-      content_ids: loaded.items.map((i) => i.slug),
+      content_type: 'product',
       num_items: loaded.items.reduce((n, i) => n + i.quantity, 0),
+      contents: loaded.items.map((item) => ({
+        id: item.productId,
+        quantity: item.quantity,
+        item_price: lineUnitPrice(item),
+      })),
     });
   }, [router]);
 
@@ -73,7 +84,7 @@ export function ConfirmationPageContent() {
                 {item.title} ×{item.quantity}
               </span>
               <span className="shrink-0 font-medium">
-                {formatBdtPrice((item.priceSnapshot ?? item.price ?? 0) * item.quantity)}
+                {formatBdtPrice(lineUnitPrice(item) * item.quantity)}
               </span>
             </li>
           ))}
@@ -105,6 +116,7 @@ export function ConfirmationPageContent() {
           href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackLead()}
           className="flex w-full min-h-14 items-center justify-center rounded-lg bg-[#25D366] text-white font-bn-body text-lg font-semibold hover:bg-[#20bd5a] transition-colors"
         >
           {CONFIRMATION.whatsappTrack}

@@ -1,26 +1,26 @@
 'use client';
 
 import { useEffect } from 'react';
-import { fbPixel } from '@/lib/analytics/fb-pixel';
+import { trackViewContent } from '@/lib/pixel';
 
 export function ProductViewTracker({
-  slug,
+  productId,
   price,
   title,
 }: {
-  slug: string;
+  productId: string;
   price: number;
   title: string;
 }) {
   useEffect(() => {
-    fbPixel.track('ViewContent', {
-      content_ids: [slug],
+    trackViewContent({
+      content_id: productId,
       content_name: title,
-      content_type: 'product',
       value: price,
       currency: 'BDT',
+      content_type: 'product',
     });
-  }, [slug, price, title]);
+  }, [productId, price, title]);
 
   return null;
 }

@@ -6,7 +6,7 @@ import { PDP } from '@/lib/content';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
-import { fbPixel } from '@/lib/analytics/fb-pixel';
+import { trackAddToCartLine, trackLead } from '@/lib/pixel';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
   formatBdtPrice,
@@ -54,14 +54,26 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   function handleAddToBag() {
-    addItem(buildCartPayload());
+    const payload = buildCartPayload();
+    addItem(payload);
+    trackAddToCartLine({
+      productId: product.id,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? product.price,
+    });
     showToast(PDP.toastAdded);
   }
 
   const settings = useStoreSettings();
 
   function handleBuyNow() {
-    addItem(buildCartPayload());
+    const payload = buildCartPayload();
+    addItem(payload);
+    trackAddToCartLine({
+      productId: product.id,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? product.price,
+    });
     router.push('/cart');
   }
 
@@ -206,6 +218,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackLead()}
           className="flex w-full min-h-14 items-center justify-center rounded-lg bg-[#25D366] text-white font-bn-body text-base font-semibold hover:bg-[#20bd5a] transition-colors"
         >
           {PDP.whatsappOrder}

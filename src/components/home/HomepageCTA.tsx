@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { SITE } from '@/lib/content';
+import { trackLead } from '@/lib/pixel';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { scrollViewport } from '@/lib/animation-variants';
@@ -58,6 +59,7 @@ export function HomepageCTA({ data }: HomepageCTAProps) {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackLead()}
             className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded border-2 border-cream/60 px-8 font-bn-body text-base font-semibold text-cream transition-colors hover:bg-cream/10"
           >
             {cta.secondaryCta}

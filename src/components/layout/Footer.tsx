@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FOOTER } from '@/lib/content';
+import { trackLead } from '@/lib/pixel';
 import { useStoreSettings, whatsappE164 } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +33,7 @@ export function Footer() {
               className="inline-flex items-center gap-2 mt-4 font-bn-body text-base text-[#25D366] hover:underline"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead()}
             >
               <span aria-hidden>📱</span>
               {phoneDisplay}
