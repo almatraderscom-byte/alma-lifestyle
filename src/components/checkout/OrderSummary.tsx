@@ -1,5 +1,6 @@
 'use client';
 
+import { CartItemThumbnail } from '@/components/cart/CartItemThumbnail';
 import { CART, CHECKOUT } from '@/lib/content';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { getDeliveryCharge, isFreeDelivery } from '@/lib/delivery';
@@ -65,7 +66,12 @@ export function OrderSummary({
           const unit = getLineUnitPrice(item);
           return (
             <li key={item.variantId} className="flex gap-3">
-              <div className={cn('h-14 w-11 shrink-0 rounded-lg', item.image)} aria-hidden />
+              <CartItemThumbnail
+                image={item.image}
+                slug={item.slug}
+                title={livePrices[item.productId]?.title ?? item.title}
+                className="h-14 w-11"
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-bn-body text-sm font-medium text-charcoal line-clamp-2">
                   {livePrices[item.productId]?.title ?? item.title}

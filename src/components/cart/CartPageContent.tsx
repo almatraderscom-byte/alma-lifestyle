@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { CartItemThumbnail } from '@/components/cart/CartItemThumbnail';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ProductCard } from '@/components/product/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -146,12 +147,11 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
                       key={item.variantId}
                       className="flex gap-4 p-4 md:p-5 hover:bg-cream/50 transition"
                     >
-                      <div
-                        className={cn(
-                          'h-20 w-16 md:h-24 md:w-20 shrink-0 rounded-lg',
-                          item.image
-                        )}
-                        aria-hidden
+                      <CartItemThumbnail
+                        image={item.image}
+                        slug={item.slug}
+                        title={displayTitle}
+                        className="h-20 w-16 md:h-24 md:w-20"
                       />
                       <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex justify-between gap-3">
