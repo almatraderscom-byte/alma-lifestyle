@@ -417,3 +417,14 @@ Open the pixel summary for a step-by-step table of captured `facebook.com/tr/` e
 | Duplicate InitiateCheckout | Expected once per visit | Test reload assertion — report if count increases |
 
 Test orders are tagged with `PLAYWRIGHT_TEST_ORDER` in checkout notes/name fields for easy identification in admin.
+
+---
+
+## Status dashboard (pre-ad launch)
+
+```bash
+npm run pixel:full-check   # local + production + report
+npm run pixel:report       # regenerate docs/pixel-status-LATEST.md
+```
+
+See [PIXEL-WORKFLOW.md](./PIXEL-WORKFLOW.md) for exit codes, manual checklist, and when to run before FB ads.

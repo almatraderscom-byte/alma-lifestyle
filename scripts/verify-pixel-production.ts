@@ -11,9 +11,19 @@ import {
   formatProductionVerifyReport,
   runProductionPixelVerification,
 } from './lib/pixel-production-verify';
+import { PRODUCTION_RESULTS_PATH, writeJsonFile } from './lib/pixel-status-data';
 
 async function main(): Promise<void> {
   const report = await runProductionPixelVerification({ headless: true });
+
+  writeJsonFile(PRODUCTION_RESULTS_PATH, {
+    generatedAt: new Date().toISOString(),
+    baseUrl: report.baseUrl,
+    pixelId: report.pixelId,
+    allPassed: report.allPassed,
+    checks: report.checks,
+  });
+
   console.log(formatProductionVerifyReport(report));
   process.exit(report.allPassed ? 0 : 1);
 }

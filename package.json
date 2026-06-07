@@ -23,6 +23,8 @@
     "test:pixel:prod": "playwright test tests/pixel-production.spec.ts --config=playwright.production.config.ts",
     "verify:pixel:prod": "tsx scripts/verify-pixel-production.ts",
     "pre-launch-check": "tsx scripts/pre-ad-launch-check.ts",
+    "pixel:report": "tsx scripts/pixel-status-report.ts",
+    "pixel:full-check": "tsx scripts/pixel-full-check.ts",
     "check-assets": "tsx scripts/check-no-demo-assets.ts",
     "check": "npm run type-check && npm run check-assets",
     "prebuild": "npm run check-assets"

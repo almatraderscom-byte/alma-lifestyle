@@ -48,6 +48,62 @@ class PixelEventsReporter implements Reporter {
 
     const html = renderHtml(this.rows, result);
     fs.writeFileSync(path.join(outDir, 'pixel-events-summary.html'), html, 'utf8');
+
+    const resultsDir = path.join(process.cwd(), 'test-results');
+    fs.mkdirSync(resultsDir, { recursive: true });
+
+    const tests = this.rows.map((row) => {
+      const stepMatch = row.title.match(/^(\d+)\./);
+      const step = stepMatch ? Number(stepMatch[1]) : 0;
+      const eventNames = [...new Set(row.events.map((event) => event.eventName))];
+      const expected = inferExpectedEventFromTitle(row.title);
+      const eventCaptured =
+        expected !== '-'
+          ? eventNames.includes(expected)
+            ? expected
+            : expected
+          : eventNames.find((name) => name !== 'PageView' && name !== 'Unknown') ??
+            eventNames[0] ??
+            '-';
+
+      return {
+        step,
+        title: row.title,
+        shortName: row.title.replace(/^\d+\.\s*/, '').trim(),
+        status: row.status,
+        eventCaptured,
+        notes: row.error ? row.error.split('\n')[0] : '-',
+        durationMs: row.durationMs,
+        error: row.error,
+      };
+    });
+
+    const apiRow = this.rows.find((row) => row.title.includes('/api/pixel-test'));
+    const apiPixelTest = apiRow
+      ? {
+          ok: apiRow.status === 'passed',
+          pixelIdPreview: extractPixelPreview(apiRow.consoleLogs),
+          pixelIdConfigured: apiRow.status === 'passed',
+        }
+      : undefined;
+
+    fs.writeFileSync(
+      path.join(resultsDir, 'pixel-local-results.json'),
+      JSON.stringify(
+        {
+          generatedAt: new Date().toISOString(),
+          status: result.status,
+          passed: this.rows.filter((row) => row.status === 'passed').length,
+          failed: this.rows.filter((row) => row.status === 'failed').length,
+          total: this.rows.length,
+          tests,
+          apiPixelTest,
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
   }
 
   printsToStdio(): boolean {
@@ -61,6 +117,24 @@ function escapeHtml(value: string): string {
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
+}
+
+function extractPixelPreview(consoleLogs: string): string | null {
+  const match = consoleLogs.match(/pixelIdPreview["']?\s*[:=]\s*["']?([^"'\s,}]+)/i);
+  return match?.[1] ?? null;
+}
+
+function inferExpectedEventFromTitle(title: string): string {
+  const lower = title.toLowerCase();
+  if (lower.includes('/api/pixel-test')) return '-';
+  if (lower.includes('refresh') || lower.includes('does not fire second')) return '-';
+  if (lower.includes('lead only') || lower.includes('fires lead')) return 'Lead';
+  if (lower.includes('purchase')) return 'Purchase';
+  if (lower.includes('initiatecheckout')) return 'InitiateCheckout';
+  if (lower.includes('addtocart')) return 'AddToCart';
+  if (lower.includes('viewcontent')) return 'ViewContent';
+  if (lower.includes('pageview')) return 'PageView';
+  return '-';
 }
 
 function renderHtml(rows: PixelReportRow[], result: FullResult): string {
