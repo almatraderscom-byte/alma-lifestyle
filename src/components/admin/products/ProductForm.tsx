@@ -39,6 +39,10 @@ import {
 import { useAdminToast } from '@/context/AdminToastContext';
 import { QuickAddMatchingModal } from '@/components/admin/products/QuickAddMatchingModal';
 import { FamilySetForm } from '@/components/admin/products/FamilySetForm';
+import {
+  SimpleProductColorVariants,
+  detectSimpleColorVariantsEnabled,
+} from '@/components/admin/products/SimpleProductColorVariants';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Custom'];
 const COUNTRIES = [
@@ -107,6 +111,9 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   const [girlAgeRows, setGirlAgeRows] = useState<GirlAgeRow[]>(
     GIRL_AGE_GROUPS.map((ageGroup) => ({ ageGroup, stock: 0 }))
   );
+  const [colorVariantsEnabled, setColorVariantsEnabled] = useState(() =>
+    detectSimpleColorVariantsEnabled(initial?.variants)
+  );
 
   useEffect(() => {
     void Promise.all([getCategories(), getCollections(), getSettings()]).then(
@@ -130,7 +137,10 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   }, []);
 
   useEffect(() => {
-    if (initial) setForm(initial);
+    if (initial) {
+      setForm(initial);
+      setColorVariantsEnabled(detectSimpleColorVariantsEnabled(initial.variants));
+    }
     if (initial?.productType === 'girl_two_piece' && initial.variants?.length) {
       const sizeToAge = Object.fromEntries(
         Object.entries(GIRL_VARIANT_SIZE_BN).map(([k, v]) => [v, k as GirlAgeGroup])
@@ -215,6 +225,18 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
         status,
         updatedAt: new Date().toISOString(),
       };
+
+      if (form.productType === 'simple' && colorVariantsEnabled && form.variants?.length) {
+        payload = {
+          ...payload,
+          hasVariants: true,
+          stock: undefined,
+          variants: form.variants.map((v) => ({
+            ...v,
+            size: 'One Size',
+          })),
+        };
+      }
 
       if (form.productType === 'girl_two_piece') {
         const skuPrefix = form.sku || `ALM-PNJ-${(form.slug || 'design').replace(/-/g, '').slice(0, 6).toUpperCase()}-G`;
@@ -511,6 +533,49 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
         </Card>
 
         <Card title="Inventory & Variants">
+          {form.productType === 'simple' ? (
+            <>
+              <SimpleProductColorVariants
+                enabled={colorVariantsEnabled}
+                onEnabledChange={(enabled) => {
+                  setColorVariantsEnabled(enabled);
+                  setDirty(true);
+                  if (!enabled) {
+                    setForm((prev) => ({
+                      ...prev,
+                      hasVariants: false,
+                      variants: undefined,
+                    }));
+                  } else {
+                    setForm((prev) => ({ ...prev, hasVariants: true }));
+                  }
+                }}
+                variants={form.variants}
+                baseSku={form.sku || `SKU-${form.slug.replace(/-/g, '').slice(0, 8).toUpperCase()}`}
+                onVariantsChange={(variants, hasVariants) => {
+                  setDirty(true);
+                  setForm((prev) => ({
+                    ...prev,
+                    hasVariants,
+                    variants,
+                    stock: hasVariants ? undefined : prev.stock,
+                  }));
+                }}
+              />
+              {!colorVariantsEnabled && (
+                <div className="mt-4">
+                  <Input
+                    label="Stock Quantity"
+                    type="number"
+                    min={0}
+                    value={form.stock ?? 0}
+                    onChange={(e) => update('stock', Number(e.target.value))}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <>
           <label className="flex items-center gap-2 text-sm font-medium text-neutral-800 mb-4">
             <input
               type="checkbox"
@@ -570,6 +635,8 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
                 Add Variant
               </Button>
             </div>
+          )}
+            </>
           )}
         </Card>
 
