@@ -13,6 +13,7 @@ import { getCategoryById } from './categories-admin';
 import {
   baseCodeForFamilyProduct,
   generateUniqueFamilySetSku,
+  generateUniqueProductSku,
   isFamilyDesignMember,
   remapVariantSkusForProductSku,
 } from './family-set-sku';
@@ -79,6 +80,27 @@ async function syncVariantsAndImages(
   }
 }
 
+async function resolveProductSkuBeforeSave(
+  product: AdminProduct,
+  brandId: string
+): Promise<AdminProduct> {
+  if (isFamilyDesignMember(product) && product.productType) {
+    return resolveFamilyMemberSku(product, brandId);
+  }
+
+  const preferred =
+    product.sku ||
+    `SKU-${product.slug.replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+  const uniqueSku = await generateUniqueProductSku(brandId, preferred);
+  if (uniqueSku === product.sku) return product;
+
+  return {
+    ...product,
+    sku: uniqueSku,
+    variants: remapVariantSkusForProductSku(product, uniqueSku),
+  };
+}
+
 async function resolveFamilyMemberSku(
   product: AdminProduct,
   brandId: string
@@ -111,7 +133,7 @@ export async function createAdminProduct(
   const brandId = await getBrandId();
   const productId = product.id || crypto.randomUUID();
   let productToSave = { ...product, id: productId };
-  productToSave = await resolveFamilyMemberSku(productToSave, brandId);
+  productToSave = await resolveProductSkuBeforeSave(productToSave, brandId);
 
   const mapped = mapAdminProductToDbInsert({
     product: productToSave,
