@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import { PRODUCTION_BASE_URL } from './tests/helpers/pixel-production-env';
+import { PRODUCTION_PIXEL_USER_AGENT } from './tests/helpers/pixel-production-monitor';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? PRODUCTION_BASE_URL;
+const desktopChrome = devices['Desktop Chrome'];
 
 export default defineConfig({
   testDir: './tests',
@@ -15,12 +17,19 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL,
-    userAgent:
-      'Mozilla/5.0 (compatible; AlmaPixelSmokeTest/1.0; +https://almatraders.com)',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    ...devices['Desktop Chrome'],
+    ...desktopChrome,
+    userAgent: PRODUCTION_PIXEL_USER_AGENT,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...desktopChrome,
+        userAgent: PRODUCTION_PIXEL_USER_AGENT,
+      },
+    },
+  ],
   outputDir: 'test-results',
 });
