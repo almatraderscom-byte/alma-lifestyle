@@ -51,7 +51,19 @@ const DEFAULT_CURRENCY: PixelCurrency = 'BDT';
 const PURCHASE_DEDUPE_PREFIX = 'alma-pixel-purchase-';
 
 function pixelTrack(event: string, params?: object): void {
-  if (typeof window === 'undefined' || !window.fbq) return;
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    void import('@/lib/pixel-dev').then(({ recordPixelEvent }) => {
+      recordPixelEvent(event, params as Record<string, unknown> | undefined, 'pixel.ts');
+    });
+  }
+
+  if (typeof window === 'undefined' || !window.fbq) {
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      console.warn('[Meta Pixel] fbq not loaded — event not sent:', event, params);
+    }
+    return;
+  }
+
   window.fbq('track', event, params);
 }
 
