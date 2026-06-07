@@ -7,7 +7,7 @@ export async function installPixelBrowserHook(page: Page): Promise<void> {
     window.addEventListener('alma-pixel-dev-event', (event) => {
       const detail = (event as CustomEvent).detail;
       if (detail?.event) {
-        window.__pixelDevEvents.push(detail);
+        window.__pixelDevEvents?.push(detail);
       }
     });
   });

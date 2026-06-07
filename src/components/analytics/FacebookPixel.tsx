@@ -57,9 +57,3 @@ export function FacebookPixel({ pixelId }: { pixelId?: string }) {
     </>
   );
 }
-
-declare global {
-  interface Window {
-    fbq?: ((...args: unknown[]) => void) & { loaded?: boolean };
-  }
-}
