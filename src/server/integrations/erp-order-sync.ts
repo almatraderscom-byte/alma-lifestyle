@@ -81,6 +81,7 @@ export async function syncOrderToErp(input: ErpOrderSyncInput): Promise<ErpSyncR
       ok?: boolean;
       erp_order_id?: string;
       error?: string;
+      sms?: { ok?: boolean; skipped?: boolean; reason?: string; duplicate?: boolean };
     };
 
     if (!res.ok) {
@@ -92,7 +93,7 @@ export async function syncOrderToErp(input: ErpOrderSyncInput): Promise<ErpSyncR
     }
 
     const erpOrderId = String(data.erp_order_id || '').trim();
-    console.log('[ERP Sync] Success:', input.websiteOrderId, '→', erpOrderId || '(pending id)');
+    console.log('[ERP Sync] Success:', input.websiteOrderId, '→', erpOrderId || '(pending id)', 'sms:', data.sms);
 
     if (erpOrderId) {
       await getSupabaseAdmin()
