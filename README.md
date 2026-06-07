@@ -177,6 +177,16 @@ Before launch, verify:
 - [ ] Custom domain + SSL (Vercel)
 - [ ] Supabase backups enabled
 
+## Meta Pixel (Facebook ads)
+
+Before launching or editing Facebook ad campaigns:
+
+```bash
+npm run pixel:full-check
+```
+
+Review the generated dashboard at [docs/pixel-status-LATEST.md](./docs/pixel-status-LATEST.md). Full workflow: [docs/PIXEL-WORKFLOW.md](./docs/PIXEL-WORKFLOW.md).
+
 ## Security
 
 - Service role key: **server only** (API routes, uploads).
