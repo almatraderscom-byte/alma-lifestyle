@@ -250,3 +250,84 @@ After each step, confirm in:
 - `PixelDevTools`, `PixelDebugOverlay`, and `/api/pixel-test` are gated by `NODE_ENV === 'development'`.
 - `pixel-dev.ts` is loaded via dynamic import only in development branches.
 - Production builds still send real events to Meta via `src/lib/pixel.ts` — no debug UI or extra console noise.
+
+---
+
+## Automated testing with Playwright
+
+The repo includes a Playwright suite that runs all 12 sequential pixel checks automatically.
+
+### File structure
+
+```
+playwright.config.ts
+scripts/pretest-pixel.mjs
+tests/
+├── pixel-events.spec.ts
+├── helpers/
+│   ├── pixel-interceptor.ts
+│   ├── pixel-assertions.ts
+│   ├── pixel-fixture.ts
+│   └── seed-test-data.ts
+└── reporters/
+    └── pixel-events-reporter.ts
+```
+
+### Prerequisites
+
+1. `NEXT_PUBLIC_FB_PIXEL_ID` set in `.env.local`
+2. Chromium installed: `npx playwright install chromium`
+3. Dev dependencies installed: `npm install`
+
+Playwright starts `npm run dev` automatically unless a server is already running on port 3000.
+
+### Commands
+
+```bash
+npm run test:pixel          # pre-flight checks + full suite
+npm run test:pixel:ui       # interactive Playwright UI
+npm run test:pixel:debug    # step-through debugger
+npm run test:pixel:report   # open HTML report
+```
+
+### What each test verifies
+
+For every event, the suite checks:
+
+1. **Network** — intercepts real `facebook.com/tr/` requests via `PixelInterceptor`
+2. **Console** — `[Meta Pixel]` log lines from `src/lib/pixel.ts`
+3. **Debug overlay** — event row visible in the dev-only panel
+4. **Params** — required e-commerce fields (`value`, `currency: BDT`, etc.)
+
+WhatsApp clicks abort `wa.me` navigation but still verify the **Lead** click handler.
+
+### Reading the report
+
+After `npm run test:pixel`:
+
+| Output | Location |
+|--------|----------|
+| Standard Playwright HTML report | `playwright-report/index.html` |
+| Pixel event summary (tables per test) | `playwright-report/pixel-events-summary.html` |
+| Failure screenshots / video / trace | `test-results/` |
+
+Open the pixel summary for a step-by-step table of captured `facebook.com/tr/` events, console excerpts, and pass/fail status.
+
+### Adding a new test
+
+1. Add a case to `tests/pixel-events.spec.ts` (keep serial order if dependencies matter).
+2. Use the `pixel` fixture from `tests/helpers/pixel-fixture.ts`.
+3. Call `assertPixelEvent()` with the expected event name.
+4. Attach data via `attachPixelReport()` in `afterEach` (already wired globally).
+
+### Troubleshooting test failures
+
+| Failure | Likely cause | Fix |
+|---------|--------------|-----|
+| `pretest-pixel` exits immediately | Missing `.env.local` or pixel ID | Set `NEXT_PUBLIC_FB_PIXEL_ID`, restart dev server |
+| Timeout waiting for pixel event | `fbq` not loaded / ad blocker in headless | Confirm `/api/pixel-test` passes; check Network for `fbevents.js` |
+| Overlay assertion fails | Panel hidden with Ctrl+Shift+P | Reload page — overlay defaults to visible in dev |
+| Checkout test fails | Form validation / API error | Ensure mocked order route is active; verify Bengali placeholders still match |
+| Duplicate InitiateCheckout | Expected once per visit | Test reload assertion — report if count increases |
+
+Test orders are tagged with `PLAYWRIGHT_TEST_ORDER` in checkout notes/name fields for easy identification in admin.

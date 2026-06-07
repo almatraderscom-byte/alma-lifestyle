@@ -18,6 +18,7 @@ const CONSOLE_STYLES: Record<string, string> = {
   InitiateCheckout: 'color:#9333ea;font-weight:bold',
   Search: 'color:#ca8a04;font-weight:bold',
   PageView: 'color:#374151;font-weight:bold',
+  Init: 'color:#059669;font-weight:bold',
 };
 
 function isDev(): boolean {
@@ -57,72 +58,7 @@ export function recordPixelEvent(
   window.dispatchEvent(new CustomEvent<PixelDevEventDetail>(PIXEL_DEV_EVENT, { detail }));
 }
 
-export function parseFbqCall(args: unknown[]): { event: string; params?: Record<string, unknown> } | null {
-  const command = typeof args[0] === 'string' ? args[0] : null;
-  if (!command) return null;
-
-  if (command === 'init') {
-    const pixelId = typeof args[1] === 'string' ? args[1] : undefined;
-    return { event: 'Init', params: pixelId ? { pixel_id: pixelId } : undefined };
-  }
-
-  if (command === 'track') {
-    const event = typeof args[1] === 'string' ? args[1] : 'Unknown';
-    const params = args[2] && typeof args[2] === 'object' ? (args[2] as Record<string, unknown>) : undefined;
-    return { event, params };
-  }
-
-  if (command === 'trackCustom') {
-    const event = typeof args[1] === 'string' ? args[1] : 'Custom';
-    const params = args[2] && typeof args[2] === 'object' ? (args[2] as Record<string, unknown>) : undefined;
-    return { event: `Custom:${event}`, params };
-  }
-
-  return { event: command, params: { raw: args.slice(1) } };
-}
-
-type FbqFn = (...args: unknown[]) => void;
-
-declare global {
-  interface Window {
-    __almaFbqDevWrapped?: boolean;
-  }
-}
-
+/** @deprecated No longer wraps fbq — logging happens in pixel.ts and FacebookPixel.onLoad. */
 export function installFbqDevInterceptor(): () => void {
-  if (!isDev() || typeof window === 'undefined') return () => {};
-
-  let attempts = 0;
-  const maxAttempts = 40;
-
-  const wrap = () => {
-    const fbq = window.fbq as FbqFn | undefined;
-    if (!fbq || window.__almaFbqDevWrapped) return true;
-
-    const original = fbq;
-    const wrapped: FbqFn = (...args: unknown[]) => {
-      const parsed = parseFbqCall(args);
-      // E-commerce events are logged from pixel.ts; interceptor catches bootstrap events only.
-      if (parsed && (parsed.event === 'Init' || parsed.event === 'PageView')) {
-        recordPixelEvent(parsed.event, parsed.params, 'fbq');
-      }
-      return original(...args);
-    };
-
-    Object.assign(wrapped, original);
-    window.fbq = wrapped as typeof window.fbq;
-    window.__almaFbqDevWrapped = true;
-    return true;
-  };
-
-  if (wrap()) return () => {};
-
-  const timer = window.setInterval(() => {
-    attempts += 1;
-    if (wrap() || attempts >= maxAttempts) {
-      window.clearInterval(timer);
-    }
-  }, 250);
-
-  return () => window.clearInterval(timer);
+  return () => {};
 }

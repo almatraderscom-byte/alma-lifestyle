@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductDetails } from '@/components/product/ProductDetails';
 import { ProductMatchingSetPDP } from '@/components/product/ProductMatchingSetPDP';
+import { ProductViewTracker } from '@/components/analytics/ProductViewTracker';
 import { ScrollFadeIn } from '@/components/ui/ScrollFadeIn';
 import { BREADCRUMB, PDP } from '@/lib/content';
 import {
@@ -42,6 +43,11 @@ export function ProductDetailView({
 
   return (
     <div className="bg-warm-white">
+      <ProductViewTracker
+        productId={product.id}
+        price={product.price}
+        title={product.title}
+      />
       <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
         <Breadcrumb
           items={[
