@@ -51,6 +51,29 @@ export async function skuExistsInDatabase(brandId: string, sku: string): Promise
   return !!data;
 }
 
+export async function generateUniqueProductSku(
+  brandId: string,
+  preferredSku: string
+): Promise<string> {
+  const sanitized =
+    preferredSku.replace(/[^A-Za-z0-9-]/g, '').slice(0, 96) ||
+    `SKU-${Date.now().toString(36).toUpperCase()}`;
+
+  if (!(await skuExistsInDatabase(brandId, sanitized))) {
+    return sanitized;
+  }
+
+  for (let seq = 2; seq <= 999; seq++) {
+    const suffix = `-${seq}`;
+    const candidate = `${sanitized.slice(0, 96 - suffix.length)}${suffix}`;
+    if (!(await skuExistsInDatabase(brandId, candidate))) {
+      return candidate;
+    }
+  }
+
+  throw new Error('Could not generate unique SKU after many attempts');
+}
+
 export async function generateUniqueFamilySetSku(
   brandId: string,
   categoryCode: string,

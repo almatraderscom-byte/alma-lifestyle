@@ -7,7 +7,7 @@ export function assertNoError(
   if (error) {
     if (error.code === '23505') {
       throw new Error(
-        'এই SKU আগে থেকে আছে। স্বয়ংক্রিয়ভাবে নতুন SKU তৈরি হবে।'
+        'এই SKU আগে থেকে আছে। অন্য SKU ব্যবহার করুন অথবা পুনরায় সেভ করুন।'
       );
     }
     throw new Error(`${context}: ${error.message} (${error.code})`);
