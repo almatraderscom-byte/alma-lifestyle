@@ -8,6 +8,7 @@ import { FaviconSync } from '@/components/layout/FaviconSync';
 import { CinematicGlobalChrome } from '@/components/cinematic/CinematicGlobalChrome';
 import { GlobalJsonLd } from '@/components/seo/GlobalJsonLd';
 import { FacebookPixel } from '@/components/analytics/FacebookPixel';
+import { PixelDevToolsLoader } from '@/components/analytics/PixelDevToolsLoader';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { buildFaviconHref, isValidStoredFaviconUrl } from '@/lib/favicon-url';
@@ -85,6 +86,7 @@ export default async function RootLayout({
           <RootShell navItems={navItems}>{children}</RootShell>
         </StoreSettingsProvider>
         <FacebookPixel pixelId={process.env.NEXT_PUBLIC_FB_PIXEL_ID} />
+        {process.env.NODE_ENV === 'development' ? <PixelDevToolsLoader /> : null}
         <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         <Analytics />
         <SpeedInsights />
