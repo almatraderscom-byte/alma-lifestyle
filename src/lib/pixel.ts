@@ -39,7 +39,11 @@ export interface TrackViewContentParams {
   content_type?: 'product';
 }
 
-type FbqFn = (command: string, event: string, params?: object) => void;
+type FbqFn = ((command: string, event?: string, params?: object) => void) & {
+  loaded?: boolean;
+  queue?: unknown[];
+  callMethod?: (...args: unknown[]) => void;
+};
 
 declare global {
   interface Window {
