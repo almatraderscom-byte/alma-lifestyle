@@ -98,17 +98,25 @@ export async function getDesignGroupBySlug(
   if (!product) return null;
 
   const row = product as ProductWithRelations;
-  const groupId = row.design_group_id ?? (row.product_type !== 'simple' ? row.id : null);
 
-  if (!groupId) {
+  // Simple products may have design_group_id set to their own id on create, but they
+  // are not matching-set design groups and are filtered out by dedupeDesignGroupMembersByType.
+  if (row.product_type === 'simple') {
     return { anchor: row, members: [row] };
   }
 
+  const groupId = row.design_group_id ?? row.id;
+
   const members = await getDesignGroupProducts(groupId);
+  if (members.length === 0) {
+    return { anchor: row, members: [row] };
+  }
+
   const anchor =
     members.find((m) => m.id === groupId) ??
     members.find((m) => m.product_type === 'men_panjabi') ??
-    members[0];
+    members[0] ??
+    row;
 
   return { anchor, members };
 }

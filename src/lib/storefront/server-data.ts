@@ -260,18 +260,27 @@ export async function loadProductBySlugServer(
     const group = await getDesignGroupBySlug(slug);
     if (group) {
       const row = group.members.find((m) => m.slug === slug) ?? group.anchor;
-      const category = categoryById.get(row.category_id);
+      if (!row) {
+        const simple = await getPublishedProductBySlug(slug);
+        if (simple) {
+          return mergeStaticProductOverrides(
+            mapDbProductToCatalog(simple, categoryById.get(simple.category_id))
+          );
+        }
+      } else {
+        const category = categoryById.get(row.category_id);
 
-      const catalog = mapDbProductToCatalog(row, category);
-      if (group.members.length > 1) {
-        catalog.designGroupMembers = group.members.map((m, i) =>
-          mapDbProductToCatalog(m, categoryById.get(m.category_id), i)
-        );
-        catalog.designGroupId = group.anchor.design_group_id ?? group.anchor.id;
-        catalog.designGroupName =
-          group.anchor.design_group_name ?? group.anchor.title;
+        const catalog = mapDbProductToCatalog(row, category);
+        if (group.members.length > 1) {
+          catalog.designGroupMembers = group.members.map((m, i) =>
+            mapDbProductToCatalog(m, categoryById.get(m.category_id), i)
+          );
+          catalog.designGroupId = group.anchor.design_group_id ?? group.anchor.id;
+          catalog.designGroupName =
+            group.anchor.design_group_name ?? group.anchor.title;
+        }
+        return mergeStaticProductOverrides(catalog);
       }
-      return mergeStaticProductOverrides(catalog);
     }
 
     const simple = await getPublishedProductBySlug(slug);
@@ -288,6 +297,19 @@ export async function loadProductBySlugServer(
     );
   } catch (err) {
     console.error('[storefront] loadProductBySlugServer failed:', slug, err);
+    try {
+      const fallback = await getPublishedProductBySlug(slug);
+      if (fallback) {
+        const brandId = await getBrandId();
+        const categories = await getCategories(brandId);
+        const categoryById = new Map(categories.map((c) => [c.id, c]));
+        return mergeStaticProductOverrides(
+          mapDbProductToCatalog(fallback, categoryById.get(fallback.category_id))
+        );
+      }
+    } catch (fallbackErr) {
+      console.error('[storefront] loadProductBySlugServer fallback failed:', slug, fallbackErr);
+    }
     return (
       getStaticIslamicProductBySlug(slug) ??
       getStaticCustomLayoutProductBySlug(slug) ??
