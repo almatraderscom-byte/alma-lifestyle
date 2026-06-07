@@ -8,6 +8,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { BREADCRUMB, CART, SITE } from '@/lib/content';
 import { getZoneCharges, getFreeDeliveryThreshold } from '@/lib/delivery-settings';
+import { trackLead } from '@/lib/pixel';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import {
@@ -291,6 +292,7 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
                 href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackLead()}
                 className="flex w-full min-h-12 items-center justify-center rounded-lg bg-[#25D366] font-bn-body font-semibold text-white hover:bg-[#20bd5a] transition"
               >
                 {CART.whatsappOrder}

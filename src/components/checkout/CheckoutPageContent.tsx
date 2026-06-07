@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -13,7 +13,10 @@ import { CART, CHECKOUT } from '@/lib/content';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { formatBdtPrice, formatVariantLabel } from '@/lib/format-bn';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
-import { fbPixel } from '@/lib/analytics/fb-pixel';
+import {
+  buildPixelContentsFromCartItems,
+  trackInitiateCheckout,
+} from '@/lib/pixel';
 import { shouldUseApi } from '@/lib/data-source';
 import { createOrderApi } from '@/lib/admin-api';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
@@ -38,8 +41,26 @@ export function CheckoutPageContent() {
   const [districtValue, setDistrictValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [priceWarning, setPriceWarning] = useState<string | null>(null);
+  const checkoutTrackedRef = useRef(false);
 
   const { deliveryCharge, total } = useOrderTotals(subtotal, districtValue);
+
+  useEffect(() => {
+    if (!hydrated || items.length === 0 || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackInitiateCheckout({
+      value: subtotal,
+      currency: 'BDT',
+      num_items: items.reduce((n, i) => n + i.quantity, 0),
+      contents: buildPixelContentsFromCartItems(
+        items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPriceBdt: getLineUnitPrice(item),
+        }))
+      ),
+    });
+  }, [hydrated, items, subtotal, getLineUnitPrice]);
 
   useEffect(() => {
     if (hydrated && items.length === 0 && !isSubmitting) {
@@ -61,13 +82,6 @@ export function CheckoutPageContent() {
   async function handleSubmit(data: CheckoutFormData) {
     setPriceWarning(null);
     setIsSubmitting(true);
-
-    fbPixel.track('InitiateCheckout', {
-      content_ids: items.map((i) => i.slug),
-      num_items: items.reduce((n, i) => n + i.quantity, 0),
-      value: subtotal,
-      currency: 'BDT',
-    });
 
     const submitStarted = Date.now();
 

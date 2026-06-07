@@ -14,6 +14,7 @@ import {
   staggerContainer,
   useMurdaMotionTiming,
 } from '@/components/product/murda-moshari/animation-config';
+import { trackLead } from '@/lib/pixel';
 import { cn } from '@/lib/utils';
 
 function CheckMarkDraw({ delay }: { delay: number }) {
@@ -217,6 +218,7 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead()}
               className={cn(
                 'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl',
                 'border border-[#25D366]/50 bg-transparent px-6 font-bn-body text-base font-semibold text-[#25D366]',

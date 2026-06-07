@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/Toast';
 import { resolveProductImageUrl } from '@/lib/default-images';
 import { getProductBySlug } from '@/lib/products-data';
 import { cardDisplayToCartItem } from '@/lib/cart-helpers';
+import { trackAddToCartLine } from '@/lib/pixel';
 import {
   AutoRotateProductImage,
   type ProductCardGalleryImage,
@@ -118,6 +119,11 @@ export function ProductCard({
     const payload = cardDisplayToCartItem(product, slug, catalogProduct?.categorySlug);
     if (!payload) return null;
     addItem(payload);
+    trackAddToCartLine({
+      productId: payload.productId,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? product.price,
+    });
     return payload;
   }
 

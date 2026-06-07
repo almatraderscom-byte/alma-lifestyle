@@ -7,6 +7,7 @@ import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
 import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
 import { murdaWhatsAppHref } from '@/components/product/murda-moshari/murda-whatsapp';
 import { formatBdtPrice } from '@/lib/format-bn';
+import { trackLead } from '@/lib/pixel';
 import { cn } from '@/lib/utils';
 
 interface MurdaStickyOrderBarProps {
@@ -70,6 +71,7 @@ export function MurdaStickyOrderBar({ onCheckout, pageRevealed }: MurdaStickyOrd
           href={waHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackLead()}
           aria-label={hero.whatsappCta}
           className="inline-flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#25D366] text-cream shadow-lg transition-transform active:scale-[0.98]"
         >

@@ -12,6 +12,7 @@ import { formatBdtPrice, toBanglaNumber } from '@/lib/format-bn';
 import { PDP } from '@/lib/content';
 import { useCart } from '@/context/CartContext';
 import { catalogToCartItem } from '@/lib/cart-helpers';
+import { trackAddToCart, trackAddToCartLine } from '@/lib/pixel';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 import { ProductGallery } from '@/components/product/ProductGallery';
@@ -89,25 +90,53 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
   if (!active) return null;
 
   function handleAddToBag() {
-    addItem(catalogToCartItem(active, { size: selectedSize, quantity }));
+    const payload = catalogToCartItem(active, { size: selectedSize, quantity });
+    addItem(payload);
+    trackAddToCartLine({
+      productId: active.id,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? active.price,
+    });
     showToast(PDP.toastAdded);
   }
 
   function handleBuyNow() {
-    addItem(catalogToCartItem(active, { size: selectedSize, quantity }));
+    const payload = catalogToCartItem(active, { size: selectedSize, quantity });
+    addItem(payload);
+    trackAddToCartLine({
+      productId: active.id,
+      quantity: payload.quantity ?? 1,
+      unitPriceBdt: payload.priceSnapshot ?? active.price,
+    });
     router.push('/cart');
   }
 
   function handleFamilyAdd() {
     const setId = `family-${product.designGroupId ?? product.id}-${Date.now()}`;
+    const lines: Array<{ productId: string; quantity: number; unitPriceBdt: number }> = [];
     for (const m of members) {
       const size = familySizes[m.id] ?? m.sizes[0] ?? 'M';
+      const payload = catalogToCartItem(m, { size, quantity: 1 });
       addItem({
-        ...catalogToCartItem(m, { size, quantity: 1 }),
+        ...payload,
         familySetId: setId,
         familySetLabel: product.designGroupName ?? product.title,
       });
+      lines.push({
+        productId: m.id,
+        quantity: 1,
+        unitPriceBdt: payload.priceSnapshot ?? m.price,
+      });
     }
+    trackAddToCart({
+      value: lines.reduce((sum, line) => sum + line.unitPriceBdt * line.quantity, 0),
+      currency: 'BDT',
+      contents: lines.map((line) => ({
+        id: line.productId,
+        quantity: line.quantity,
+        item_price: line.unitPriceBdt,
+      })),
+    });
     showToast(PDP.toastAdded);
     router.push('/cart');
   }
