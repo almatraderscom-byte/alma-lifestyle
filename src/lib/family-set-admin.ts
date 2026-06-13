@@ -123,16 +123,34 @@ export function createDefaultFamilySetState(): FamilySetFormState {
   };
 }
 
-/** Slug base from design name (e.g. "রয়্যাল নেভি" → royal-navy if latin, or slugified). */
-export function designSlugFromName(designName: string): string {
-  const slug = generateProductSlug(designName);
-  return slug.replace(/-panjabi$/, '').replace(/-men$/, '').replace(/-boy$/, '');
+/** Stable slug when Latin slugify strips Bengali / non-Latin names to empty. */
+export function stableDesignSlugFromText(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return 'design';
+  let hash = 0;
+  for (let i = 0; i < trimmed.length; i++) {
+    hash = (hash * 31 + trimmed.charCodeAt(i)) >>> 0;
+  }
+  return `design-${hash.toString(36)}`;
 }
 
-/** SKU code from slug: royal-navy → RN */
+/** Slug base from design name (e.g. "রয়্যাল নেভি" → royal-navy if latin, or slugified). */
+export function designSlugFromName(designName: string): string {
+  const slug = generateProductSlug(designName)
+    .replace(/-panjabi$/, '')
+    .replace(/-men$/, '')
+    .replace(/-boy$/, '');
+  if (slug) return slug;
+  return stableDesignSlugFromText(designName);
+}
+
+/** SKU code from slug: royal-navy → RN, design-k7x3m2 → K7X3M2 */
 export function skuCodeFromDesignSlug(designSlug: string): string {
   const parts = designSlug.split('-').filter(Boolean);
   if (parts.length === 0) return 'DSN';
+  if (parts[0] === 'design' && parts[1]) {
+    return parts[1].toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'DSN';
+  }
   const code = parts.map((p) => p[0]?.toUpperCase() ?? '').join('');
   return code.slice(0, 8) || 'DSN';
 }
