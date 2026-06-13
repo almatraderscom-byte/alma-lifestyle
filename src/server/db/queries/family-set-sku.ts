@@ -74,6 +74,34 @@ export async function generateUniqueProductSku(
   throw new Error('Could not generate unique SKU after many attempts');
 }
 
+export async function slugExistsInDatabase(brandId: string, slug: string): Promise<boolean> {
+  const normalized = slug.replace(/^-+|-+$/g, '').trim() || 'product';
+  const { data, error } = await getSupabaseAdmin()
+    .from('products')
+    .select('id')
+    .eq('brand_id', brandId)
+    .eq('slug', normalized)
+    .maybeSingle();
+
+  assertNoError(error, 'slugExistsInDatabase');
+  return !!data;
+}
+
+export async function ensureUniqueProductSlug(
+  brandId: string,
+  slug: string
+): Promise<string> {
+  const base = slug.replace(/^-+|-+$/g, '').trim() || 'product';
+  if (!(await slugExistsInDatabase(brandId, base))) return base;
+
+  for (let seq = 2; seq <= 999; seq++) {
+    const candidate = `${base}-${seq}`;
+    if (!(await slugExistsInDatabase(brandId, candidate))) return candidate;
+  }
+
+  throw new Error('Could not generate unique slug after many attempts');
+}
+
 export async function generateUniqueFamilySetSku(
   brandId: string,
   categoryCode: string,

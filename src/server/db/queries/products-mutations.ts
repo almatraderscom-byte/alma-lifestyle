@@ -12,6 +12,7 @@ import { getProductById } from './products';
 import { getCategoryById } from './categories-admin';
 import {
   baseCodeForFamilyProduct,
+  ensureUniqueProductSlug,
   generateUniqueFamilySetSku,
   generateUniqueProductSku,
   isFamilyDesignMember,
@@ -134,6 +135,10 @@ export async function createAdminProduct(
   const productId = product.id || crypto.randomUUID();
   let productToSave = { ...product, id: productId };
   productToSave = await resolveProductSkuBeforeSave(productToSave, brandId);
+  const uniqueSlug = await ensureUniqueProductSlug(brandId, productToSave.slug);
+  if (uniqueSlug !== productToSave.slug) {
+    productToSave = { ...productToSave, slug: uniqueSlug };
+  }
 
   const mapped = mapAdminProductToDbInsert({
     product: productToSave,
