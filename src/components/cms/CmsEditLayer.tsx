@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useCmsEdit } from '@/components/cms/CmsEditProvider';
+import { useCmsEdit } from '@/components/cms/cms-edit-context';
 
 /**
  * The visual editing chrome laid over the live page. Rendered only when
@@ -149,8 +149,8 @@ export function CmsEditLayer() {
     try {
       const form = new FormData();
       form.append('file', file);
-      form.append('folder', 'murda-moshari');
-      form.append('bucket', 'product-images');
+      form.append('folder', cms.uploadConfig.folder);
+      form.append('bucket', cms.uploadConfig.bucket);
       form.append('mediaType', 'image');
       const res = await fetch('/api/v1/upload', {
         method: 'POST',

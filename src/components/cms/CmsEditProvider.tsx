@@ -1,9 +1,7 @@
 'use client';
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -14,6 +12,14 @@ import { MurdaPageProvider } from '@/components/product/murda-moshari/MurdaPageC
 import type { MurdaMoshariContent } from '@/lib/landing-content-types';
 import { getByPath, setByPath } from '@/lib/cms/object-path';
 import { CmsEditLayer } from '@/components/cms/CmsEditLayer';
+import {
+  CmsEditContext,
+  useCmsEdit,
+  type CmsEditContextValue,
+} from '@/components/cms/cms-edit-context';
+
+export { useCmsEdit };
+export type { CmsEditContextValue };
 
 /**
  * Client-side controller for the Elementor-style visual editor on the murda
@@ -32,29 +38,7 @@ import { CmsEditLayer } from '@/components/cms/CmsEditLayer';
  * listeners, no visual change — so normal visitors are completely unaffected.
  */
 
-export interface CmsEditContextValue {
-  /** URL requested edit mode (`?edit=1`). */
-  active: boolean;
-  /** Admin session confirmed. */
-  isAdmin: boolean;
-  /** active && isAdmin — the layer only interacts when this is true. */
-  editing: boolean;
-  dirty: boolean;
-  saving: boolean;
-  savedAt: number | null;
-  error: string | null;
-  content: MurdaMoshariContent;
-  getField: (path: string) => unknown;
-  setField: (path: string, value: unknown) => void;
-  save: () => Promise<void>;
-  discard: () => void;
-}
-
-const CmsEditContext = createContext<CmsEditContextValue | null>(null);
-
-export function useCmsEdit(): CmsEditContextValue | null {
-  return useContext(CmsEditContext);
-}
+const UPLOAD_CONFIG = { folder: 'murda-moshari', bucket: 'product-images' };
 
 export interface CmsEditProviderProps {
   slug: string;
@@ -166,6 +150,7 @@ export function CmsEditProvider({ slug, initialContent, children }: CmsEditProvi
       savedAt,
       error,
       content,
+      uploadConfig: UPLOAD_CONFIG,
       getField,
       setField,
       save,
