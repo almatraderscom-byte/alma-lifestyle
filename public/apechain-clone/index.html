@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ApeChain — The Place to Ape</title>
+<meta name="description" content="ApeChain is the place to ape. A chain built for digital and IRL communities, builders, creators, collectors and gamers. Powered by APE." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   ApeChain clone — design tokens
+   Brand palette (official): #0054FA Blue Ribbon, #006D8A Blue
+   Lagoon, #FFFFFF. Dark navy base to match the live site mood.
+   ============================================================ */
+:root{
+  --blue:#0054FA;
+  --blue-600:#0047d6;
+  --blue-300:#4d86ff;
+  --lagoon:#006D8A;
+  --cyan:#22d3ee;
+  --ink:#03081c;          /* deepest background */
+  --ink-2:#060d29;        /* section background */
+  --ink-3:#0a1436;        /* card background */
+  --line:rgba(120,150,255,.14);
+  --white:#ffffff;
+  --muted:#9fb0d9;
+  --muted-2:#6b7aa8;
+  --banana:#ffd23e;
+  --radius:22px;
+  --maxw:1240px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:"Space Grotesk",system-ui,-apple-system,sans-serif;
+  background:var(--ink);
+  color:var(--white);
+  line-height:1.5;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+h1,h2,h3,h4{font-family:"Archivo","Space Grotesk",sans-serif;font-weight:900;line-height:1.02;letter-spacing:-.02em}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--blue-300);
+  padding:7px 14px;border:1px solid var(--line);border-radius:999px;
+  background:rgba(0,84,250,.08);
+}
+.eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 12px 2px var(--blue)}
+
+/* ============================ Buttons ============================ */
+.btn{
+  --bg:var(--blue);
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:"Space Grotesk";font-weight:700;font-size:15px;letter-spacing:.01em;
+  padding:14px 26px;border-radius:999px;border:0;cursor:pointer;
+  background:var(--bg);color:#fff;white-space:nowrap;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),background .3s ease;
+  box-shadow:0 10px 30px -8px rgba(0,84,250,.6);
+}
+.btn:hover{transform:translateY(-3px);box-shadow:0 18px 40px -8px rgba(0,84,250,.8)}
+.btn:active{transform:translateY(-1px)}
+.btn svg{transition:transform .35s var(--ease)}
+.btn:hover svg{transform:translateX(4px)}
+.btn--ghost{background:transparent;color:#fff;border:1px solid var(--line);box-shadow:none}
+.btn--ghost:hover{background:rgba(255,255,255,.06);box-shadow:none;border-color:rgba(120,150,255,.35)}
+.btn--light{background:#fff;color:var(--ink);box-shadow:0 10px 30px -8px rgba(255,255,255,.25)}
+.btn--light:hover{box-shadow:0 18px 40px -8px rgba(255,255,255,.4)}
+.btn--sm{padding:10px 20px;font-size:14px}
+
+/* ============================ Header ============================ */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  transition:background .4s ease,backdrop-filter .4s ease,border-color .4s ease,padding .4s ease;
+  border-bottom:1px solid transparent;
+}
+header.scrolled{
+  background:rgba(3,8,28,.72);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--line);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;height:76px;transition:height .4s ease}
+header.scrolled .nav{height:66px}
+.brand{display:flex;align-items:center;gap:11px;font-family:"Archivo";font-weight:900;font-size:21px;letter-spacing:-.02em}
+.brand .mark{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(0,84,250,.55));transition:transform .5s var(--ease)}
+.brand:hover .mark{transform:rotate(-8deg) scale(1.06)}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{
+  position:relative;font-weight:600;font-size:15px;color:var(--muted);
+  padding:9px 15px;border-radius:10px;transition:color .25s ease;
+}
+.nav-links a::after{
+  content:"";position:absolute;left:15px;right:15px;bottom:5px;height:2px;
+  background:var(--blue);border-radius:2px;
+  transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease);
+}
+.nav-links a:hover{color:#fff}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-cta{display:flex;align-items:center;gap:12px}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:0;cursor:pointer;padding:8px}
+.hamburger span{width:24px;height:2px;background:#fff;border-radius:2px;transition:transform .3s var(--ease),opacity .3s ease}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* mobile drawer */
+.drawer{
+  position:fixed;inset:0 0 0 auto;width:min(340px,84vw);z-index:99;
+  background:var(--ink-2);border-left:1px solid var(--line);
+  transform:translateX(100%);transition:transform .5s var(--ease);
+  padding:110px 28px 40px;display:flex;flex-direction:column;gap:6px;
+}
+.drawer.open{transform:translateX(0)}
+.drawer a{font-size:19px;font-weight:600;color:var(--muted);padding:14px 4px;border-bottom:1px solid var(--line);transition:color .25s}
+.drawer a:hover{color:#fff}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s;z-index:98}
+.scrim.open{opacity:1;visibility:visible}
+
+/* ============================ Hero ============================ */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:140px 0 90px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.grid-overlay{
+  position:absolute;inset:0;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 40%,#000 30%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 40%,#000 30%,transparent 78%);
+}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;animation:float 14s ease-in-out infinite}
+.blob.b1{width:520px;height:520px;background:var(--blue);top:-140px;left:-120px}
+.blob.b2{width:460px;height:460px;background:var(--lagoon);bottom:-160px;right:-120px;animation-delay:-4s}
+.blob.b3{width:340px;height:340px;background:#1a3fff;top:30%;right:18%;animation-delay:-8s;opacity:.35}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-30px,25px) scale(.95)}}
+.hero-inner{position:relative;z-index:2;text-align:center;max-width:960px;margin:0 auto}
+.hero h1{
+  font-size:clamp(48px,9vw,124px);line-height:.94;margin:26px 0 0;
+  text-transform:uppercase;
+}
+.hero h1 .grad{
+  background:linear-gradient(120deg,#fff 0%,#8fb0ff 40%,var(--blue) 75%,var(--cyan) 100%);
+  background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 6s linear infinite;
+}
+@keyframes shimmer{to{background-position:200% center}}
+.hero p.lead{font-size:clamp(17px,2.1vw,22px);color:var(--muted);max-width:620px;margin:28px auto 0;font-weight:400}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+.scroll-ind{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted-2);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.mouse{width:24px;height:38px;border:2px solid var(--muted-2);border-radius:14px;display:flex;justify-content:center;padding-top:7px}
+.mouse i{width:3px;height:7px;background:var(--muted-2);border-radius:2px;animation:wheel 1.8s infinite}
+@keyframes wheel{0%{opacity:0;transform:translateY(-3px)}40%{opacity:1}100%{opacity:0;transform:translateY(9px)}}
+
+/* ============================ Marquee ============================ */
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ink-2);padding:22px 0;overflow:hidden;white-space:nowrap;position:relative}
+.marquee::before,.marquee::after{content:"";position:absolute;top:0;bottom:0;width:120px;z-index:2}
+.marquee::before{left:0;background:linear-gradient(90deg,var(--ink-2),transparent)}
+.marquee::after{right:0;background:linear-gradient(-90deg,var(--ink-2),transparent)}
+.marquee-track{display:inline-flex;align-items:center;gap:56px;animation:scrollx 32s linear infinite}
+.marquee-track span{font-family:"Archivo";font-weight:800;font-size:22px;color:var(--muted-2);letter-spacing:.02em;display:inline-flex;align-items:center;gap:56px;text-transform:uppercase}
+.marquee-track span::after{content:"◆";color:var(--blue);font-size:12px}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* ============================ Sections ============================ */
+section{position:relative}
+.sec{padding:110px 0}
+.sec-head{max-width:720px;margin:0 auto 60px;text-align:center}
+.sec-head h2{font-size:clamp(34px,5vw,60px);text-transform:uppercase;margin-top:18px}
+.sec-head p{color:var(--muted);font-size:18px;margin-top:18px}
+
+/* stats */
+.stats{background:var(--ink-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.stat{background:var(--ink-2);padding:40px 28px;text-align:center;transition:background .35s}
+.stat:hover{background:var(--ink-3)}
+.stat .num{font-family:"Archivo";font-weight:900;font-size:clamp(38px,5vw,58px);background:linear-gradient(120deg,#fff,var(--blue-300));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--muted);font-size:15px;margin-top:8px}
+
+/* feature rows */
+.feature{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:56px 0}
+.feature.rev .f-text{order:2}
+.f-text h3{font-size:clamp(30px,4vw,46px);text-transform:uppercase}
+.f-text p{color:var(--muted);font-size:17px;margin-top:20px}
+.f-list{list-style:none;margin-top:26px;display:flex;flex-direction:column;gap:14px}
+.f-list li{display:flex;gap:13px;align-items:flex-start;font-size:16px;color:#cdd7f2}
+.f-list li::before{content:"";width:22px;height:22px;flex:0 0 auto;margin-top:1px;border-radius:6px;background:var(--blue);
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2l-3.5-3.5L4 14.2 9 19.2 20 8.2l-1.5-1.5z'/></svg>") center/16px no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2l-3.5-3.5L4 14.2 9 19.2 20 8.2l-1.5-1.5z'/></svg>") center/16px no-repeat;
+}
+.f-visual{position:relative;aspect-ratio:1/.92;border-radius:26px;border:1px solid var(--line);overflow:hidden;
+  background:radial-gradient(120% 120% at 20% 10%,rgba(0,84,250,.28),transparent 55%),radial-gradient(120% 120% at 90% 90%,rgba(0,109,138,.28),transparent 55%),var(--ink-3);
+  display:grid;place-items:center;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.f-visual:hover{transform:translateY(-6px);box-shadow:0 30px 70px -30px rgba(0,84,250,.6)}
+.f-visual .glyph{font-size:clamp(90px,14vw,180px);filter:drop-shadow(0 12px 40px rgba(0,84,250,.5))}
+.f-visual .ring{position:absolute;border:1px solid var(--line);border-radius:50%}
+.f-visual .ring.r1{inset:16%;animation:spin 22s linear infinite}
+.f-visual .ring.r2{inset:28%;animation:spin 16s linear infinite reverse}
+.f-visual .ring.r3{inset:40%;border-style:dashed;animation:spin 30s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* apps grid */
+.apps{background:var(--ink-2);border-top:1px solid var(--line)}
+.app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.app-card{
+  position:relative;background:var(--ink-3);border:1px solid var(--line);border-radius:var(--radius);
+  padding:30px;overflow:hidden;transition:transform .45s var(--ease),border-color .45s;
+}
+.app-card::before{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at var(--mx,50%) var(--my,0%),rgba(0,84,250,.18),transparent 70%);opacity:0;transition:opacity .4s}
+.app-card:hover{transform:translateY(-8px);border-color:rgba(77,134,255,.5)}
+.app-card:hover::before{opacity:1}
+.app-ico{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,var(--blue),var(--lagoon));box-shadow:0 8px 22px -6px rgba(0,84,250,.6)}
+.app-card h4{font-size:21px;margin:20px 0 8px}
+.app-card p{color:var(--muted);font-size:15px}
+.app-tag{position:relative;z-index:1;display:inline-block;margin-top:16px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-300);padding:5px 11px;border:1px solid var(--line);border-radius:999px}
+
+/* banana bill */
+.banana{background:linear-gradient(160deg,#0a1436,#03081c);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.banana-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center}
+.banana-big{font-family:"Archivo";font-weight:900;font-size:clamp(80px,13vw,170px);line-height:.86;letter-spacing:-.03em;
+  background:linear-gradient(120deg,var(--banana),#ffb300);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 60px rgba(255,210,62,.15)}
+.banana h3{font-size:clamp(30px,4vw,48px);text-transform:uppercase;margin-bottom:20px}
+.banana p{color:var(--muted);font-size:17px;margin-bottom:14px}
+
+/* blueprint pillars */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.pillar{background:var(--ink-3);border:1px solid var(--line);border-radius:var(--radius);padding:38px 30px;transition:transform .45s var(--ease),background .45s}
+.pillar:hover{transform:translateY(-8px);background:#0c1740}
+.pillar .p-n{font-family:"Archivo";font-weight:900;font-size:52px;color:rgba(77,134,255,.28);line-height:1}
+.pillar h4{font-size:24px;margin:14px 0 12px;text-transform:uppercase}
+.pillar p{color:var(--muted);font-size:15px}
+
+/* CTA */
+.cta{padding:120px 0}
+.cta-box{position:relative;overflow:hidden;border-radius:34px;padding:80px 40px;text-align:center;
+  background:radial-gradient(120% 160% at 50% 0%,rgba(0,84,250,.55),transparent 60%),var(--ink-3);
+  border:1px solid var(--line)}
+.cta-box .blob{position:absolute}
+.cta-box h2{font-size:clamp(40px,7vw,86px);text-transform:uppercase;position:relative;z-index:2}
+.cta-box p{color:var(--muted);font-size:19px;margin:22px auto 0;max-width:560px;position:relative;z-index:2}
+.cta-box .hero-cta{margin-top:36px}
+
+/* ============================ Footer ============================ */
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding:70px 0 34px}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;margin-bottom:54px}
+.foot-brand p{color:var(--muted);font-size:15px;margin-top:18px;max-width:300px}
+.socials{display:flex;gap:12px;margin-top:22px}
+.socials a{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);transition:all .3s var(--ease)}
+.socials a:hover{color:#fff;background:var(--blue);border-color:var(--blue);transform:translateY(-3px)}
+.foot-col h5{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-bottom:18px}
+.foot-col a{display:block;color:var(--muted);font-size:15px;padding:7px 0;transition:color .25s,transform .25s}
+.foot-col a:hover{color:#fff;transform:translateX(4px)}
+.foot-bottom{border-top:1px solid var(--line);padding-top:26px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;color:var(--muted-2);font-size:14px}
+
+/* ============================ Reveal animation ============================ */
+[data-reveal]{opacity:0;transform:translateY(34px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+[data-reveal].in{opacity:1;transform:none}
+[data-reveal].d1{transition-delay:.08s}
+[data-reveal].d2{transition-delay:.16s}
+[data-reveal].d3{transition-delay:.24s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}[data-reveal]{opacity:1;transform:none}}
+
+/* ============================ Responsive ============================ */
+@media(max-width:1000px){
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .app-grid,.pillars,.stat-grid{grid-template-columns:repeat(2,1fr)}
+  .feature{grid-template-columns:1fr;gap:38px}
+  .feature.rev .f-text{order:0}
+  .banana-wrap{grid-template-columns:1fr;text-align:center}
+}
+@media(max-width:760px){
+  .nav-links,.nav-cta .btn{display:none}
+  .hamburger{display:flex}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .app-grid,.pillars{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .sec{padding:80px 0}
+}
+@media(max-width:460px){.foot-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ============================ HEADER ============================ -->
+<header id="header">
+  <div class="container nav">
+    <a href="#top" class="brand" aria-label="ApeChain home">
+      <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path d="M24 2 4 13.5v21L24 46l20-11.5v-21L24 2Z" fill="url(#g1)"/>
+        <path d="M24 2 4 13.5v21L24 46l20-11.5v-21L24 2Z" stroke="#4d86ff" stroke-width="1.2" opacity=".5"/>
+        <circle cx="17.5" cy="22" r="3.2" fill="#03081c"/>
+        <circle cx="30.5" cy="22" r="3.2" fill="#03081c"/>
+        <path d="M17 30c2.2 2.6 5 3.9 7 3.9s4.8-1.3 7-3.9" stroke="#03081c" stroke-width="2.4" stroke-linecap="round"/>
+        <defs><linearGradient id="g1" x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse"><stop stop-color="#4d86ff"/><stop offset="1" stop-color="#0054FA"/></linearGradient></defs>
+      </svg>
+      ApeChain
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#portal">Portal</a>
+      <a href="#apps">Apps</a>
+      <a href="#banana">Banana Bill</a>
+      <a href="#blueprint">The Blueprint</a>
+      <a href="#docs">Docs</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#portal" class="btn btn--sm">Enter Portal
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button class="hamburger" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Mobile menu">
+  <a href="#portal">Portal</a>
+  <a href="#apps">Apps</a>
+  <a href="#banana">Banana Bill</a>
+  <a href="#blueprint">The Blueprint</a>
+  <a href="#docs">Docs</a>
+  <a href="#portal" class="btn" style="margin-top:20px">Enter Portal</a>
+</aside>
+
+<main id="top">
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="grid-overlay"></div>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="container hero-inner">
+    <span class="eyebrow" data-reveal>Powered by $APE</span>
+    <h1 data-reveal class="d1">The Place<br><span class="grad">To Ape</span></h1>
+    <p class="lead" data-reveal>The chain built for culture — for the communities, builders, creators, collectors and gamers pushing everything on-chain. Fast, cheap, and yield-native.</p>
+    <div class="hero-cta d2" data-reveal>
+      <a href="#portal" class="btn">Start Building
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#apps" class="btn btn--ghost">Explore Apps</a>
+    </div>
+  </div>
+  <div class="scroll-ind" aria-hidden="true">
+    <div class="mouse"><i></i></div>
+    Scroll
+  </div>
+</section>
+
+<!-- ============================ MARQUEE ============================ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Top Trader</span><span>Dookey Dash: Unclogged</span><span>Otherside</span><span>Poker</span><span>Made By Apes</span><span>Battle Plan</span><span>Streets of New Tokyo</span>
+    <span>Top Trader</span><span>Dookey Dash: Unclogged</span><span>Otherside</span><span>Poker</span><span>Made By Apes</span><span>Battle Plan</span><span>Streets of New Tokyo</span>
+  </div>
+</div>
+
+<!-- ============================ STATS ============================ -->
+<section class="sec stats">
+  <div class="container">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">Built for scale</span>
+      <h2>An engine for the ape economy</h2>
+      <p>Sub-second blocks, sub-cent fees and native yield — infrastructure tuned for microtransactions, minting and real-time gameplay.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat" data-reveal><div class="num" data-count="0.25" data-suffix="s" data-dec="2">0.25s</div><div class="lbl">Block time</div></div>
+      <div class="stat d1" data-reveal><div class="num" data-count="0.01" data-prefix="&lt;$" data-dec="2">&lt;$0.01</div><div class="lbl">Average fee</div></div>
+      <div class="stat d2" data-reveal><div class="num" data-count="1000" data-suffix="+" data-dec="0">1,000+</div><div class="lbl">Transactions / sec</div></div>
+      <div class="stat d3" data-reveal><div class="num" data-count="100" data-suffix="%" data-dec="0">100%</div><div class="lbl">Native yield</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PORTAL FEATURE ============================ -->
+<section class="sec" id="portal">
+  <div class="container">
+    <div class="feature">
+      <div class="f-text" data-reveal>
+        <span class="eyebrow">Ape Portal</span>
+        <h3>The simplest way to bridge, swap &amp; on-ramp</h3>
+        <p>Ape Portal is ApeChain's official cross-chain gateway. Move assets between Ethereum, Arbitrum and ApeChain in a few taps — native bridging and OFT assets keep L1-to-L3 transfers fast and seamless.</p>
+        <ul class="f-list">
+          <li>Native bridging with fast, low-cost transfers</li>
+          <li>Swap and on-ramp from fiat in one flow</li>
+          <li>Cross-chain support across Ethereum &amp; Arbitrum</li>
+        </ul>
+        <div class="hero-cta" style="justify-content:flex-start;margin-top:30px">
+          <a href="#" class="btn">Enter Portal
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="f-visual d1" data-reveal>
+        <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <div class="glyph">🌉</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ YIELD FEATURE ============================ -->
+<section class="sec" style="background:var(--ink-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="feature rev">
+      <div class="f-text d1" data-reveal>
+        <span class="eyebrow">Native Yield</span>
+        <h3>Your assets earn the moment they arrive</h3>
+        <p>Bridge stablecoins like USDC, USDT and DAI — or ETH and APE — into ApeChain and earn native yield with automatic compounding. The chain works for you, not the other way around.</p>
+        <ul class="f-list">
+          <li>Automatic, compounding yield on bridged assets</li>
+          <li>APE is the native gas &amp; governance token</li>
+          <li>Every transaction fuels an economic loop</li>
+        </ul>
+      </div>
+      <div class="f-visual" data-reveal>
+        <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <div class="glyph">📈</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ APPS ============================ -->
+<section class="sec apps" id="apps">
+  <div class="container">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">Apps Ecosystem</span>
+      <h2>Where apes come to play</h2>
+      <p>Games, marketplaces and social apps launching on ApeChain — a growing ecosystem built by the community, for the community.</p>
+    </div>
+    <div class="app-grid" id="appGrid">
+      <a class="app-card" data-reveal href="#"><div class="app-ico">🎮</div><h4>Top Trader</h4><p>Yuga Labs' on-chain trading game — go long, go short, out-trade the apes.</p><span class="app-tag">Gaming</span></a>
+      <a class="app-card d1" data-reveal href="#"><div class="app-ico">🏄</div><h4>Dookey Dash: Unclogged</h4><p>The skill-based endless runner returns, fully on-chain and competitive.</p><span class="app-tag">Gaming</span></a>
+      <a class="app-card d2" data-reveal href="#"><div class="app-ico">🌌</div><h4>Otherside</h4><p>Yuga's interoperable metaverse — explore, build and play in the Otherside.</p><span class="app-tag">Metaverse</span></a>
+      <a class="app-card" data-reveal href="#"><div class="app-ico">🃏</div><h4>Poker</h4><p>Sugartown's on-chain poker room — real stakes, real-time, sub-cent fees.</p><span class="app-tag">Gaming</span></a>
+      <a class="app-card d1" data-reveal href="#"><div class="app-ico">🖼️</div><h4>OpenSea</h4><p>The marketplace for NFTs and tokens, now trading natively on ApeChain.</p><span class="app-tag">Marketplace</span></a>
+      <a class="app-card d2" data-reveal href="#"><div class="app-ico">🐵</div><h4>Made By Apes</h4><p>The registry celebrating businesses built by the ApeCoin community.</p><span class="app-tag">Social</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ BANANA BILL ============================ -->
+<section class="sec banana" id="banana">
+  <div class="container">
+    <div class="banana-wrap">
+      <div data-reveal>
+        <span class="eyebrow" style="color:var(--banana);border-color:rgba(255,210,62,.3);background:rgba(255,210,62,.08)">The Banana Bill</span>
+        <div class="banana-big" data-count="70" data-prefix="$" data-suffix="M" data-dec="0" style="margin:20px 0">$70M</div>
+        <p style="font-size:15px;color:var(--muted-2)">…and 100M+ APE set aside to fuel the ecosystem.</p>
+      </div>
+      <div data-reveal class="d1">
+        <h3>Build something valuable. Get rewarded.</h3>
+        <p>The Banana Bill is a fund dedicated to the long-term growth of ApeChain — powering user incentives and commercial agreements with the projects, teams and creatives building the future here.</p>
+        <p>Web3 companies, dev teams and ready-to-launch projects can apply for tiered funding and boosted visibility from the team.</p>
+        <div class="hero-cta" style="justify-content:flex-start;margin-top:28px">
+          <a href="#" class="btn btn--light">Apply Now
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#03081c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ BLUEPRINT ============================ -->
+<section class="sec" id="blueprint">
+  <div class="container">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">The Blueprint</span>
+      <h2>Three pillars, one economy</h2>
+      <p>ApeChain's roadmap is built on content, tools and distribution — a framework designed to reward everyone who builds along the way.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar" data-reveal><div class="p-n">01</div><h4>Content</h4><p>Games, culture and experiences that give the community a reason to show up — and keep coming back.</p></div>
+      <div class="pillar d1" data-reveal><div class="p-n">02</div><h4>Tools</h4><p>Bridging, yield, dev infrastructure and portals that make building on ApeChain effortless.</p></div>
+      <div class="pillar d2" data-reveal><div class="p-n">03</div><h4>Distribution</h4><p>Reach and visibility that connect builders to millions of apes across the ecosystem.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CTA ============================ -->
+<section class="cta" id="docs">
+  <div class="container">
+    <div class="cta-box" data-reveal>
+      <div class="blob b3" style="top:-80px;left:10%;opacity:.4"></div>
+      <h2>Ready to Ape?</h2>
+      <p>Bridge in, build something, and join the communities defining what's next on-chain.</p>
+      <div class="hero-cta">
+        <a href="#portal" class="btn btn--light">Enter Portal</a>
+        <a href="#" class="btn btn--ghost">Read the Docs
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ FOOTER ============================ -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#top" class="brand" style="font-size:20px">
+          <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="width:30px;height:30px">
+            <path d="M24 2 4 13.5v21L24 46l20-11.5v-21L24 2Z" fill="url(#g2)"/>
+            <circle cx="17.5" cy="22" r="3.2" fill="#03081c"/><circle cx="30.5" cy="22" r="3.2" fill="#03081c"/>
+            <path d="M17 30c2.2 2.6 5 3.9 7 3.9s4.8-1.3 7-3.9" stroke="#03081c" stroke-width="2.4" stroke-linecap="round"/>
+            <defs><linearGradient id="g2" x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse"><stop stop-color="#4d86ff"/><stop offset="1" stop-color="#0054FA"/></linearGradient></defs>
+          </svg>
+          ApeChain
+        </a>
+        <p>The place to ape. A chain built for culture — powered by $APE.</p>
+        <div class="socials">
+          <a href="#" aria-label="X"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-6.9l-5.4-7-6.2 7H1.6l8.1-9.3L1 2h7.1l4.9 6.4L18.9 2Zm-1.2 18h1.9L6.4 4h-2l13.3 16Z"/></svg></a>
+          <a href="#" aria-label="Discord"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.4A19 19 0 0 0 15.4 3l-.3.5a14 14 0 0 1 4.1 2 12.7 12.7 0 0 0-11-.5c-.5.2-.9.4-1.3.6A14 14 0 0 1 8.9 3.5L8.6 3A19 19 0 0 0 4 4.4 19.9 19.9 0 0 0 .5 18a19 19 0 0 0 5.8 2.9l.6-1a12 12 0 0 1-2-1l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12 12 0 0 1-2 1l.6 1A19 19 0 0 0 23.5 18 19.9 19.9 0 0 0 20 4.4ZM8.3 14.8c-.9 0-1.6-.9-1.6-1.9s.7-1.9 1.6-1.9 1.6.9 1.6 1.9-.7 1.9-1.6 1.9Zm7.4 0c-.9 0-1.6-.9-1.6-1.9s.7-1.9 1.6-1.9 1.6.9 1.6 1.9-.7 1.9-1.6 1.9Z"/></svg></a>
+          <a href="#" aria-label="Docs"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7"/><path d="M14 3v5h5M8 13h8M8 17h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h5>Ecosystem</h5>
+        <a href="#portal">Ape Portal</a><a href="#apps">Apps</a><a href="#banana">Banana Bill</a><a href="#blueprint">The Blueprint</a>
+      </div>
+      <div class="foot-col">
+        <h5>Build</h5>
+        <a href="#docs">Documentation</a><a href="#">Bridge</a><a href="#">RPC &amp; Chain Info</a><a href="#">Grants</a>
+      </div>
+      <div class="foot-col">
+        <h5>Community</h5>
+        <a href="#">X / Twitter</a><a href="#">Discord</a><a href="#">ApeCoin DAO</a><a href="#">Made By Apes</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ApeChain. A clone built for demo purposes.</span>
+      <span>Privacy · Terms · Brand</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------- header scroll state ---------- */
+const header=document.getElementById('header');
+const onScroll=()=>header.classList.toggle('scrolled',window.scrollY>20);
+onScroll();addEventListener('scroll',onScroll,{passive:true});
+
+/* ---------- mobile drawer ---------- */
+const ham=document.getElementById('ham'),drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim');
+const toggle=(o)=>{ham.classList.toggle('open',o);drawer.classList.toggle('open',o);scrim.classList.toggle('open',o);document.body.style.overflow=o?'hidden':''};
+ham.addEventListener('click',()=>toggle(!drawer.classList.contains('open')));
+scrim.addEventListener('click',()=>toggle(false));
+drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>toggle(false)));
+
+/* ---------- scroll reveal ---------- */
+const io=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+},{threshold:.15,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('[data-reveal]').forEach(el=>io.observe(el));
+
+/* ---------- count-up numbers ---------- */
+const fmt=(n,dec)=>{const v=Number(n).toFixed(dec);return dec>0?v:Number(v).toLocaleString('en-US')};
+const countIO=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target,target=parseFloat(el.dataset.count),dec=parseInt(el.dataset.dec||'0',10);
+    const pre=el.dataset.prefix||'',suf=el.dataset.suffix||'';const dur=1400,t0=performance.now();
+    const tick=(now)=>{const p=Math.min(1,(now-t0)/dur);const eased=1-Math.pow(1-p,3);
+      el.innerHTML=pre+fmt(target*eased,dec)+suf;
+      if(p<1)requestAnimationFrame(tick);else el.innerHTML=pre+fmt(target,dec)+suf;};
+    requestAnimationFrame(tick);countIO.unobserve(el);
+  });
+},{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>countIO.observe(el));
+
+/* ---------- app card cursor glow ---------- */
+document.querySelectorAll('.app-card').forEach(card=>{
+  card.addEventListener('pointermove',e=>{
+    const r=card.getBoundingClientRect();
+    card.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    card.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+</script>
+</body>
+</html>
