@@ -7,7 +7,7 @@
 <meta name="description" content="Alma Lifestyle — premium prayer mats, murda moshari and Islamic essentials, presented in an immersive ApeChain-inspired experience." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600;700&display=swap" rel="stylesheet" />
 <style>
 :root{
   --blue:#0054FA;
@@ -40,6 +40,24 @@ a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%}
 .display{font-family:"Archivo",sans-serif;font-weight:900;letter-spacing:-.02em;line-height:.92;text-transform:uppercase}
 .mono{font-family:"Space Grotesk",monospace;letter-spacing:.16em;text-transform:uppercase}
+.bn{font-family:"Hind Siliguri","Noto Serif Bengali",sans-serif}
+.bn-serif{font-family:"Noto Serif Bengali","Hind Siliguri",serif}
+.price{font-family:"Space Grotesk";font-weight:600}
+.price .was{color:#8fa0ad;text-decoration:line-through;margin-left:10px;font-weight:400;font-size:.85em}
+/* ---- Fabric (photo-less) product cards — premium lookbook treatment ---- */
+.fabric{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.fabric .weave{position:absolute;inset:0;opacity:.5;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 7px),
+             repeating-linear-gradient(-45deg,rgba(0,0,0,.10) 0 1px,transparent 1px 7px)}
+.fabric .sheen{position:absolute;inset:0;background:
+  radial-gradient(120% 80% at 28% 12%,rgba(255,255,255,.22),transparent 55%),
+  radial-gradient(120% 100% at 85% 100%,rgba(0,0,0,.35),transparent 60%)}
+.fabric .motif{position:absolute;inset:0;display:grid;place-items:center;opacity:.16}
+.fabric .motif svg{width:52%;height:52%}
+.fabric .fname{position:relative;z-index:3;text-align:center;padding:0 26px}
+.fabric .fname .en{font-family:"Archivo";font-weight:900;text-transform:uppercase;letter-spacing:-.01em;color:#fff;font-size:clamp(20px,2.6vw,34px);line-height:.95;text-shadow:0 4px 22px rgba(0,0,0,.35)}
+.fabric .fname .bnn{font-family:"Noto Serif Bengali";font-weight:600;color:rgba(255,255,255,.9);font-size:clamp(13px,1.5vw,17px);margin-top:8px}
+.fabric .fname .pr{margin-top:14px;font-family:"Space Grotesk";font-weight:600;font-size:14px;color:#fff;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:999px;display:inline-block}
 .container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 32px}
 
 /* ---------- Tag chip ---------- */
@@ -105,8 +123,8 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 .hero{position:relative;height:100vh;min-height:720px;overflow:hidden;
   background:radial-gradient(120% 90% at 50% 10%,#40606f 0%,#2a4954 42%,#182d37 100%)}
 #ripple{position:absolute;inset:0;z-index:1;pointer-events:none}
-.hero-carousel{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;perspective:1800px}
-.c-track{position:relative;width:min(760px,72vw);height:min(430px,52vh);transform-style:preserve-3d}
+.hero-carousel{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;perspective:1500px}
+.c-track{position:relative;width:min(820px,74vw);height:min(470px,56vh);transform-style:preserve-3d}
 .c-card{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;overflow:hidden;
   border:1px solid rgba(255,255,255,.16);box-shadow:0 40px 90px -30px rgba(0,0,0,.7);
   transition:transform .8s var(--ease),opacity .8s var(--ease),filter .8s var(--ease);will-change:transform;cursor:pointer;background:#0d1a20}
@@ -118,8 +136,10 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 .ov-tags{display:flex;gap:10px;margin-bottom:14px}
 .ov-title{font-family:"Archivo";font-weight:900;font-size:clamp(46px,7.5vw,104px);line-height:.86;text-transform:uppercase;
   text-shadow:0 8px 40px rgba(0,0,0,.5)}
-.ov-sub{margin-top:12px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#cdd9e0}
-.ov-cta{margin-top:26px;pointer-events:auto}
+.ov-bn{margin-top:10px;font-size:clamp(16px,1.9vw,22px);font-weight:600;color:#eaf1f5;text-shadow:0 3px 18px rgba(0,0,0,.5)}
+.ov-sub{margin-top:10px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#aebecb}
+.ov-price{margin-top:14px;font-size:22px;color:#fff}
+.ov-cta{margin-top:24px;pointer-events:auto}
 .ov-right{display:flex;flex-direction:column;align-items:flex-end;gap:18px;pointer-events:auto}
 .see-all{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#dfe9ee}
 .thumbs{display:flex;gap:8px}
@@ -162,7 +182,7 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
   box-shadow:0 50px 90px -40px rgba(10,30,40,.55);border:1px solid rgba(10,16,22,.1);transition:transform .6s var(--ease)}
 .spot-card img{width:100%;height:440px;object-fit:cover}
 .spot-card .sc-label{position:absolute;left:22px;bottom:22px;right:22px}
-.spot-card .sc-label h4{font-family:"Archivo";font-weight:900;font-size:26px;text-transform:uppercase;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.6)}
+.spot-card .sc-label h4{font-family:"Noto Serif Bengali","Archivo";font-weight:700;font-size:26px;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.6)}
 .spot-card .sc-label p{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#e7eef2;margin-top:4px}
 .spot-card .sc-btn{margin-top:14px;display:inline-flex;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 14px;border-radius:999px}
@@ -183,8 +203,12 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 .pcard .pc-cat{position:absolute;top:14px;left:14px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:#fff;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);padding:5px 10px;border-radius:5px;border:1px solid rgba(255,255,255,.2)}
 .pcard .pc-body{position:absolute;left:16px;right:16px;bottom:16px}
-.pcard .pc-body h4{font-family:"Archivo";font-weight:900;font-size:19px;text-transform:uppercase;color:#fff}
-.pcard .pc-body p{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#cdd9e0;margin-top:4px}
+.pcard .pc-body h4{font-family:"Noto Serif Bengali","Archivo";font-weight:700;font-size:19px;color:#fff;line-height:1.2}
+.pcard .pc-body p{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#cdd9e0;margin-top:5px;font-family:"Space Grotesk"}
+.pcard.fab .pcw{position:absolute;inset:0;opacity:.5;background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,rgba(0,0,0,.10) 0 1px,transparent 1px 7px)}
+.pcard.fab .pcs{position:absolute;inset:0;background:radial-gradient(120% 80% at 26% 10%,rgba(255,255,255,.16),transparent 55%)}
+.pcard.fab .pcm{position:absolute;inset:0;display:grid;place-items:center;opacity:.12}
+.pcard.fab .pcm svg{width:40%;height:64%}
 .pcard.tall{grid-row:span 2}
 .pcard.wide{grid-column:span 2}
 .pcard.feat h4{font-size:30px}
@@ -194,8 +218,9 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 .cats-row{display:flex;white-space:nowrap;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
   mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
 .cats-track{display:inline-flex;align-items:center;gap:44px;padding-right:44px;will-change:transform}
-.cats-track .ci{display:inline-flex;align-items:center;gap:22px;font-family:"Archivo";font-weight:900;font-size:clamp(34px,5vw,62px);text-transform:uppercase}
+.cats-track .ci{display:inline-flex;align-items:center;gap:22px;font-family:"Noto Serif Bengali","Archivo";font-weight:700;font-size:clamp(30px,4.4vw,56px)}
 .cats-track .cimg{width:clamp(46px,6vw,72px);height:clamp(46px,6vw,72px);border-radius:14px;object-fit:cover;box-shadow:0 10px 24px -10px rgba(0,84,250,.5)}
+.cats-track .cswatch{width:clamp(40px,5vw,60px);height:clamp(40px,5vw,60px);border-radius:12px;box-shadow:0 10px 24px -10px rgba(0,84,250,.5);border:1px solid rgba(255,255,255,.35)}
 .cats-cta{display:flex;justify-content:center;margin-top:44px}
 
 /* ============================ FOOTER ============================ */
@@ -250,24 +275,24 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 <header id="header">
   <div class="container nav">
     <a href="#top" class="logo">ALMA</a>
-    <nav class="nav-links">
-      <a href="#products">Explore</a>
-      <a href="#spotlight">Collections</a>
-      <a href="#products">Shop</a>
-      <a href="#footer">Contact</a>
+    <nav class="nav-links bn">
+      <a href="#products">পাঞ্জাবি</a>
+      <a href="#spotlight">কালেকশন</a>
+      <a href="#products">সব পণ্য</a>
+      <a href="#footer">যোগাযোগ</a>
     </nav>
     <div class="nav-right">
-      <a href="#products" class="cart-btn">Cart (0)</a>
+      <a href="#products" class="cart-btn bn">কার্ট (০)</a>
       <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer">
-  <a href="#products">Explore</a>
-  <a href="#spotlight">Collections</a>
-  <a href="#products">Shop</a>
-  <a href="#footer">Contact</a>
+<aside class="drawer bn" id="drawer">
+  <a href="#products">পাঞ্জাবি</a>
+  <a href="#spotlight">কালেকশন</a>
+  <a href="#products">সব পণ্য</a>
+  <a href="#footer">যোগাযোগ</a>
 </aside>
 
 <main id="top">
@@ -287,14 +312,16 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
       <div class="ov-left">
         <div class="ov-tags">
           <span class="tag"><span class="fire">🔥</span> HOT</span>
-          <span class="tag" id="ovCat">BEDDING</span>
+          <span class="tag bn" id="ovCat">পাঞ্জাবি</span>
         </div>
-        <h1 class="ov-title rise" id="ovTitle">MURDA<br>MOSHARI</h1>
-        <div class="ov-sub" id="ovSub">PREMIUM MOSQUITO NET, CRAFTED FOR PEACEFUL REST</div>
-        <div class="ov-cta rise"><a href="#products" class="btn"><span class="mag">Launch</span></a></div>
+        <h1 class="ov-title rise" id="ovTitle">SILK<br>PREMIUM</h1>
+        <div class="ov-bn bn-serif rise" id="ovBn">সিল্ক প্রিমিয়াম পাঞ্জাবি</div>
+        <div class="ov-sub" id="ovSub">PREMIUM SILK PANJABI · SIGNATURE FESTIVE COLLECTION</div>
+        <div class="ov-price price rise" id="ovPrice">৳3,850 <span class="was">৳4,500</span></div>
+        <div class="ov-cta rise"><a href="#products" class="btn"><span class="mag">Shop Now</span></a></div>
       </div>
       <div class="ov-right">
-        <a href="#products" class="see-all">See all products ▶</a>
+        <a href="#products" class="see-all bn">সব পণ্য দেখুন ▶</a>
         <div class="thumbs" id="thumbs"></div>
         <div class="c-nav">
           <button id="prev" aria-label="Previous">
@@ -311,28 +338,31 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 
 <!-- ============================ SPOTLIGHT ============================ -->
 <section class="spotlight" id="spotlight">
-  <div class="spot-ghost">JAYNAMAZ</div>
+  <div class="spot-ghost">PANJABI</div>
   <div class="container spot-grid">
     <div class="spot-head">
       <span class="tag dark">ALMA SPOTLIGHT</span>
-      <h2 class="spot-title" data-splt>WHERE COMFORT<br>MEETS CRAFT</h2>
+      <h2 class="spot-title" data-splt>CRAFTED FOR<br>EVERY OCCASION</h2>
       <div class="spot-body" data-fade>
-        <p>Every Alma piece is chosen for the moments that matter — the quiet of prayer, the calm of a good night's rest, the warmth of a home well kept.</p>
-        <p>Our jaynamaz collection pairs plush velvet with intricate mihrab motifs, while our murda moshari is engineered for durability and peace of mind.</p>
-        <p>Simple. Considered. Made to last. Ready to feel the difference?</p>
+        <p class="bn">আলমা লাইফস্টাইলের প্রতিটি পাঞ্জাবি বাছাই করা হয় সেই মুহূর্তগুলোর জন্য যেগুলো সত্যিই গুরুত্বপূর্ণ — ঈদ, উৎসব কিংবা প্রতিদিনের স্নিগ্ধতা।</p>
+        <p>From premium silk to breathable cotton, every piece is tailored for comfort and finished for occasion. Fast delivery across Bangladesh with cash on delivery.</p>
+        <p class="bn">সহজ। যত্নশীল। টেকসই। পার্থক্যটা অনুভব করতে প্রস্তুত?</p>
       </div>
       <div class="spot-cta" data-fade>
-        <a href="#products" class="btn dark solid">Shop Now</a>
+        <a href="#products" class="btn dark solid">Shop Panjabi</a>
         <a href="#products" class="btn dark">View Collection</a>
       </div>
     </div>
     <div class="spot-visual" data-tilt-wrap>
-      <div class="spot-card" data-tilt>
-        <img src="{{jJ2}}" alt="Featured jaynamaz" />
+      <div class="spot-card" data-tilt style="background:linear-gradient(155deg,#864a5c 0%,#6b2c3e 55%,#421826 100%)">
+        <div class="fabric" style="position:relative;height:440px">
+          <div class="weave"></div><div class="sheen"></div>
+          <div class="motif"><svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6C34 6 22 20 22 40v62h56V40C78 20 66 6 50 6Z" stroke="#fff" stroke-width="1.4"/><path d="M50 20c-9 0-16 8-16 20v52h32V40c0-12-7-20-16-20Z" stroke="#fff" stroke-width="1.1"/><circle cx="50" cy="42" r="7" stroke="#fff" stroke-width="1.1"/><path d="M50 52v40M38 70h24M42 60h16M42 82h16" stroke="#fff" stroke-width="1"/></svg></div>
+        </div>
         <div class="sc-label">
-          <h4>Royal Jaynamaz</h4>
-          <p>Velvet prayer mat · Limited edition</p>
-          <span class="sc-btn">What's inside ▸</span>
+          <h4>মেরুন উৎসব পাঞ্জাবি</h4>
+          <p>Maroon Festive · Eid Edit · ৳2,950</p>
+          <span class="sc-btn">Shop now ▸</span>
         </div>
       </div>
     </div>
@@ -344,17 +374,17 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
   <div class="container">
     <div class="products-head" data-fade>
       <h3><span class="dot"></span> ALMA COLLECTION</h3>
-      <a href="#" class="see-all">See all products ▶</a>
+      <a href="#" class="see-all bn">সব পণ্য দেখুন ▶</a>
     </div>
     <div class="pgrid">
-      <div class="pcard" data-grid><img src="{{mosBlk}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Bedding</span><div class="pc-body"><h4>Murda Moshari</h4><p>Premium mosquito net</p></div></div>
-      <div class="pcard" data-grid><img src="{{books}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Knowledge</span><div class="pc-body"><h4>Islamic Library</h4><p>7 essential books</p></div></div>
-      <div class="pcard tall feat" data-grid><img src="{{jGreen}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Emerald</h4><p>Velvet · Code 103</p></div></div>
-      <div class="pcard" data-grid><img src="{{jCream}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Cream</h4><p>Soft velvet finish</p></div></div>
-      <div class="pcard" data-grid><img src="{{jAsh}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Ash</h4><p>Understated elegance</p></div></div>
-      <div class="pcard wide" data-grid><img src="{{mosUse}}" alt=""><div class="pc-veil"></div><span class="pc-cat">In Use</span><div class="pc-body"><h4>Rest, Reimagined</h4><p>Moshari in the home</p></div></div>
-      <div class="pcard" data-grid><img src="{{jWhite}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Pearl</h4><p>Clean & timeless</p></div></div>
-      <div class="pcard" data-grid><img src="{{jBlack}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Onyx</h4><p>Bold & modern</p></div></div>
+      <div class="pcard fab tall feat" data-grid style="background:linear-gradient(155deg,#64707f 0%,#4a5568 55%,#333c4a 100%)"><div class="pcw"></div><div class="pcs"></div><div class="pcm"><svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6C34 6 22 20 22 40v62h56V40C78 20 66 6 50 6Z" stroke="#fff" stroke-width="1.4"/><path d="M50 20c-9 0-16 8-16 20v52h32V40c0-12-7-20-16-20Z" stroke="#fff" stroke-width="1.1"/><circle cx="50" cy="42" r="7" stroke="#fff" stroke-width="1.1"/><path d="M50 52v40M38 70h24M42 60h16M42 82h16" stroke="#fff" stroke-width="1"/></svg></div><div class="pc-veil"></div><span class="pc-cat">পাঞ্জাবি</span><div class="pc-body"><h4>সিল্ক প্রিমিয়াম পাঞ্জাবি</h4><p>Silk Premium · ৳3,850</p></div></div>
+      <div class="pcard fab" data-grid style="background:linear-gradient(155deg,#41556f 0%,#2c3e5c 55%,#1c2a3d 100%)"><div class="pcw"></div><div class="pcs"></div><div class="pc-veil"></div><span class="pc-cat">পাঞ্জাবি</span><div class="pc-body"><h4>রয়্যাল নেভি পাঞ্জাবি</h4><p>Royal Navy · ৳2,550</p></div></div>
+      <div class="pcard" data-grid><img src="{{mosBlk}}" alt=""><div class="pc-veil"></div><span class="pc-cat">ইসলামিক</span><div class="pc-body"><h4>স্মার্ট মুর্দা মশারী</h4><p>Murda Moshari · ৳1,790</p></div></div>
+      <div class="pcard fab" data-grid style="background:linear-gradient(155deg,#864a5c 0%,#6b2c3e 55%,#4a1c2a 100%)"><div class="pcw"></div><div class="pcs"></div><div class="pc-veil"></div><span class="pc-cat">পাঞ্জাবি</span><div class="pc-body"><h4>মেরুন উৎসব পাঞ্জাবি</h4><p>Maroon Festive · ৳2,950</p></div></div>
+      <div class="pcard" data-grid><img src="{{jGreen}}" alt=""><div class="pc-veil"></div><span class="pc-cat">ইসলামিক</span><div class="pc-body"><h4>জায়নামাজ · এমারেল্ড</h4><p>Prayer Mat · ৳1,290</p></div></div>
+      <div class="pcard fab wide" data-grid style="background:linear-gradient(155deg,#a58a6b 0%,#8b7355 55%,#5c4c38 100%)"><div class="pcw"></div><div class="pcs"></div><div class="pc-veil"></div><span class="pc-cat">পাঞ্জাবি</span><div class="pc-body"><h4>প্রিমিয়াম কটন পাঞ্জাবি</h4><p>Premium Cotton · ৳2,150</p></div></div>
+      <div class="pcard fab" data-grid style="background:linear-gradient(155deg,#5e9070 0%,#4a7c59 55%,#31543d 100%)"><div class="pcw"></div><div class="pcs"></div><div class="pc-veil"></div><span class="pc-cat">পাঞ্জাবি</span><div class="pc-body"><h4>সবুজ ক্যাজুয়াল পাঞ্জাবি</h4><p>Green Casual · ৳1,990</p></div></div>
+      <div class="pcard" data-grid><img src="{{books}}" alt=""><div class="pc-veil"></div><span class="pc-cat">ইসলামিক</span><div class="pc-body"><h4>ইসলামিক বই সংগ্রহ</h4><p>7 Book Collection</p></div></div>
     </div>
   </div>
 
@@ -363,7 +393,7 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
     <div class="cats-row">
       <div class="cats-track" id="catsTrack"></div>
     </div>
-    <div class="cats-cta"><a href="#products" class="btn dark solid">Browse all products</a></div>
+    <div class="cats-cta"><a href="#products" class="btn dark solid">সব পণ্য দেখুন</a></div>
   </div>
 </section>
 
@@ -375,24 +405,24 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
     <div class="foot-top">
       <div class="foot-brand">
         <span class="logo">ALMA</span>
-        <p>Premium prayer mats, murda moshari and Islamic essentials — crafted for the moments that matter.</p>
+        <p class="bn">প্রিমিয়াম পাঞ্জাবি, ইসলামিক এসেনশিয়ালস ও লাইফস্টাইল পণ্য — সেই মুহূর্তগুলোর জন্য যেগুলো সত্যিই গুরুত্বপূর্ণ।</p>
         <div class="socials">
           <a href="#" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3l.4-3H14V4.5c0-.9.3-1.5 1.6-1.5H17V.3C16.7.3 15.6.2 14.4.2 11.9.2 10.3 1.7 10.3 4.4V6H7.5v3h2.8v11H14V9Z"/></svg></a>
           <a href="#" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></a>
           <a href="#" aria-label="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.8-4.3-.2-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2.3 1.3 1.1 2.3 1.5 2.6 1.6.3.1.5.1.7-.1l.9-1c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.2.1.9-.1 1.4Z"/></svg></a>
         </div>
       </div>
-      <div class="foot-col">
-        <h5>Shop</h5>
-        <a href="#products">All Products</a><a href="#products">Jaynamaz</a><a href="#products">Murda Moshari</a><a href="#products">Islamic Books</a>
+      <div class="foot-col bn">
+        <h5>শপ</h5>
+        <a href="#products">সব পণ্য</a><a href="#products">পাঞ্জাবি</a><a href="#products">ইসলামিক</a><a href="#products">এক্সেসরিজ</a>
       </div>
-      <div class="foot-col">
-        <h5>Company</h5>
-        <a href="#">About Us</a><a href="#">Contact</a><a href="#">Delivery</a><a href="#">Track Order</a>
+      <div class="foot-col bn">
+        <h5>কোম্পানি</h5>
+        <a href="#">আমাদের সম্পর্কে</a><a href="#">যোগাযোগ</a><a href="#">ডেলিভারি</a><a href="#">অর্ডার ট্র্যাক</a>
       </div>
-      <div class="foot-col">
-        <h5>Support</h5>
-        <a href="#">FAQ</a><a href="#">Returns &amp; Refunds</a><a href="#">Privacy Policy</a><a href="#">Terms of Service</a>
+      <div class="foot-col bn">
+        <h5>সাপোর্ট</h5>
+        <a href="#">সচরাচর জিজ্ঞাসা</a><a href="#">রিটার্ন ও রিফান্ড</a><a href="#">প্রাইভেসি পলিসি</a><a href="#">শর্তাবলী</a>
       </div>
     </div>
   </div>
@@ -430,19 +460,32 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
   if(GS && ST){ try{ GS.registerPlugin(ST); }catch(e){} }
 
   /* ---------------- DATA ---------------- */
+  /* Real Alma Lifestyle catalog (from src/lib/products-data.ts).
+     type:'fabric' => photo-less premium lookbook card built from the product colour.
+     type:'photo'  => real product photograph (Islamic line). */
   var SLIDES = [
-    { img:'{{mosBlk}}', cat:'BEDDING',    title:'MURDA<br>MOSHARI',   sub:'PREMIUM MOSQUITO NET, CRAFTED FOR PEACEFUL REST' },
-    { img:'{{jGreen}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>EMERALD', sub:'VELVET PRAYER MAT · CODE 103 · 1290 TK' },
-    { img:'{{jCream}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>CREAM',   sub:'SOFT VELVET WITH INTRICATE MIHRAB MOTIF' },
-    { img:'{{books}}',  cat:'KNOWLEDGE',  title:'ISLAMIC<br>LIBRARY',  sub:'SEVEN ESSENTIAL BOOKS, ONE COLLECTION' },
-    { img:'{{jBlack}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>ONYX',    sub:'BOLD, MODERN, MADE TO LAST' },
-    { img:'{{jWhite}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>PEARL',   sub:'CLEAN AND TIMELESS EVERYDAY ESSENTIAL' },
-    { img:'{{mosUse}}', cat:'LIFESTYLE',  title:'REST,<br>REIMAGINED', sub:'THE MOSHARI, AT HOME IN YOUR SPACE' }
+    { type:'fabric', color:'#4a5568', cat:'পাঞ্জাবি', en:'SILK<br>PREMIUM',   bn:'সিল্ক প্রিমিয়াম পাঞ্জাবি', sub:'PREMIUM SILK PANJABI · SIGNATURE FESTIVE', price:'৳3,850', was:'৳4,500' },
+    { type:'fabric', color:'#2c3e5c', cat:'পাঞ্জাবি', en:'ROYAL<br>NAVY',      bn:'রয়্যাল নেভি পাঞ্জাবি',   sub:'ROYAL NAVY PANJABI · EVERYDAY LUXURY',    price:'৳2,550', was:'৳3,200' },
+    { type:'fabric', color:'#6b2c3e', cat:'পাঞ্জাবি', en:'MAROON<br>FESTIVE',  bn:'মেরুন উৎসব পাঞ্জাবি',     sub:'MAROON FESTIVE PANJABI · EID EDIT',       price:'৳2,950', was:'' },
+    { type:'photo',  img:'{{mosBlk}}', cat:'ইসলামিক', en:'MURDA<br>MOSHARI',   bn:'স্মার্ট মুর্দা মশারী',    sub:'SMART MURDA MOSHARI · DIGNIFIED CARE',    price:'৳1,790', was:'৳2,260' },
+    { type:'fabric', color:'#4a7c59', cat:'পাঞ্জাবি', en:'GREEN<br>CASUAL',    bn:'সবুজ ক্যাজুয়াল পাঞ্জাবি', sub:'GREEN CASUAL PANJABI · SOFT COTTON',      price:'৳1,990', was:'৳2,350' },
+    { type:'photo',  img:'{{jGreen}}', cat:'ইসলামিক', en:'JAYNAMAZ<br>EMERALD', bn:'জায়নামাজ · এমারেল্ড',   sub:'VELVET PRAYER MAT · INTRICATE MIHRAB',    price:'৳1,290', was:'' },
+    { type:'fabric', color:'#8b7355', cat:'পাঞ্জাবি', en:'PREMIUM<br>COTTON',   bn:'প্রিমিয়াম কটন পাঞ্জাবি', sub:'PREMIUM COTTON PANJABI · BREATHABLE',     price:'৳2,150', was:'৳2,490' }
   ];
   var CATS = [
-    {t:'PRAYER MATS', i:'{{jGreen}}'},{t:'BEDDING', i:'{{mosBlk}}'},{t:'ISLAMIC BOOKS', i:'{{books}}'},
-    {t:'HOME ESSENTIALS', i:'{{jCream}}'},{t:'LIFESTYLE', i:'{{mosUse}}'},{t:'VELVET SERIES', i:'{{jJ5}}'}
+    {t:'পাঞ্জাবি', color:'#2c3e5c'},{t:'ইসলামিক', i:'{{mosBlk}}'},{t:'ইলেকট্রনিক্স', color:'#2d3748'},
+    {t:'এক্সেসরিজ', color:'#6b4f3a'},{t:'হোম ও ডেকর', color:'#9cb5a0'},{t:'সিল্ক কালেকশন', color:'#4a5568'}
   ];
+  var MOTIF = '<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 6C34 6 22 20 22 40v62h56V40C78 20 66 6 50 6Z" stroke="#fff" stroke-width="1.4"/><path d="M50 20c-9 0-16 8-16 20v52h32V40c0-12-7-20-16-20Z" stroke="#fff" stroke-width="1.1"/><circle cx="50" cy="42" r="7" stroke="#fff" stroke-width="1.1"/><path d="M50 52v40M38 70h24M42 60h16M42 82h16" stroke="#fff" stroke-width="1"/></svg>';
+  function shade(hex,amt){ var n=parseInt(hex.slice(1),16); var r=Math.max(0,Math.min(255,(n>>16)+amt)); var g=Math.max(0,Math.min(255,((n>>8)&255)+amt)); var b=Math.max(0,Math.min(255,(n&255)+amt)); return 'rgb('+r+','+g+','+b+')'; }
+  function slideInner(s){
+    if(s.type==='photo'){ return '<img src="'+s.img+'" alt=""><div class="veil"></div>'; }
+    var enPlain=s.en.replace('<br>',' ');
+    return '<div class="fabric" style="background:linear-gradient(155deg,'+shade(s.color,26)+' 0%,'+s.color+' 55%,'+shade(s.color,-30)+' 100%)">'+
+      '<div class="weave"></div><div class="sheen"></div><div class="motif">'+MOTIF+'</div>'+
+      '<div class="fname"><div class="en">'+enPlain+'</div><div class="bnn">'+s.bn+'</div><div class="pr">'+s.price+'</div></div></div>';
+  }
+  function thumbInner(s){ return s.type==='photo' ? '<img src="'+s.img+'" alt="">' : '<div style="width:100%;height:100%;background:'+s.color+'"></div>'; }
 
   function ready(fn){ if(document.readyState!=='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
 
@@ -481,12 +524,13 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
     /* ---------------- HERO 3D CAROUSEL (pure CSS transforms) ---------------- */
     var track=document.getElementById('cTrack'),thumbsEl=document.getElementById('thumbs');
     var ovTitle=document.getElementById('ovTitle'),ovSub=document.getElementById('ovSub'),ovCat=document.getElementById('ovCat');
+    var ovBn=document.getElementById('ovBn'),ovPrice=document.getElementById('ovPrice');
     var active=0;
     SLIDES.forEach(function(s,i){
       var card=document.createElement('div');card.className='c-card';
-      card.innerHTML='<img src="'+s.img+'" alt=""><div class="veil"></div>';
+      card.innerHTML=slideInner(s);
       card.addEventListener('click',function(){go(i);});track.appendChild(card);
-      var th=document.createElement('div');th.className='thumb';th.innerHTML='<img src="'+s.img+'" alt="">';
+      var th=document.createElement('div');th.className='thumb';th.innerHTML=thumbInner(s);
       th.addEventListener('click',function(){go(i);});thumbsEl.appendChild(th);
     });
     var cards=[].slice.call(track.children),thumbEls=[].slice.call(thumbsEl.children);
@@ -494,12 +538,14 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
       var n=SLIDES.length;
       cards.forEach(function(card,i){
         var off=i-active; if(off>n/2){off-=n;} if(off<-n/2){off+=n;} var abs=Math.abs(off);
-        var x=off*62,z=-abs*220,ry=off*-22,scale=1-abs*0.05,op=abs>2?0:1-abs*0.18;
+        var x=off*44,z=-abs*300,ry=off*-30,scale=1-abs*0.10,op=abs>2?0:1-abs*0.22;
         card.style.transform='translateX('+x+'%) translateZ('+z+'px) rotateY('+ry+'deg) scale('+scale+')';
-        card.style.opacity=op;card.style.zIndex=100-abs;card.style.filter=abs===0?'none':'brightness(.7)';card.style.pointerEvents=op?'auto':'none';
+        card.style.opacity=op;card.style.zIndex=100-abs;card.style.filter=abs===0?'none':'brightness(.5) saturate(.85)';card.style.pointerEvents=op?'auto':'none';
       });
       thumbEls.forEach(function(t,i){t.classList.toggle('act',i===active);});
-      var s=SLIDES[active]; ovTitle.innerHTML=s.title;ovSub.textContent=s.sub;ovCat.textContent=s.cat;
+      var s=SLIDES[active];
+      ovTitle.innerHTML=s.en; if(ovBn){ovBn.textContent=s.bn;} ovSub.textContent=s.sub; ovCat.textContent=s.cat;
+      if(ovPrice){ ovPrice.innerHTML=s.price+(s.was?' <span class="was">'+s.was+'</span>':''); }
       ovTitle.style.animation='none'; void ovTitle.offsetWidth; ovTitle.style.animation='ovIn .6s cubic-bezier(.22,1,.36,1)';
     }
     function go(i){active=(i+SLIDES.length)%SLIDES.length;layout();resetAuto();}
@@ -529,7 +575,7 @@ header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-botto
 
     /* ---------------- CATEGORY MARQUEE (rAF, no deps) ---------------- */
     var catsTrack=document.getElementById('catsTrack');
-    function buildCats(){ return CATS.map(function(c){return '<span class="ci">'+c.t+' <img class="cimg" src="'+c.i+'" alt=""></span>';}).join(''); }
+    function buildCats(){ return CATS.map(function(c){ var icon=c.i?'<img class="cimg" src="'+c.i+'" alt="">':'<span class="cswatch" style="background:'+c.color+'"></span>'; return '<span class="ci">'+c.t+' '+icon+'</span>'; }).join(''); }
     catsTrack.innerHTML=buildCats()+buildCats();
     var mx=0;
     (function marq(){ mx-=0.6; var half=catsTrack.scrollWidth/2; if(half&&-mx>=half){mx+=half;} catsTrack.style.transform='translateX('+mx+'px)'; requestAnimationFrame(marq); })();
