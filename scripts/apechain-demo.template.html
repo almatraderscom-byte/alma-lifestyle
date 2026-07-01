@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ALMA LIFESTYLE — The Place to Live Well</title>
+<meta name="description" content="Alma Lifestyle — premium prayer mats, murda moshari and Islamic essentials, presented in an immersive ApeChain-inspired experience." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --blue:#0054FA;
+  --blue-2:#2f7bff;
+  --lagoon:#006D8A;
+  --teal-hi:#3c5b69;
+  --teal-lo:#182d37;
+  --paper:#e9eef3;      /* light section bg */
+  --paper-2:#dfe6ee;
+  --ink:#0a1016;
+  --white:#fff;
+  --muted:#9fb0bd;
+  --muted-d:#5b6b78;
+  --line:rgba(255,255,255,.14);
+  --line-d:rgba(10,16,22,.12);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --maxw:1320px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+body{
+  font-family:"Space Grotesk",system-ui,sans-serif;
+  background:var(--teal-lo);color:var(--white);
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.5;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.display{font-family:"Archivo",sans-serif;font-weight:900;letter-spacing:-.02em;line-height:.92;text-transform:uppercase}
+.mono{font-family:"Space Grotesk",monospace;letter-spacing:.16em;text-transform:uppercase}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+
+/* ---------- Tag chip ---------- */
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"Space Grotesk";font-size:11px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;padding:6px 11px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.06)}
+.tag.dark{border-color:var(--line-d);background:rgba(10,16,22,.04);color:var(--ink)}
+.tag .fire{font-size:13px}
+
+/* ---------- Buttons ---------- */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:"Space Grotesk";font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;
+  padding:15px 30px;border-radius:999px;border:1px solid var(--line);cursor:pointer;background:transparent;color:#fff;
+  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease);will-change:transform}
+.btn:hover{background:#fff;color:var(--ink);border-color:#fff}
+.btn.solid{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 12px 34px -10px rgba(0,84,250,.7)}
+.btn.solid:hover{background:var(--blue-2);border-color:var(--blue-2);color:#fff}
+.btn.dark{border-color:var(--line-d);color:var(--ink)}
+.btn.dark:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn .mag{display:inline-flex;will-change:transform}
+
+/* ============================ PRELOADER ============================ */
+.preloader{position:fixed;inset:0;z-index:1000;background:var(--teal-lo);display:flex;align-items:center;justify-content:center;flex-direction:column}
+.preloader .pl-word{font-family:"Archivo";font-weight:900;font-size:clamp(28px,5vw,54px);letter-spacing:.02em;text-transform:uppercase;color:#fff;opacity:.9}
+.preloader .pl-num{font-family:"Anton";font-size:clamp(90px,20vw,240px);line-height:1;color:#fff;margin-top:6px}
+.preloader .pl-bar{width:min(360px,70vw);height:2px;background:rgba(255,255,255,.16);margin-top:26px;overflow:hidden;border-radius:2px}
+.preloader .pl-bar i{display:block;height:100%;width:0;background:var(--blue);box-shadow:0 0 18px 2px var(--blue)}
+.preloader .pl-sub{margin-top:16px;font-size:11px;color:var(--muted)}
+
+/* ============================ HEADER ============================ */
+header{position:fixed;top:0;left:0;right:0;z-index:200;transition:background .5s var(--ease),backdrop-filter .5s var(--ease),border-color .5s}
+header.blur{background:rgba(16,32,40,.6);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:88px}
+.logo{display:inline-flex;align-items:center;border:2px solid #fff;padding:7px 12px;border-radius:4px;
+  font-family:"Archivo";font-weight:800;font-size:19px;letter-spacing:.02em;text-transform:uppercase}
+.nav-links{display:flex;gap:38px}
+.nav-links a{position:relative;font-family:"Space Grotesk";font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:#e7eef2;padding:6px 0}
+.nav-links a::after{content:"";position:absolute;left:0;right:100%;bottom:-2px;height:2px;background:#fff;transition:right .35s var(--ease)}
+.nav-links a:hover::after{right:0}
+.nav-right{display:flex;align-items:center;gap:18px}
+.cart-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.burger{display:none;flex-direction:column;gap:5px;background:none;border:0;cursor:pointer;padding:6px}
+.burger span{width:26px;height:2px;background:#fff;transition:transform .3s var(--ease),opacity .3s}
+.burger.on span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.on span:nth-child(2){opacity:0}
+.burger.on span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* mobile drawer */
+.drawer{position:fixed;inset:0 0 0 auto;width:min(360px,86vw);z-index:199;background:#12242d;border-left:1px solid var(--line);
+  transform:translateX(100%);transition:transform .55s var(--ease);padding:120px 34px 40px;display:flex;flex-direction:column;gap:4px}
+.drawer.on{transform:translateX(0)}
+.drawer a{font-family:"Archivo";font-weight:800;font-size:24px;text-transform:uppercase;color:#dfe9ee;padding:16px 0;border-bottom:1px solid var(--line);
+  opacity:0;transform:translateX(24px);transition:color .25s}
+.drawer.on a{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.drawer.on a:nth-child(1){transition-delay:.12s}.drawer.on a:nth-child(2){transition-delay:.18s}
+.drawer.on a:nth-child(3){transition-delay:.24s}.drawer.on a:nth-child(4){transition-delay:.30s}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:198;opacity:0;visibility:hidden;transition:.4s}
+.scrim.on{opacity:1;visibility:visible}
+
+/* ============================ HERO ============================ */
+.hero{position:relative;height:100vh;min-height:720px;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 10%,#40606f 0%,#2a4954 42%,#182d37 100%)}
+#ripple{position:absolute;inset:0;z-index:1;pointer-events:none}
+.hero-carousel{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;perspective:1800px}
+.c-track{position:relative;width:min(760px,72vw);height:min(430px,52vh);transform-style:preserve-3d}
+.c-card{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.16);box-shadow:0 40px 90px -30px rgba(0,0,0,.7);
+  transition:transform .8s var(--ease),opacity .8s var(--ease),filter .8s var(--ease);will-change:transform;cursor:pointer;background:#0d1a20}
+.c-card img{width:100%;height:100%;object-fit:cover}
+.c-card .veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(8,16,20,.55))}
+.hero-overlay{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:0 0 48px;pointer-events:none}
+.hero-overlay .container{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+.ov-left{max-width:560px}
+.ov-tags{display:flex;gap:10px;margin-bottom:14px}
+.ov-title{font-family:"Archivo";font-weight:900;font-size:clamp(46px,7.5vw,104px);line-height:.86;text-transform:uppercase;
+  text-shadow:0 8px 40px rgba(0,0,0,.5)}
+.ov-sub{margin-top:12px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#cdd9e0}
+.ov-cta{margin-top:26px;pointer-events:auto}
+.ov-right{display:flex;flex-direction:column;align-items:flex-end;gap:18px;pointer-events:auto}
+.see-all{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#dfe9ee}
+.thumbs{display:flex;gap:8px}
+.thumb{width:38px;height:38px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.2);opacity:.55;transition:opacity .3s,transform .3s,border-color .3s;cursor:pointer}
+.thumb.act{opacity:1;border-color:#fff;transform:translateY(-3px)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.c-nav{display:flex;gap:10px}
+.c-nav button{width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);
+  color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .3s,transform .3s}
+.c-nav button:hover{background:rgba(255,255,255,.18);transform:scale(1.06)}
+.hero-fade{position:absolute;left:0;right:0;bottom:0;height:140px;z-index:3;background:linear-gradient(180deg,transparent,rgba(24,45,55,.9));pointer-events:none}
+
+/* reveal-on-load helpers driven by GSAP */
+.rise{opacity:0;transform:translateY(40px)}
+
+/* ============================ SPOTLIGHT ============================ */
+.spotlight{background:var(--paper);color:var(--ink);position:relative;overflow:hidden;padding:130px 0}
+.spot-ghost{position:absolute;left:-4%;top:8%;font-family:"Anton";font-size:24vw;color:rgba(10,16,22,.04);white-space:nowrap;pointer-events:none;line-height:1}
+.spot-grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:70px;align-items:center}
+.spot-head .tag.dark{margin-bottom:22px}
+.spot-title{font-family:"Archivo";font-weight:900;font-size:clamp(40px,6vw,76px);line-height:.9;text-transform:uppercase;letter-spacing:-.02em}
+.spot-body{margin-top:26px;color:#43535f;font-size:16px;max-width:440px}
+.spot-body p{margin-bottom:14px}
+.spot-cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+.spot-visual{position:relative;perspective:1400px}
+.spot-card{position:relative;border-radius:18px;overflow:hidden;transform:rotateY(-16deg) rotateX(6deg) rotateZ(-2deg);
+  box-shadow:0 50px 90px -40px rgba(10,30,40,.55);border:1px solid rgba(10,16,22,.1);transition:transform .6s var(--ease)}
+.spot-card img{width:100%;height:440px;object-fit:cover}
+.spot-card .sc-label{position:absolute;left:22px;bottom:22px;right:22px}
+.spot-card .sc-label h4{font-family:"Archivo";font-weight:900;font-size:26px;text-transform:uppercase;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.6)}
+.spot-card .sc-label p{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#e7eef2;margin-top:4px}
+.spot-card .sc-btn{margin-top:14px;display:inline-flex;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 14px;border-radius:999px}
+
+/* ============================ PRODUCTS GRID ============================ */
+.products{background:var(--paper);color:var(--ink);padding:20px 0 130px}
+.products-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}
+.products-head h3{display:flex;align-items:center;gap:12px;font-family:"Archivo";font-weight:900;font-size:clamp(22px,3vw,32px);text-transform:uppercase}
+.products-head h3 .dot{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--lagoon))}
+.products-head .see-all{color:var(--ink)}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:230px;gap:18px}
+.pcard{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line-d);cursor:pointer;
+  transform-style:preserve-3d;transition:box-shadow .4s var(--ease)}
+.pcard img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.pcard:hover img{transform:scale(1.07)}
+.pcard:hover{box-shadow:0 30px 60px -28px rgba(10,30,40,.5)}
+.pcard .pc-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,14,20,.05) 30%,rgba(6,14,20,.82))}
+.pcard .pc-cat{position:absolute;top:14px;left:14px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:#fff;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);padding:5px 10px;border-radius:5px;border:1px solid rgba(255,255,255,.2)}
+.pcard .pc-body{position:absolute;left:16px;right:16px;bottom:16px}
+.pcard .pc-body h4{font-family:"Archivo";font-weight:900;font-size:19px;text-transform:uppercase;color:#fff}
+.pcard .pc-body p{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#cdd9e0;margin-top:4px}
+.pcard.tall{grid-row:span 2}
+.pcard.wide{grid-column:span 2}
+.pcard.feat h4{font-size:30px}
+
+/* ============================ MARQUEE ============================ */
+.cats{background:var(--paper);color:var(--blue);padding:40px 0 30px;overflow:hidden}
+.cats-row{display:flex;white-space:nowrap;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.cats-track{display:inline-flex;align-items:center;gap:44px;padding-right:44px;will-change:transform}
+.cats-track .ci{display:inline-flex;align-items:center;gap:22px;font-family:"Archivo";font-weight:900;font-size:clamp(34px,5vw,62px);text-transform:uppercase}
+.cats-track .cimg{width:clamp(46px,6vw,72px);height:clamp(46px,6vw,72px);border-radius:14px;object-fit:cover;box-shadow:0 10px 24px -10px rgba(0,84,250,.5)}
+.cats-cta{display:flex;justify-content:center;margin-top:44px}
+
+/* ============================ FOOTER ============================ */
+.footer{background:linear-gradient(180deg,var(--blue) 0%,#0b3fc4 60%,#082f95 100%);color:#fff;position:relative;overflow:hidden;padding:90px 0 0}
+.foot-top{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;padding-bottom:70px}
+.foot-brand .logo{border-color:#fff}
+.foot-brand p{margin-top:18px;color:#dbe6ff;font-size:14px;max-width:280px}
+.foot-brand .socials{display:flex;gap:12px;margin-top:22px}
+.foot-brand .socials a{width:42px;height:42px;border:1px solid rgba(255,255,255,.35);border-radius:11px;display:grid;place-items:center;transition:.3s var(--ease)}
+.foot-brand .socials a:hover{background:#fff;color:var(--blue);transform:translateY(-3px)}
+.foot-col h5{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#a9c2ff;margin-bottom:16px}
+.foot-col a{display:block;color:#e4ecff;font-size:14px;padding:6px 0;transition:.25s}
+.foot-col a:hover{color:#fff;transform:translateX(4px)}
+.foot-word{font-family:"Anton";font-size:clamp(56px,17vw,260px);line-height:.8;text-transform:uppercase;text-align:center;
+  color:#fff;padding:10px 0 0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden}
+.foot-legal{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 0 30px;border-top:1px solid rgba(255,255,255,.2);color:#bcd0ff;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+
+/* ============================ RESPONSIVE ============================ */
+@media(max-width:1024px){
+  .spot-grid{grid-template-columns:1fr;gap:44px}
+  .pgrid{grid-template-columns:repeat(2,1fr)}
+  .pcard.wide{grid-column:span 2}
+  .foot-top{grid-template-columns:1fr 1fr;gap:32px}
+}
+@media(max-width:760px){
+  .nav-links,.cart-btn{display:none}
+  .burger{display:flex}
+  .nav{height:74px}
+  .container{padding:0 20px}
+  .hero-overlay .container{flex-direction:column;align-items:flex-start;gap:22px}
+  .ov-right{align-items:flex-start;width:100%}
+  .pgrid{grid-template-columns:1fr;grid-auto-rows:200px}
+  .pcard.wide{grid-column:span 1}
+  .pcard.tall{grid-row:span 1}
+  .foot-top{grid-template-columns:1fr}
+  .spot-card img{height:340px}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+
+<!-- ============================ PRELOADER ============================ -->
+<div class="preloader" id="preloader">
+  <div class="pl-word">ALMA LIFESTYLE</div>
+  <div class="pl-num" id="plNum">0</div>
+  <div class="pl-bar"><i id="plBar"></i></div>
+  <div class="pl-sub mono">Curating your experience</div>
+</div>
+
+<!-- ============================ HEADER ============================ -->
+<header id="header">
+  <div class="container nav">
+    <a href="#top" class="logo">ALMA</a>
+    <nav class="nav-links">
+      <a href="#products">Explore</a>
+      <a href="#spotlight">Collections</a>
+      <a href="#products">Shop</a>
+      <a href="#footer">Contact</a>
+    </nav>
+    <div class="nav-right">
+      <a href="#products" class="cart-btn">Cart (0)</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <a href="#products">Explore</a>
+  <a href="#spotlight">Collections</a>
+  <a href="#products">Shop</a>
+  <a href="#footer">Contact</a>
+</aside>
+
+<main id="top">
+
+<!-- ============================ HERO ============================ -->
+<section class="hero" id="hero">
+  <canvas id="ripple"></canvas>
+
+  <div class="hero-carousel">
+    <div class="c-track" id="cTrack"><!-- cards injected --></div>
+  </div>
+
+  <div class="hero-fade"></div>
+
+  <div class="hero-overlay">
+    <div class="container">
+      <div class="ov-left">
+        <div class="ov-tags">
+          <span class="tag"><span class="fire">🔥</span> HOT</span>
+          <span class="tag" id="ovCat">BEDDING</span>
+        </div>
+        <h1 class="ov-title rise" id="ovTitle">MURDA<br>MOSHARI</h1>
+        <div class="ov-sub" id="ovSub">PREMIUM MOSQUITO NET, CRAFTED FOR PEACEFUL REST</div>
+        <div class="ov-cta rise"><a href="#products" class="btn"><span class="mag">Launch</span></a></div>
+      </div>
+      <div class="ov-right">
+        <a href="#products" class="see-all">See all products ▶</a>
+        <div class="thumbs" id="thumbs"></div>
+        <div class="c-nav">
+          <button id="prev" aria-label="Previous">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button id="next" aria-label="Next">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SPOTLIGHT ============================ -->
+<section class="spotlight" id="spotlight">
+  <div class="spot-ghost">JAYNAMAZ</div>
+  <div class="container spot-grid">
+    <div class="spot-head">
+      <span class="tag dark">ALMA SPOTLIGHT</span>
+      <h2 class="spot-title" data-splt>WHERE COMFORT<br>MEETS CRAFT</h2>
+      <div class="spot-body" data-fade>
+        <p>Every Alma piece is chosen for the moments that matter — the quiet of prayer, the calm of a good night's rest, the warmth of a home well kept.</p>
+        <p>Our jaynamaz collection pairs plush velvet with intricate mihrab motifs, while our murda moshari is engineered for durability and peace of mind.</p>
+        <p>Simple. Considered. Made to last. Ready to feel the difference?</p>
+      </div>
+      <div class="spot-cta" data-fade>
+        <a href="#products" class="btn dark solid">Shop Now</a>
+        <a href="#products" class="btn dark">View Collection</a>
+      </div>
+    </div>
+    <div class="spot-visual" data-tilt-wrap>
+      <div class="spot-card" data-tilt>
+        <img src="{{jJ2}}" alt="Featured jaynamaz" />
+        <div class="sc-label">
+          <h4>Royal Jaynamaz</h4>
+          <p>Velvet prayer mat · Limited edition</p>
+          <span class="sc-btn">What's inside ▸</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PRODUCTS GRID ============================ -->
+<section class="products" id="products">
+  <div class="container">
+    <div class="products-head" data-fade>
+      <h3><span class="dot"></span> ALMA COLLECTION</h3>
+      <a href="#" class="see-all">See all products ▶</a>
+    </div>
+    <div class="pgrid">
+      <div class="pcard" data-grid><img src="{{mosBlk}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Bedding</span><div class="pc-body"><h4>Murda Moshari</h4><p>Premium mosquito net</p></div></div>
+      <div class="pcard" data-grid><img src="{{books}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Knowledge</span><div class="pc-body"><h4>Islamic Library</h4><p>7 essential books</p></div></div>
+      <div class="pcard tall feat" data-grid><img src="{{jGreen}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Emerald</h4><p>Velvet · Code 103</p></div></div>
+      <div class="pcard" data-grid><img src="{{jCream}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Cream</h4><p>Soft velvet finish</p></div></div>
+      <div class="pcard" data-grid><img src="{{jAsh}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Ash</h4><p>Understated elegance</p></div></div>
+      <div class="pcard wide" data-grid><img src="{{mosUse}}" alt=""><div class="pc-veil"></div><span class="pc-cat">In Use</span><div class="pc-body"><h4>Rest, Reimagined</h4><p>Moshari in the home</p></div></div>
+      <div class="pcard" data-grid><img src="{{jWhite}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Pearl</h4><p>Clean & timeless</p></div></div>
+      <div class="pcard" data-grid><img src="{{jBlack}}" alt=""><div class="pc-veil"></div><span class="pc-cat">Prayer Mat</span><div class="pc-body"><h4>Jaynamaz · Onyx</h4><p>Bold & modern</p></div></div>
+    </div>
+  </div>
+
+  <!-- category marquee -->
+  <div class="cats" id="cats">
+    <div class="cats-row">
+      <div class="cats-track" id="catsTrack"></div>
+    </div>
+    <div class="cats-cta"><a href="#products" class="btn dark solid">Browse all products</a></div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <span class="logo">ALMA</span>
+        <p>Premium prayer mats, murda moshari and Islamic essentials — crafted for the moments that matter.</p>
+        <div class="socials">
+          <a href="#" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3l.4-3H14V4.5c0-.9.3-1.5 1.6-1.5H17V.3C16.7.3 15.6.2 14.4.2 11.9.2 10.3 1.7 10.3 4.4V6H7.5v3h2.8v11H14V9Z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.8-4.3-.2-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2.3 1.3 1.1 2.3 1.5 2.6 1.6.3.1.5.1.7-.1l.9-1c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.2.1.9-.1 1.4Z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h5>Shop</h5>
+        <a href="#products">All Products</a><a href="#products">Jaynamaz</a><a href="#products">Murda Moshari</a><a href="#products">Islamic Books</a>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <a href="#">About Us</a><a href="#">Contact</a><a href="#">Delivery</a><a href="#">Track Order</a>
+      </div>
+      <div class="foot-col">
+        <h5>Support</h5>
+        <a href="#">FAQ</a><a href="#">Returns &amp; Refunds</a><a href="#">Privacy Policy</a><a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+  <div class="foot-word">ALMA LIFESTYLE</div>
+  <div class="container">
+    <div class="foot-legal"><span>© 2026 Alma Lifestyle</span><span>Terms of Service · Privacy Notice</span></div>
+  </div>
+</footer>
+
+<!-- ============================ LIBRARIES (inlined — no network needed) ============================ -->
+<script>{{GSAP}}</script>
+<script>{{SCROLLTRIGGER}}</script>
+<script>{{LENIS}}</script>
+<script>
+/* Safety net: if a library failed to load for any reason, never leave the
+   preloader covering the page — reveal content immediately and bail out. */
+if (typeof window.gsap === 'undefined' || typeof window.Lenis === 'undefined') {
+  var _pl = document.getElementById('preloader'); if (_pl) _pl.style.display = 'none';
+  document.querySelectorAll('.rise').forEach(function(el){ el.style.opacity=1; el.style.transform='none'; });
+  console.warn('Animation libraries unavailable — showing static fallback.');
+} else {
+/* ==================================================================
+   DATA
+   ================================================================== */
+const SLIDES = [
+  { img:'{{mosBlk}}', cat:'BEDDING',    title:'MURDA<br>MOSHARI',    sub:'PREMIUM MOSQUITO NET, CRAFTED FOR PEACEFUL REST' },
+  { img:'{{jGreen}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>EMERALD',  sub:'VELVET PRAYER MAT · CODE 103 · 1290 TK' },
+  { img:'{{jCream}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>CREAM',    sub:'SOFT VELVET WITH INTRICATE MIHRAB MOTIF' },
+  { img:'{{books}}',  cat:'KNOWLEDGE',  title:'ISLAMIC<br>LIBRARY',   sub:'SEVEN ESSENTIAL BOOKS, ONE COLLECTION' },
+  { img:'{{jBlack}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>ONYX',     sub:'BOLD, MODERN, MADE TO LAST' },
+  { img:'{{jWhite}}', cat:'PRAYER MAT', title:'JAYNAMAZ<br>PEARL',    sub:'CLEAN AND TIMELESS EVERYDAY ESSENTIAL' },
+  { img:'{{mosUse}}', cat:'LIFESTYLE',  title:'REST,<br>REIMAGINED',  sub:'THE MOSHARI, AT HOME IN YOUR SPACE' },
+];
+const CATS = [
+  {t:'PRAYER MATS', i:'{{jGreen}}'},{t:'BEDDING', i:'{{mosBlk}}'},{t:'ISLAMIC BOOKS', i:'{{books}}'},
+  {t:'HOME ESSENTIALS', i:'{{jCream}}'},{t:'LIFESTYLE', i:'{{mosUse}}'},{t:'VELVET SERIES', i:'{{jJ5}}'},
+];
+
+/* ==================================================================
+   PRELOADER  (0 -> 100 then reveal)
+   ================================================================== */
+const plNum = document.getElementById('plNum');
+const plBar = document.getElementById('plBar');
+const preloader = document.getElementById('preloader');
+let pct = 0;
+const plTick = () => {
+  pct += Math.max(1, (100 - pct) * 0.06);
+  if (pct >= 100) pct = 100;
+  plNum.textContent = Math.floor(pct);
+  plBar.style.width = pct + '%';
+  if (pct < 100) requestAnimationFrame(plTick); else finishPreload();
+};
+function finishPreload(){
+  gsap.to(preloader, {yPercent:-100, duration:1, ease:'power4.inOut', delay:.25,
+    onComplete:()=>{ preloader.style.display='none'; document.documentElement.classList.remove('lenis-stopped'); }});
+  heroIntro();
+}
+
+/* ==================================================================
+   SMOOTH SCROLL (Lenis) + GSAP ticker
+   ================================================================== */
+const lenis = new Lenis({ duration:1.15, smoothWheel:true, lerp:.09 });
+lenis.on('scroll', () => ScrollTrigger.update());
+gsap.ticker.add((t)=> lenis.raf(t*1000));
+gsap.ticker.lagSmoothing(0);
+
+/* ==================================================================
+   HERO — 3D CAROUSEL
+   ================================================================== */
+const track = document.getElementById('cTrack');
+const thumbsEl = document.getElementById('thumbs');
+const ovTitle = document.getElementById('ovTitle');
+const ovSub = document.getElementById('ovSub');
+const ovCat = document.getElementById('ovCat');
+let active = 0;
+
+SLIDES.forEach((s,i)=>{
+  const card = document.createElement('div');
+  card.className = 'c-card';
+  card.innerHTML = '<img src="'+s.img+'" alt=""><div class="veil"></div>';
+  card.addEventListener('click', ()=> go(i));
+  track.appendChild(card);
+
+  const th = document.createElement('div');
+  th.className = 'thumb';
+  th.innerHTML = '<img src="'+s.img+'" alt="">';
+  th.addEventListener('click', ()=> go(i));
+  thumbsEl.appendChild(th);
+});
+const cards = [...track.children];
+const thumbEls = [...thumbsEl.children];
+
+function layout(){
+  const n = SLIDES.length;
+  cards.forEach((card,i)=>{
+    let off = i - active;
+    if (off > n/2) off -= n;
+    if (off < -n/2) off += n;
+    const abs = Math.abs(off);
+    const x = off * 62;                 // % spread
+    const z = -abs * 220;               // depth
+    const ry = off * -22;               // fan rotation
+    const scale = 1 - abs*0.05;
+    const op = abs > 2 ? 0 : 1 - abs*0.18;
+    card.style.transform = 'translateX('+x+'%) translateZ('+z+'px) rotateY('+ry+'deg) scale('+scale+')';
+    card.style.opacity = op;
+    card.style.zIndex = 100 - abs;
+    card.style.filter = abs===0 ? 'none' : 'brightness(.7)';
+    card.style.pointerEvents = op ? 'auto':'none';
+  });
+  thumbEls.forEach((t,i)=> t.classList.toggle('act', i===active));
+  const s = SLIDES[active];
+  // animate overlay text swap
+  gsap.fromTo([ovTitle,ovSub],{y:24,opacity:0},{y:0,opacity:1,duration:.6,ease:'power3.out',stagger:.05});
+  ovTitle.innerHTML = s.title; ovSub.textContent = s.sub; ovCat.textContent = s.cat;
+}
+function go(i){ active = (i + SLIDES.length) % SLIDES.length; layout(); resetAuto(); }
+document.getElementById('next').addEventListener('click', ()=> go(active+1));
+document.getElementById('prev').addEventListener('click', ()=> go(active-1));
+let auto = setInterval(()=> go(active+1), 5000);
+function resetAuto(){ clearInterval(auto); auto = setInterval(()=> go(active+1), 5000); }
+layout();
+
+/* ==================================================================
+   HERO — RIPPLE + PARTICLE CANVAS  (paused when offscreen)
+   ================================================================== */
+const cv = document.getElementById('ripple');
+const cx = cv.getContext('2d');
+let W,H,DPR,particles=[],t0=0,heroVisible=true,rafId;
+function sizeCanvas(){
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = cv.clientWidth = cv.parentElement.clientWidth;
+  H = cv.clientHeight = cv.parentElement.clientHeight;
+  cv.width = W*DPR; cv.height = H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+}
+function initParticles(){
+  particles = Array.from({length: window.innerWidth<760?36:70}, ()=>({
+    x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.8+.4,
+    vx:(Math.random()-.5)*.25, vy:(Math.random()-.5)*.25, a:Math.random()*.5+.15
+  }));
+}
+let mouseX=.5, mouseY=.5;
+window.addEventListener('pointermove', e=>{ mouseX=e.clientX/window.innerWidth; mouseY=e.clientY/window.innerHeight; });
+function draw(ts){
+  rafId = requestAnimationFrame(draw);
+  if (!heroVisible) return;
+  const t = ts*0.001;
+  cx.clearRect(0,0,W,H);
+  // concentric ripple rings, centre drifts slightly with mouse
+  const ccx = W*(0.5 + (mouseX-.5)*0.06), ccy = H*(0.42 + (mouseY-.5)*0.06);
+  const rings = 22, gap = Math.max(W,H)/rings;
+  cx.lineWidth = 1;
+  for(let i=0;i<rings;i++){
+    const rad = ((t*22)%gap) + i*gap;
+    const alpha = 0.10 * (1 - (rad/(Math.max(W,H)*1.1)));
+    if (alpha<=0) continue;
+    cx.strokeStyle = 'rgba(180,205,220,'+alpha+')';
+    cx.beginPath(); cx.arc(ccx,ccy,rad,0,Math.PI*2); cx.stroke();
+  }
+  // particles
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle='rgba(210,230,240,'+p.a+')'; cx.fill();
+  });
+}
+sizeCanvas(); initParticles(); rafId=requestAnimationFrame(draw);
+window.addEventListener('resize', ()=>{ sizeCanvas(); initParticles(); });
+new IntersectionObserver(([e])=>{ heroVisible = e.isIntersecting; }, {threshold:0}).observe(cv);
+
+/* ==================================================================
+   HEADER blur + mobile drawer
+   ================================================================== */
+const header = document.getElementById('header');
+lenis.on('scroll', ({scroll})=> header.classList.toggle('blur', scroll>40));
+const burger=document.getElementById('burger'),drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim');
+const setMenu=(o)=>{burger.classList.toggle('on',o);drawer.classList.toggle('on',o);scrim.classList.toggle('on',o);o?lenis.stop():lenis.start();};
+burger.addEventListener('click',()=>setMenu(!drawer.classList.contains('on')));
+scrim.addEventListener('click',()=>setMenu(false));
+drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',e=>{
+  const id=a.getAttribute('href'); setMenu(false);
+  if(id&&id.startsWith('#')){e.preventDefault(); lenis.scrollTo(id,{offset:-20});}
+}));
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{const id=a.getAttribute('href'); if(id.length>1){e.preventDefault(); lenis.scrollTo(id,{offset:-10});}});
+});
+
+/* ==================================================================
+   MAGNETIC BUTTONS
+   ================================================================== */
+document.querySelectorAll('.btn').forEach(btn=>{
+  const mag = btn.querySelector('.mag') || btn;
+  btn.addEventListener('pointermove', e=>{
+    const r=btn.getBoundingClientRect();
+    const mx=e.clientX-r.left-r.width/2, my=e.clientY-r.top-r.height/2;
+    gsap.to(btn,{x:mx*0.3,y:my*0.4,duration:.4,ease:'power3.out'});
+    gsap.to(mag,{x:mx*0.15,y:my*0.2,duration:.4,ease:'power3.out'});
+  });
+  btn.addEventListener('pointerleave', ()=>{ gsap.to(btn,{x:0,y:0,duration:.5,ease:'elastic.out(1,.5)'}); gsap.to(mag,{x:0,y:0,duration:.5,ease:'elastic.out(1,.5)'}); });
+});
+
+/* ==================================================================
+   TILT (spotlight card + product cards)
+   ================================================================== */
+function bindTilt(el, max){
+  const host = el.closest('[data-tilt-wrap]') || el;
+  host.addEventListener('pointermove', e=>{
+    const r=el.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+    gsap.to(el,{rotateY:px*max, rotateX:-py*max, duration:.5, ease:'power2.out', transformPerspective:1000, transformOrigin:'center'});
+  });
+  host.addEventListener('pointerleave', ()=> gsap.to(el,{rotateY: el.dataset.baseY||0, rotateX:0, duration:.7, ease:'power3.out'}));
+}
+const spotCard=document.querySelector('.spot-card');
+if(spotCard){ spotCard.dataset.baseY=-16; bindTilt(spotCard, 12); }
+document.querySelectorAll('.pcard').forEach(c=>bindTilt(c,8));
+
+/* ==================================================================
+   SCROLL REVEALS (GSAP + ScrollTrigger)
+   ================================================================== */
+function heroIntro(){
+  gsap.timeline({defaults:{ease:'power4.out'}})
+    .from('.nav .logo',{y:-30,opacity:0,duration:.7},0)
+    .from('.nav-links a',{y:-24,opacity:0,duration:.6,stagger:.06},0.05)
+    .from('.nav-right',{y:-24,opacity:0,duration:.6},0.1)
+    .from('.c-card',{opacity:0,scale:.85,duration:1,stagger:.05},0.2)
+    .to('.ov-title',{opacity:1,y:0,duration:.9},0.5)
+    .to('.ov-cta',{opacity:1,y:0,duration:.7},0.7);
+}
+
+/* split the spotlight title into words for stagger */
+document.querySelectorAll('[data-splt]').forEach(el=>{
+  const html = el.innerHTML.split('<br>').map(line=>
+    '<span class="l" style="display:block;overflow:hidden"><span class="w" style="display:inline-block">'+line+'</span></span>'
+  ).join('');
+  el.innerHTML = html;
+});
+
+ScrollTrigger.batch('[data-splt] .w',{start:'top 85%',onEnter:b=>gsap.from(b,{yPercent:110,opacity:0,duration:.9,ease:'power4.out',stagger:.12})});
+ScrollTrigger.batch('[data-fade]',{start:'top 88%',onEnter:b=>gsap.from(b,{y:40,opacity:0,duration:.9,ease:'power3.out',stagger:.12})});
+ScrollTrigger.batch('[data-grid]',{start:'top 92%',onEnter:b=>gsap.from(b,{y:60,opacity:0,scale:.96,duration:.8,ease:'power3.out',stagger:.08})});
+
+gsap.from('[data-tilt-wrap]',{scrollTrigger:{trigger:'.spotlight',start:'top 70%'},opacity:0,x:60,rotateY:-30,duration:1.1,ease:'power3.out'});
+gsap.from('.spot-ghost',{scrollTrigger:{trigger:'.spotlight',start:'top 80%',scrub:1},xPercent:-8});
+
+/* footer wordmark parallax reveal */
+gsap.from('.foot-word',{scrollTrigger:{trigger:'.footer',start:'top 60%'},yPercent:40,opacity:0,duration:1.2,ease:'power4.out'});
+
+/* ==================================================================
+   CATEGORY MARQUEE (seamless, GSAP-driven)
+   ================================================================== */
+const catsTrack=document.getElementById('catsTrack');
+const buildCats=()=> CATS.map(c=>'<span class="ci">'+c.t+' <img class="cimg" src="'+c.i+'" alt=""></span>').join('');
+catsTrack.innerHTML = buildCats()+buildCats();
+let mxpos=0;
+gsap.ticker.add(()=>{
+  mxpos -= 0.6;
+  const half = catsTrack.scrollWidth/2;
+  if (-mxpos >= half) mxpos += half;
+  catsTrack.style.transform = 'translateX('+mxpos+'px)';
+});
+
+/* lock scroll while preloading */
+document.documentElement.classList.add('lenis-stopped');
+lenis.stop();
+requestAnimationFrame(()=>{ lenis.start(); plTick(); });
+window.addEventListener('load', ()=> ScrollTrigger.refresh());
+} /* end library-available guard */
+</script>
+</body>
+</html>
