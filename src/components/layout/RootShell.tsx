@@ -77,8 +77,12 @@ export function RootShell({
     return <>{children}</>;
   }
 
+  // The Obsidian homepage ships its own header/footer, so run the shell
+  // chromeless on '/' (providers stay mounted for cart/wishlist/nav).
+  const chromeless = embedPreview || pathname === '/';
+
   return (
-    <StorefrontProviders navItems={navItems} chromeless={embedPreview}>
+    <StorefrontProviders navItems={navItems} chromeless={chromeless}>
       {children}
     </StorefrontProviders>
   );

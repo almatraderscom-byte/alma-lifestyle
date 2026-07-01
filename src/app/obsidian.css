@@ -1,0 +1,1446 @@
+/* ============================================================================
+   Alma "Obsidian Luxe" design system — electric violet + warm gold on deep
+   obsidian, with a warm-ivory light zone and a scroll-driven day->night sky.
+   Ported from the verified static demo (public/apechain-clone). All component
+   classes are scoped under `.obsidian-home` to avoid any collision with the
+   existing storefront styles; only design tokens live at :root.
+   ============================================================================ */
+
+:root {
+  /* palette */
+  --ob-violet: #7c5cff;
+  --ob-violet-2: #9a7dff;
+  --ob-gold: #d8a94e;
+  --ob-gold-2: #ecc074;
+  --ob-lagoon: #d8a94e;
+  --ob-teal-hi: #20203a;
+  --ob-teal-lo: #07070c; /* page / hero base (obsidian) */
+  --ob-ink-bg: #0b0b14;
+  --ob-paper: #f2ede6; /* warm ivory light section */
+  --ob-paper-2: #e7ded1;
+  --ob-ink: #0b0a12;
+  --ob-white: #fff;
+  --ob-muted: #a6a3c4;
+  --ob-muted-d: #6a6880;
+  --ob-line: rgba(255, 255, 255, 0.13);
+  --ob-line-d: rgba(11, 10, 18, 0.12);
+  --ob-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ob-maxw: 1320px;
+
+  /* day->night sky system — JS drives these from scroll across the collection
+     band (sunrise akashi) down to the footer wordmark (deep night blue). */
+  --sky-top: #c4def7;
+  --sky-bot: #96c1ee;
+  --sky-ink: #101c36;
+  --sky-dim: rgba(16, 28, 54, 0.66);
+  --sky-line: rgba(16, 28, 54, 0.16);
+  --sun: rgba(255, 248, 224, 0.55);
+  --strip-op: 0.2;
+}
+
+/* registering --theme as a real colour lets it INTERPOLATE — a plain var()
+   background jumps instantly, this gives the smooth cross-fade */
+@property --theme {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f2ede6;
+}
+
+/* --------------------------------------------------------------------------
+   Root wrapper + base typography (scoped)
+   -------------------------------------------------------------------------- */
+.obsidian-home {
+  --theme: #f2ede6;
+  transition: --theme 1.2s var(--ob-ease);
+  background: var(--ob-teal-lo);
+  color: var(--ob-white);
+  font-family: var(--font-space-grotesk), 'Space Grotesk', system-ui, sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.obsidian-home a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.obsidian-home .display {
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.obsidian-home .mono {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.obsidian-home .anton {
+  font-family: var(--font-anton), 'Anton', sans-serif;
+}
+
+.obsidian-home .bn {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', 'Noto Serif Bengali', sans-serif;
+}
+
+.obsidian-home .bn-serif {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', 'Hind Siliguri', serif;
+}
+
+.obsidian-home .price {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+}
+
+.obsidian-home .price .was {
+  color: #8fa0ad;
+  text-decoration: line-through;
+  margin-left: 10px;
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+.obsidian-home .ob-wrap {
+  max-width: var(--ob-maxw);
+  margin: 0 auto;
+  padding: 0 clamp(18px, 4vw, 48px);
+}
+
+/* --------------------------------------------------------------------------
+   Shared primitives — buttons & tags (scoped)
+   -------------------------------------------------------------------------- */
+.obsidian-home .ob-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 26px;
+  border-radius: 999px;
+  border: 1px solid var(--ob-line);
+  color: var(--ob-white);
+  cursor: pointer;
+  transition:
+    background 0.4s var(--ob-ease),
+    color 0.4s var(--ob-ease),
+    border-color 0.4s var(--ob-ease),
+    transform 0.4s var(--ob-ease);
+  background: transparent;
+}
+
+.obsidian-home .ob-btn:hover {
+  background: #fff;
+  color: var(--ob-ink);
+  border-color: #fff;
+}
+
+.obsidian-home .ob-btn.solid {
+  background: var(--ob-violet);
+  border-color: var(--ob-violet);
+  color: #fff;
+  box-shadow: 0 12px 34px -10px rgba(124, 92, 255, 0.75);
+}
+
+.obsidian-home .ob-btn.solid:hover {
+  background: var(--ob-violet-2);
+  border-color: var(--ob-violet-2);
+  color: #fff;
+}
+
+.obsidian-home .ob-btn.dark {
+  border-color: var(--ob-line-d);
+  color: var(--ob-ink);
+}
+
+.obsidian-home .ob-btn.dark:hover {
+  background: var(--ob-ink);
+  color: #fff;
+  border-color: var(--ob-ink);
+}
+
+.obsidian-home .ob-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ob-line);
+  color: var(--ob-white);
+}
+
+.obsidian-home .ob-tag.dark {
+  border-color: var(--ob-line-d);
+  background: rgba(10, 16, 22, 0.04);
+  color: var(--ob-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home {
+    transition: none;
+  }
+}
+
+.obsidian-home .container {
+  max-width: var(--ob-maxw);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+}
+
+/* ==========================================================================
+   HEADER (fixed blur bar)
+   ========================================================================== */
+.obsidian-home .ob-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  transition:
+    background 0.5s var(--ob-ease),
+    backdrop-filter 0.5s var(--ob-ease),
+    border-color 0.5s;
+  border-bottom: 1px solid transparent;
+}
+.obsidian-home .ob-header.blur {
+  background: rgba(11, 10, 20, 0.62);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid var(--ob-line);
+}
+.obsidian-home .ob-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88px;
+}
+.obsidian-home .ob-logo {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid #fff;
+  padding: 7px 12px;
+  border-radius: 4px;
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.obsidian-home .ob-nav-links {
+  display: flex;
+  gap: 38px;
+}
+.obsidian-home .ob-nav-links a {
+  position: relative;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e7eef2;
+  padding: 6px 0;
+}
+.obsidian-home .ob-nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -2px;
+  height: 2px;
+  background: #fff;
+  transition: right 0.35s var(--ob-ease);
+}
+.obsidian-home .ob-nav-links a:hover::after {
+  right: 0;
+}
+.obsidian-home .ob-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.obsidian-home .ob-cart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.obsidian-home .ob-burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 6px;
+}
+.obsidian-home .ob-burger span {
+  width: 26px;
+  height: 2px;
+  background: #fff;
+  transition:
+    transform 0.3s var(--ob-ease),
+    opacity 0.3s;
+}
+.obsidian-home .ob-burger.on span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.obsidian-home .ob-burger.on span:nth-child(2) {
+  opacity: 0;
+}
+.obsidian-home .ob-burger.on span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+.obsidian-home .ob-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(360px, 86vw);
+  z-index: 199;
+  background: #0e0d1a;
+  border-left: 1px solid var(--ob-line);
+  transform: translateX(100%);
+  transition: transform 0.55s var(--ob-ease);
+  padding: 120px 34px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.obsidian-home .ob-drawer.on {
+  transform: translateX(0);
+}
+.obsidian-home .ob-drawer a {
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  text-transform: uppercase;
+  color: #dfe9ee;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ob-line);
+}
+.obsidian-home .ob-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 198;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.4s;
+}
+.obsidian-home .ob-scrim.on {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+.obsidian-home .hero {
+  position: relative;
+  height: 100vh;
+  min-height: 720px;
+  overflow: hidden;
+  background: radial-gradient(130% 100% at 50% 6%, #1a1730 0%, #100f1e 44%, #07070c 100%);
+}
+.obsidian-home .hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 78% 40%, rgba(124, 92, 255, 0.18), transparent 60%),
+    radial-gradient(50% 40% at 20% 70%, rgba(216, 169, 78, 0.1), transparent 60%);
+}
+.obsidian-home .hero-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transition:
+    background 1.15s var(--ob-ease),
+    opacity 1.15s var(--ob-ease);
+  opacity: 0.85;
+  background: radial-gradient(72% 62% at 50% 46%, var(--wash, rgba(124, 92, 255, 0.3)), transparent 68%);
+}
+.obsidian-home .hero-ghost {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: min(30vw, 340px);
+  line-height: 0.8;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.07);
+  text-shadow: 0 0 60px rgba(255, 255, 255, 0.06);
+  transition:
+    opacity 0.5s ease,
+    transform 0.8s var(--ob-ease);
+}
+.obsidian-home .hero-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1500px;
+}
+.obsidian-home .c-track {
+  position: relative;
+  width: min(820px, 74vw);
+  height: min(470px, 56vh);
+  transform-style: preserve-3d;
+}
+.obsidian-home .c-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition:
+    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.8s var(--ob-ease),
+    filter 0.8s var(--ob-ease);
+  will-change: transform;
+  cursor: pointer;
+}
+.obsidian-home .c-in {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0d1a20;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+}
+.obsidian-home .c-in img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.obsidian-home .c-card .veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(8, 16, 20, 0.55));
+}
+.obsidian-home .hero-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 0 0 48px;
+  pointer-events: none;
+}
+.obsidian-home .hero-overlay .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+.obsidian-home .ov-left {
+  max-width: 560px;
+}
+.obsidian-home .ov-tags {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.obsidian-home .ov-title {
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(46px, 7.5vw, 104px);
+  line-height: 0.86;
+  text-transform: uppercase;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+.obsidian-home .ov-bn {
+  margin-top: 10px;
+  font-size: clamp(16px, 1.9vw, 22px);
+  font-weight: 600;
+  color: #eaf1f5;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.5);
+}
+.obsidian-home .ov-sub {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #aebecb;
+}
+.obsidian-home .ov-price {
+  margin-top: 14px;
+  font-size: 22px;
+  color: #fff;
+}
+.obsidian-home .ov-cta {
+  margin-top: 24px;
+  pointer-events: auto;
+}
+.obsidian-home .ov-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 18px;
+  pointer-events: auto;
+}
+.obsidian-home .see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #dfe9ee;
+}
+.obsidian-home .thumbs {
+  display: flex;
+  gap: 8px;
+}
+.obsidian-home .thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0.55;
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    border-color 0.3s;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+}
+.obsidian-home .thumb.act {
+  opacity: 1;
+  border-color: #fff;
+  transform: translateY(-3px);
+}
+.obsidian-home .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.obsidian-home .c-nav {
+  display: flex;
+  gap: 10px;
+}
+.obsidian-home .c-nav button {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    background 0.3s,
+    transform 0.3s;
+}
+.obsidian-home .c-nav button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.06);
+}
+.obsidian-home .hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  z-index: 3;
+  background: linear-gradient(180deg, transparent, rgba(24, 45, 55, 0.9));
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   SPOTLIGHT
+   ========================================================================== */
+.obsidian-home .spotlight {
+  background: var(--ob-paper);
+  color: #0c0f16;
+  position: relative;
+  overflow: hidden;
+  padding: 130px 0;
+}
+.obsidian-home .spot-ghost {
+  position: absolute;
+  left: -4%;
+  top: 8%;
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-size: 24vw;
+  color: rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 0;
+}
+.obsidian-home .spot-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 70px;
+  align-items: center;
+}
+.obsidian-home .spot-head .ob-tag.dark {
+  margin-bottom: 22px;
+}
+.obsidian-home .spot-title {
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(40px, 6vw, 76px);
+  line-height: 0.9;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.obsidian-home .spot-body {
+  margin-top: 26px;
+  color: rgba(12, 16, 22, 0.78);
+  font-size: 16px;
+  max-width: 440px;
+}
+.obsidian-home .spot-body p {
+  margin-bottom: 14px;
+}
+.obsidian-home .spot-cta {
+  display: flex;
+  gap: 14px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.obsidian-home .spot-visual {
+  position: relative;
+  perspective: 1400px;
+}
+.obsidian-home .spot-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  transform: rotateY(-16deg) rotateX(6deg) rotateZ(-2deg);
+  box-shadow: 0 50px 90px -40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  transition: transform 0.6s var(--ob-ease);
+}
+.obsidian-home .spot-card:hover {
+  transform: rotateY(-8deg) rotateX(3deg) rotateZ(-1deg);
+}
+.obsidian-home .spot-card img {
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+}
+.obsidian-home .spot-card .sc-label {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  right: 22px;
+}
+.obsidian-home .spot-card .sc-label h4 {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+.obsidian-home .spot-card .sc-label p {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e7eef2;
+  margin-top: 4px;
+}
+.obsidian-home .spot-card .sc-btn {
+  margin-top: 14px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+.obsidian-home .spot-what {
+  position: relative;
+  margin-top: 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.obsidian-home .spot-what .bar {
+  position: absolute;
+  inset: auto 6% 10px;
+  height: 14px;
+  border-radius: 999px;
+  filter: blur(1px);
+  background: linear-gradient(90deg, #7c5cff, #2f7dff, #1fbf8f, #e0a94e, #ff7a2f);
+}
+.obsidian-home .spot-what .pill {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  color: #0c0f16;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  border-radius: 999px;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   PRODUCTS GRID
+   ========================================================================== */
+.obsidian-home .products {
+  background: var(--ob-paper);
+  color: var(--ob-ink);
+  padding: 20px 0 0;
+}
+.obsidian-home .products-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 34px;
+}
+.obsidian-home .products-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-archivo), 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(22px, 3vw, 32px);
+  text-transform: uppercase;
+}
+.obsidian-home .products-head h3 .dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--ob-violet), var(--ob-gold));
+}
+.obsidian-home .products-head .see-all {
+  color: var(--ob-ink);
+}
+.obsidian-home .pgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 230px;
+  gap: 18px;
+}
+.obsidian-home .pcard {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--ob-line-d);
+  cursor: pointer;
+  transition: box-shadow 0.4s var(--ob-ease);
+  display: block;
+}
+.obsidian-home .pcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ob-ease);
+}
+.obsidian-home .pcard:hover img {
+  transform: scale(1.07);
+}
+.obsidian-home .pcard:hover {
+  box-shadow: 0 30px 60px -28px rgba(10, 30, 40, 0.5);
+}
+.obsidian-home .pcard .pc-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 14, 20, 0.05) 30%, rgba(6, 14, 20, 0.82));
+}
+.obsidian-home .pcard .pc-cat {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.obsidian-home .pcard .pc-body {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+}
+.obsidian-home .pcard .pc-body h4 {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  font-size: 19px;
+  color: #fff;
+  line-height: 1.2;
+}
+.obsidian-home .pcard .pc-body p {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cdd9e0;
+  margin-top: 5px;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+}
+.obsidian-home .pcard.tall {
+  grid-row: span 2;
+}
+.obsidian-home .pcard.wide {
+  grid-column: span 2;
+}
+.obsidian-home .pcard.feat .pc-body h4 {
+  font-size: 30px;
+}
+.obsidian-home .pcard.glow-violet {
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 92, 255, 0.55),
+    0 24px 60px -32px rgba(124, 92, 255, 0.6);
+}
+.obsidian-home .pcard.glow-gold {
+  box-shadow:
+    inset 0 0 0 1px rgba(216, 169, 78, 0.55),
+    0 24px 60px -32px rgba(216, 169, 78, 0.55);
+}
+.obsidian-home .pcard.glow-violet:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 92, 255, 0.8),
+    0 34px 70px -28px rgba(124, 92, 255, 0.7);
+}
+.obsidian-home .pcard.glow-gold:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(216, 169, 78, 0.85),
+    0 34px 70px -28px rgba(216, 169, 78, 0.65);
+}
+
+/* ==========================================================================
+   SHINE (akashi sunrise band) + CATS marquee — day->night sky
+   ========================================================================== */
+.obsidian-home .shine {
+  position: relative;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--sky-ink);
+  padding: 96px 0 30px;
+  overflow: hidden;
+}
+.obsidian-home .shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(180deg, var(--ob-paper), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.obsidian-home .shine-head,
+.obsidian-home .shine-row {
+  position: relative;
+  z-index: 1;
+}
+.obsidian-home .shine .ob-tag.dark {
+  border-color: var(--sky-line);
+  background: transparent;
+  color: var(--sky-ink);
+}
+.obsidian-home .shine-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.obsidian-home .shine-title {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 800;
+  font-size: clamp(38px, 6vw, 84px);
+  line-height: 0.98;
+  color: var(--sky-ink);
+  letter-spacing: -0.01em;
+}
+.obsidian-home .shine-row {
+  display: flex;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.obsidian-home .shine-track {
+  display: inline-flex;
+  gap: 22px;
+  padding: 0 22px;
+  will-change: transform;
+  animation: obShineScroll 40s linear infinite;
+}
+.obsidian-home .shine-row:hover .shine-track {
+  animation-play-state: paused;
+}
+@keyframes obShineScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.obsidian-home .scard {
+  flex: none;
+  width: clamp(230px, 24vw, 320px);
+  height: clamp(150px, 15vw, 200px);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: #0d0c16;
+  border: 1px solid rgba(11, 10, 20, 0.12);
+  box-shadow: 0 24px 50px -26px rgba(11, 10, 20, 0.5);
+}
+.obsidian-home .scard img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+.obsidian-home .scard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(7, 7, 12, 0.86));
+}
+.obsidian-home .scard .sc-in {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  right: 16px;
+  z-index: 2;
+}
+.obsidian-home .scard .sc-in h5 {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: #fff;
+}
+.obsidian-home .scard .sc-in p {
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c9c6e0;
+}
+.obsidian-home .cats {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--sky-ink);
+  padding: 40px 0 30px;
+  overflow: hidden;
+}
+.obsidian-home .cats-row {
+  display: flex;
+  white-space: nowrap;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.obsidian-home .cats-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 30px;
+  padding-right: 30px;
+  will-change: transform;
+  animation: obShineScroll 32s linear infinite;
+}
+.obsidian-home .cats-track .ci {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 800;
+  font-size: clamp(30px, 4.4vw, 56px);
+  color: var(--sky-ink);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.obsidian-home .cats-track .csep {
+  flex: none;
+  width: clamp(30px, 3.4vw, 48px);
+  height: clamp(30px, 3.4vw, 48px);
+  border-radius: clamp(9px, 1vw, 14px);
+  background: var(--ob-violet);
+  box-shadow: 0 10px 26px -10px rgba(124, 92, 255, 0.65);
+  transition: transform 0.3s var(--ob-ease);
+}
+.obsidian-home .cats-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 44px;
+}
+
+/* ==========================================================================
+   FOOTER (day->night wordmark)
+   ========================================================================== */
+.obsidian-home .ob-footer {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--sky-ink);
+  position: relative;
+  overflow: hidden;
+  padding: 120px 0 0;
+}
+.obsidian-home .foot-top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 70px;
+}
+.obsidian-home .foot-brand .ob-logo {
+  border-color: var(--sky-ink);
+  color: var(--sky-ink);
+}
+.obsidian-home .foot-brand p {
+  margin-top: 18px;
+  color: var(--sky-dim);
+  font-size: 14px;
+  max-width: 280px;
+}
+.obsidian-home .foot-brand .socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+.obsidian-home .foot-brand .socials a {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--sky-line);
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--sky-ink);
+  transition: 0.3s var(--ob-ease);
+}
+.obsidian-home .foot-brand .socials a:hover {
+  background: var(--ob-gold);
+  color: #0b0a12;
+  border-color: var(--ob-gold);
+  transform: translateY(-3px);
+}
+.obsidian-home .foot-col h5 {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sky-ink);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.obsidian-home .foot-col a {
+  display: block;
+  color: var(--sky-dim);
+  font-size: 14px;
+  padding: 6px 0;
+  transition: 0.25s;
+}
+.obsidian-home .foot-col a:hover {
+  color: var(--sky-ink);
+  transform: translateX(4px);
+}
+.obsidian-home .foot-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(120px, 20vw, 300px);
+  z-index: 0;
+  display: flex;
+  gap: 2px;
+  opacity: var(--strip-op, 0.28);
+  pointer-events: none;
+  -webkit-mask: linear-gradient(180deg, transparent, #000 40%);
+  mask: linear-gradient(180deg, transparent, #000 40%);
+}
+.obsidian-home .foot-strip img {
+  flex: 1;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05);
+}
+.obsidian-home .foot-word {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-size: clamp(56px, 17vw, 260px);
+  line-height: 0.8;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px 0 0;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: visible;
+  perspective: 900px;
+  filter: drop-shadow(0 12px 26px rgba(16, 32, 74, 0.28));
+}
+.obsidian-home .foot-word .fw-l {
+  display: inline-block;
+  transform-style: preserve-3d;
+  will-change: transform, filter;
+  background: linear-gradient(180deg, #fff 0%, #eaf1ff 55%, #cdddff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.obsidian-home .foot-legal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 22px 0 30px;
+  border-top: 1px solid var(--sky-line);
+  color: var(--sky-dim);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   REVEAL HELPERS
+   ========================================================================== */
+.obsidian-home .rise {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.9s var(--ob-ease),
+    transform 0.9s var(--ob-ease);
+}
+.obsidian-home .rise.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .obsidian-home .spot-grid {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+  .obsidian-home .pgrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .obsidian-home .foot-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+/* ==========================================================================
+   HERO VIDEO (cinematic video replaces the WebGL background)
+   ========================================================================== */
+.obsidian-home .hero-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.62) saturate(1.05);
+}
+
+/* ==========================================================================
+   CATEGORY SHOWCASE (CMS-driven, Obsidian-styled)
+   ========================================================================== */
+.obsidian-home .ob-cats-showcase {
+  background: var(--ob-paper);
+  color: var(--ob-ink);
+  padding: 96px 0;
+}
+.obsidian-home .ocs-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.obsidian-home .ocs-title {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 800;
+  font-size: clamp(32px, 5vw, 62px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.obsidian-home .ocs-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 18px;
+}
+.obsidian-home .ocs-stack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.obsidian-home .ocs-card {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--ob-line-d);
+  min-height: 220px;
+  color: #fff;
+  transition:
+    transform 0.5s var(--ob-ease),
+    box-shadow 0.5s var(--ob-ease);
+}
+.obsidian-home .ocs-card.feat {
+  grid-row: span 1;
+  min-height: 100%;
+}
+.obsidian-home .ocs-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ob-ease);
+}
+.obsidian-home .ocs-card:hover {
+  box-shadow: 0 30px 60px -28px rgba(10, 30, 40, 0.5);
+}
+.obsidian-home .ocs-card:hover img {
+  transform: scale(1.06);
+}
+.obsidian-home .ocs-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 14, 20, 0.05) 30%, rgba(6, 14, 20, 0.8));
+}
+.obsidian-home .ocs-body {
+  position: relative;
+  z-index: 1;
+  padding: 22px;
+}
+.obsidian-home .ocs-body h4 {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 34px);
+  line-height: 1.1;
+}
+.obsidian-home .ocs-body p {
+  margin-top: 6px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+.obsidian-home .ocs-go {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 14px;
+  transition: transform 0.4s var(--ob-ease);
+}
+.obsidian-home .ocs-card:hover .ocs-go {
+  transform: translateX(6px);
+}
+
+/* ==========================================================================
+   REVIEWS (CMS-driven) — sits inside the day sky
+   ========================================================================== */
+.obsidian-home .ob-reviews {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--sky-ink);
+  padding: 90px 0;
+}
+.obsidian-home .obr-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.obsidian-home .obr-head h3 {
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 800;
+  font-size: clamp(30px, 4.4vw, 56px);
+  line-height: 1;
+  color: var(--sky-ink);
+}
+.obsidian-home .obr-verified {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--sky-dim);
+}
+.obsidian-home .obr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.obsidian-home .obr-card {
+  border: 1px solid var(--sky-line);
+  border-radius: 16px;
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(6px);
+  margin: 0;
+}
+.obsidian-home .obr-stars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ob-gold);
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+.obsidian-home .obr-rate {
+  color: var(--sky-dim);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.obsidian-home .obr-text {
+  margin: 14px 0 18px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--sky-ink);
+}
+.obsidian-home .obr-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.obsidian-home .obr-name {
+  font-weight: 700;
+  color: var(--sky-ink);
+}
+.obsidian-home .obr-city {
+  color: var(--sky-dim);
+}
+
+/* ==========================================================================
+   TRUST BADGES (CMS-driven) — continues the day sky
+   ========================================================================== */
+.obsidian-home .ob-trust {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--sky-ink);
+  padding: 20px 0 80px;
+}
+.obsidian-home .obt-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+.obsidian-home .obt-item {
+  text-align: center;
+  padding: 28px 18px;
+  border: 1px solid var(--sky-line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+.obsidian-home .obt-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+.obsidian-home .obt-title {
+  margin-top: 12px;
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--sky-ink);
+}
+.obsidian-home .obt-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--sky-dim);
+}
+
+@media (max-width: 1024px) {
+  .obsidian-home .ocs-grid {
+    grid-template-columns: 1fr;
+  }
+  .obsidian-home .obr-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .obsidian-home .obt-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .obsidian-home .ob-nav-links,
+  .obsidian-home .ob-cart-btn {
+    display: none;
+  }
+  .obsidian-home .ob-burger {
+    display: flex;
+  }
+  .obsidian-home .ob-nav {
+    height: 74px;
+  }
+  .obsidian-home .hero-overlay .container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  .obsidian-home .ov-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+  .obsidian-home .pgrid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 200px;
+  }
+  .obsidian-home .pcard.wide,
+  .obsidian-home .pcard.tall {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  .obsidian-home .foot-top {
+    grid-template-columns: 1fr;
+  }
+  .obsidian-home .spot-card img {
+    height: 340px;
+  }
+  .obsidian-home .ocs-stack {
+    grid-template-columns: 1fr;
+  }
+  .obsidian-home .obr-grid {
+    grid-template-columns: 1fr;
+  }
+  .obsidian-home .obt-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

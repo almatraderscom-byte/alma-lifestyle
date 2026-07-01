@@ -1,5 +1,12 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Noto_Serif_Bengali, Hind_Siliguri } from 'next/font/google';
+import {
+  Playfair_Display,
+  Noto_Serif_Bengali,
+  Hind_Siliguri,
+  Archivo,
+  Anton,
+  Space_Grotesk,
+} from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { RootShell } from '@/components/layout/RootShell';
@@ -37,6 +44,28 @@ const hindSiliguri = Hind_Siliguri({
   display: 'swap',
 });
 
+// Obsidian Luxe display fonts (homepage cinematic redesign)
+const archivo = Archivo({
+  variable: '--font-archivo',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+});
+
+const anton = Anton({
+  variable: '--font-anton',
+  subsets: ['latin'],
+  weight: ['400'],
+  display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await loadPublicSettingsServer();
   const faviconHref = buildFaviconHref(settings.faviconUrl, settings.updatedAt);
@@ -65,7 +94,7 @@ export default async function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} h-full scroll-smooth`}
+      className={`${playfair.variable} ${notoSerifBengali.variable} ${hindSiliguri.variable} ${archivo.variable} ${anton.variable} ${spaceGrotesk.variable} h-full scroll-smooth`}
     >
       <head>
         <link rel="preload" as="image" href="/videos/hero/hero-poster.jpg" />

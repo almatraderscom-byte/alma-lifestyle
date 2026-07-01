@@ -1,13 +1,12 @@
 import { HomePageRenderer } from '@/components/home/HomePageRenderer';
+import { ObsidianHome } from '@/components/home/obsidian/ObsidianHome';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
+import { toCardProduct } from '@/lib/products-data';
 import {
   loadHomepageConfigServer,
   loadCatalogProductsServer,
-  pickOceanProductsFromCatalog,
-  resolveFeaturedProductsServer,
   loadCinematicContentServer,
 } from '@/lib/storefront/server-data';
-import { loadCinematicStageProducts } from '@/server/db/queries/cinematic-stage-products';
 
 export const revalidate = 300;
 
@@ -18,24 +17,20 @@ export default async function HomePage() {
       loadCatalogProductsServer({ limit: 200, page: 1 }),
     ]);
     const config = await loadHomepageConfigServer(catalog);
-    const featuredSection = config.sections.find((s) => s.id === 'featured');
-    const [featuredProducts, oceanProducts, { chapterProducts, filmStripProducts }] =
-      await Promise.all([
-        featuredSection && featuredSection.id === 'featured' && featuredSection.enabled
-          ? resolveFeaturedProductsServer(featuredSection.data, catalog)
-          : Promise.resolve([]),
-        Promise.resolve(pickOceanProductsFromCatalog(catalog, 12)),
-        loadCinematicStageProducts(cinematicContent, catalog),
-      ]);
+
+    const categoriesSection = config.sections.find((s) => s.id === 'categories');
+    const reviewsSection = config.sections.find((s) => s.id === 'reviews');
+    const trustSection = config.sections.find((s) => s.id === 'trust');
+
+    const products = catalog.map(toCardProduct);
 
     return (
-      <HomePageRenderer
-        initialConfig={config}
-        featuredProducts={featuredProducts}
-        oceanProducts={oceanProducts}
-        chapterProducts={chapterProducts}
-        filmStripProducts={filmStripProducts}
-        cinematicContent={cinematicContent}
+      <ObsidianHome
+        products={products}
+        hero={cinematicContent.hero}
+        categories={categoriesSection?.id === 'categories' ? categoriesSection.data : undefined}
+        reviews={reviewsSection?.id === 'reviews' ? reviewsSection.data : undefined}
+        trust={trustSection?.id === 'trust' ? trustSection.data : undefined}
       />
     );
   } catch (err) {

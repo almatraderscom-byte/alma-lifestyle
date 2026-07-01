@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./obsidian.css";
 
 :root {
   --primary: #2a2622;
