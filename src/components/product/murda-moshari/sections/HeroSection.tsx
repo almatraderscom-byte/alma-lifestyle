@@ -154,6 +154,8 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 md:grid-cols-2 md:gap-12">
         <div className="order-2 md:order-1">
           <MotionP
+            data-cms-field="hero.eyebrow"
+            data-cms-label="Eyebrow"
             className="font-bn-body text-xs uppercase tracking-wider text-mustard"
             {...(!reduced && {
               initial: { opacity: 0, x: -20 },
@@ -165,6 +167,8 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
           </MotionP>
 
           <MotionH1
+            data-cms-field="hero.heading"
+            data-cms-label="Heading"
             className="font-bn-heading mt-3 text-3xl leading-tight text-charcoal md:text-5xl"
             {...(!reduced && {
               variants: staggerContainer(stagger(0.06)),
@@ -190,6 +194,8 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
           </MotionH1>
 
           <MotionP
+            data-cms-field="hero.subheading"
+            data-cms-label="Subheading"
             className="font-bn-body mt-5 text-lg leading-relaxed text-charcoal/80"
             {...(!reduced && {
               initial: { opacity: 0, y: 24 },
@@ -204,6 +210,8 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
             <MotionButton
               type="button"
               onClick={onOrderClick}
+              data-cms-field="hero.primaryCta"
+              data-cms-label="Order button"
               className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-emerald px-6 font-bn-body text-base font-semibold text-cream"
               {...(!reduced && {
                 initial: { opacity: 0, scale: 0.95 },
@@ -219,6 +227,8 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackLead()}
+              data-cms-field="hero.whatsappCta"
+              data-cms-label="WhatsApp button"
               className={cn(
                 'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl',
                 'border border-[#25D366]/50 bg-transparent px-6 font-bn-body text-base font-semibold text-[#25D366]',
@@ -238,7 +248,12 @@ export function HeroSection({ onOrderClick }: HeroSectionProps) {
 
           <ul className="font-bn-body mt-6 flex flex-col gap-2 text-sm text-charcoal/70 sm:flex-row sm:flex-wrap sm:gap-x-6">
             {hero.trustItems.map((item, i) => (
-              <li key={item} className="flex items-center gap-2">
+              <li
+                key={item}
+                data-cms-field={`hero.trustItems.${i}`}
+                data-cms-label="Trust item"
+                className="flex items-center gap-2"
+              >
                 <CheckMarkDraw delay={duration(0.9 + i * 0.12)} />
                 {item}
               </li>
