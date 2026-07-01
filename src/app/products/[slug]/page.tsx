@@ -5,6 +5,11 @@ import { ProductDetailView } from '@/components/product/ProductDetailView';
 import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-content';
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
+import { JsonLd } from '@/components/seo/JsonLd';
+import {
+  buildProductJsonLd,
+  buildProductBreadcrumbJsonLd,
+} from '@/lib/seo/product-jsonld';
 import { getLandingContent } from '@/server/db/queries/landing-content';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import {
@@ -73,7 +78,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <ProductDetailView product={product} catalogProducts={catalogProducts} />
+    <>
+      <JsonLd
+        data={[
+          buildProductJsonLd(product, slug),
+          buildProductBreadcrumbJsonLd(slug, product.title),
+        ]}
+      />
+      <ProductDetailView product={product} catalogProducts={catalogProducts} />
+    </>
   );
 }
 
