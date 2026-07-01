@@ -54,14 +54,31 @@ function seedFromDisplay(display: CatalogProduct): Record<string, unknown> {
   };
 }
 
-/** Keep only the editable fields from a working copy (to preserve edits after GET). */
-function pickEditable(working: Record<string, unknown>): Record<string, unknown> {
+/**
+ * Scalar fields safe to re-apply over the freshly-fetched AdminProduct after the
+ * GET resolves (these can be edited before the full record loads).
+ */
+const SCALAR_KEYS = Object.keys(FIELD_TO_DISPLAY);
+
+/**
+ * Every field the PATCH payload should carry from the working copy. `images`
+ * only becomes meaningful after the full AdminProduct GET has populated it, so
+ * it is *not* in {@link SCALAR_KEYS} — we never re-apply a half-built images
+ * array over the fetched record.
+ */
+const SAVE_KEYS = [...SCALAR_KEYS, 'images'];
+
+/** Keep only the given keys (that are defined) from a working copy. */
+function pick(working: Record<string, unknown>, keys: string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const key of Object.keys(FIELD_TO_DISPLAY)) {
+  for (const key of keys) {
     if (working[key] !== undefined) out[key] = working[key];
   }
   return out;
 }
+
+/** `images.<n>.url` — the dot-path a tagged gallery image edits. */
+const IMAGE_URL_PATH = /^images\.(\d+)\.url$/;
 
 export interface ProductCmsEditProviderProps {
   product: CatalogProduct;
@@ -138,7 +155,7 @@ export function ProductCmsEditProvider({
         }
         setFullAdmin(body.data);
         setWorking((prev) => {
-          const merged = { ...(body.data as unknown as Record<string, unknown>), ...pickEditable(prev) };
+          const merged = { ...(body.data as unknown as Record<string, unknown>), ...pick(prev, SCALAR_KEYS) };
           baselineWorkingRef.current = { ...(body.data as unknown as Record<string, unknown>) };
           return merged;
         });
@@ -158,6 +175,20 @@ export function ProductCmsEditProvider({
     const displayKey = FIELD_TO_DISPLAY[path];
     if (displayKey) {
       setDisplay((prev) => ({ ...prev, [displayKey]: value }) as CatalogProduct);
+    }
+    // Mirror an image URL edit into the matching display gallery slot so the
+    // owner sees the new photo instantly (working uses AdminProduct.images,
+    // display uses CatalogProduct.images — same order, matched by index).
+    const imageMatch = IMAGE_URL_PATH.exec(path);
+    if (imageMatch && typeof value === 'string') {
+      const idx = Number(imageMatch[1]);
+      setDisplay((prev) => {
+        if (!prev.images?.[idx]) return prev;
+        const images = prev.images.map((img, i) =>
+          i === idx ? { ...img, url: value } : img
+        );
+        return { ...prev, images } as CatalogProduct;
+      });
     }
     setDirty(true);
     setSavedAt(null);
@@ -179,7 +210,7 @@ export function ProductCmsEditProvider({
     setSaving(true);
     setError(null);
     try {
-      const payload: AdminProduct = { ...fullAdmin, ...pickEditable(working) } as AdminProduct;
+      const payload: AdminProduct = { ...fullAdmin, ...pick(working, SAVE_KEYS) } as AdminProduct;
       const res = await fetch(`/api/v1/products/${encodeURIComponent(product.id)}`, {
         method: 'PATCH',
         credentials: 'same-origin',
