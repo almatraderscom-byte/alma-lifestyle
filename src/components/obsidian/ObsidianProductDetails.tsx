@@ -77,7 +77,13 @@ export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps)
   const whatsappHref = buildWhatsAppHref(settings, whatsappMessage);
 
   const accordionItems = [
-    { id: 'desc', title: PDP.accordion.description, content: product.description },
+    {
+      id: 'desc',
+      title: PDP.accordion.description,
+      content: product.description,
+      cmsField: 'description',
+      cmsLabel: 'Product description',
+    },
     { id: 'material', title: PDP.accordion.material, content: product.materialCare },
     { id: 'delivery', title: PDP.accordion.delivery, content: product.deliveryInfo },
     { id: 'returns', title: PDP.accordion.returns, content: product.returnPolicy },
@@ -87,18 +93,26 @@ export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps)
     <div className="ob-pdp-info">
       <div className="ob-pdp-head">
         <SplitBadge dark="ALMA" light={product.categoryName} />
-        <h1 className="ob-pdp-title bn-serif">{product.title}</h1>
+        <h1
+          className="ob-pdp-title bn-serif"
+          data-cms-field="title"
+          data-cms-label="Product title"
+        >
+          {product.title}
+        </h1>
         <p className="ob-pdp-rating">
           <span aria-hidden>★★★★★</span> {formatRating(product.rating)}{' '}
           {formatReviewCount(product.reviewCount)}
         </p>
       </div>
 
-      <AnimatedPrice
-        price={product.price}
-        compareAtPrice={product.compareAtPrice}
-        discountPercent={discountPercent}
-      />
+      <div data-cms-field="priceBdt" data-cms-label="Price (৳)">
+        <AnimatedPrice
+          price={product.price}
+          compareAtPrice={product.compareAtPrice}
+          discountPercent={discountPercent}
+        />
+      </div>
 
       {product.colors.length > 0 && (
         <div className="ob-pdp-field">
