@@ -38,7 +38,11 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
         />
       )}
       <div className="relative mx-auto max-w-3xl px-4 text-center">
-        <p className="font-bn-body text-xs uppercase tracking-wider text-mustard">
+        <p
+          data-cms-field="donation.eyebrow"
+          data-cms-label="Donation eyebrow"
+          className="font-bn-body text-xs uppercase tracking-wider text-mustard"
+        >
           {reduced
             ? donation.eyebrow
             : eyebrowWords.map((word, i) => (
@@ -55,11 +59,17 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
               ))}
         </p>
         {reduced ? (
-          <h2 className="font-bn-heading mt-4 text-2xl text-cream md:text-4xl">
+          <h2
+            data-cms-field="donation.heading"
+            data-cms-label="Donation heading"
+            className="font-bn-heading mt-4 text-2xl text-cream md:text-4xl"
+          >
             {donation.heading}
           </h2>
         ) : (
           <motion.h2
+            data-cms-field="donation.heading"
+            data-cms-label="Donation heading"
             className="font-bn-heading relative mt-4 text-2xl text-cream md:text-4xl"
             initial={{ opacity: 0.85 }}
             whileInView={{ opacity: 1 }}
@@ -85,6 +95,8 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
           </motion.h2>
         )}
         <motion.p
+          data-cms-field="donation.body"
+          data-cms-label="Donation body"
           className="font-bn-body mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/90 md:text-lg"
           {...(!reduced && {
             variants: fadeUp,
@@ -101,6 +113,8 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
             <button
               type="button"
               onClick={onOrderClick}
+              data-cms-field="donation.cta"
+              data-cms-label="Donation button"
               className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-mustard px-6 font-bn-body text-base font-semibold text-emerald"
             >
               {donation.cta}
@@ -109,6 +123,8 @@ export function DonationSection({ onOrderClick }: DonationSectionProps) {
             <motion.button
               type="button"
               onClick={onOrderClick}
+              data-cms-field="donation.cta"
+              data-cms-label="Donation button"
               className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-mustard px-6 font-bn-body text-base font-semibold text-emerald"
               whileInView={{
                 boxShadow: [

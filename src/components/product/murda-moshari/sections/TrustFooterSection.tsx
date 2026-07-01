@@ -29,13 +29,25 @@ export function TrustFooterSection() {
           >
             <WhatsAppIcon className="h-32 w-32 text-[#25D366]" />
           </div>
-          <p className="font-bn-body relative text-xs uppercase tracking-wider text-mustard">
+          <p
+            data-cms-field="trustFooter.whatsappEyebrow"
+            data-cms-label="Footer eyebrow"
+            className="font-bn-body relative text-xs uppercase tracking-wider text-mustard"
+          >
             {trustFooter.whatsappEyebrow}
           </p>
-          <h2 className="font-bn-heading relative mt-3 text-2xl font-semibold text-charcoal md:text-3xl">
+          <h2
+            data-cms-field="trustFooter.whatsappTitle"
+            data-cms-label="Footer title"
+            className="font-bn-heading relative mt-3 text-2xl font-semibold text-charcoal md:text-3xl"
+          >
             {trustFooter.whatsappTitle}
           </h2>
-          <p className="font-bn-body relative mt-2 text-sm text-charcoal/70 md:text-base">
+          <p
+            data-cms-field="trustFooter.whatsappSubtitle"
+            data-cms-label="Footer subtitle"
+            className="font-bn-body relative mt-2 text-sm text-charcoal/70 md:text-base"
+          >
             {trustFooter.whatsappSubtitle}
           </p>
           <a
@@ -43,6 +55,8 @@ export function TrustFooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackLead()}
+            data-cms-field="trustFooter.whatsappCta"
+            data-cms-label="Footer WhatsApp button"
             className="relative mt-6 inline-flex min-h-[52px] min-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-8 font-bn-body text-lg font-semibold text-cream transition-colors hover:bg-[#20bd5a]"
           >
             <WhatsAppIcon className="h-6 w-6" />
@@ -55,11 +69,17 @@ export function TrustFooterSection() {
         </div>
 
         {reduced ? (
-          <p className="font-bn-heading mx-auto mt-8 max-w-2xl text-center text-sm italic text-charcoal/80 md:text-base">
+          <p
+            data-cms-field="trustFooter.closing"
+            data-cms-label="Footer closing"
+            className="font-bn-heading mx-auto mt-8 max-w-2xl text-center text-sm italic text-charcoal/80 md:text-base"
+          >
             {trustFooter.closing}
           </p>
         ) : (
           <motion.p
+            data-cms-field="trustFooter.closing"
+            data-cms-label="Footer closing"
             className="font-bn-heading mx-auto mt-8 max-w-2xl text-center text-sm italic text-charcoal/80 md:text-base"
             initial={{ opacity: 0, filter: 'blur(4px)' }}
             whileInView={{ opacity: 1, filter: 'blur(0px)' }}

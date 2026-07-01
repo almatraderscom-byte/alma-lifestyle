@@ -54,11 +54,19 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
             transition: transition({ duration: duration(0.7) }),
           })}
         >
-          <p className="font-bn-heading text-center text-lg text-charcoal/80 md:text-xl">
+          <p
+            data-cms-field="pricing.leadLine"
+            data-cms-label="Pricing lead line"
+            className="font-bn-heading text-center text-lg text-charcoal/80 md:text-xl"
+          >
             {pricing.leadLine}
           </p>
           <div className="relative mt-6 inline-block">
-            <p className="font-bn-body text-lg text-charcoal/60">
+            <p
+              data-cms-field="pricing.originalLabel"
+              data-cms-label="Original price label"
+              className="font-bn-body text-lg text-charcoal/60"
+            >
               {pricing.originalLabel}: {formatBdtPrice(pricing.originalPrice)}
             </p>
             {!reduced && (
@@ -73,7 +81,13 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
               />
             )}
           </div>
-          <p className="font-bn-body mt-4 text-base text-charcoal/70">{pricing.offerLabel}</p>
+          <p
+            data-cms-field="pricing.offerLabel"
+            data-cms-label="Offer label"
+            className="font-bn-body mt-4 text-base text-charcoal/70"
+          >
+            {pricing.offerLabel}
+          </p>
           <div className="relative mt-2">
             <p className="font-bn-heading flex flex-wrap items-baseline gap-0 text-6xl text-emerald md:text-7xl">
               {reduced
@@ -122,7 +136,13 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
               {formatBnText(`${toBanglaNumber(savings)} টাকা সাশ্রয়`)}
             </motion.p>
           )}
-          <p className="font-bn-body mt-4 text-sm text-charcoal/60">{pricing.urgency}</p>
+          <p
+            data-cms-field="pricing.urgency"
+            data-cms-label="Urgency line"
+            className="font-bn-body mt-4 text-sm text-charcoal/60"
+          >
+            {pricing.urgency}
+          </p>
 
           <div className="mt-8 flex items-center justify-center gap-4">
             <button
@@ -151,6 +171,8 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
               <button
                 type="button"
                 onClick={handleClick}
+                data-cms-field="pricing.cta"
+                data-cms-label="Order button"
                 className="w-full rounded-xl bg-emerald py-4 font-bn-body text-lg font-semibold text-cream md:w-auto md:min-w-[280px]"
               >
                 {pricing.cta} — {formatBdtPrice(pricing.offerPrice)}
@@ -160,6 +182,8 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
                 type="button"
                 onClick={handleClick}
                 disabled={adding}
+                data-cms-field="pricing.cta"
+                data-cms-label="Order button"
                 className="relative w-full overflow-hidden rounded-xl bg-emerald py-4 font-bn-body text-lg font-semibold text-cream md:w-auto md:min-w-[280px]"
                 style={{
                   backgroundImage:
@@ -194,7 +218,11 @@ export function PricingSection({ qty, setQty, onAddToCart }: PricingSectionProps
               </motion.button>
             )}
           </div>
-          <p className="font-bn-body mt-4 text-center text-sm text-charcoal/70">
+          <p
+            data-cms-field="pricing.reassurance"
+            data-cms-label="Reassurance line"
+            className="font-bn-body mt-4 text-center text-sm text-charcoal/70"
+          >
             {pricing.reassurance}
           </p>
         </Card>

@@ -18,6 +18,8 @@ interface Selection {
   path: string;
   label: string;
   el: HTMLElement;
+  /** `data-cms-type` on the element, e.g. "image". Defaults to text/number. */
+  fieldType: string;
 }
 
 const OUTLINE_COLOR = '#7c5cff';
@@ -34,6 +36,8 @@ export function CmsEditLayer() {
   const [hoverLabel, setHoverLabel] = useState('');
   const [selection, setSelection] = useState<Selection | null>(null);
   const [selRect, setSelRect] = useState<ReturnType<typeof rectOf> | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const editing = cms?.editing ?? false;
@@ -50,6 +54,7 @@ export function CmsEditLayer() {
   }, []);
 
   useLayoutEffect(() => {
+    setUploadError(null);
     if (!selection) {
       setSelRect(null);
       return;
@@ -96,7 +101,8 @@ export function CmsEditLayer() {
       e.preventDefault();
       e.stopPropagation();
       const path = el.getAttribute('data-cms-field') || '';
-      setSelection({ path, label: labelFor(el, path), el });
+      const fieldType = el.getAttribute('data-cms-type') || 'text';
+      setSelection({ path, label: labelFor(el, path), el, fieldType });
       setHoverRect(null);
     };
 
@@ -136,6 +142,40 @@ export function CmsEditLayer() {
     requestAnimationFrame(syncSelRect);
   };
 
+  const uploadFile = async (file: File) => {
+    if (!selection) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('folder', 'murda-moshari');
+      form.append('bucket', 'product-images');
+      form.append('mediaType', 'image');
+      const res = await fetch('/api/v1/upload', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: form,
+      });
+      const body = (await res.json().catch(() => null)) as
+        | { status: 'success'; data: { url: string } }
+        | { status: 'error'; error: string }
+        | null;
+      if (!res.ok || !body || body.status !== 'success') {
+        setUploadError(
+          body && body.status === 'error' ? body.error : `Upload failed (${res.status})`
+        );
+        return;
+      }
+      cms.setField(selection.path, body.data.url);
+      requestAnimationFrame(syncSelRect);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <>
       {/* hover outline */}
@@ -162,7 +202,51 @@ export function CmsEditLayer() {
             </button>
           </div>
 
-          {editable ? (
+          {selection.fieldType === 'image' ? (
+            <div>
+              {typeof rawValue === 'string' && rawValue ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={rawValue}
+                  alt="Current"
+                  style={{
+                    width: '100%',
+                    height: 140,
+                    objectFit: 'contain',
+                    background: '#0b0a12',
+                    borderRadius: 8,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                  }}
+                />
+              ) : (
+                <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 8 }}>No image set.</div>
+              )}
+              <label style={{ ...primaryBtnStyle, display: 'block', textAlign: 'center', marginTop: 10, cursor: uploading ? 'default' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                {uploading ? 'Uploading…' : 'Upload / replace image'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadFile(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              {uploadError && (
+                <p style={{ color: '#ff6b6b', fontSize: 12, margin: '8px 0 0' }}>{uploadError}</p>
+              )}
+              <input
+                type="text"
+                value={typeof rawValue === 'string' ? rawValue : ''}
+                onChange={(e) => commit(e.target.value)}
+                placeholder="or paste an image URL / path"
+                style={{ ...textareaStyle, marginTop: 10, resize: 'none' }}
+              />
+            </div>
+          ) : editable ? (
             <textarea
               autoFocus
               value={isNumber ? String(rawValue) : (rawValue as string) ?? ''}
@@ -173,8 +257,8 @@ export function CmsEditLayer() {
             />
           ) : (
             <p style={{ fontSize: 13, opacity: 0.7, margin: 0 }}>
-              This element isn&apos;t a simple text/number field yet. Richer editing (images,
-              lists, styles) is coming in the next phase.
+              This element isn&apos;t a simple text/number field yet. Richer editing (lists,
+              styles) is coming in the next phase.
             </p>
           )}
         </div>

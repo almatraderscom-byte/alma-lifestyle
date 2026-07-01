@@ -33,7 +33,12 @@ export function SolutionSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 md:grid-cols-2 md:gap-14">
         <div className="order-2 md:order-1">
           <div className="relative overflow-visible">
-            <div className="relative aspect-[3/2] min-h-[200px] w-full overflow-hidden rounded-2xl md:min-h-[280px] md:rounded-l-3xl md:rounded-r-none">
+            <div
+              data-cms-field="solution.image"
+              data-cms-label="Solution image"
+              data-cms-type="image"
+              className="relative aspect-[3/2] min-h-[200px] w-full overflow-hidden rounded-2xl md:min-h-[280px] md:rounded-l-3xl md:rounded-r-none"
+            >
               <div className="absolute inset-0">
                 {reduced ? (
                   <Image
@@ -65,6 +70,8 @@ export function SolutionSection() {
                 reduced ? (
                   <span
                     key={tag}
+                    data-cms-field={`solution.tags.${i}`}
+                    data-cms-label="Solution tag"
                     className={cn(
                       'absolute rounded-full bg-cream px-3 py-1.5 font-bn-body text-xs font-medium text-emerald md:text-sm',
                       chipPositions[i]
@@ -75,6 +82,8 @@ export function SolutionSection() {
                 ) : (
                   <motion.span
                     key={tag}
+                    data-cms-field={`solution.tags.${i}`}
+                    data-cms-label="Solution tag"
                     className={cn(
                       'absolute rounded-full bg-cream px-3 py-1.5 font-bn-body text-xs font-medium text-emerald md:text-sm',
                       chipPositions[i]
@@ -112,13 +121,25 @@ export function SolutionSection() {
         >
           {reduced ? (
             <>
-              <p className="font-bn-body text-xs uppercase tracking-wider text-mustard">
+              <p
+                data-cms-field="solution.eyebrow"
+                data-cms-label="Solution eyebrow"
+                className="font-bn-body text-xs uppercase tracking-wider text-mustard"
+              >
                 {solution.eyebrow}
               </p>
-              <h2 className="font-bn-heading mt-2 text-2xl text-charcoal md:text-3xl">
+              <h2
+                data-cms-field="solution.heading"
+                data-cms-label="Solution heading"
+                className="font-bn-heading mt-2 text-2xl text-charcoal md:text-3xl"
+              >
                 {solution.heading}
               </h2>
-              <p className="font-bn-body mt-5 text-base leading-relaxed text-charcoal/80 md:text-lg">
+              <p
+                data-cms-field="solution.body"
+                data-cms-label="Solution body"
+                className="font-bn-body mt-5 text-base leading-relaxed text-charcoal/80 md:text-lg"
+              >
                 {solution.body}
               </p>
             </>
@@ -126,18 +147,24 @@ export function SolutionSection() {
             <>
               <motion.p
                 variants={fadeUp}
+                data-cms-field="solution.eyebrow"
+                data-cms-label="Solution eyebrow"
                 className="font-bn-body text-xs uppercase tracking-wider text-mustard"
               >
                 {solution.eyebrow}
               </motion.p>
               <motion.h2
                 variants={fadeUp}
+                data-cms-field="solution.heading"
+                data-cms-label="Solution heading"
                 className="font-bn-heading mt-2 text-2xl text-charcoal md:text-3xl"
               >
                 {solution.heading}
               </motion.h2>
               <motion.p
                 variants={fadeUp}
+                data-cms-field="solution.body"
+                data-cms-label="Solution body"
                 className="font-bn-body mt-5 text-base leading-relaxed text-charcoal/80 md:text-lg"
               >
                 {solution.body}

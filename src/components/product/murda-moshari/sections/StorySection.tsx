@@ -27,13 +27,25 @@ export function StorySection() {
         >
           “
         </span>
-        <p className="font-bn-body text-xs uppercase tracking-wider text-mustard">
+        <p
+          data-cms-field="story.eyebrow"
+          data-cms-label="Story eyebrow"
+          className="font-bn-body text-xs uppercase tracking-wider text-mustard"
+        >
           {story.eyebrow}
         </p>
-        <h2 className="font-bn-heading mt-3 text-2xl font-bold text-charcoal md:text-3xl">
+        <h2
+          data-cms-field="story.heading"
+          data-cms-label="Story heading"
+          className="font-bn-heading mt-3 text-2xl font-bold text-charcoal md:text-3xl"
+        >
           {story.heading}
         </h2>
-        <div className="mt-8 space-y-6">
+        <div
+          data-cms-field="story.body"
+          data-cms-label="Story body"
+          className="mt-8 space-y-6"
+        >
           {sentences.map((sentence, i) =>
             reduced ? (
               <p
@@ -60,7 +72,11 @@ export function StorySection() {
             )
           )}
         </div>
-        <p className="font-bn-body mt-10 text-right text-sm italic text-charcoal/70 md:text-base">
+        <p
+          data-cms-field="story.attribution"
+          data-cms-label="Story attribution"
+          className="font-bn-body mt-10 text-right text-sm italic text-charcoal/70 md:text-base"
+        >
           {story.attribution}
         </p>
       </div>

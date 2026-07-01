@@ -64,6 +64,8 @@ function NarrativeScene({
 
   return (
     <motion.p
+      data-cms-field={`narrative.scenes.${index}`}
+      data-cms-label="Scene"
       style={{ opacity, y }}
       className="absolute inset-x-0 top-1/2 mx-auto max-w-3xl -translate-y-1/2 px-6 text-center font-bn-heading text-2xl leading-relaxed text-charcoal md:text-4xl"
     >
@@ -94,7 +96,11 @@ export function NarrativeStickySection() {
   if (reduced) {
     return (
       <section className="bg-cream/95 px-4 py-14 md:py-20">
-        <p className="font-bn-body text-center text-xs uppercase tracking-wider text-mustard">
+        <p
+          data-cms-field="narrative.eyebrow"
+          data-cms-label="Narrative eyebrow"
+          className="font-bn-body text-center text-xs uppercase tracking-wider text-mustard"
+        >
           {narrative.eyebrow}
         </p>
         <div className="mx-auto mt-8 max-w-3xl space-y-8">
@@ -129,7 +135,11 @@ export function NarrativeStickySection() {
             transition={{ duration: 240, repeat: Infinity, ease: 'linear' }}
           />
         </div>
-        <p className="relative z-10 px-4 font-bn-body text-xs uppercase tracking-wider text-mustard">
+        <p
+          data-cms-field="narrative.eyebrow"
+          data-cms-label="Narrative eyebrow"
+          className="relative z-10 px-4 font-bn-body text-xs uppercase tracking-wider text-mustard"
+        >
           {narrative.eyebrow}
         </p>
         <div className="relative z-10 mt-6 h-[45vh] w-full max-w-4xl md:mt-8 md:h-[40vh]">

@@ -10,7 +10,12 @@ export function HeroProductImage() {
   const heroImage = useMurdaPage().hero.heroImage ?? DEFAULT_HERO_IMAGE;
 
   return (
-    <div className="relative z-10 aspect-[4/3] w-full min-h-[220px] md:min-h-[300px]">
+    <div
+      data-cms-field="hero.heroImage"
+      data-cms-label="Hero image"
+      data-cms-type="image"
+      className="relative z-10 aspect-[4/3] w-full min-h-[220px] md:min-h-[300px]"
+    >
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-white shadow-inner">
         <div className="relative h-full w-full">
           <Image

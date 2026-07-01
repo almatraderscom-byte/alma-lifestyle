@@ -39,7 +39,11 @@ export function ProblemSection() {
           })}
         >
           <div className="relative text-center">
-            <h2 className="font-bn-heading text-2xl text-charcoal md:text-3xl">
+            <h2
+              data-cms-field="problem.heading"
+              data-cms-label="Problem heading"
+              className="font-bn-heading text-2xl text-charcoal md:text-3xl"
+            >
               {problem.heading}
             </h2>
             {!reduced && (
@@ -54,19 +58,30 @@ export function ProblemSection() {
               />
             )}
           </div>
-          <p className="font-bn-body mt-8 text-base leading-relaxed text-charcoal md:text-lg">
+          <p
+            data-cms-field="problem.intro"
+            data-cms-label="Problem intro"
+            className="font-bn-body mt-8 text-base leading-relaxed text-charcoal md:text-lg"
+          >
             {problem.intro}
           </p>
           <ul className="font-bn-body mt-6 space-y-3 text-base leading-relaxed text-charcoal">
             {problem.points.map((point, i) =>
               reduced ? (
-                <li key={point} className="flex gap-3">
+                <li
+                  key={point}
+                  data-cms-field={`problem.points.${i}`}
+                  data-cms-label="Problem point"
+                  className="flex gap-3"
+                >
                   <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mustard" />
                   <span>{point}</span>
                 </li>
               ) : (
                 <motion.li
                   key={point}
+                  data-cms-field={`problem.points.${i}`}
+                  data-cms-label="Problem point"
                   className="flex gap-3"
                   initial={{ opacity: 0, x: -16 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -91,13 +106,19 @@ export function ProblemSection() {
             )}
           </ul>
           {reduced ? (
-            <p className="font-bn-body mt-8 text-base leading-relaxed text-charcoal md:text-lg">
+            <p
+              data-cms-field="problem.outro"
+              data-cms-label="Problem outro"
+              className="font-bn-body mt-8 text-base leading-relaxed text-charcoal md:text-lg"
+            >
               {before}
               <span className="font-semibold text-emerald">পরিপূর্ণ সমাধান</span>
               {after}
             </p>
           ) : (
             <motion.p
+              data-cms-field="problem.outro"
+              data-cms-label="Problem outro"
               className="font-bn-body mt-8 text-base leading-relaxed text-charcoal md:text-lg"
               variants={fadeIn}
               initial="hidden"
