@@ -15,6 +15,26 @@ export interface ObsidianCard {
   price: number;
   priceText: string;
   compareAtText: string | null;
+  /** Product name with any trailing "Product Code: NNN" stripped (for the big hero headline). */
+  heroTitle: string;
+  /** The extracted "Product Code · NNN" line, if the title carried one (small sub line). */
+  codeText: string | null;
+}
+
+/** Split a CMS product title into its clean name and any embedded product code.
+ *  Robust to trailing junk after the code, e.g.
+ *    "সাদা কালার পাঞ্জাবী Product Code: 212"     → { name, code:"PRODUCT CODE 212" }
+ *    "এ্যাশ কালার পাঞ্জাবী Product Code: 223 - "  → { name, code:"PRODUCT CODE 223" } */
+function splitTitleCode(title: string): { name: string; code: string | null } {
+  const m = title.match(
+    /^([\s\S]*?)\s*(?:product\s*code|প্রোডাক্ট\s*কোড)\s*[:·\-]?\s*([\s\S]*)$/i
+  );
+  if (m) {
+    const name = m[1].trim();
+    const token = (m[2].trim().match(/^[\w./]+/) || [''])[0];
+    return { name: name || title.trim(), code: token ? `PRODUCT CODE ${token}` : 'PRODUCT CODE' };
+  }
+  return { name: title.trim(), code: null };
 }
 
 export function toObsidianCard(p: CardProduct): ObsidianCard {
@@ -22,6 +42,7 @@ export function toObsidianCard(p: CardProduct): ObsidianCard {
   const slug = p.slug ?? p.id;
   const imageUrl = resolveProductImageUrl(primary?.url, slug, p.categorySlug);
   const price = p.priceRange ? p.priceRange.min : p.price;
+  const { name, code } = splitTitleCode(p.title);
   return {
     id: p.id,
     slug,
@@ -34,6 +55,8 @@ export function toObsidianCard(p: CardProduct): ObsidianCard {
     priceText: formatBdtPrice(price),
     compareAtText:
       p.compareAtPrice && p.compareAtPrice > price ? formatBdtPrice(p.compareAtPrice) : null,
+    heroTitle: name || p.title,
+    codeText: code,
   };
 }
 

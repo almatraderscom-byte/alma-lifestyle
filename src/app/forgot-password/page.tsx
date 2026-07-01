@@ -4,6 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
+import { SplitBadge } from '@/components/obsidian/SplitBadge';
+import { FloatingWord } from '@/components/obsidian/FloatingWord';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -38,36 +41,46 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        {AUTH.resetTitle}
-      </h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
+    <ObsidianShell className="ob-doc ob-auth" marquee={{}}>
+      <section className="doc-hero">
+        <div className="container">
+          <SplitBadge dark="ALMA" light="অ্যাকাউন্ট" />
+          <FloatingWord text="RESET" tone="light" className="doc-hero-word" />
+          <h1 className="doc-hero-title bn-serif">{AUTH.resetTitle}</h1>
         </div>
-        {error && <p className="font-bn-body text-sm text-red-600">{error}</p>}
-        {message && <p className="font-bn-body text-sm text-emerald-700">{message}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white"
-        >
-          {loading ? AUTH.loading : AUTH.sendResetLink}
-        </button>
-        <p className="text-center font-bn-body text-sm">
-          <Link href="/login" className="text-accent hover:underline">
-            {AUTH.backToLogin}
-          </Link>
-        </p>
-      </form>
-    </div>
+      </section>
+      <section className="doc-body">
+        <div className="container">
+          <div className="ob-auth-card" data-ob-reveal>
+            <form onSubmit={handleSubmit} className="ob-track-form">
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.email}</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="ob-track-input"
+                />
+              </div>
+              {error && <p className="ob-track-error bn">{error}</p>}
+              {message && <p className="ob-auth-ok bn">{message}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="ob-btn solid ob-track-submit bn"
+              >
+                {loading ? AUTH.loading : AUTH.sendResetLink}
+              </button>
+              <div className="ob-auth-links bn">
+                <p>
+                  <Link href="/login">{AUTH.backToLogin}</Link>
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </ObsidianShell>
   );
 }

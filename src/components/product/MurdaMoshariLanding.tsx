@@ -123,7 +123,7 @@ function MurdaMoshariLandingInner({ product }: { product: CatalogProduct }) {
   );
 
   return (
-    <div className="overflow-x-clip bg-warm-white pb-24 md:pb-12">
+    <div className="murda-solemn overflow-x-clip bg-warm-white pb-24 md:pb-12">
       <ScrollProgressBar />
       <MurdaProductJsonLd product={product} />
       {!overlayDone && <CinematicOverlay onComplete={() => setOverlayDone(true)} />}

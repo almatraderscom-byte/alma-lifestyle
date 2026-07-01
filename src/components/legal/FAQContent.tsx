@@ -111,6 +111,7 @@ export function FAQContent() {
   return (
     <PageLayout
       badge="সাহায্য"
+      heroWord="FAQ"
       title="সাধারণ প্রশ্নাবলী (FAQ)"
       subtitle="আপনার সব প্রশ্নের উত্তর এক জায়গায়"
     >

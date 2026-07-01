@@ -25,14 +25,33 @@ export function RouteProgressBar() {
     <AnimatePresence>
       {isLoading && (
         <motion.div
-          className="fixed top-0 left-0 right-0 z-[9998] h-0.5 bg-terracotta pointer-events-none"
-          initial={{ scaleX: 0 }}
+          className="fixed top-0 left-0 right-0 z-[9998] h-[3px] pointer-events-none overflow-hidden"
+          initial={{ scaleX: 0, opacity: 1 }}
           animate={{ scaleX: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.55, ease: 'easeOut' }}
-          style={{ transformOrigin: '0% 50%' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            transformOrigin: '0% 50%',
+            background:
+              'linear-gradient(90deg, #7c5cff 0%, #9a7dff 35%, #b25cff 60%, #d8a94e 100%)',
+            boxShadow:
+              '0 0 12px rgba(124,92,255,0.75), 0 0 26px rgba(178,92,255,0.45)',
+          }}
           aria-hidden
-        />
+        >
+          {/* Sweeping specular highlight — reads as a fast comet crossing the bar. */}
+          <motion.span
+            className="absolute inset-y-0 w-1/3"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)',
+              filter: 'blur(1px)',
+            }}
+            initial={{ x: '-120%' }}
+            animate={{ x: '360%' }}
+            transition={{ duration: 0.9, ease: 'easeInOut', repeat: Infinity }}
+          />
+        </motion.div>
       )}
     </AnimatePresence>
   );

@@ -11,6 +11,7 @@ export default function AboutPage() {
   return (
     <PageLayout
       badge="আমাদের সম্পর্কে"
+      heroWord="ABOUT"
       title="ALMA Lifestyle এর গল্প"
       subtitle="এলিগেন্স, কমফোর্ট এবং আধুনিক লাইফস্টাইলের এক বিশ্বস্ত ঠিকানা"
     >

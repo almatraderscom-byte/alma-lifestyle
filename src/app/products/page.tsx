@@ -1,18 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { ProductsListing } from '@/components/product/ProductsListing';
+import { ObsidianProductsListing } from '@/components/obsidian/ObsidianProductsListing';
+import { AlmaBrandedLoader } from '@/components/layout/AlmaBrandedLoader';
 import { CATEGORY_LABELS, type CategorySlug } from '@/lib/products-data';
 import { buildCategoryListingMetadata } from '@/lib/seo/category-metadata';
 import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
+import { resolveProductImageUrl } from '@/lib/default-images';
 
 export const revalidate = 60;
 
 function ProductsFallback() {
-  return (
-    <div className="min-h-[50vh] flex items-center justify-center font-bn-body text-text-light">
-      লোড হচ্ছে...
-    </div>
-  );
+  return <AlmaBrandedLoader className="min-h-screen" />;
 }
 
 export async function generateMetadata({
@@ -28,9 +26,12 @@ export async function generateMetadata({
 
 export default async function ProductsPage() {
   const { products } = await loadCatalogProductsServer({ limit: 200 });
+  const stripImages = products
+    .slice(0, 12)
+    .map((p) => resolveProductImageUrl(p.images?.[0]?.url, p.slug, p.categorySlug));
   return (
     <Suspense fallback={<ProductsFallback />}>
-      <ProductsListing initialProducts={products} />
+      <ObsidianProductsListing initialProducts={products} stripImages={stripImages} />
     </Suspense>
   );
 }

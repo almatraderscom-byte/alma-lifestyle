@@ -11,6 +11,7 @@ export default function SizeGuidePage() {
   return (
     <PageLayout
       badge="সাহায্য"
+      heroWord="SIZE GUIDE"
       title="সাইজ গাইড"
       subtitle="সঠিক সাইজ বেছে নিন - একদম পারফেক্ট ফিটিং"
     >

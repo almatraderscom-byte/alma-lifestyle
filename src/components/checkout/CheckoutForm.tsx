@@ -129,7 +129,7 @@ export function CheckoutForm({
   return (
     <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8" noValidate>
       <fieldset className="space-y-4">
-        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-white mb-2">
           {CHECKOUT.customerSection}
         </legend>
 
@@ -172,7 +172,7 @@ export function CheckoutForm({
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-white mb-2">
           {CHECKOUT.addressSection}
         </legend>
 
@@ -183,7 +183,7 @@ export function CheckoutForm({
         />
 
         {zoneLabel && (
-          <p className="font-bn-body text-sm text-terracotta -mt-2">{zoneLabel}</p>
+          <p className="ob-cc-accent font-bn-body text-sm -mt-2">{zoneLabel}</p>
         )}
 
         <Field label={CHECKOUT.thanaLabel} error={showErrors ? errors.thana : undefined} required>
@@ -222,7 +222,7 @@ export function CheckoutForm({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="font-bn-heading text-xl font-bold text-charcoal mb-2">
+        <legend className="font-bn-heading text-xl font-bold text-white mb-2">
           {CHECKOUT.paymentSection}
         </legend>
 
@@ -244,7 +244,7 @@ export function CheckoutForm({
             title={CHECKOUT.paymentBkash}
             subtitle={`Send money to: ${settings.bkashMerchantNumber || '01307-777733'}`}
             badge="bKash"
-            badgeClass="text-pink-600 font-bold"
+            badgeClass="text-pink-400 font-bold"
           />
         )}
         {settings.nagadEnabled && (
@@ -255,13 +255,13 @@ export function CheckoutForm({
             title={CHECKOUT.paymentNagad}
             subtitle={`Send money to: ${settings.nagadMerchantNumber || '01307-777733'}`}
             badge="Nagad"
-            badgeClass="text-orange-600 font-bold"
+            badgeClass="text-orange-400 font-bold"
           />
         )}
 
         {(form.paymentMethod === 'bkash' || form.paymentMethod === 'nagad') && (
-          <div className="space-y-3 rounded-lg border border-border-subtle bg-cream/60 p-4">
-            <p className="font-bn-body text-sm text-charcoal leading-relaxed">
+          <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+            <p className="font-bn-body text-sm text-white/80 leading-relaxed">
               {CHECKOUT.paymentInstruction.replace('{number}', paymentNumber)}
             </p>
             <Field
@@ -286,11 +286,11 @@ export function CheckoutForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-14 rounded-lg bg-terracotta font-bn-body text-lg font-semibold text-white hover:opacity-90 disabled:opacity-60 transition"
+            className="ob-cc-cta"
           >
             {isSubmitting ? CHECKOUT.submitting : CHECKOUT.submit}
           </button>
-          <p className="font-bn-body text-xs text-center text-text-light leading-relaxed">
+          <p className="font-bn-body text-xs text-center text-white/40 leading-relaxed">
             {CHECKOUT.terms}
           </p>
         </div>
@@ -312,13 +312,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block font-bn-body text-base font-medium text-charcoal mb-1.5">
+      <label className="block font-bn-body text-base font-medium text-white/80 mb-1.5">
         {label}
-        {required && <span className="text-terracotta ml-0.5">*</span>}
+        {required && <span className="ob-cc-accent ml-0.5">*</span>}
       </label>
       {children}
       {error && (
-        <p className="mt-1.5 font-bn-body text-sm text-red-600" role="alert">
+        <p className="mt-1.5 font-bn-body text-sm text-red-400" role="alert">
           {error}
         </p>
       )}
@@ -327,11 +327,7 @@ function Field({
 }
 
 function inputClass(hasError?: boolean) {
-  return cn(
-    'w-full min-h-12 rounded-lg border px-4 font-bn-body text-base bg-white text-charcoal',
-    'focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta',
-    hasError ? 'border-red-500' : 'border-border-subtle'
-  );
+  return cn('ob-cc-input font-bn-body', hasError && 'ob-cc-input--error');
 }
 
 function PaymentOption({
@@ -354,10 +350,7 @@ function PaymentOption({
   return (
     <label
       htmlFor={id}
-      className={cn(
-        'flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition',
-        checked ? 'border-terracotta bg-cream' : 'border-border-subtle bg-white hover:border-neutral-300'
-      )}
+      className={cn('ob-cc-pay', checked && 'is-active')}
     >
       <input
         id={id}
@@ -365,13 +358,13 @@ function PaymentOption({
         name="payment"
         checked={checked}
         onChange={onChange}
-        className="h-5 w-5 accent-terracotta"
+        className="h-5 w-5 accent-[var(--ob-violet,#7c5cff)]"
       />
       <div className="flex-1 min-w-0">
-        <div className="font-bn-body font-medium text-charcoal">{title}</div>
-        <div className="font-bn-body text-sm text-text-light">{subtitle}</div>
+        <div className="font-bn-body font-medium text-white">{title}</div>
+        <div className="font-bn-body text-sm text-white/50">{subtitle}</div>
       </div>
-      <span className={cn('text-sm shrink-0', badgeClass)}>{badge}</span>
+      <span className={cn('text-sm shrink-0 text-white/70', badgeClass)}>{badge}</span>
     </label>
   );
 }

@@ -13,6 +13,7 @@ export default function ContactPage() {
   return (
     <PageLayout
       badge="যোগাযোগ"
+      heroWord="CONTACT"
       title="আমাদের সাথে যোগাযোগ করুন"
       subtitle="যেকোনো প্রশ্ন, পরামর্শ বা সাহায্যের জন্য আমরা আছি আপনার পাশে"
     >

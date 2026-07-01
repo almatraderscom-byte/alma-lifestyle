@@ -14,6 +14,7 @@ import { getDefaultImageForHint, resolveImageUrl } from '@/lib/default-images';
 import { ObsidianHeader } from './ObsidianHeader';
 import { ObsidianHero } from './ObsidianHero';
 import { ObsidianFooter } from './ObsidianFooter';
+import { ObsidianFX } from './ObsidianFX';
 import { buildObsidianSlots, type ObsidianCard } from './obsidian-data';
 
 interface ObsidianHomeProps {
@@ -89,95 +90,104 @@ function useScrollSky(rootRef: React.RefObject<HTMLDivElement | null>) {
 
 /* ------------------------------ sub-sections ------------------------------ */
 
-function Spotlight({ product }: { product: ObsidianCard | null }) {
+function Spotlight({
+  product,
+  categories,
+}: {
+  product: ObsidianCard | null;
+  categories?: CategoriesSectionData;
+}) {
   if (!product) return null;
-  return (
-    <section className="spotlight" id="spotlight">
-      <div className="spot-ghost">PANJABI</div>
-      <div className="container spot-grid">
-        <div className="spot-head">
-          <span className="ob-tag dark">ALMA SPOTLIGHT</span>
-          <h2 className="spot-title">
-            CRAFTED FOR
-            <br />
-            EVERY OCCASION
-          </h2>
-          <div className="spot-body">
-            <p className="bn">
-              আলমা লাইফস্টাইলের প্রতিটি পাঞ্জাবি বাছাই করা হয় সেই মুহূর্তগুলোর জন্য যেগুলো সত্যিই
-              গুরুত্বপূর্ণ — ঈদ, উৎসব কিংবা প্রতিদিনের স্নিগ্ধতা।
-            </p>
-            <p>
-              From premium silk to breathable cotton, every piece is tailored for comfort and finished
-              for occasion. Fast delivery across Bangladesh with cash on delivery.
-            </p>
-            <p className="bn">সহজ। যত্নশীল। টেকসই। পার্থক্যটা অনুভব করতে প্রস্তুত?</p>
-          </div>
-          <div className="spot-cta">
-            <Link href="/products?category=panjabi" className="ob-btn dark solid">
-              Shop Panjabi
-            </Link>
-            <Link href="/products" className="ob-btn dark">
-              View Collection
-            </Link>
-          </div>
-        </div>
-        <div className="spot-visual">
-          <Link href={product.href} className="spot-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={product.imageUrl} alt={product.title} />
-            <div className="sc-label">
-              <h4>{product.title}</h4>
-              <p>
-                {product.categoryLabel} · {product.priceText}
-              </p>
-              <span className="sc-btn">Shop now ▸</span>
-            </div>
-          </Link>
-          <div className="spot-what">
-            <span className="bar" />
-            <span className="pill">এটা কী?</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CategoryShowcase({ data }: { data?: CategoriesSectionData }) {
-  if (!data) return null;
   const img = (imageUrl: string, hint: string) =>
     resolveImageUrl(imageUrl, getDefaultImageForHint(hint));
   return (
-    <section className="ob-cats-showcase" id="categories">
+    <section className="spotlight" id="spotlight">
+      <div className="spot-ghost">PANJABI</div>
       <div className="container">
-        <div className="ocs-head">
-          <span className="ob-tag dark">{data.label}</span>
-          <h3 className="ocs-title bn-serif">{data.title}</h3>
-        </div>
-        <div className="ocs-grid">
-          <Link href={data.featured.href} className="ocs-card feat">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img(data.featured.imageUrl, data.featured.imageHint)} alt={data.featured.displayName} />
-            <div className="ocs-veil" />
-            <div className="ocs-body">
-              <h4 className="bn-serif">{data.featured.displayName}</h4>
-              {data.featured.subtitle && <p className="bn">{formatBnText(data.featured.subtitle)}</p>}
-              <span className="ocs-go bn">দেখুন →</span>
+        {/* Category showcase now lives ON TOP of the spotlight — same CMS data,
+            same styling, just merged into this one premium section. */}
+        {categories && (
+          <div className="spot-cats" id="categories">
+            <div className="ocs-head" data-ob-reveal>
+              <span className="ob-tag dark">{categories.label}</span>
+              <h3 className="ocs-title bn-serif">{categories.title}</h3>
             </div>
-          </Link>
-          <div className="ocs-stack">
-            {data.stacked.map((cat, i) => (
-              <Link key={`${cat.categorySlug}-${i}`} href={cat.href} className="ocs-card">
+            <div className="ocs-grid">
+              <Link href={categories.featured.href} className="ocs-card feat">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img(cat.imageUrl, cat.imageHint)} alt={cat.displayName} />
+                <img
+                  src={img(categories.featured.imageUrl, categories.featured.imageHint)}
+                  alt={categories.featured.displayName}
+                />
                 <div className="ocs-veil" />
                 <div className="ocs-body">
-                  <h4 className="bn-serif">{cat.displayName}</h4>
+                  <h4 className="bn-serif">{categories.featured.displayName}</h4>
+                  {categories.featured.subtitle && (
+                    <p className="bn">{formatBnText(categories.featured.subtitle)}</p>
+                  )}
                   <span className="ocs-go bn">দেখুন →</span>
                 </div>
               </Link>
-            ))}
+              <div className="ocs-stack">
+                {categories.stacked.map((cat, i) => (
+                  <Link key={`${cat.categorySlug}-${i}`} href={cat.href} className="ocs-card">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img(cat.imageUrl, cat.imageHint)} alt={cat.displayName} />
+                    <div className="ocs-veil" />
+                    <div className="ocs-body">
+                      <h4 className="bn-serif">{cat.displayName}</h4>
+                      <span className="ocs-go bn">দেখুন →</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="spot-grid">
+          <div className="spot-head" data-ob-reveal>
+            {/* Two-part unified tag (reference SPOTLIGHT badge): existing
+                "ALMA SPOTLIGHT" string split into a solid-black + white half. */}
+            <span className="spot-badge">
+              <span className="sb-dark">ALMA</span>
+              <span className="sb-light">SPOTLIGHT</span>
+            </span>
+            <h2 className="spot-title">
+              CRAFTED FOR
+              <br />
+              EVERY OCCASION
+            </h2>
+            <div className="spot-body">
+              <p className="bn">প্রিমিয়াম কাপড়, নিখুঁত সেলাই — প্রতিটি পাঞ্জাবিতে আলমার স্বাক্ষর।</p>
+              <p>Handpicked fabrics, tailored to perfection — delivered across Bangladesh.</p>
+            </div>
+            <div className="spot-cta">
+              <Link href="/products?category=panjabi" className="ob-btn dark solid">
+                Shop Panjabi
+              </Link>
+              <Link href="/products" className="ob-btn dark">
+                View Collection
+              </Link>
+            </div>
+          </div>
+          <div className="spot-visual">
+            {/* Large faint background word behind the floating graphic. */}
+            <span className="spot-bgword" aria-hidden>
+              {product.categoryLabel}
+            </span>
+            {/* Floating mesh-gradient capsule "rod" with the chromatic-glitch
+                "What's this?" button (existing এটা কী? string). */}
+            <div className="spot-rod">
+              <Link
+                href={product.href}
+                className="spot-what-btn"
+                data-text="এটা কী?"
+                aria-label="এটা কী?"
+              >
+                এটা কী?
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -191,7 +201,7 @@ function ProductsGrid({ products }: { products: ObsidianCard[] }) {
   return (
     <section className="products" id="products">
       <div className="container">
-        <div className="products-head">
+        <div className="products-head" data-ob-reveal>
           <h3>
             <span className="dot" /> ALMA COLLECTION
           </h3>
@@ -207,8 +217,8 @@ function ProductsGrid({ products }: { products: ObsidianCard[] }) {
               <div className="pc-veil" />
               <span className="pc-cat">{p.categoryLabel}</span>
               <div className="pc-body">
-                <h4>{p.title}</h4>
-                <p>{p.priceText}</p>
+                <h4>{p.heroTitle}</h4>
+                <p>{p.codeText ? `${p.codeText} · ${p.priceText}` : p.priceText}</p>
               </div>
             </Link>
           ))}
@@ -223,11 +233,16 @@ function ShineBand({ products }: { products: ObsidianCard[] }) {
   return (
     <div className="shine">
       <div className="container shine-head">
+        <div className="shine-blobs" aria-hidden>
+          <span />
+          <span />
+          <span />
+        </div>
         <span className="ob-tag dark">ALMA COLLECTION</span>
-        <h3 className="shine-title">
-          যেখানে আলমা
+        <h3 className="shine-title" data-ob-reveal>
+          যে পাঞ্জাবিতে আপনি
           <br />
-          উজ্জ্বল হয়
+          নিজেই মুগ্ধ হবেন
         </h3>
       </div>
       <div className="shine-row">
@@ -237,7 +252,7 @@ function ShineBand({ products }: { products: ObsidianCard[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imageUrl} alt="" />
               <div className="sc-in">
-                <h5>{p.title}</h5>
+                <h5>{p.heroTitle}</h5>
                 <p>
                   {p.categoryLabel} · {p.priceText}
                 </p>
@@ -255,7 +270,7 @@ function Reviews({ data }: { data?: ReviewsSectionData }) {
   return (
     <section className="ob-reviews" id="reviews">
       <div className="container">
-        <div className="obr-head">
+        <div className="obr-head" data-ob-reveal>
           <h3 className="bn-serif">{data.title}</h3>
           {data.verifiedLabel && <span className="obr-verified bn">✔ {data.verifiedLabel}</span>}
         </div>
@@ -279,16 +294,72 @@ function Reviews({ data }: { data?: ReviewsSectionData }) {
   );
 }
 
+/* Animated line-art icons replacing the "cheap emoji" trust badges. Each is a
+   stroked SVG that draws/pulses on its own via CSS keyframes in obsidian.css.
+   Chosen by index so it maps to the 4 CMS trust items (delivery, cash, return,
+   support) while gracefully cycling for any count. */
+function ObTrustGlyph({ index }: { index: number }) {
+  const kind = index % 4;
+  const common = {
+    viewBox: '0 0 48 48',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+  if (kind === 0) {
+    // Delivery truck
+    return (
+      <svg {...common} className="obt-svg obt-svg--truck" aria-hidden>
+        <path className="obt-draw" d="M4 14h22v16H4z" />
+        <path className="obt-draw" d="M26 20h8l6 6v4h-14z" />
+        <circle className="obt-wheel" cx="14" cy="34" r="3.4" />
+        <circle className="obt-wheel" cx="33" cy="34" r="3.4" />
+        <path className="obt-dash" d="M0 24h4M0 28h6" />
+      </svg>
+    );
+  }
+  if (kind === 1) {
+    // Cash on delivery
+    return (
+      <svg {...common} className="obt-svg obt-svg--cash" aria-hidden>
+        <rect className="obt-draw" x="6" y="13" width="36" height="22" rx="3" />
+        <circle className="obt-coin" cx="24" cy="24" r="6" />
+        <path className="obt-draw" d="M10 17v14M38 17v14" />
+      </svg>
+    );
+  }
+  if (kind === 2) {
+    // Easy return
+    return (
+      <svg {...common} className="obt-svg obt-svg--return" aria-hidden>
+        <path className="obt-spin" d="M38 24a14 14 0 1 1-4.1-9.9" />
+        <path className="obt-spin" d="M34 6v9h-9" />
+      </svg>
+    );
+  }
+  // Support / headset
+  return (
+    <svg {...common} className="obt-svg obt-svg--support" aria-hidden>
+      <path className="obt-draw" d="M10 26v-2a14 14 0 0 1 28 0v2" />
+      <rect className="obt-pulse" x="6" y="24" width="7" height="12" rx="2.5" />
+      <rect className="obt-pulse" x="35" y="24" width="7" height="12" rx="2.5" />
+      <path className="obt-draw" d="M38 36v2a6 6 0 0 1-6 6h-6" />
+    </svg>
+  );
+}
+
 function TrustBadges({ data }: { data?: TrustSectionData }) {
   if (!data || data.items.length === 0) return null;
   return (
     <section className="ob-trust" id="trust">
       <div className="container">
         <div className="obt-grid">
-          {data.items.map((item) => (
+          {data.items.map((item, i) => (
             <div className="obt-item" key={item.id}>
               <span className="obt-icon" aria-hidden>
-                {item.icon}
+                <ObTrustGlyph index={i} />
               </span>
               <h4 className="obt-title bn-serif">{item.title}</h4>
               <p className="obt-text bn">{formatBnText(item.text)}</p>
@@ -331,15 +402,44 @@ export function ObsidianHome({ products, hero, categories, reviews, trust }: Obs
   const rootRef = useRef<HTMLDivElement | null>(null);
   useScrollSky(rootRef);
 
-  const { heroPool, spotlight, grid, shine, strip } = buildObsidianSlots(products);
+  const { cards, heroPool, spotlight, grid, shine, strip } = buildObsidianSlots(products);
+
+  // Category-specific, de-duplicated image pools for the nav-hover reveal.
+  // NAV order: [পাঞ্জাবি, কালেকশন, সব পণ্য, যোগাযোগ(social — no images)].
+  const uniq = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
+  const panjabiImages = uniq(
+    cards.filter((c) => c.categorySlug === 'panjabi').map((c) => c.imageUrl)
+  );
+  const allImages = uniq(cards.map((c) => c.imageUrl));
+  // "সব পণ্য": interleave categories so a mix of 1–2 per category surfaces first,
+  // never repeating an image already shown earlier in the same set.
+  const byCat = new Map<string, string[]>();
+  cards.forEach((c) => {
+    const key = c.categorySlug ?? 'other';
+    if (!byCat.has(key)) byCat.set(key, []);
+    byCat.get(key)!.push(c.imageUrl);
+  });
+  const mixed: string[] = [];
+  const cols = Array.from(byCat.values());
+  for (let r = 0; r < Math.max(...cols.map((c) => c.length), 0); r++) {
+    for (const col of cols) if (col[r]) mixed.push(col[r]);
+  }
+  const allMixed = uniq(mixed.length ? mixed : allImages);
+
+  const navImageSets: string[][] = [
+    panjabiImages.length ? panjabiImages : allImages, // পাঞ্জাবি
+    panjabiImages.length ? panjabiImages : allImages, // কালেকশন (panjabi + matching)
+    allMixed, // সব পণ্য
+    [], // যোগাযোগ → social bubbles (handled in header)
+  ];
 
   return (
     <div className="obsidian-home" ref={rootRef}>
-      <ObsidianHeader />
+      <ObsidianFX />
+      <ObsidianHeader navImageSets={navImageSets} />
       <main id="top">
         <ObsidianHero hero={hero} products={heroPool} />
-        <Spotlight product={spotlight} />
-        <CategoryShowcase data={categories} />
+        <Spotlight product={spotlight} categories={categories} />
         <ProductsGrid products={grid} />
         <ShineBand products={shine} />
         <Reviews data={reviews} />

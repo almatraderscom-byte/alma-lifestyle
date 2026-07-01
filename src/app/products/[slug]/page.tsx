@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MurdaMoshariLanding } from '@/components/product/MurdaMoshariLanding';
-import { ProductDetailView } from '@/components/product/ProductDetailView';
+import { ObsidianProductDetail } from '@/components/obsidian/ObsidianProductDetail';
 import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-content';
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
@@ -73,7 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <ProductDetailView product={product} catalogProducts={catalogProducts} />
+    <ObsidianProductDetail product={product} catalogProducts={catalogProducts} />
   );
 }
 

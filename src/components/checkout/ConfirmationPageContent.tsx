@@ -10,6 +10,7 @@ import { formatBdtPrice } from '@/lib/format-bn';
 import { loadLastOrder, type PlacedOrder } from '@/lib/orders';
 import { trackLead, trackPurchaseOnce } from '@/lib/pixel';
 import { cn } from '@/lib/utils';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
 
 function lineUnitPrice(item: PlacedOrder['items'][number]): number {
   return item.priceSnapshot ?? item.price ?? 0;
@@ -46,9 +47,13 @@ export function ConfirmationPageContent() {
 
   if (!ready || !order) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <div className="h-8 w-48 mx-auto animate-pulse rounded bg-secondary" />
-      </div>
+      <ObsidianShell className="ob-doc ob-confirm" marquee={{}}>
+        <section className="doc-body">
+          <div className="container text-center">
+            <div className="h-8 w-48 mx-auto animate-pulse rounded bg-white/10" />
+          </div>
+        </section>
+      </ObsidianShell>
     );
   }
 
@@ -56,29 +61,31 @@ export function ConfirmationPageContent() {
   const whatsappHref = buildWhatsAppHref(settings, whatsappMessage);
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-10 md:py-16 text-center">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f5e9]">
-        <CheckIcon className="h-10 w-10 text-green-600" />
+    <ObsidianShell className="ob-doc ob-confirm" marquee={{}}>
+      <section className="doc-body">
+      <div className="ob-confirm-card mx-auto max-w-lg px-5 py-10 md:py-16 text-center">
+      <div className="ob-cc-success mx-auto">
+        <CheckIcon className="h-10 w-10" />
       </div>
 
-      <h1 className="font-bn-heading text-2xl sm:text-[1.75rem] font-bold text-primary mt-6 leading-relaxed">
+      <h1 className="font-bn-heading text-2xl sm:text-[1.75rem] font-bold text-white mt-6 leading-relaxed">
         {CONFIRMATION.title}
       </h1>
 
-      <p className="font-bn-body text-base text-text-light mt-3">
+      <p className="font-bn-body text-base text-white/50 mt-3">
         {CONFIRMATION.orderNumberPrefix}{' '}
-        <span className="font-semibold text-primary">{order.orderNumberDisplay}</span>
+        <span className="ob-cc-accent font-semibold">{order.orderNumberDisplay}</span>
       </p>
 
-      <div className="mt-8 text-left rounded-xl border border-border-subtle bg-warm-white p-5 space-y-3">
-        <h2 className="font-bn-heading text-lg font-bold text-primary">
+      <div className="mt-8 text-left rounded-2xl border border-white/10 bg-white/[0.04] p-5 space-y-3">
+        <h2 className="font-bn-heading text-lg font-bold text-white">
           {CONFIRMATION.summaryTitle}
         </h2>
         <ul className="space-y-2">
           {order.items.map((item) => (
             <li
               key={item.variantId}
-              className="flex justify-between gap-2 font-bn-body text-sm text-primary"
+              className="flex justify-between gap-2 font-bn-body text-sm text-white/80"
             >
               <span className="line-clamp-1">
                 {item.title} ×{item.quantity}
@@ -89,27 +96,27 @@ export function ConfirmationPageContent() {
             </li>
           ))}
         </ul>
-        <div className="pt-3 border-t border-border-subtle space-y-1.5 font-bn-body text-sm">
+        <div className="pt-3 border-t border-white/10 space-y-1.5 font-bn-body text-sm text-white/80">
           <div className="flex justify-between">
-            <span className="text-text-light">{CONFIRMATION.subtotal}</span>
+            <span className="text-white/50">{CONFIRMATION.subtotal}</span>
             <span>{formatBdtPrice(order.subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-light">{CONFIRMATION.delivery}</span>
+            <span className="text-white/50">{CONFIRMATION.delivery}</span>
             <span>
               {order.deliveryCharge === 0
                 ? formatBdtPrice(0)
                 : formatBdtPrice(order.deliveryCharge)}
             </span>
           </div>
-          <div className="flex justify-between font-bn-heading text-lg font-bold pt-1">
-            <span>{CONFIRMATION.total}</span>
-            <span className="text-accent">{formatBdtPrice(order.total)}</span>
+          <div className="ob-cc-total-rule flex justify-between font-bn-heading text-lg font-bold pt-2 mt-1">
+            <span className="text-white">{CONFIRMATION.total}</span>
+            <span className="ob-cc-total-figure">{formatBdtPrice(order.total)}</span>
           </div>
         </div>
       </div>
 
-      <p className="font-bn-body text-base text-text-light mt-6">{CONFIRMATION.contactSoon}</p>
+      <p className="font-bn-body text-base text-white/50 mt-6">{CONFIRMATION.contactSoon}</p>
 
       <div className="mt-8 space-y-3">
         <a
@@ -117,24 +124,26 @@ export function ConfirmationPageContent() {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackLead()}
-          className="flex w-full min-h-14 items-center justify-center rounded-lg bg-[#25D366] text-white font-bn-body text-lg font-semibold hover:bg-[#20bd5a] transition-colors"
+          className="ob-cc-wa min-h-14 text-lg"
         >
           {CONFIRMATION.whatsappTrack}
         </a>
         <Link
           href="/products"
-          className="flex w-full min-h-12 items-center justify-center rounded-lg border-2 border-primary font-bn-body text-base font-semibold text-primary hover:bg-secondary transition-colors"
+          className="flex w-full min-h-12 items-center justify-center rounded-xl border border-white/20 font-bn-body text-base font-semibold text-white hover:bg-white/[0.06] hover:border-white/30 transition-colors"
         >
           {CONFIRMATION.continueShopping}
         </Link>
         <Link
           href="/"
-          className="flex w-full min-h-12 items-center justify-center font-bn-body text-base text-accent underline underline-offset-4"
+          className="flex w-full min-h-12 items-center justify-center font-bn-body text-base text-white/60 underline underline-offset-4 hover:text-white transition-colors"
         >
           {CONFIRMATION.goHome}
         </Link>
       </div>
-    </div>
+      </div>
+      </section>
+    </ObsidianShell>
   );
 }
 

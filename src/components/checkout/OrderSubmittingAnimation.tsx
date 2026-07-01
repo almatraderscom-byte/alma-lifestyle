@@ -10,14 +10,14 @@ function ProgressStep({ delay, text }: { delay: number; text: string }) {
       initial={reduceMotion ? false : { opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: delay * 0.4 + 0.5 }}
-      className="flex items-center gap-3 text-sm text-charcoal font-bn-body"
+      className="flex items-center gap-3 text-sm text-white/70 font-bn-body"
     >
       <motion.div
-        className="h-5 w-5 shrink-0 rounded-full border-2 border-terracotta"
+        className="h-5 w-5 shrink-0 rounded-full border-2 border-[#7c5cff]"
         animate={
           reduceMotion
-            ? { backgroundColor: '#C97D5D' }
-            : { backgroundColor: ['transparent', '#C97D5D', '#C97D5D'] }
+            ? { backgroundColor: '#7c5cff' }
+            : { backgroundColor: ['transparent', '#7c5cff', '#7c5cff'] }
         }
         transition={{ delay: delay * 0.4 + 0.7, duration: 0.3 }}
       />
@@ -31,14 +31,14 @@ export function OrderSubmittingAnimation() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-cream"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0b0a12]"
       role="status"
       aria-live="polite"
       aria-label="অর্ডার প্রসেস হচ্ছে"
     >
       <div className="mx-auto max-w-md px-6 text-center">
-        <div className="relative mb-8 h-48 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-sky-50 via-cream to-amber-50" />
+        <div className="relative mb-8 h-48 overflow-hidden rounded-2xl border border-white/10">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1830] via-[#141322] to-[#0d0c16]" />
 
           {!reduceMotion && (
             <motion.div
@@ -94,10 +94,10 @@ export function OrderSubmittingAnimation() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="font-bn-heading text-2xl font-bold text-charcoal md:text-3xl">
+          <h2 className="font-bn-heading text-2xl font-bold text-white md:text-3xl">
             আপনার অর্ডার প্রসেস হচ্ছে...
           </h2>
-          <p className="mt-3 font-bn-body text-text-light">
+          <p className="mt-3 font-bn-body text-white/60">
             একটু অপেক্ষা করুন, আমরা সব তথ্য সংরক্ষণ করছি
           </p>
 
@@ -109,7 +109,7 @@ export function OrderSubmittingAnimation() {
           </div>
         </motion.div>
 
-        <p className="mt-8 font-bn-body text-xs text-text-light">ALMA পরিবারে স্বাগতম</p>
+        <p className="mt-8 font-bn-body text-xs text-white/40">ALMA পরিবারে স্বাগতম</p>
       </div>
     </div>
   );

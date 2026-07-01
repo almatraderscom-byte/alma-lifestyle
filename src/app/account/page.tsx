@@ -7,6 +7,9 @@ import { ACCOUNT } from '@/lib/content';
 import { ORDER_STATUS_LABELS } from '@/lib/order-status-labels';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { formatBdtPrice } from '@/lib/format-bn';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
+import { SplitBadge } from '@/components/obsidian/SplitBadge';
+import { FloatingWord } from '@/components/obsidian/FloatingWord';
 
 interface OrderRow {
   id: string;
@@ -75,73 +78,79 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <p className="font-bn-body text-text-light">{ACCOUNT.loading}</p>
-      </div>
+      <ObsidianShell className="ob-doc ob-account" marquee={{}}>
+        <section className="doc-body">
+          <div className="container">
+            <p className="ob-account-empty bn">{ACCOUNT.loading}</p>
+          </div>
+        </section>
+      </ObsidianShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
-      <div className="grid gap-8 md:grid-cols-3">
-        <aside className="space-y-4">
-          <div className="rounded-xl bg-cream p-6">
-            <h2 className="font-bn-heading text-xl font-bold text-primary">{name}</h2>
-            <p className="font-bn-body text-sm text-text-light mt-1">{email}</p>
-          </div>
-          <nav className="space-y-1 font-bn-body text-sm">
-            <Link href="/track" className="block rounded-lg px-4 py-2 hover:bg-cream">
-              {ACCOUNT.trackGuest}
-            </Link>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="block w-full text-left rounded-lg px-4 py-2 text-red-600 hover:bg-red-50"
-            >
-              {ACCOUNT.logout}
-            </button>
-          </nav>
-        </aside>
-
-        <main className="md:col-span-2">
-          <h1 className="font-bn-heading text-3xl font-bold text-primary mb-6">{ACCOUNT.title}</h1>
-          {orders.length === 0 ? (
-            <p className="font-bn-body text-text-light">{ACCOUNT.noOrders}</p>
-          ) : (
-            <ul className="space-y-4">
-              {orders.map((order) => {
-                const totalBdt = Math.round(Number(order.total_usd) * 110);
-                return (
-                  <li
-                    key={order.id}
-                    className="rounded-xl border border-border-subtle p-4 bg-background"
+    <ObsidianShell className="ob-doc ob-account" marquee={{}}>
+      <section className="doc-hero">
+        <div className="container">
+          <SplitBadge dark="ALMA" light="অ্যাকাউন্ট" />
+          <FloatingWord text="ACCOUNT" tone="light" className="doc-hero-word" />
+          <h1 className="doc-hero-title bn-serif">{ACCOUNT.title}</h1>
+        </div>
+      </section>
+      <section className="doc-body">
+        <div className="container">
+          <div className="ob-account-grid" data-ob-reveal>
+            <aside>
+              <div className="ob-account-card">
+                <h2 className="ob-account-name bn">{name}</h2>
+                <p className="ob-account-email">{email}</p>
+                <nav className="ob-account-nav bn">
+                  <Link href="/track">{ACCOUNT.trackGuest}</Link>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="ob-account-signout"
                   >
-                    <div className="flex justify-between gap-2">
-                      <p className="font-bn-heading font-semibold text-primary">
-                        {order.order_number}
-                      </p>
-                      <p className="font-bn-body text-sm text-text-light">
-                        {new Date(order.created_at).toLocaleDateString('bn-BD')}
-                      </p>
-                    </div>
-                    <p className="font-bn-body text-sm text-accent mt-1">
-                      {ORDER_STATUS_LABELS[order.status] ?? order.status}
-                    </p>
-                    <p className="font-bn-body text-sm mt-2">
-                      {(order.order_items ?? [])
-                        .map((i) => `${i.product_title} ×${i.quantity}`)
-                        .join(', ')}
-                    </p>
-                    <p className="font-bn-heading font-bold text-primary mt-2">
-                      {formatBdtPrice(totalBdt)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </main>
-      </div>
-    </div>
+                    {ACCOUNT.logout}
+                  </button>
+                </nav>
+              </div>
+            </aside>
+
+            <main>
+              <h2 className="ob-account-orders-title bn">{ACCOUNT.title}</h2>
+              {orders.length === 0 ? (
+                <p className="ob-account-empty bn">{ACCOUNT.noOrders}</p>
+              ) : (
+                <ul className="ob-account-orders">
+                  {orders.map((order) => {
+                    const totalBdt = Math.round(Number(order.total_usd) * 110);
+                    return (
+                      <li key={order.id} className="ob-account-order">
+                        <div className="ob-account-order-top">
+                          <p className="ob-account-order-num bn">{order.order_number}</p>
+                          <p className="ob-account-order-date">
+                            {new Date(order.created_at).toLocaleDateString('bn-BD')}
+                          </p>
+                        </div>
+                        <p className="ob-account-order-status bn">
+                          {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                        </p>
+                        <p className="ob-account-order-items bn">
+                          {(order.order_items ?? [])
+                            .map((i) => `${i.product_title} ×${i.quantity}`)
+                            .join(', ')}
+                        </p>
+                        <p className="ob-account-order-total bn">{formatBdtPrice(totalBdt)}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </main>
+          </div>
+        </div>
+      </section>
+    </ObsidianShell>
   );
 }

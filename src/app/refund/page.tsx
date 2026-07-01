@@ -10,6 +10,7 @@ export default function RefundPage() {
   return (
     <PageLayout
       badge="নীতিমালা"
+      heroWord="REFUND"
       title="ফেরত ও রিফান্ড নীতিমালা"
       subtitle="আপনার সন্তুষ্টি আমাদের প্রথম অগ্রাধিকার"
       lastUpdated="১ জুন, ২০২৬"

@@ -2,7 +2,7 @@ import { AlmaSkeletonMark, SkeletonBlock, SkeletonLine } from '@/components/cine
 
 export default function ProductDetailLoading() {
   return (
-    <div className="relative min-h-screen bg-warm-white px-4 py-8 lg:px-12">
+    <div className="relative min-h-screen bg-[#0b0a12] px-4 py-8 lg:px-12">
       <div className="absolute right-4 top-4">
         <AlmaSkeletonMark />
       </div>

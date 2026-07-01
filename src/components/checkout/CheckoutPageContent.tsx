@@ -22,7 +22,9 @@ import { shouldUseApi } from '@/lib/data-source';
 import { createOrderApi } from '@/lib/admin-api';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
-import { cn } from '@/lib/utils';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
+import { SplitBadge } from '@/components/obsidian/SplitBadge';
+import { FloatingWord } from '@/components/obsidian/FloatingWord';
 
 export function CheckoutPageContent() {
   const settings = useStoreSettings();
@@ -194,9 +196,13 @@ export function CheckoutPageContent() {
 
   if (!hydrated) {
     return (
-      <div className="min-h-[40vh] bg-cream px-4 py-12">
-        <div className="mx-auto max-w-4xl h-8 w-56 animate-pulse rounded bg-secondary" />
-      </div>
+      <ObsidianShell className="ob-doc ob-checkout" marquee={{}}>
+        <section className="doc-body">
+          <div className="container">
+            <div className="h-8 w-56 animate-pulse rounded bg-white/10" />
+          </div>
+        </section>
+      </ObsidianShell>
     );
   }
 
@@ -210,36 +216,31 @@ export function CheckoutPageContent() {
     <>
       {isSubmitting && <OrderSubmittingAnimation />}
 
-      <div className="min-h-screen bg-cream pb-28 lg:pb-0">
-        <section className="border-b border-border-subtle bg-white py-8 md:py-10">
-          <div className="mx-auto max-w-7xl px-4 md:px-6">
-            <p className="font-bn-body text-xs font-medium tracking-widest text-terracotta mb-2">
-              চেকআউট
-            </p>
-            <h1 className="font-bn-heading text-3xl md:text-4xl font-bold text-charcoal">
-              আপনার অর্ডার সম্পূর্ণ করুন
-            </h1>
-            <p className="font-bn-body text-text-light mt-2 text-sm md:text-base">
+      <ObsidianShell className="ob-doc ob-checkout" marquee={{}}>
+        <section className="doc-hero">
+          <div className="container">
+            <SplitBadge dark="ALMA" light="চেকআউট" />
+            <FloatingWord text="CHECKOUT" tone="light" className="doc-hero-word" />
+            <h1 className="doc-hero-title bn-serif">আপনার অর্ডার সম্পূর্ণ করুন</h1>
+            <p className="doc-hero-sub bn">
               {items.length} টি পণ্য
               {districtValue ? ` • মোট ${formatBdtPrice(total)}` : ''}
             </p>
-            <Link
-              href="/cart"
-              className="inline-block mt-3 font-bn-body text-sm text-terracotta hover:underline"
-            >
+            <Link href="/cart" className="doc-hero-back bn">
               ← {CART.breadcrumbCart}
             </Link>
           </div>
         </section>
 
-        <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+        <div className="doc-body">
+          <div className="container ob-checkout-wrap">
           {priceWarning && (
-            <p className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-bn-body text-sm text-red-800">
+            <p className="ob-cc-error mb-6 px-4 py-3 font-bn-body text-sm">
               {priceWarning}
             </p>
           )}
           {hasUnavailableItems && !priceWarning && (
-            <p className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 font-bn-body text-sm text-amber-900">
+            <p className="ob-cc-warn mb-6 px-4 py-3 font-bn-body text-sm">
               {CHECKOUT.stockBlockCheckout}
             </p>
           )}
@@ -249,12 +250,12 @@ export function CheckoutPageContent() {
               <motion.section
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="overflow-hidden rounded-lg border border-border-subtle bg-white shadow-sm"
+                className="ob-cc-card"
               >
-                <div className="border-b border-border-subtle px-6 py-4">
-                  <h2 className="font-bn-heading text-xl font-bold text-charcoal">আপনার পণ্য</h2>
+                <div className="ob-cc-head">
+                  <h2 className="ob-cc-head-title">আপনার পণ্য</h2>
                 </div>
-                <ul className="divide-y divide-border-subtle">
+                <ul className="ob-cc-divide">
                   {items.map((item) => {
                     const unit = getLineUnitPrice(item);
                     const unavailable = isLineUnavailable(item);
@@ -263,7 +264,7 @@ export function CheckoutPageContent() {
                     return (
                       <li
                         key={item.variantId}
-                        className="flex gap-4 p-4 md:p-5 hover:bg-cream/40 transition"
+                        className="ob-cc-row flex gap-4 p-4 md:p-5"
                       >
                         <CartItemThumbnail
                           image={item.image}
@@ -274,28 +275,28 @@ export function CheckoutPageContent() {
                         <div className="flex-1 min-w-0">
                           <Link
                             href={`/products/${item.slug}`}
-                            className="font-bn-body font-medium text-charcoal hover:text-terracotta line-clamp-2"
+                            className="font-bn-body font-medium text-white transition-colors hover:text-[var(--ob-violet,#7c5cff)] line-clamp-2"
                           >
                             {title}
                           </Link>
-                          <p className="font-bn-body text-sm text-text-light mt-1">
+                          <p className="font-bn-body text-sm text-white/50 mt-1">
                             {formatVariantLabel(item.color, item.size)}
                           </p>
                           {priceChanged && (
-                            <p className="font-bn-body text-xs text-amber-700 mt-1">
+                            <p className="font-bn-body text-xs text-amber-300 mt-1">
                               দাম আপডেট হয়েছে
                             </p>
                           )}
                           {unavailable && (
-                            <p className="font-bn-body text-xs text-red-700 mt-1">{CART.stockOutLine}</p>
+                            <p className="font-bn-body text-xs text-red-400 mt-1">{CART.stockOutLine}</p>
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-bn-heading text-lg font-bold text-terracotta">
+                          <p className="ob-cc-accent font-bn-heading text-lg font-bold">
                             {formatBdtPrice(unit * item.quantity)}
                           </p>
                           {item.quantity > 1 && (
-                            <p className="font-bn-body text-xs text-text-light">
+                            <p className="font-bn-body text-xs text-white/40">
                               {formatBdtPrice(unit)} × {item.quantity}
                             </p>
                           )}
@@ -310,7 +311,7 @@ export function CheckoutPageContent() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.08 }}
-                className="rounded-lg border border-border-subtle bg-white p-6 shadow-sm"
+                className="ob-cc-card p-6"
               >
                 <CheckoutForm
                   districtValue={districtValue}
@@ -350,18 +351,18 @@ export function CheckoutPageContent() {
         </div>
 
         <div
-          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-subtle bg-white shadow-[0_-8px_30px_rgba(42,38,34,0.12)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          className="ob-cc-mobilebar lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           role="region"
           aria-label="অর্ডার নিশ্চিত করুন"
         >
           <div className="mx-auto flex max-w-7xl items-center gap-3">
             <div className="shrink-0">
-              <p className="font-bn-body text-xs text-text-light">{CHECKOUT.total}</p>
-              <p className="font-bn-heading text-xl font-bold text-terracotta">
+              <p className="font-bn-body text-xs text-white/50">{CHECKOUT.total}</p>
+              <p className="ob-cc-total-figure font-bn-heading text-xl">
                 {formatBdtPrice(total)}
               </p>
               {districtValue && deliveryCharge > 0 && (
-                <p className="font-bn-body text-[10px] text-text-light">
+                <p className="font-bn-body text-[10px] text-white/40">
                   {CHECKOUT.delivery}: {formatBdtPrice(deliveryCharge)}
                 </p>
               )}
@@ -370,13 +371,14 @@ export function CheckoutPageContent() {
               type="submit"
               form="checkout-form"
               disabled={submitDisabled || isSubmitting}
-              className="flex min-h-12 flex-1 items-center justify-center rounded-lg bg-terracotta px-4 font-bn-body text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ob-cc-cta flex-1 px-4 text-base"
             >
               {isSubmitting ? CHECKOUT.submitting : `${CHECKOUT.submit} →`}
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      </ObsidianShell>
     </>
   );
 }

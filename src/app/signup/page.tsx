@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
+import { SplitBadge } from '@/components/obsidian/SplitBadge';
+import { FloatingWord } from '@/components/obsidian/FloatingWord';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -55,69 +58,79 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        {AUTH.signUpTitle}
-      </h1>
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.fullName}</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
+    <ObsidianShell className="ob-doc ob-auth" marquee={{}}>
+      <section className="doc-hero">
+        <div className="container">
+          <SplitBadge dark="ALMA" light="অ্যাকাউন্ট" />
+          <FloatingWord text="SIGN UP" tone="light" className="doc-hero-word" />
+          <h1 className="doc-hero-title bn-serif">{AUTH.signUpTitle}</h1>
         </div>
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
+      </section>
+      <section className="doc-body">
+        <div className="container">
+          <div className="ob-auth-card" data-ob-reveal>
+            <form onSubmit={handleSignup} className="ob-track-form">
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.fullName}</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="ob-track-input"
+                />
+              </div>
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.email}</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="ob-track-input"
+                />
+              </div>
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.mobile}</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  className="ob-track-input"
+                />
+              </div>
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.password}</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  className="ob-track-input"
+                />
+              </div>
+              {error && <p className="ob-track-error bn">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="ob-btn solid ob-track-submit bn"
+              >
+                {loading ? AUTH.signUpCreating : AUTH.signUpButton}
+              </button>
+              <div className="ob-auth-links bn">
+                <p>
+                  {AUTH.hasAccount}{' '}
+                  <Link href="/login">{AUTH.loginButton}</Link>
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.mobile}</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01XXXXXXXXX"
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
-        </div>
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.password}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="new-password"
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
-        </div>
-        {error && <p className="font-bn-body text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white hover:bg-[#7a6549] disabled:opacity-60"
-        >
-          {loading ? AUTH.signUpCreating : AUTH.signUpButton}
-        </button>
-        <p className="text-center font-bn-body text-sm">
-          {AUTH.hasAccount}{' '}
-          <Link href="/login" className="text-accent font-medium hover:underline">
-            {AUTH.loginButton}
-          </Link>
-        </p>
-      </form>
-    </div>
+      </section>
+    </ObsidianShell>
   );
 }

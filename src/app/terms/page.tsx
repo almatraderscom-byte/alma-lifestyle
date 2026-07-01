@@ -11,6 +11,7 @@ export default function TermsPage() {
   return (
     <PageLayout
       badge="নীতিমালা"
+      heroWord="TERMS"
       title="শর্তাবলী"
       subtitle="ALMA Lifestyle ব্যবহারের নিয়ম ও শর্ত"
       lastUpdated="১ জুন, ২০২৬"

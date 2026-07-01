@@ -12,16 +12,21 @@ import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { NavMenuProvider } from '@/context/NavMenuContext';
 import { isEmbedPreviewMode } from '@/lib/homepage-config';
+import { isObsidianChromeRoute, isHomeRoute } from '@/lib/storefront/obsidian-routes';
 import type { HeaderNavItem } from '@/lib/nav-menu';
 
 function StorefrontProviders({
   children,
   navItems,
   chromeless,
+  overlays,
 }: {
   children: React.ReactNode;
   navItems: HeaderNavItem[];
   chromeless?: boolean;
+  /** Keep the global overlays (route progress, scroll-to-top, WhatsApp) mounted
+   *  even when the page supplies its own Obsidian chrome. Homepage stays false. */
+  overlays?: boolean;
 }) {
   if (chromeless) {
     return (
@@ -29,7 +34,18 @@ function StorefrontProviders({
         <NavMenuProvider items={navItems}>
           <CartProvider>
             <WishlistProvider>
+              {overlays ? (
+                <Suspense fallback={null}>
+                  <RouteProgressBar />
+                </Suspense>
+              ) : null}
               <main className="min-h-0 flex-1">{children}</main>
+              {overlays ? (
+                <>
+                  <ScrollToTop />
+                  <WhatsAppButton />
+                </>
+              ) : null}
             </WishlistProvider>
           </CartProvider>
         </NavMenuProvider>
@@ -77,12 +93,17 @@ export function RootShell({
     return <>{children}</>;
   }
 
-  // The Obsidian homepage ships its own header/footer, so run the shell
-  // chromeless on '/' (providers stay mounted for cart/wishlist/nav).
-  const chromeless = embedPreview || pathname === '/';
+  // Pages migrated onto the Obsidian design language ship their own
+  // header/footer via ObsidianShell, so the global shell runs chromeless to
+  // avoid a doubled header/footer (providers stay mounted for cart/wishlist/nav).
+  const isObsidian = isObsidianChromeRoute(pathname);
+  const chromeless = embedPreview || isObsidian;
+  // Keep global overlays on Obsidian sub-pages, but not on the homepage (which
+  // was approved overlay-free) or embed previews.
+  const overlays = isObsidian && !isHomeRoute(pathname) && !embedPreview;
 
   return (
-    <StorefrontProviders navItems={navItems} chromeless={chromeless}>
+    <StorefrontProviders navItems={navItems} chromeless={chromeless} overlays={overlays}>
       {children}
     </StorefrontProviders>
   );

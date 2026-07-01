@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AUTH } from '@/lib/content';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import { ObsidianShell } from '@/components/obsidian/ObsidianShell';
+import { SplitBadge } from '@/components/obsidian/SplitBadge';
+import { FloatingWord } from '@/components/obsidian/FloatingWord';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,58 +40,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="font-bn-heading text-3xl font-bold text-primary text-center mb-8">
-        {AUTH.loginTitle}
-      </h1>
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.email}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
+    <ObsidianShell className="ob-doc ob-auth" marquee={{}}>
+      <section className="doc-hero">
+        <div className="container">
+          <SplitBadge dark="ALMA" light="অ্যাকাউন্ট" />
+          <FloatingWord text="LOGIN" tone="light" className="doc-hero-word" />
+          <h1 className="doc-hero-title bn-serif">{AUTH.loginTitle}</h1>
         </div>
-        <div>
-          <label className="font-bn-body text-sm font-medium text-primary">{AUTH.password}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className="mt-1 w-full min-h-12 rounded-lg border border-border-subtle px-4 font-bn-body"
-          />
+      </section>
+      <section className="doc-body">
+        <div className="container">
+          <div className="ob-auth-card" data-ob-reveal>
+            <form onSubmit={handleLogin} className="ob-track-form">
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.email}</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="ob-track-input"
+                />
+              </div>
+              <div className="ob-track-field">
+                <label className="ob-track-label bn">{AUTH.password}</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="ob-track-input"
+                />
+              </div>
+              {error && <p className="ob-track-error bn">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="ob-btn solid ob-track-submit bn"
+              >
+                {loading ? AUTH.loading : AUTH.loginButton}
+              </button>
+              <div className="ob-auth-links bn">
+                <p>
+                  {AUTH.signUpPrompt}{' '}
+                  <Link href="/signup">{AUTH.signUpLink}</Link>
+                </p>
+                <p>
+                  <Link href="/forgot-password">{AUTH.forgotPassword}</Link>
+                </p>
+                <p>
+                  <Link href="/track">{AUTH.trackGuest}</Link>
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
-        {error && <p className="font-bn-body text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full min-h-12 rounded-lg bg-accent font-bn-body font-semibold text-white hover:bg-[#7a6549] disabled:opacity-60"
-        >
-          {loading ? AUTH.loading : AUTH.loginButton}
-        </button>
-        <p className="text-center font-bn-body text-sm">
-          {AUTH.signUpPrompt}{' '}
-          <Link href="/signup" className="text-accent font-medium hover:underline">
-            {AUTH.signUpLink}
-          </Link>
-        </p>
-        <p className="text-center font-bn-body text-sm">
-          <Link href="/forgot-password" className="text-text-light hover:text-accent">
-            {AUTH.forgotPassword}
-          </Link>
-        </p>
-        <p className="text-center font-bn-body text-sm pt-2">
-          <Link href="/track" className="text-accent hover:underline">
-            {AUTH.trackGuest}
-          </Link>
-        </p>
-      </form>
-    </div>
+      </section>
+    </ObsidianShell>
   );
 }

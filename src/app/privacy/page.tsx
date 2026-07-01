@@ -10,6 +10,7 @@ export default function PrivacyPage() {
   return (
     <PageLayout
       badge="নীতিমালা"
+      heroWord="PRIVACY"
       title="গোপনীয়তা নীতিমালা"
       subtitle="আপনার তথ্যের নিরাপত্তা আমাদের কাছে অগ্রাধিকার"
       lastUpdated="১ জুন, ২০২৬"

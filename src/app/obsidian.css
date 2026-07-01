@@ -56,7 +56,11 @@
   color: var(--ob-white);
   font-family: var(--font-space-grotesk), 'Space Grotesk', system-ui, sans-serif;
   line-height: 1.5;
-  overflow-x: hidden;
+  /* `overflow-x: clip` (NOT hidden): `hidden` forces overflow-y to compute to
+     `auto`, turning this wrapper into its own scroll container — that competes
+     with the window/Lenis scroll and causes juddery ("kapkapi") scrolling and
+     breaks position:fixed children. `clip` contains horizontal bleed only. */
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -213,10 +217,38 @@
     border-color 0.5s;
   border-bottom: 1px solid transparent;
 }
-.obsidian-home .ob-header.blur {
-  background: rgba(11, 10, 20, 0.62);
-  backdrop-filter: blur(16px) saturate(1.2);
-  border-bottom: 1px solid var(--ob-line);
+.obsidian-home .ob-header.ob-solid {
+  /* Apechain-style crisp bar: a FULLY SOLID graphite panel — NO backdrop-filter,
+     so absolutely nothing behind it blurs through when the bar slides back in on
+     scroll-up. Just a clean dark surface with one light hairline + a soft drop
+     shadow for the razor edge. */
+  background: #0b0a12;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 20px 46px -30px rgba(0, 0, 0, 0.9);
+}
+/* Guarantee legibility of header text regardless of what's scrolling beneath. */
+.obsidian-home .ob-header .ob-logo,
+.obsidian-home .ob-header .ob-nav-links a,
+.obsidian-home .ob-header .ob-cart-btn {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+/* Apechain bold nav treatment — heavier weight + wider tracking so the links
+   read as a confident, editorial wordmark row. */
+.obsidian-home .ob-nav-links.ob-nav-bold a {
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+.obsidian-home .ob-nav-links.ob-nav-bold a::after {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme, #7c5cff) 90%, #fff),
+    #ffffff
+  );
 }
 .obsidian-home .ob-nav {
   display: flex;
@@ -353,7 +385,12 @@
   height: 100vh;
   min-height: 720px;
   overflow: hidden;
-  background: radial-gradient(130% 100% at 50% 6%, #1a1730 0%, #100f1e 44%, #07070c 100%);
+  /* Saturated, LIVE-theme hero base: a rich colour bloom in the upper/centre-right
+     (where the orb floats) that cross-fades hue with the carousel via the
+     registered `--theme` @property — so the background visibly "pops" and syncs
+     with the 3D. Lower-left stays deep-dark so the white overlay text reads. */
+  background:
+    radial-gradient(125% 95% at 70% 16%, color-mix(in srgb, var(--theme, #7c5cff) 46%, #17122e) 0%, #130f26 38%, #0a0817 70%, #06050c 100%);
 }
 .obsidian-home .hero::after {
   content: '';
@@ -361,9 +398,11 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  mix-blend-mode: screen;
+  /* Stronger, theme-driven accent glow toward the orb; a warm gold kicker low-left. */
   background:
-    radial-gradient(60% 50% at 78% 40%, rgba(124, 92, 255, 0.18), transparent 60%),
-    radial-gradient(50% 40% at 20% 70%, rgba(216, 169, 78, 0.1), transparent 60%);
+    radial-gradient(58% 52% at 74% 30%, color-mix(in srgb, var(--theme, #7c5cff) 60%, transparent), transparent 62%),
+    radial-gradient(46% 40% at 22% 72%, rgba(216, 169, 78, 0.16), transparent 62%);
 }
 .obsidian-home .hero-wash {
   position: absolute;
@@ -374,8 +413,8 @@
   transition:
     background 1.15s var(--ob-ease),
     opacity 1.15s var(--ob-ease);
-  opacity: 0.85;
-  background: radial-gradient(72% 62% at 50% 46%, var(--wash, rgba(124, 92, 255, 0.3)), transparent 68%);
+  opacity: 0.95;
+  background: radial-gradient(72% 62% at 62% 40%, var(--wash, rgba(124, 92, 255, 0.34)), transparent 66%);
 }
 .obsidian-home .hero-ghost {
   position: absolute;
@@ -408,8 +447,8 @@
 }
 .obsidian-home .c-track {
   position: relative;
-  width: min(820px, 74vw);
-  height: min(470px, 56vh);
+  width: min(960px, 82vw);
+  height: min(560px, 64vh);
   transform-style: preserve-3d;
 }
 .obsidian-home .c-card {
@@ -418,6 +457,9 @@
   left: 0;
   width: 100%;
   height: 100%;
+  /* Preserve 3D so the active card's inner rotateX/rotateY (the sway tilt) is
+     rendered with real perspective depth instead of being flattened. */
+  transform-style: preserve-3d;
   transition:
     transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 0.8s var(--ob-ease),
@@ -433,8 +475,11 @@
   background: #0d1a20;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+  transform-style: preserve-3d;
+  transition: transform 0.4s var(--ob-ease);
 }
-.obsidian-home .c-in img {
+.obsidian-home .c-in img,
+.obsidian-home .c-in video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -475,6 +520,20 @@
   text-transform: uppercase;
   text-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   color: #fff;
+}
+/* Bengali serif headline needs breathing room: the script's stacked matras
+   (vowel signs above/below the base line) collide at the tight uppercase
+   line-height, so give it a generous, premium leading + no all-caps. */
+.obsidian-home .ov-title.bn-serif {
+  font-weight: 700;
+  font-size: clamp(38px, 5.6vw, 82px);
+  line-height: 1.22;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  padding-bottom: 0.08em;
+  text-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.55),
+    0 2px 10px rgba(0, 0, 0, 0.4);
 }
 .obsidian-home .ov-bn {
   margin-top: 10px;
@@ -546,27 +605,60 @@
   height: 100%;
   object-fit: cover;
 }
+.obsidian-home .thumb-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.55), rgba(47, 125, 255, 0.55));
+}
 .obsidian-home .c-nav {
   display: flex;
   gap: 10px;
 }
+/* Vertical stack pinned to the far-right middle of the hero (reference layout). */
+.obsidian-home .c-nav-side {
+  position: absolute;
+  right: clamp(18px, 3.4vw, 54px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  flex-direction: column;
+  gap: 16px;
+  pointer-events: auto;
+}
 .obsidian-home .c-nav button {
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(18, 16, 32, 0.34);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
   color: #fff;
   cursor: pointer;
   display: grid;
   place-items: center;
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.14),
+    0 12px 30px -14px rgba(0, 0, 0, 0.7);
   transition:
     background 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s,
     transform 0.3s;
 }
 .obsidian-home .c-nav button:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: scale(1.06);
+  background: rgba(124, 92, 255, 0.22);
+  border-color: rgba(180, 160, 255, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.35),
+    0 0 22px -2px rgba(124, 92, 255, 0.45),
+    0 14px 34px -14px rgba(0, 0, 0, 0.75);
+  transform: scale(1.08);
 }
 .obsidian-home .hero-fade {
   position: absolute;
@@ -583,11 +675,29 @@
    SPOTLIGHT
    ========================================================================== */
 .obsidian-home .spotlight {
-  background: var(--ob-paper);
+  /* Pale pastel tint of the active hero theme — syncs live with the carousel
+     (--theme is a registered <color>, so it cross-fades smoothly) and stays
+     light like the reference instead of a saturated block. */
+  background: color-mix(in srgb, var(--theme, #f2ede6) 22%, #ffffff);
   color: #0c0f16;
   position: relative;
   overflow: hidden;
   padding: 130px 0;
+  transition: background-color 0.7s ease-in-out;
+}
+/* Faint map/grid overlay, fading in from the top edge (reference texture). */
+.obsidian-home .spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(12, 15, 22, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 15, 22, 0.045) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 0%, #000 42%, transparent 86%);
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 42%, transparent 86%);
 }
 .obsidian-home .spot-ghost {
   position: absolute;
@@ -601,6 +711,14 @@
   line-height: 1;
   z-index: 0;
 }
+/* Category showcase merged on top of the spotlight section. */
+.obsidian-home .spot-cats {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 90px;
+  padding-bottom: 78px;
+  border-bottom: 1px solid rgba(12, 15, 22, 0.14);
+}
 .obsidian-home .spot-grid {
   position: relative;
   z-index: 1;
@@ -612,13 +730,101 @@
 .obsidian-home .spot-head .ob-tag.dark {
   margin-bottom: 22px;
 }
-.obsidian-home .spot-title {
-  font-family: var(--font-archivo), 'Archivo', sans-serif;
-  font-weight: 900;
-  font-size: clamp(40px, 6vw, 76px);
-  line-height: 0.9;
+/* Two-part unified badge: solid-black half + white half, thick shared border. */
+.obsidian-home .spot-badge {
+  display: inline-flex;
+  align-items: stretch;
+  margin-bottom: 26px;
+  border: 2px solid #0c0f16;
+  border-radius: 9px;
+  overflow: hidden;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  line-height: 1;
   text-transform: uppercase;
-  letter-spacing: -0.02em;
+}
+.obsidian-home .spot-badge .sb-dark,
+.obsidian-home .spot-badge .sb-light {
+  display: flex;
+  align-items: center;
+  padding: 9px 15px;
+}
+.obsidian-home .spot-badge .sb-dark {
+  background: #0c0f16;
+  color: #fff;
+}
+.obsidian-home .spot-badge .sb-light {
+  background: #fff;
+  color: #0c0f16;
+}
+/* Massive, highly-condensed display heading (Anton). Animated multi-colour
+   "neon" gradient fill that sweeps continuously — reads as vivid + alive on the
+   light spotlight panel (client wanted it colourful & eye-catching, not plain
+   black). Leading loosened from 0.84 → 0.96 so the two lines no longer collide. */
+.obsidian-home .spot-title {
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: clamp(46px, 7vw, 94px);
+  line-height: 0.96;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  padding-block: 0.06em;
+  background-image: linear-gradient(
+    100deg,
+    #7c5cff 0%,
+    #3f7bff 20%,
+    #2fb5c9 40%,
+    #d8a94e 60%,
+    #e0344b 80%,
+    #b25cff 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 6px 22px rgba(124, 92, 255, 0.28));
+  animation: spot-neon 7s linear infinite;
+}
+@keyframes spot-neon {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 260% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .spot-title {
+    animation: none;
+  }
+}
+/* Pill CTAs — solid black + outline (white bg, thick black border). */
+.obsidian-home .spot-cta .ob-btn {
+  border-width: 2px;
+}
+.obsidian-home .spot-cta .ob-btn.dark.solid {
+  background: #0c0f16;
+  border-color: #0c0f16;
+  color: #fff;
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.45);
+}
+.obsidian-home .spot-cta .ob-btn.dark.solid:hover {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+.obsidian-home .spot-cta .ob-btn.dark:not(.solid) {
+  background: #fff;
+  border-color: #0c0f16;
+  color: #0c0f16;
+}
+.obsidian-home .spot-cta .ob-btn.dark:not(.solid):hover {
+  background: #0c0f16;
+  border-color: #0c0f16;
+  color: #fff;
 }
 .obsidian-home .spot-body {
   margin-top: 26px;
@@ -637,86 +843,127 @@
 }
 .obsidian-home .spot-visual {
   position: relative;
-  perspective: 1400px;
-}
-.obsidian-home .spot-card {
-  position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  transform: rotateY(-16deg) rotateX(6deg) rotateZ(-2deg);
-  box-shadow: 0 50px 90px -40px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  transition: transform 0.6s var(--ob-ease);
-}
-.obsidian-home .spot-card:hover {
-  transform: rotateY(-8deg) rotateX(3deg) rotateZ(-1deg);
-}
-.obsidian-home .spot-card img {
-  width: 100%;
-  height: 440px;
-  object-fit: cover;
-}
-.obsidian-home .spot-card .sc-label {
-  position: absolute;
-  left: 22px;
-  bottom: 22px;
-  right: 22px;
-}
-.obsidian-home .spot-card .sc-label h4 {
-  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
-  font-weight: 700;
-  font-size: 26px;
-  color: #fff;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-}
-.obsidian-home .spot-card .sc-label p {
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #e7eef2;
-  margin-top: 4px;
-}
-.obsidian-home .spot-card .sc-btn {
-  margin-top: 14px;
-  display: inline-flex;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  padding: 8px 14px;
-  border-radius: 999px;
-}
-.obsidian-home .spot-what {
-  position: relative;
-  margin-top: 24px;
-  height: 52px;
+  min-height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 1400px;
 }
-.obsidian-home .spot-what .bar {
+/* Large, faint word centred behind the floating rod. */
+.obsidian-home .spot-bgword {
   position: absolute;
-  inset: auto 6% 10px;
-  height: 14px;
-  border-radius: 999px;
-  filter: blur(1px);
-  background: linear-gradient(90deg, #7c5cff, #2f7dff, #1fbf8f, #e0a94e, #ff7a2f);
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  font-size: clamp(56px, 10vw, 150px);
+  line-height: 1;
+  color: rgba(12, 15, 22, 0.07);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
-.obsidian-home .spot-what .pill {
+/* Floating capsule "rod" — colourful mesh gradient, glowing 3D look. */
+.obsidian-home .spot-rod {
   position: relative;
   z-index: 2;
+  width: min(560px, 100%);
+  height: 132px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(70% 160% at 18% 28%, rgba(79, 123, 255, 0.95), transparent 60%),
+    radial-gradient(62% 150% at 50% 74%, rgba(162, 75, 255, 0.9), transparent 62%),
+    radial-gradient(56% 150% at 84% 38%, rgba(255, 138, 61, 0.9), transparent 58%),
+    radial-gradient(50% 140% at 98% 78%, rgba(255, 72, 143, 0.82), transparent 60%),
+    linear-gradient(115deg, #2c2f66, #5a2f8f);
+  box-shadow:
+    0 34px 74px -24px rgba(90, 47, 143, 0.75),
+    inset 0 2px 6px rgba(255, 255, 255, 0.3),
+    inset 0 -18px 42px rgba(0, 0, 0, 0.36);
+  animation: sw-rod-float 6s ease-in-out infinite;
+}
+@keyframes sw-rod-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(0.4deg);
+  }
+}
+/* "What's this?" pill with a cyan/magenta chromatic-aberration glitch on hover:
+   two solid-colour offset copies of the pill split out and snap back. */
+.obsidian-home .spot-what-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #fff;
   color: #0c0f16;
   font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  padding: 12px 22px;
+  white-space: nowrap;
+  padding: 14px 30px;
   border-radius: 999px;
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.45);
+}
+.obsidian-home .spot-what-btn:hover {
+  animation: sw-glitch 0.5s ease-in-out;
+}
+@keyframes sw-glitch {
+  0% {
+    box-shadow:
+      0 0 0 rgba(0, 234, 255, 0),
+      0 0 0 rgba(255, 43, 214, 0),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+  20% {
+    box-shadow:
+      -7px -4px 0 rgba(0, 234, 255, 0.9),
+      7px 4px 0 rgba(255, 43, 214, 0.9),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+  40% {
+    box-shadow:
+      6px -3px 0 rgba(0, 234, 255, 0.9),
+      -6px 3px 0 rgba(255, 43, 214, 0.9),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+  60% {
+    box-shadow:
+      -4px 3px 0 rgba(0, 234, 255, 0.85),
+      4px -3px 0 rgba(255, 43, 214, 0.85),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+  80% {
+    box-shadow:
+      3px 2px 0 rgba(0, 234, 255, 0.8),
+      -3px -2px 0 rgba(255, 43, 214, 0.8),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+  100% {
+    box-shadow:
+      0 0 0 rgba(0, 234, 255, 0),
+      0 0 0 rgba(255, 43, 214, 0),
+      0 14px 34px -12px rgba(0, 0, 0, 0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .spot-rod {
+    animation: none;
+  }
+  .obsidian-home .spot-what-btn:hover {
+    animation: none;
+  }
 }
 
 /* ==========================================================================
@@ -741,6 +988,12 @@
   font-weight: 900;
   font-size: clamp(22px, 3vw, 32px);
   text-transform: uppercase;
+}
+.obsidian-home .products-head h3 .products-head-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: default;
 }
 .obsidian-home .products-head h3 .dot {
   width: 26px;
@@ -882,18 +1135,128 @@
   color: var(--sky-ink);
 }
 .obsidian-home .shine-head {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 16px;
   margin-bottom: 48px;
+  isolation: isolate;
+}
+/* Animated shape backdrop behind the collection heading — three slow, drifting
+   colour blobs so the Bengali wordmark sits on a living, premium field rather
+   than floating on flat sky. Sits behind the text via z-index. */
+.obsidian-home .shine-blobs {
+  position: absolute;
+  inset: -40px -6% -30px -6%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: visible;
+  filter: blur(2px);
+}
+.obsidian-home .shine-blobs span {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.obsidian-home .shine-blobs span:nth-child(1) {
+  left: 2%;
+  top: 4%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle at 50% 50%, #7c5cff 0%, transparent 68%);
+  animation: shine-blob-a 13s ease-in-out infinite;
+}
+.obsidian-home .shine-blobs span:nth-child(2) {
+  left: 34%;
+  top: -18%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle at 50% 50%, #3f7bff 0%, transparent 68%);
+  animation: shine-blob-b 17s ease-in-out infinite;
+}
+.obsidian-home .shine-blobs span:nth-child(3) {
+  right: 4%;
+  top: 10%;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle at 50% 50%, #2fb5c9 0%, transparent 68%);
+  animation: shine-blob-c 15s ease-in-out infinite;
+}
+@keyframes shine-blob-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(46px, 26px) scale(1.14);
+  }
+}
+@keyframes shine-blob-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.04);
+  }
+  50% {
+    transform: translate(-40px, 34px) scale(0.9);
+  }
+}
+@keyframes shine-blob-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.96);
+  }
+  50% {
+    transform: translate(-30px, -28px) scale(1.16);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .shine-blobs span {
+    animation: none;
+  }
 }
 .obsidian-home .shine-title {
+  position: relative;
+  max-width: 20ch;
   font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
   font-weight: 800;
-  font-size: clamp(38px, 6vw, 84px);
-  line-height: 0.98;
+  font-size: clamp(34px, 5.4vw, 76px);
+  line-height: 1.24;
   color: var(--sky-ink);
   letter-spacing: -0.01em;
+  padding-block: 0.14em;
+  /* Soft, smooth sheen: mostly the sky-ink, with a gentle violet highlight that
+     glides back and forth across the wordmark — understated, premium (client
+     asked for a soft smooth animation on this heading). */
+  background-image: linear-gradient(
+    100deg,
+    var(--sky-ink) 0%,
+    var(--sky-ink) 40%,
+    #7c5cff 50%,
+    var(--sky-ink) 60%,
+    var(--sky-ink) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine-sheen 9s ease-in-out infinite;
+}
+@keyframes shine-sheen {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .shine-title {
+    animation: none;
+  }
 }
 .obsidian-home .shine-row {
   display: flex;
@@ -987,20 +1350,55 @@
   display: inline-flex;
   align-items: center;
   font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', serif;
-  font-weight: 800;
-  font-size: clamp(30px, 4.4vw, 56px);
+  font-weight: 900;
+  font-size: clamp(38px, 5.6vw, 76px);
   color: var(--sky-ink);
   text-transform: uppercase;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  /* Living, colour-cycling wordmark — a warm multi-hue gradient continuously
+     flows across the scrolling words. The section background turns deep royal
+     BLUE as you scroll, so all blue/violet hues are removed and pure WHITE is
+     woven in so the words never disappear against the blue sky. */
+  background-image: linear-gradient(
+    100deg,
+    #ffffff,
+    #ffe08a,
+    #ff9d5c,
+    #ff5c8a,
+    #ffd24e,
+    #ffffff
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 3px 12px rgba(10, 18, 44, 0.45));
+  animation: cats-neon 10s linear infinite;
 }
+@keyframes cats-neon {
+  to {
+    background-position: 300% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .cats-track .ci {
+    animation: none;
+  }
+}
+/* Square blue icon blocks alternating between the massive words. */
 .obsidian-home .cats-track .csep {
   flex: none;
-  width: clamp(30px, 3.4vw, 48px);
-  height: clamp(30px, 3.4vw, 48px);
-  border-radius: clamp(9px, 1vw, 14px);
-  background: var(--ob-violet);
-  box-shadow: 0 10px 26px -10px rgba(124, 92, 255, 0.65);
+  width: clamp(38px, 4.2vw, 62px);
+  height: clamp(38px, 4.2vw, 62px);
+  border-radius: clamp(10px, 1.1vw, 16px);
+  /* Warm amber tile (was blue — vanished against the blue sky bg). */
+  background: linear-gradient(150deg, #ffd24e 0%, #ff9d5c 100%);
+  box-shadow: 0 14px 30px -12px rgba(255, 157, 92, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: transform 0.3s var(--ob-ease);
+}
+.obsidian-home .cats-track:hover .csep {
+  transform: rotate(45deg) scale(0.92);
 }
 .obsidian-home .cats-cta {
   display: flex;
@@ -1168,7 +1566,64 @@
   }
 }
 /* ==========================================================================
-   HERO VIDEO (cinematic video replaces the WebGL background)
+   HERO WEBGL ORB (three.js scene — floating crystal, rings, particles)
+   ========================================================================== */
+.obsidian-home .hero-webgl {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* Ambient ripple + particle field — 2D canvas above the orb, below content. */
+.obsidian-home .hero-ripple {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* White-flash cut on slide change. */
+.obsidian-home .hero-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: #fff;
+  opacity: 0;
+  mix-blend-mode: overlay;
+}
+.obsidian-home .hero-flash.fire {
+  animation: obHeroFlash 0.5s ease-out;
+}
+@keyframes obHeroFlash {
+  0% { opacity: 0; }
+  18% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+/* Per-slide hero title reveal (safe for Bengali — whole-word slide/fade). */
+.obsidian-home .ov-title-anim {
+  animation: obOvIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes obOvIn {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .ov-title-anim { animation: none; }
+  .obsidian-home .hero-flash.fire { animation: none; }
+}
+
+/* ==========================================================================
+   HERO VIDEO (optional cinematic video — layers over the WebGL orb)
    ========================================================================== */
 .obsidian-home .hero-video {
   position: absolute;
@@ -1178,6 +1633,60 @@
   height: 100%;
   object-fit: cover;
   filter: brightness(0.62) saturate(1.05);
+}
+
+/* ==========================================================================
+   CURSOR COMET TRAIL (fixed overlay canvas, violet→gold)
+   ========================================================================== */
+.ob-cursor-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Lenis smooth-scroll base CSS (we vendor only lenis.min.js, so its stylesheet
+   must be inlined here). Without `scroll-behavior:auto`, the browser's native
+   CSS smooth-scroll (Tailwind's `scroll-smooth` on <html>) fights Lenis's JS
+   scroll and produces juddery ("kapkapi") motion. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   SCROLL REVEAL (IntersectionObserver-driven)
+   ========================================================================== */
+.obsidian-home [data-ob-reveal] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.8s var(--ob-ease),
+    transform 0.8s var(--ob-ease);
+  will-change: opacity, transform;
+}
+.obsidian-home [data-ob-reveal].in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home [data-ob-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ==========================================================================
@@ -1371,8 +1880,136 @@
   backdrop-filter: blur(6px);
 }
 .obsidian-home .obt-icon {
-  font-size: 34px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto;
+  border-radius: 16px;
+  color: var(--sky-ink);
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--sky-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 10px 26px -14px rgba(12, 22, 48, 0.7);
+}
+.obsidian-home .obt-svg {
+  width: 34px;
+  height: 34px;
+  overflow: visible;
+}
+/* line-draw + float loops for the animated trust glyphs */
+.obsidian-home .obt-svg .obt-draw {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: obt-draw 2.6s ease forwards, obt-breathe 4.6s ease-in-out 2.6s infinite;
+}
+.obsidian-home .obt-svg .obt-wheel {
+  transform-origin: center;
+  animation: obt-roll 3.4s ease-in-out infinite;
+}
+.obsidian-home .obt-svg--truck {
+  animation: obt-drive 3.6s ease-in-out infinite;
+}
+.obsidian-home .obt-svg .obt-dash {
+  stroke-dasharray: 8 6;
+  opacity: 0.55;
+  animation: obt-dash 0.9s linear infinite;
+}
+.obsidian-home .obt-svg .obt-coin {
+  transform-origin: 24px 24px;
+  animation: obt-flip 3.2s ease-in-out infinite;
+}
+.obsidian-home .obt-svg .obt-spin {
+  transform-origin: 24px 24px;
+  animation: obt-return 3.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.obsidian-home .obt-svg .obt-pulse {
+  transform-origin: center;
+  animation: obt-pulse 1.8s ease-in-out infinite;
+}
+.obsidian-home .obt-svg .obt-pulse:nth-of-type(3) {
+  animation-delay: 0.4s;
+}
+@keyframes obt-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes obt-breathe {
+  0%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dashoffset: 6;
+  }
+}
+@keyframes obt-drive {
+  0%,
+  100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+@keyframes obt-roll {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1.5px);
+  }
+}
+@keyframes obt-dash {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+@keyframes obt-flip {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.15);
+  }
+}
+@keyframes obt-return {
+  0% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-320deg);
+  }
+}
+@keyframes obt-pulse {
+  0%,
+  100% {
+    transform: scaleY(0.7);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .obt-svg .obt-draw,
+  .obsidian-home .obt-svg .obt-wheel,
+  .obsidian-home .obt-svg--truck,
+  .obsidian-home .obt-svg .obt-dash,
+  .obsidian-home .obt-svg .obt-coin,
+  .obsidian-home .obt-svg .obt-spin,
+  .obsidian-home .obt-svg .obt-pulse {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }
 .obsidian-home .obt-title {
   margin-top: 12px;
@@ -1419,6 +2056,14 @@
     align-items: flex-start;
     width: 100%;
   }
+  .obsidian-home .c-nav-side {
+    right: 12px;
+    gap: 12px;
+  }
+  .obsidian-home .c-nav-side button {
+    width: 48px;
+    height: 48px;
+  }
   .obsidian-home .pgrid {
     grid-template-columns: 1fr;
     grid-auto-rows: 200px;
@@ -1431,8 +2076,15 @@
   .obsidian-home .foot-top {
     grid-template-columns: 1fr;
   }
-  .obsidian-home .spot-card img {
-    height: 340px;
+  .obsidian-home .spot-grid {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+  .obsidian-home .spot-visual {
+    min-height: 280px;
+  }
+  .obsidian-home .spot-rod {
+    height: 112px;
   }
   .obsidian-home .ocs-stack {
     grid-template-columns: 1fr;
@@ -1442,5 +2094,1888 @@
   }
   .obsidian-home .obt-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ==========================================================================
+   REUSABLE FLOATING WORDMARK (FloatingWord) — massive Anton display heading
+   with constant per-letter 3D float + cursor chromatic refraction. Same engine
+   as the footer wordmark, usable on any page/section.
+   ========================================================================== */
+.obsidian-home .ob-fword {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-anton), 'Anton', sans-serif;
+  font-size: clamp(40px, 9vw, 120px);
+  line-height: 0.84;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: visible;
+  perspective: 900px;
+}
+.obsidian-home .ob-fword .fw-l {
+  display: inline-block;
+  transform-style: preserve-3d;
+  will-change: transform, filter;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.obsidian-home .ob-fword-light {
+  filter: drop-shadow(0 12px 26px rgba(16, 32, 74, 0.28));
+}
+.obsidian-home .ob-fword-light .fw-l {
+  /* background-image longhand (NOT the `background` shorthand) so it does not
+     reset the `background-clip: text` set on `.ob-fword .fw-l` above. Using the
+     shorthand here silently resets clip to border-box → solid filled letter
+     boxes (the "white rectangle" bug). */
+  background-image: linear-gradient(180deg, #fff 0%, #eaf1ff 55%, #cdddff 100%);
+}
+.obsidian-home .ob-fword-ink {
+  filter: drop-shadow(0 14px 30px rgba(12, 22, 54, 0.18));
+}
+.obsidian-home .ob-fword-ink .fw-l {
+  background-image: linear-gradient(180deg, #10203a 0%, #24406e 55%, #3a5da0 100%);
+}
+
+/* ==========================================================================
+   SHOP PAGE (/products) — Obsidian reskin
+   ========================================================================== */
+.obsidian-home.ob-shop {
+  background: var(--ob-ink, #0b1020);
+}
+.obsidian-home .shop-hero {
+  position: relative;
+  padding: 150px 0 70px;
+  /* Same living, theme-driven band as .doc-hero (see note there). */
+  background:
+    radial-gradient(120% 150% at 16% -12%, color-mix(in srgb, var(--theme, #3f7bff) 46%, transparent), transparent 58%),
+    radial-gradient(90% 120% at 88% 6%, color-mix(in srgb, var(--theme, #7c5cff) 32%, transparent), transparent 60%),
+    linear-gradient(180deg, #0a1226 0%, #0d1630 60%, #101b38 100%);
+  color: #eaf1ff;
+  overflow: hidden;
+}
+.obsidian-home .shop-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+  mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+}
+.obsidian-home .shop-hero::after {
+  content: '';
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 150%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(38% 60% at 30% 30%, color-mix(in srgb, var(--theme, #7c5cff) 55%, transparent), transparent 70%),
+    radial-gradient(34% 52% at 72% 40%, color-mix(in srgb, var(--theme, #3f7bff) 45%, transparent), transparent 72%);
+  filter: blur(46px);
+  opacity: 0.7;
+  mix-blend-mode: screen;
+  animation: ob-aurora-drift 18s var(--ob-ease) infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .shop-hero::after { animation: none; }
+}
+.obsidian-home .shop-hero .container {
+  position: relative;
+  z-index: 1;
+}
+.obsidian-home .shop-hero-word {
+  margin: 26px 0 20px;
+}
+.obsidian-home .shop-hero-title {
+  font-size: clamp(24px, 4vw, 44px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+}
+.obsidian-home .shop-hero-sub {
+  margin-top: 12px;
+  color: rgba(224, 236, 255, 0.66);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.obsidian-home .shop-body {
+  position: relative;
+  padding: 46px 0 90px;
+  background: color-mix(in srgb, var(--theme, #2f7dff) 16%, #ffffff);
+  color: #0c0f16;
+  transition: background-color 0.7s ease-in-out;
+}
+.obsidian-home .shop-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(12, 15, 22, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 15, 22, 0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(130% 90% at 50% 0%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(130% 90% at 50% 0%, #000 30%, transparent 80%);
+}
+.obsidian-home .shop-body .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Category pill chips */
+.obsidian-home .shop-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+.obsidian-home .shop-cat {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(12, 16, 22, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  color: #0c0f16;
+  cursor: pointer;
+  transition: all 0.25s var(--ob-ease);
+}
+.obsidian-home .shop-cat:hover {
+  border-color: rgba(12, 16, 22, 0.4);
+}
+.obsidian-home .shop-cat.on {
+  background: #0c0f16;
+  border-color: #0c0f16;
+  color: #fff;
+}
+
+/* Toolbar */
+.obsidian-home .shop-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0 22px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(12, 16, 22, 0.14);
+}
+.obsidian-home .shop-set {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(12, 16, 22, 0.14);
+  background: rgba(255, 255, 255, 0.55);
+}
+.obsidian-home .shop-set-chip {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 15px;
+  border-radius: 999px;
+  color: rgba(12, 16, 22, 0.7);
+  cursor: pointer;
+  transition: all 0.25s var(--ob-ease);
+}
+.obsidian-home .shop-set-chip.on {
+  background: #0c0f16;
+  color: #fff;
+}
+.obsidian-home .shop-count {
+  flex: 1;
+  min-width: 140px;
+  font-size: 14px;
+  color: rgba(12, 16, 22, 0.6);
+  text-align: center;
+}
+.obsidian-home .shop-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.obsidian-home .shop-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(12, 16, 22, 0.7);
+}
+.obsidian-home .shop-sort select {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 14px;
+  color: #0c0f16;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(12, 16, 22, 0.16);
+  background: #fff;
+  cursor: pointer;
+}
+.obsidian-home .shop-filter-btn {
+  background: #fff;
+  border-color: #0c0f16;
+  color: #0c0f16;
+}
+
+/* Product grid */
+.obsidian-home .ob-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 26px 22px;
+}
+.obsidian-home .ob-pcard {
+  display: flex;
+  flex-direction: column;
+}
+.obsidian-home .ob-pcard-media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  margin-bottom: 14px;
+}
+.obsidian-home .ob-pcard-link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+.obsidian-home .ob-pcard-media .pc-cat {
+  z-index: 2;
+}
+.obsidian-home .ob-pcard-wish {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(6, 14, 20, 0.4);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s var(--ob-ease), background 0.2s;
+}
+.obsidian-home .ob-pcard-wish:hover {
+  background: rgba(6, 14, 20, 0.65);
+}
+.obsidian-home .ob-pcard-wish.on {
+  color: #ff6b8a;
+  border-color: rgba(255, 107, 138, 0.6);
+}
+.obsidian-home .ob-pcard-quick {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  min-height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(12, 16, 22, 0.92);
+  color: #fff;
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s var(--ob-ease), transform 0.3s var(--ob-ease);
+}
+.obsidian-home .ob-pcard-media:hover .ob-pcard-quick {
+  opacity: 1;
+  transform: none;
+}
+.obsidian-home .ob-pcard-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.obsidian-home .ob-pcard-title h4 {
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.3;
+  color: #0c0f16;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-pcard-title:hover h4 {
+  color: #2450e6;
+}
+.obsidian-home .ob-pcard-price {
+  font-size: 18px;
+  color: #0c0f16;
+}
+.obsidian-home .ob-pcard-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.obsidian-home .ob-mini-tag {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(12, 16, 22, 0.08);
+  color: rgba(12, 16, 22, 0.82);
+}
+.obsidian-home .ob-pcard-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.obsidian-home .ob-pcard-actions .ob-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+/* Empty state */
+.obsidian-home .ob-empty {
+  text-align: center;
+  padding: 70px 20px;
+  border: 1px dashed rgba(12, 16, 22, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.obsidian-home .ob-empty-emoji {
+  font-size: 46px;
+  margin-bottom: 12px;
+}
+.obsidian-home .ob-empty h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0c0f16;
+}
+.obsidian-home .ob-empty p {
+  margin: 8px 0 22px;
+  color: rgba(12, 16, 22, 0.66);
+}
+
+/* Pagination */
+.obsidian-home .ob-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 50px;
+}
+.obsidian-home .ob-pager-btn,
+.obsidian-home .ob-pager-num {
+  min-height: 46px;
+  min-width: 46px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 2px solid rgba(12, 16, 22, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  color: #0c0f16;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.obsidian-home .ob-pager-num.on {
+  background: #0c0f16;
+  border-color: #0c0f16;
+  color: #fff;
+}
+
+/* Advanced-filter drawer (wraps the existing ProductFiltersPanel) */
+.obsidian-home .ob-filter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+.obsidian-home .ob-filter-scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(8, 14, 30, 0.55);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+.obsidian-home .ob-filter-drawer {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: min(400px, 92vw);
+  display: flex;
+  flex-direction: column;
+  background: #f6f8fc;
+  color: #0c0f16;
+  box-shadow: 0 30px 80px -20px rgba(6, 14, 30, 0.5);
+}
+.obsidian-home .ob-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  min-height: 62px;
+  border-bottom: 1px solid rgba(12, 16, 22, 0.12);
+}
+.obsidian-home .ob-filter-head h2 {
+  font-size: 19px;
+  font-weight: 700;
+}
+.obsidian-home .ob-filter-close {
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: rgba(12, 16, 22, 0.7);
+}
+.obsidian-home .ob-filter-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 30px;
+}
+
+@media (max-width: 1024px) {
+  .obsidian-home .ob-shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .obsidian-home .shop-hero {
+    padding: 120px 0 50px;
+  }
+  .obsidian-home .ob-shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 14px;
+  }
+  .obsidian-home .shop-count {
+    order: 3;
+    width: 100%;
+  }
+  .obsidian-home .ob-pcard-actions {
+    flex-direction: column;
+  }
+}
+
+/* ==========================================================================
+   PRODUCT DETAIL PAGE (/products/[slug]) — Obsidian reskin
+   ========================================================================== */
+.obsidian-home.ob-pdp {
+  background: var(--ob-ink, #0b1020);
+}
+.obsidian-home .pdp-hero {
+  position: relative;
+  padding: 140px 0 54px;
+  background:
+    radial-gradient(120% 140% at 80% 0%, rgba(63, 123, 255, 0.26), transparent 60%),
+    linear-gradient(180deg, #0a1226 0%, #0d1630 60%, #101b38 100%);
+  color: #eaf1ff;
+  overflow: hidden;
+}
+.obsidian-home .pdp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+  mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+}
+.obsidian-home .pdp-hero .container {
+  position: relative;
+  z-index: 1;
+}
+.obsidian-home .pdp-hero-word {
+  margin-top: 24px;
+}
+
+.obsidian-home .pdp-body {
+  position: relative;
+  padding: 40px 0 90px;
+  background: color-mix(in srgb, var(--theme, #2f7dff) 16%, #ffffff);
+  color: #0c0f16;
+  transition: background-color 0.7s ease-in-out;
+}
+
+/* Breadcrumb */
+.obsidian-home .ob-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 13px;
+  color: rgba(12, 16, 22, 0.6);
+  margin-bottom: 28px;
+}
+.obsidian-home .ob-crumb a:hover {
+  color: #2450e6;
+}
+.obsidian-home .ob-crumb-cur {
+  color: #0c0f16;
+  font-weight: 600;
+}
+
+/* 50/50 split grid */
+.obsidian-home .ob-pdp-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+/* Gallery */
+.obsidian-home .ob-gallery {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.obsidian-home .ob-gallery-main {
+  position: relative;
+  width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(12, 16, 22, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 40px 90px -44px rgba(10, 30, 60, 0.5),
+    0 0 0 1px color-mix(in srgb, var(--theme, #2f7dff) 20%, transparent);
+  transition: box-shadow 0.7s var(--ob-ease);
+}
+/* Soft theme-tinted aura behind the frame — subtly follows the active image. */
+.obsidian-home .ob-gallery-glow {
+  position: absolute;
+  inset: -2px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 80% at 50% 0%,
+    color-mix(in srgb, var(--theme, #2f7dff) 30%, transparent),
+    transparent 62%
+  );
+  opacity: 0.55;
+  transition: background 0.7s var(--ob-ease);
+}
+.obsidian-home .ob-gallery-img {
+  transition: transform 0.9s var(--ob-ease);
+  will-change: transform;
+}
+.obsidian-home .ob-gallery-main:hover .ob-gallery-img {
+  transform: scale(1.06);
+}
+.obsidian-home .ob-gallery-count {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #eaf1ff;
+  background: rgba(10, 18, 38, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.obsidian-home .ob-ar-34 {
+  aspect-ratio: 3 / 4;
+}
+.obsidian-home .ob-ar-11 {
+  aspect-ratio: 1 / 1;
+}
+.obsidian-home .ob-gallery-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.obsidian-home .ob-gallery-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 70%, rgba(6, 14, 20, 0.14));
+}
+.obsidian-home .ob-gallery-thumbs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.obsidian-home .ob-gallery-thumb {
+  position: relative;
+  width: 72px;
+  height: 92px;
+  border-radius: 13px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.72;
+  transition:
+    border-color 0.25s var(--ob-ease),
+    transform 0.28s var(--ob-ease),
+    opacity 0.25s var(--ob-ease),
+    box-shadow 0.28s var(--ob-ease);
+}
+.obsidian-home .ob-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.obsidian-home .ob-gallery-thumb:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.obsidian-home .ob-gallery-thumb.on {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--theme, #2450e6) 72%, #0c0f16);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--theme, #2450e6) 70%, transparent);
+}
+
+/* Info panel — refined glass card, subtly tinted by the active image. */
+.obsidian-home .ob-pdp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 34px 34px 30px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--theme, #2f7dff) 8%, rgba(255, 255, 255, 0.86)),
+      rgba(255, 255, 255, 0.72)
+    );
+  box-shadow:
+    0 30px 70px -46px rgba(10, 30, 60, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.7s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.obsidian-home .ob-pdp-title {
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 700;
+  color: #0c0f16;
+  line-height: 1.18;
+}
+.obsidian-home .ob-pdp-rating {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 14px;
+  color: rgba(12, 16, 22, 0.6);
+}
+.obsidian-home .ob-pdp-rating span[aria-hidden] {
+  color: #f4b740;
+  letter-spacing: 2px;
+}
+.obsidian-home .ob-pdp-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 14px;
+  padding: 20px 0;
+  border-top: 1px solid rgba(12, 16, 22, 0.14);
+  border-bottom: 1px solid rgba(12, 16, 22, 0.14);
+}
+.obsidian-home .ob-pdp-now {
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1;
+  color: #0c0f16;
+  transform-origin: left center;
+}
+/* When a discount is present the offer price is highlighted with the live accent. */
+.obsidian-home .ob-pdp-price--deal .ob-pdp-now {
+  color: color-mix(in srgb, var(--theme, #2450e6) 62%, #0c0f16);
+  text-shadow: 0 6px 26px color-mix(in srgb, var(--theme, #2450e6) 34%, transparent);
+}
+.obsidian-home .ob-pdp-price .was {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: rgba(12, 16, 22, 0.55);
+  transform-origin: left center;
+}
+/* Animated strike — a line that draws across the regular price (scaleX 0→1). */
+.obsidian-home .ob-pdp-strike {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 52%;
+  height: 2.5px;
+  border-radius: 2px;
+  transform-origin: left center;
+  background: color-mix(in srgb, var(--theme, #d64545) 55%, #d64545);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--theme, #d64545) 55%, transparent);
+}
+.obsidian-home .ob-pdp-off {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme, #2450e6) 16%, #ffffff);
+  color: color-mix(in srgb, var(--theme, #2450e6) 72%, #0c0f16);
+  border: 1px solid color-mix(in srgb, var(--theme, #2450e6) 34%, transparent);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--theme, #2450e6) 50%, transparent);
+  align-self: center;
+}
+.obsidian-home .ob-pdp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.obsidian-home .ob-pdp-label {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0c0f16;
+}
+.obsidian-home .ob-pdp-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.obsidian-home .ob-pdp-color {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 3px 10px -4px rgba(10, 30, 60, 0.45), inset 0 0 0 1px rgba(12, 16, 22, 0.12);
+  cursor: pointer;
+  transition: transform 0.22s var(--ob-ease), box-shadow 0.22s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-color:hover {
+  transform: scale(1.08);
+}
+/* Tactile selected ring in the live accent colour. */
+.obsidian-home .ob-pdp-color.on {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px color-mix(in srgb, var(--theme, #0c0f16) 70%, #0c0f16),
+    0 8px 20px -8px color-mix(in srgb, var(--theme, #2450e6) 60%, transparent);
+}
+.obsidian-home .ob-pdp-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.obsidian-home .ob-pdp-size {
+  min-height: 48px;
+  min-width: 54px;
+  padding: 0 18px;
+  border-radius: 13px;
+  border: 2px solid rgba(12, 16, 22, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  color: #0c0f16;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ob-ease),
+    background 0.22s var(--ob-ease),
+    border-color 0.22s var(--ob-ease),
+    box-shadow 0.22s var(--ob-ease),
+    color 0.22s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-size:hover {
+  border-color: color-mix(in srgb, var(--theme, #2450e6) 55%, rgba(12, 16, 22, 0.4));
+  transform: translateY(-1px);
+}
+.obsidian-home .ob-pdp-size.on {
+  background: #0c0f16;
+  border-color: #0c0f16;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--theme, #2450e6) 70%, rgba(10, 30, 60, 0.6));
+}
+.obsidian-home .ob-pdp-sizechart {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 13px;
+  color: #2450e6;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.obsidian-home .ob-pdp-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid rgba(12, 16, 22, 0.16);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.obsidian-home .ob-pdp-qty button {
+  min-height: 50px;
+  min-width: 50px;
+  font-size: 22px;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #0c0f16;
+  transition: background 0.2s var(--ob-ease), color 0.2s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-qty button:hover {
+  background: color-mix(in srgb, var(--theme, #2450e6) 12%, transparent);
+  color: color-mix(in srgb, var(--theme, #2450e6) 70%, #0c0f16);
+}
+.obsidian-home .ob-pdp-qty button:active {
+  transform: scale(0.94);
+}
+.obsidian-home .ob-pdp-qty span {
+  min-width: 56px;
+  text-align: center;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+}
+.obsidian-home .ob-pdp-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.obsidian-home .ob-pdp-cta-row {
+  display: flex;
+  gap: 12px;
+}
+.obsidian-home .ob-pdp-cta-row .ob-btn {
+  flex: 1;
+  min-height: 56px;
+  font-size: 15px;
+}
+/* Primary Buy-now carries an accent glow so the CTA hierarchy reads clearly. */
+.obsidian-home .ob-pdp-cta-row .ob-btn.solid {
+  box-shadow: 0 16px 34px -16px color-mix(in srgb, var(--theme, #2450e6) 75%, rgba(10, 30, 60, 0.6));
+}
+.obsidian-home .ob-pdp-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 14px 30px -16px rgba(37, 211, 102, 0.7);
+  transition: background 0.25s var(--ob-ease), transform 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-whatsapp:hover {
+  background: #20bd5a;
+  transform: translateY(-1px);
+}
+.obsidian-home .ob-pdp-trust {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+.obsidian-home .ob-pdp-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  border: 1px solid rgba(12, 16, 22, 0.1);
+  background: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  color: #0c0f16;
+  transition: border-color 0.25s var(--ob-ease), transform 0.25s var(--ob-ease), box-shadow 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-pdp-trust-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--theme, #2450e6) 40%, transparent);
+  box-shadow: 0 12px 24px -16px color-mix(in srgb, var(--theme, #2450e6) 60%, transparent);
+}
+.obsidian-home .ob-pdp-trust-item span[aria-hidden] {
+  font-size: 17px;
+}
+.obsidian-home .ob-pdp-accordion {
+  margin-top: 4px;
+}
+.obsidian-home .ob-pdp-set {
+  margin-bottom: 20px;
+}
+
+/* Related / recent rails */
+.obsidian-home .pdp-rail {
+  margin-top: 64px;
+}
+.obsidian-home .pdp-rail .products-head {
+  margin-bottom: 26px;
+}
+
+@media (max-width: 900px) {
+  .obsidian-home .ob-pdp-grid {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .obsidian-home .ob-gallery {
+    position: static;
+  }
+}
+@media (max-width: 640px) {
+  .obsidian-home .pdp-hero {
+    padding: 116px 0 40px;
+  }
+  .obsidian-home .ob-pdp-info {
+    padding: 24px 20px 22px;
+    border-radius: 20px;
+  }
+  .obsidian-home .ob-pdp-cta-row {
+    flex-direction: column;
+  }
+}
+/* Honour reduced-motion: no hover zoom or lifts on the PDP. */
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .ob-gallery-main:hover .ob-gallery-img {
+    transform: none;
+  }
+  .obsidian-home .ob-pdp-color,
+  .obsidian-home .ob-pdp-size,
+  .obsidian-home .ob-pdp-trust-item,
+  .obsidian-home .ob-pdp-whatsapp,
+  .obsidian-home .ob-gallery-thumb,
+  .obsidian-home .ob-gallery-img {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   CONTENT / LEGAL PAGES (about, contact, delivery, refund, privacy, terms,
+   size-guide, faq) — Obsidian reskin via shared PageLayout
+   ========================================================================== */
+.obsidian-home.ob-doc {
+  background: var(--ob-ink, #0b1020);
+}
+
+/* Dark cinematic hero band with grid overlay + floating chromatic word */
+.obsidian-home .doc-hero {
+  position: relative;
+  padding: 150px 0 66px;
+  /* Theme-driven, colour-SHIFTING band — the accent radials use the registered
+     `--theme` (@property <color>, 1.2s cross-fade) so the header band gently
+     changes hue exactly like the homepage spotlight instead of a static navy. */
+  background:
+    radial-gradient(120% 150% at 16% -12%, color-mix(in srgb, var(--theme, #3f7bff) 46%, transparent), transparent 58%),
+    radial-gradient(90% 120% at 88% 6%, color-mix(in srgb, var(--theme, #7c5cff) 32%, transparent), transparent 60%),
+    linear-gradient(180deg, #0a1226 0%, #0d1630 60%, #101b38 100%);
+  color: #eaf1ff;
+  overflow: hidden;
+}
+.obsidian-home .doc-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+  mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 88%);
+}
+/* Slow drifting aurora blob, tinted by the live accent — adds gentle motion so
+   the band reads "alive" (wow) rather than a flat colour panel. */
+.obsidian-home .doc-hero::after {
+  content: '';
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 150%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(38% 60% at 30% 30%, color-mix(in srgb, var(--theme, #7c5cff) 55%, transparent), transparent 70%),
+    radial-gradient(34% 52% at 72% 40%, color-mix(in srgb, var(--theme, #3f7bff) 45%, transparent), transparent 72%);
+  filter: blur(46px);
+  opacity: 0.7;
+  mix-blend-mode: screen;
+  animation: ob-aurora-drift 18s var(--ob-ease) infinite alternate;
+}
+@keyframes ob-aurora-drift {
+  0%   { transform: translate3d(-4%, 0, 0) scale(1); }
+  50%  { transform: translate3d(5%, 3%, 0) scale(1.12); }
+  100% { transform: translate3d(-2%, -2%, 0) scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-home .doc-hero::after { animation: none; }
+}
+.obsidian-home .doc-hero .container {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.obsidian-home .doc-hero .spot-badge {
+  justify-content: center;
+}
+.obsidian-home .doc-hero-word {
+  margin: 22px 0 18px;
+  justify-content: center;
+}
+.obsidian-home .doc-hero-title {
+  font-size: clamp(26px, 4.4vw, 48px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.12;
+}
+.obsidian-home .doc-hero-sub {
+  margin: 12px auto 0;
+  max-width: 640px;
+  color: rgba(224, 236, 255, 0.66);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+.obsidian-home .doc-hero-updated {
+  margin-top: 14px;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(224, 236, 255, 0.45);
+}
+
+/* Body sits on the live product/brand-tinted wash (scroll-sky shows through) */
+.obsidian-home .doc-body {
+  position: relative;
+  padding: 54px 0 96px;
+  background: color-mix(in srgb, var(--theme, #2f7dff) 14%, #ffffff);
+  transition: background-color 0.7s ease-in-out;
+}
+.obsidian-home .doc-body .container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+}
+
+/* Light "paper" prose surface — an editorial document inside the dark chrome */
+.obsidian-home .ob-prose {
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  border-radius: 18px;
+  padding: clamp(24px, 4vw, 52px);
+  box-shadow: 0 30px 70px -40px rgba(9, 12, 26, 0.5);
+  color: #23252e;
+}
+/* Typography for bare-tag content (direct children only, so custom .not-prose
+   blocks in contact/faq/size-guide keep their own Tailwind styling intact). */
+.obsidian-home .ob-prose > h2 {
+  font-family: var(--font-noto-serif-bengali), serif;
+  font-size: clamp(21px, 2.6vw, 28px);
+  font-weight: 700;
+  color: #14151b;
+  line-height: 1.3;
+  margin: 34px 0 12px;
+}
+.obsidian-home .ob-prose > h2:first-child {
+  margin-top: 0;
+}
+.obsidian-home .ob-prose > h3 {
+  font-family: var(--font-noto-serif-bengali), serif;
+  font-size: clamp(17px, 2vw, 20px);
+  font-weight: 600;
+  color: #1b1c24;
+  margin: 22px 0 8px;
+}
+.obsidian-home .ob-prose > p {
+  font-size: 16px;
+  line-height: 1.95;
+  color: #3b3e49;
+  margin: 0 0 14px;
+}
+.obsidian-home .ob-prose > ul,
+.obsidian-home .ob-prose > ol {
+  margin: 4px 0 18px;
+  padding-left: 24px;
+}
+.obsidian-home .ob-prose > ul {
+  list-style: none;
+  padding-left: 4px;
+}
+.obsidian-home .ob-prose > ul > li {
+  position: relative;
+  padding-left: 24px;
+  margin: 0 0 10px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: #3b3e49;
+}
+.obsidian-home .ob-prose > ul > li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 11px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ob-violet, #7c5cff);
+}
+.obsidian-home .ob-prose > ol > li {
+  margin: 0 0 10px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: #3b3e49;
+}
+.obsidian-home .ob-prose strong {
+  color: #14151b;
+  font-weight: 700;
+}
+.obsidian-home .ob-prose a:not([class]) {
+  color: var(--ob-violet, #7c5cff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.obsidian-home .ob-prose a:not([class]):hover {
+  color: var(--ob-violet-2, #9a7dff);
+}
+
+/* Help / contact CTA — dark contrast card so the base .ob-btn reads on it */
+.obsidian-home .doc-help {
+  margin-top: 30px;
+  border-radius: 18px;
+  padding: clamp(26px, 4vw, 44px);
+  text-align: center;
+  color: #eaf1ff;
+  background:
+    radial-gradient(120% 160% at 50% 0%, rgba(124, 92, 255, 0.22), transparent 60%),
+    linear-gradient(180deg, #0d1122 0%, #0a0d1a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.obsidian-home .doc-help h3 {
+  font-family: var(--font-noto-serif-bengali), serif;
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 700;
+  color: #fff;
+}
+.obsidian-home .doc-help > p {
+  margin-top: 10px;
+  color: rgba(224, 236, 255, 0.66);
+  font-size: 15px;
+}
+.obsidian-home .doc-help-actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.obsidian-home .doc-help-links {
+  margin-top: 20px;
+  font-size: 14px;
+  color: rgba(224, 236, 255, 0.5);
+}
+.obsidian-home .doc-help-links a {
+  color: rgba(224, 236, 255, 0.82);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.obsidian-home .doc-help-links a:hover {
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .obsidian-home .doc-hero {
+    padding: 116px 0 44px;
+  }
+  .obsidian-home .doc-body {
+    padding: 34px 0 70px;
+  }
+}
+
+/* Order tracking form (/track) — light card on the doc body */
+.obsidian-home .ob-track-card {
+  max-width: 640px;
+  margin: 0 auto;
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  border-radius: 18px;
+  padding: clamp(24px, 4vw, 44px);
+  box-shadow: 0 30px 70px -40px rgba(9, 12, 26, 0.5);
+}
+.obsidian-home .ob-track-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.obsidian-home .ob-track-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.obsidian-home .ob-track-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4b4e59;
+}
+.obsidian-home .ob-track-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 10, 18, 0.16);
+  background: #fff;
+  color: #14151b;
+  font-size: 15px;
+  transition:
+    border-color 0.3s var(--ob-ease),
+    box-shadow 0.3s var(--ob-ease);
+}
+.obsidian-home .ob-track-input:focus {
+  outline: none;
+  border-color: var(--ob-violet, #7c5cff);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.16);
+}
+.obsidian-home .ob-track-error {
+  font-size: 14px;
+  color: #d33a4b;
+}
+.obsidian-home .ob-track-submit {
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+}
+.obsidian-home .ob-track-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.obsidian-home .ob-track-again {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--ob-violet, #7c5cff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Cart + checkout + confirmation: the shared `.doc-body` is a near-WHITE tint
+   (color-mix(--theme 14%, #fff)) that suits the light "document" pages (legal,
+   account) — but the cart/checkout cards are DARK glass with white text, so that
+   pale body made the text invisible. Override those three routes to a dark,
+   accent-tinted body so the glass panels + white copy read perfectly and the
+   backdrop still gently shifts hue with the live `--theme` (matches the header). */
+.obsidian-home.ob-cart .doc-body,
+.obsidian-home.ob-checkout .doc-body,
+.obsidian-home.ob-confirm .doc-body {
+  background:
+    radial-gradient(120% 90% at 16% -10%, color-mix(in srgb, var(--theme, #7c5cff) 30%, transparent), transparent 58%),
+    radial-gradient(96% 84% at 88% 2%, color-mix(in srgb, var(--theme, #3f7bff) 20%, transparent), transparent 62%),
+    linear-gradient(180deg, #0b0a15 0%, #0a0912 58%, #08070d 100%);
+  color: #eaf1ff;
+  transition: background-color 0.7s ease-in-out;
+}
+
+/* Cart (/cart) — wider body so the 3-column grid fits inside the doc shell */
+.obsidian-home.ob-cart .doc-body .container {
+  max-width: 1220px;
+}
+.obsidian-home .ob-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.obsidian-home .ob-cart-empty .ob-btn {
+  justify-content: center;
+}
+
+/* Hero back-link (checkout) */
+.obsidian-home .doc-hero-back {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 14px;
+  color: rgba(224, 236, 255, 0.72);
+  text-decoration: none;
+  transition: color 0.3s var(--ob-ease);
+}
+.obsidian-home .doc-hero-back:hover {
+  color: #fff;
+}
+
+/* Checkout (/checkout) — wide body + room for the mobile sticky bar */
+.obsidian-home.ob-checkout .doc-body .container {
+  max-width: 1220px;
+}
+@media (max-width: 1023px) {
+  .obsidian-home.ob-checkout .doc-body {
+    padding-bottom: 120px;
+  }
+}
+
+/* Order confirmation (/checkout/confirmation) — centered success card (dark glass) */
+.obsidian-home .ob-confirm-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
+}
+
+/* Auth (/login, /signup, /forgot-password) — reuses .ob-track-* field styling */
+.obsidian-home .ob-auth-card {
+  max-width: 460px;
+  margin: 0 auto;
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  border-radius: 18px;
+  padding: clamp(24px, 4vw, 40px);
+  box-shadow: 0 30px 70px -40px rgba(9, 12, 26, 0.5);
+}
+.obsidian-home .ob-auth-ok {
+  font-size: 14px;
+  color: #197a4b;
+}
+.obsidian-home .ob-auth-links {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #4b4e59;
+}
+.obsidian-home .ob-auth-links a {
+  color: var(--ob-violet, #7c5cff);
+  font-weight: 600;
+  text-decoration: none;
+}
+.obsidian-home .ob-auth-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Account dashboard (/account) */
+.obsidian-home.ob-account .doc-body .container {
+  max-width: 1080px;
+}
+.obsidian-home .ob-account-grid {
+  display: grid;
+  gap: 28px;
+}
+@media (min-width: 768px) {
+  .obsidian-home .ob-account-grid {
+    grid-template-columns: 300px 1fr;
+    align-items: start;
+  }
+}
+.obsidian-home .ob-account-card {
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 30px 70px -40px rgba(9, 12, 26, 0.5);
+}
+.obsidian-home .ob-account-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #14151b;
+}
+.obsidian-home .ob-account-email {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #4b4e59;
+}
+.obsidian-home .ob-account-nav {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.obsidian-home .ob-account-nav a,
+.obsidian-home .ob-account-nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #2a2c34;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-account-nav a:hover {
+  background: rgba(11, 10, 18, 0.05);
+}
+.obsidian-home .ob-account-nav .ob-account-signout {
+  color: #d33a4b;
+}
+.obsidian-home .ob-account-nav .ob-account-signout:hover {
+  background: rgba(211, 58, 75, 0.08);
+}
+.obsidian-home .ob-account-orders-title {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 700;
+  color: #f4f0ff;
+  margin-bottom: 20px;
+}
+.obsidian-home .ob-account-empty {
+  color: rgba(224, 236, 255, 0.72);
+  font-size: 15px;
+}
+.obsidian-home .ob-account-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.obsidian-home .ob-account-order {
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 24px 60px -46px rgba(9, 12, 26, 0.5);
+}
+.obsidian-home .ob-account-order-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.obsidian-home .ob-account-order-num {
+  font-weight: 700;
+  color: #14151b;
+}
+.obsidian-home .ob-account-order-date {
+  font-size: 13.5px;
+  color: #6a6d78;
+}
+.obsidian-home .ob-account-order-status {
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ob-violet, #7c5cff);
+}
+.obsidian-home .ob-account-order-items {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #3a3c44;
+}
+.obsidian-home .ob-account-order-total {
+  margin-top: 8px;
+  font-weight: 700;
+  color: #14151b;
+}
+
+/* ==========================================================================
+   CART & CHECKOUT — dark Obsidian re-theme (glassmorphism)
+   Reusable classes applied to the middle sections of /cart, /checkout and
+   /checkout/confirmation so they blend with the surrounding dark shell.
+   ========================================================================== */
+
+/* Glass panel — cards / summary / form container */
+.obsidian-home .ob-cc-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 24px 70px -34px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+/* Section header strip inside a glass card */
+.obsidian-home .ob-cc-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--theme, #7c5cff) 8%, transparent),
+    transparent
+  );
+}
+.obsidian-home .ob-cc-head-title {
+  font-family: var(--font-bn-heading, serif);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  font-weight: 700;
+  color: #f4f0ff;
+  letter-spacing: 0.01em;
+}
+
+/* Hairline divider between rows */
+.obsidian-home .ob-cc-divide > * + * {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* A single product row — subtle hover lift */
+.obsidian-home .ob-cc-row {
+  transition:
+    background 0.35s var(--ob-ease),
+    transform 0.35s var(--ob-ease);
+}
+.obsidian-home .ob-cc-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Prices / totals / accents */
+.obsidian-home .ob-cc-accent {
+  color: color-mix(in srgb, var(--theme, #7c5cff) 55%, #f4f0ff);
+}
+
+/* Grand total rule + figure */
+.obsidian-home .ob-cc-total-rule {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--theme, #7c5cff) 60%, transparent),
+      transparent
+    )
+    1;
+}
+.obsidian-home .ob-cc-total-figure {
+  font-family: var(--font-bn-heading, serif);
+  font-weight: 800;
+  color: color-mix(in srgb, var(--theme, #7c5cff) 62%, #f4f0ff);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--theme, #7c5cff) 40%, transparent);
+}
+
+/* Quantity stepper */
+.obsidian-home .ob-cc-stepper {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+.obsidian-home .ob-cc-stepper button {
+  min-height: 40px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f4f0ff;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.25s var(--ob-ease), color 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-cc-stepper button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--theme, #7c5cff) 22%, transparent);
+}
+.obsidian-home .ob-cc-stepper button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.obsidian-home .ob-cc-stepper .ob-cc-qty {
+  min-width: 44px;
+  text-align: center;
+  padding: 0 8px;
+  font-family: var(--font-bn-heading, serif);
+  font-weight: 600;
+  color: #fff;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Primary accent CTA (checkout / place order) */
+.obsidian-home .ob-cc-cta {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  border-radius: 14px;
+  font-family: var(--font-bn-body, sans-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--ob-violet, #7c5cff),
+    color-mix(in srgb, var(--theme, #7c5cff) 70%, var(--ob-violet, #7c5cff))
+  );
+  border: 1px solid color-mix(in srgb, var(--ob-violet, #7c5cff) 60%, transparent);
+  box-shadow: 0 14px 40px -14px rgba(124, 92, 255, 0.65);
+  transition: transform 0.3s var(--ob-ease), box-shadow 0.3s var(--ob-ease), opacity 0.3s var(--ob-ease);
+}
+.obsidian-home .ob-cc-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 48px -14px rgba(124, 92, 255, 0.8);
+}
+.obsidian-home .ob-cc-cta:disabled,
+.obsidian-home .ob-cc-cta[aria-disabled='true'] {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* WhatsApp CTA (brand green, dark-safe) */
+.obsidian-home .ob-cc-wa {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 14px;
+  font-family: var(--font-bn-body, sans-serif);
+  font-weight: 600;
+  color: #fff;
+  background: #25d366;
+  transition: background 0.25s var(--ob-ease), transform 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-cc-wa:hover {
+  background: #20bd5a;
+  transform: translateY(-1px);
+}
+
+/* Trust chips */
+.obsidian-home .ob-cc-chip {
+  font-size: 12px;
+  color: rgba(244, 240, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+/* Warning / error notices (dark-safe) */
+.obsidian-home .ob-cc-warn {
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+  border-radius: 14px;
+}
+.obsidian-home .ob-cc-error {
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  border-radius: 14px;
+}
+
+/* Form inputs */
+.obsidian-home .ob-cc-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-family: var(--font-bn-body, sans-serif);
+  font-size: 1rem;
+  color: #f4f0ff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: border-color 0.25s var(--ob-ease), box-shadow 0.25s var(--ob-ease), background 0.25s var(--ob-ease);
+}
+.obsidian-home textarea.ob-cc-input {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  line-height: 1.5;
+}
+.obsidian-home .ob-cc-input::placeholder {
+  color: rgba(244, 240, 255, 0.38);
+}
+.obsidian-home .ob-cc-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: color-mix(in srgb, var(--theme, #7c5cff) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme, #7c5cff) 22%, transparent);
+}
+.obsidian-home .ob-cc-input--error {
+  border-color: rgba(248, 113, 113, 0.6);
+}
+.obsidian-home .ob-cc-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+}
+
+/* Payment option cards */
+.obsidian-home .ob-cc-pay {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 16px;
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.25s var(--ob-ease), background 0.25s var(--ob-ease), transform 0.25s var(--ob-ease);
+}
+.obsidian-home .ob-cc-pay:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+.obsidian-home .ob-cc-pay.is-active {
+  border-color: color-mix(in srgb, var(--theme, #7c5cff) 70%, transparent);
+  background: color-mix(in srgb, var(--theme, #7c5cff) 12%, rgba(255, 255, 255, 0.03));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme, #7c5cff) 45%, transparent) inset;
+}
+
+/* Success glow ring (confirmation) */
+.obsidian-home .ob-cc-success {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  width: 88px;
+  border-radius: 999px;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.08), 0 0 40px rgba(34, 197, 94, 0.35);
+}
+
+/* Empty-cart glow icon */
+.obsidian-home .ob-cart-empty {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.obsidian-home .ob-cart-empty-icon {
+  color: color-mix(in srgb, var(--theme, #7c5cff) 55%, #cfc7ff);
+  filter: drop-shadow(0 0 24px color-mix(in srgb, var(--theme, #7c5cff) 45%, transparent));
+}
+
+/* Mobile sticky checkout bar */
+.obsidian-home .ob-cc-mobilebar {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 12, 20, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================================
+   MURDA MOSHARI — SOLEMN OBSIDIAN RESKIN
+   The "smart murda moshari" (burial screen) is an emotional, funerary product.
+   Its landing page keeps its full section structure + conversion flow, but the
+   warm cream/charcoal palette is remapped — via scoped CSS-variable overrides —
+   to a deep, mournful obsidian night lit by a single warm candle-gold accent.
+   The goal is dignified grief, not the vivid neon of the homepage.
+   All Tailwind utilities (bg-cream, text-charcoal, bg-emerald, border-…) read
+   these variables, so one scope recolours the entire page with no churn.
+   ========================================================================== */
+.murda-solemn {
+  /* page + panel fields → obsidian night with a faint cool-blue undertone */
+  --warm-white: #07060c;
+  --color-warm-white: #07060c;
+  --color-cream: #100e1b;
+  --color-secondary: #100e1b;
+  --secondary: #100e1b;
+  /* ink → soft moonlight, so heading/body text reads on the dark field */
+  --color-charcoal: #e9e6f2;
+  --text-dark: #e9e6f2;
+  --primary: #e9e6f2;
+  --color-primary: #e9e6f2;
+  /* candle-gold accent (mustard) + a bronze CTA (emerald) — the only warmth */
+  --color-mustard: #d0a95f;
+  --color-emerald: #b98a3f;
+  /* muted secondary text + warm hover accent */
+  --text-light: #a9a3c0;
+  --color-text-light: #a9a3c0;
+  --accent: #d0a95f;
+  --color-accent: #d0a95f;
+  /* hairline borders become faint light-on-dark */
+  --border-subtle: rgba(233, 230, 242, 0.12);
+  --color-border-subtle: rgba(233, 230, 242, 0.12);
+
+  position: relative;
+  background-color: #07060c;
+  color: #e9e6f2;
+  isolation: isolate;
+}
+
+/* Literal light utilities the token swap can't reach — neutralise to panels. */
+.murda-solemn .bg-white {
+  background-color: #0b0912;
+}
+.murda-solemn .from-white {
+  --tw-gradient-from: #0b0912 var(--tw-gradient-from-position);
+}
+.murda-solemn .to-white {
+  --tw-gradient-to: #0b0912 var(--tw-gradient-to-position);
+}
+
+/* Solemn atmosphere — a fixed vignette that darkens the edges and lets a single
+   warm candle-glow bleed from the top, like light over a shrouded body. */
+.murda-solemn::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      70% 42% at 50% -6%,
+      rgba(208, 169, 95, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(120% 100% at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.55) 100%);
+  mix-blend-mode: screen;
+}
+/* Faint film grain for a mournful, analogue texture. */
+.murda-solemn::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Keep real content above the atmosphere layers. */
+.murda-solemn > * {
+  position: relative;
+  z-index: 1;
+}
+/* Panels/cards need a hair of separation from the near-black field. */
+.murda-solemn .rounded-2xl,
+.murda-solemn .rounded-xl {
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .murda-solemn::after {
+    display: none;
   }
 }

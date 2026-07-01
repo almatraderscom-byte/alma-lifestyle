@@ -11,6 +11,7 @@ export default function DeliveryPage() {
   return (
     <PageLayout
       badge="নীতিমালা"
+      heroWord="DELIVERY"
       title="ডেলিভারি নীতিমালা"
       subtitle="দ্রুত ও নিরাপদ ডেলিভারি — পুরো বাংলাদেশে"
       lastUpdated="১ জুন, ২০২৬"

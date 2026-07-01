@@ -4,7 +4,7 @@ export function AlmaSkeletonMark({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-8 w-8 items-center justify-center rounded-full bg-mustard/20 text-xs font-semibold text-mustard animate-pulse',
+        'flex h-8 w-8 items-center justify-center rounded-full bg-[#7c5cff]/20 text-xs font-semibold text-[#9a7dff] animate-pulse',
         className
       )}
       aria-hidden
@@ -24,7 +24,7 @@ export function SkeletonBlock({
   return (
     <div
       className={cn(
-        'rounded-sm bg-[#ebe3d6]',
+        'rounded-sm bg-[#1b1826] animate-pulse',
         shimmer && 'skeleton-shimmer',
         className
       )}

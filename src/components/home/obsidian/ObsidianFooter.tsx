@@ -39,21 +39,23 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ];
 
-/** Per-letter floating + cursor ripple on the giant wordmark (ported from demo). */
+/** Giant wordmark: constant per-letter 3D float + cursor-reactive refraction
+ *  glow (cyan/orange chromatic split). Ported from the demo — always animating,
+ *  so the wordmark never reads as flat text. */
 function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const word = wordRef.current;
     if (!word) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const letters = Array.from(word.querySelectorAll<HTMLElement>('.fw-l'));
+    const letters = Array.from(word.querySelectorAll<HTMLElement>(".fw-l"));
     if (!letters.length) return;
 
     const st = letters.map(() => ({ z: 0, rx: 0, ry: 0, y: 0, g: 0 }));
     let mX = 0;
     let mY = 0;
     let mIn = false;
-    const R = 200;
+    const R = 220;
     let raf = 0;
 
     const onMove = (e: PointerEvent) => {
@@ -64,16 +66,19 @@ function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
     const onLeave = () => {
       mIn = false;
     };
-    word.addEventListener('pointermove', onMove);
-    word.addEventListener('pointerleave', onLeave);
+    word.addEventListener("pointermove", onMove);
+    word.addEventListener("pointerleave", onLeave);
 
     const loop = () => {
       const t = performance.now() / 1000;
       for (let i = 0; i < letters.length; i++) {
         const ph = i * 0.42;
-        const iy = Math.sin(t * 1.05 + ph) * 8;
-        const irx = Math.sin(t * 0.85 + ph) * 6;
-        const irz = Math.sin(t * 0.6 + ph) * 1.8;
+        // Idle float — a touch more pronounced so the row visibly waves + tilts
+        // in 3D even when the pointer is nowhere near it.
+        const iy = Math.sin(t * 1.05 + ph) * 12;
+        const irx = Math.sin(t * 0.85 + ph) * 9;
+        const iry = Math.sin(t * 0.5 + ph) * 5;
+        const irz = Math.sin(t * 0.6 + ph) * 2.4;
         let tz = 0;
         let trx = 0;
         let tryv = 0;
@@ -86,10 +91,10 @@ function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
           const dy = mY - (r.top + r.height / 2);
           let inf = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / R);
           inf *= inf;
-          tz = inf * 95;
-          tryv = -(dx / R) * inf * 36;
-          trx = (dy / R) * inf * 30;
-          ty = -inf * 10;
+          tz = inf * 120;
+          tryv = -(dx / R) * inf * 40;
+          trx = (dy / R) * inf * 32;
+          ty = -inf * 14;
           tg = Math.max(0, 1 - Math.abs(dx) / (R * 1.15));
           tg *= tg;
         }
@@ -99,24 +104,16 @@ function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
         s.ry += (tryv - s.ry) * 0.12;
         s.y += (ty - s.y) * 0.12;
         s.g += (tg - s.g) * 0.14;
-        letters[i].style.transform = `translateY(${(iy + s.y).toFixed(2)}px) translateZ(${s.z.toFixed(
-          2
-        )}px) rotateX(${(irx + s.rx).toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${irz.toFixed(
-          2
-        )}deg)`;
+        letters[i].style.transform =
+          `translateY(${(iy + s.y).toFixed(2)}px) translateZ(${s.z.toFixed(2)}px) rotateX(${(irx + s.rx).toFixed(2)}deg) rotateY(${(iry + s.ry).toFixed(2)}deg) rotateZ(${irz.toFixed(2)}deg)`;
         if (s.g > 0.01) {
           const g = s.g;
           letters[i].style.filter = `brightness(${(1 + g * 0.55).toFixed(3)})`;
-          letters[i].style.textShadow = `${(g * 3).toFixed(1)}px 0 ${(g * 4).toFixed(
-            1
-          )}px rgba(255,120,90,${(g * 0.5).toFixed(2)}),${(-g * 3).toFixed(1)}px 0 ${(g * 4).toFixed(
-            1
-          )}px rgba(90,150,255,${(g * 0.5).toFixed(2)}),0 0 ${(g * 22).toFixed(1)}px rgba(255,255,255,${(
-            g * 0.65
-          ).toFixed(2)})`;
+          letters[i].style.textShadow =
+            `${(g * 3).toFixed(1)}px 0 ${(g * 4).toFixed(1)}px rgba(255,120,90,${(g * 0.5).toFixed(2)}),${(-g * 3).toFixed(1)}px 0 ${(g * 4).toFixed(1)}px rgba(90,150,255,${(g * 0.5).toFixed(2)}),0 0 ${(g * 22).toFixed(1)}px rgba(255,255,255,${(g * 0.65).toFixed(2)})`;
         } else if (letters[i].style.filter) {
-          letters[i].style.filter = '';
-          letters[i].style.textShadow = '';
+          letters[i].style.filter = "";
+          letters[i].style.textShadow = "";
         }
       }
       raf = requestAnimationFrame(loop);
@@ -125,8 +122,8 @@ function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
 
     return () => {
       cancelAnimationFrame(raf);
-      word.removeEventListener('pointermove', onMove);
-      word.removeEventListener('pointerleave', onLeave);
+      word.removeEventListener("pointermove", onMove);
+      word.removeEventListener("pointerleave", onLeave);
     };
   }, [wordRef]);
 }
