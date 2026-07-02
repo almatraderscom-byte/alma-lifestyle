@@ -234,7 +234,13 @@ export function AssistantWidget() {
           body: JSON.stringify({ messages: chatTurns, context: liveContext() }),
         });
         if (!res.ok || !res.body) {
-          fail();
+          if (res.status === 429) {
+            patchLast({
+              text: 'এই মুহূর্তে একটু ভিড় চলছে! 🙏 এক-দুই মিনিট পরে আবার লিখুন, আমি এখানেই আছি।',
+            });
+          } else {
+            fail();
+          }
           return;
         }
 

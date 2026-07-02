@@ -119,6 +119,11 @@ export async function POST(request: NextRequest) {
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => '');
     console.error('[assistant] Gemini error', upstream.status, detail.slice(0, 300));
+    // Surface quota exhaustion distinctly so the widget can say "busy, try
+    // again shortly" instead of pointing every hiccup at WhatsApp.
+    if (upstream.status === 429) {
+      return apiError('Assistant is busy', 429, 'GEMINI_QUOTA');
+    }
     return apiError('Assistant is temporarily unavailable', 502, 'GEMINI_ERROR');
   }
 
