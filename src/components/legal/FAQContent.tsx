@@ -110,6 +110,7 @@ const faqCategories = [
 export function FAQContent() {
   return (
     <PageLayout
+      slug="faq"
       badge="সাহায্য"
       heroWord="FAQ"
       title="সাধারণ প্রশ্নাবলী (FAQ)"

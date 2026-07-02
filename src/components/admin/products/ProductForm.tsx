@@ -352,7 +352,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
             {CREATION_MODE_OPTIONS.map((opt) => (
               <label
                 key={opt.value}
-                className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-4 cursor-pointer has-[:checked]:border-[#C97D5D] has-[:checked]:ring-1 has-[:checked]:ring-[#C97D5D]"
+                className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-4 cursor-pointer has-[:checked]:border-[var(--ob-violet)] has-[:checked]:ring-1 has-[:checked]:ring-[var(--ob-violet)]"
               >
                 <span className="flex items-center gap-2">
                   <input
@@ -372,7 +372,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
           </p>
           <button
             type="button"
-            className="text-sm text-[#C97D5D] hover:underline"
+            className="text-sm text-[var(--ob-violet)] hover:underline"
             onClick={() => setCreationMode('single')}
           >
             Switch to single product form →
@@ -676,7 +676,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
         <Card
           title="SEO"
           action={
-            <button type="button" className="text-sm text-[#C97D5D]" onClick={() => setSeoOpen(!seoOpen)}>
+            <button type="button" className="text-sm text-[var(--ob-violet)]" onClick={() => setSeoOpen(!seoOpen)}>
               {seoOpen ? 'Collapse' : 'Expand'}
             </button>
           }
@@ -748,7 +748,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
               ...categories.map((c) => ({ value: c.id, label: c.name })),
             ]}
           />
-          <Link href="/admin/products/categories" className="text-sm text-[#C97D5D] mt-2 inline-block">
+          <Link href="/admin/products/categories" className="text-sm text-[var(--ob-violet)] mt-2 inline-block">
             + Add new category
           </Link>
         </Card>

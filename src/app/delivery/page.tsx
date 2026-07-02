@@ -1,15 +1,37 @@
 import type { Metadata } from 'next';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { getFreeDeliveryThreshold, getZoneCharges } from '@/lib/delivery-settings';
+import { toBanglaNumber } from '@/lib/format-bn';
 
-export const metadata: Metadata = {
-  title: 'ডেলিভারি নীতিমালা | ALMA Lifestyle',
-  description: 'ALMA Lifestyle এর ডেলিভারি সময়, চার্জ এবং policy সম্পর্কে বিস্তারিত জানুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'delivery', {
+    title: 'ডেলিভারি নীতিমালা | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle এর ডেলিভারি সময়, চার্জ এবং policy সম্পর্কে বিস্তারিত জানুন।',
+  });
+}
 
-export default function DeliveryPage() {
+function formatLocalPhone(raw: string): string {
+  const digits = (raw || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.startsWith('880') ? `0${digits.slice(3)}` : digits;
+}
+
+export default async function DeliveryPage() {
+  const settings = await loadPublicSettingsServer();
+  const zones = getZoneCharges(settings);
+  const dhakaCharge = `৳${toBanglaNumber(zones.dhaka_city)}`;
+  const outsideCharge = `৳${toBanglaNumber(zones.outside_dhaka)}`;
+  const freeThreshold = `৳${toBanglaNumber(getFreeDeliveryThreshold(settings))}`;
+  const phone = formatLocalPhone(settings.contactPhone);
+
   return (
     <PageLayout
+      slug="delivery"
       badge="নীতিমালা"
       heroWord="DELIVERY"
       title="ডেলিভারি নীতিমালা"
@@ -30,7 +52,7 @@ export default function DeliveryPage() {
           <strong>সময়:</strong> ১-২ কার্যদিবস
         </li>
         <li>
-          <strong>ডেলিভারি চার্জ:</strong> ৳৮০
+          <strong>ডেলিভারি চার্জ:</strong> {dhakaCharge}
         </li>
         <li>
           <strong>সার্ভিস:</strong> Home delivery বা office delivery
@@ -43,7 +65,7 @@ export default function DeliveryPage() {
           <strong>সময়:</strong> ৩-৫ কার্যদিবস
         </li>
         <li>
-          <strong>ডেলিভারি চার্জ:</strong> ৳১২০
+          <strong>ডেলিভারি চার্জ:</strong> {outsideCharge}
         </li>
         <li>
           <strong>সার্ভিস:</strong> কুরিয়ার (Sundarban, Steadfast, RedX)
@@ -52,7 +74,7 @@ export default function DeliveryPage() {
 
       <h3>ফ্রি ডেলিভারি</h3>
       <p>
-        <strong>৳২,০০০+</strong> অর্ডারে <strong>ফ্রি ডেলিভারি</strong> — সারা বাংলাদেশে।
+        <strong>{freeThreshold}+</strong> অর্ডারে <strong>ফ্রি ডেলিভারি</strong> — সারা বাংলাদেশে।
       </p>
 
       <h2>ডেলিভারি প্রক্রিয়া</h2>
@@ -88,12 +110,12 @@ export default function DeliveryPage() {
           <tr>
             <td>ঢাকা সিটি</td>
             <td>১-২ দিন</td>
-            <td>৳৮০</td>
+            <td>{dhakaCharge}</td>
           </tr>
           <tr>
             <td>ঢাকার বাইরে (সব জেলা)</td>
             <td>৩-৫ দিন</td>
-            <td>৳১২০</td>
+            <td>{outsideCharge}</td>
           </tr>
         </tbody>
       </table>
@@ -122,9 +144,9 @@ export default function DeliveryPage() {
       <h2>ডেলিভারি সংক্রান্ত সমস্যা?</h2>
       <p>ডেলিভারিতে দেরি, ভুল পণ্য, বা অন্য কোনো সমস্যা হলে অনুগ্রহ করে দ্রুত আমাদের জানান:</p>
       <ul>
-        <li>ফোন: 01307-777733</li>
-        <li>WhatsApp: 01307-777733</li>
-        <li>Email: admin@almatraders.com</li>
+        <li>ফোন: {phone}</li>
+        <li>WhatsApp: {phone}</li>
+        <li>Email: {settings.contactEmail}</li>
       </ul>
 
       <h2>গুরুত্বপূর্ণ তথ্য</h2>

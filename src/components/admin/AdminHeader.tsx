@@ -59,7 +59,7 @@ export function AdminHeader({ breadcrumbs, onMenuClick }: AdminHeaderProps) {
           aria-label="Notifications"
         >
           <BellIcon />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#C97D5D]" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--ob-violet)]" />
         </button>
 
         <div className="relative" ref={ref}>
@@ -68,13 +68,13 @@ export function AdminHeader({ breadcrumbs, onMenuClick }: AdminHeaderProps) {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className={cn(
               'flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-50',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97D5D]/40'
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ob-violet)]/40'
             )}
             aria-expanded={dropdownOpen}
             aria-haspopup="menu"
             aria-label="Admin account menu"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C97D5D] text-sm font-semibold text-white shrink-0">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--ob-violet)] text-sm font-semibold text-white shrink-0">
               {user?.name?.[0]?.toUpperCase() ?? 'A'}
             </span>
             <span className="hidden sm:block text-sm font-medium text-neutral-800 max-w-[140px] truncate">

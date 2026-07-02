@@ -5,10 +5,13 @@ import Link from 'next/link';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
 import type {
   CategoriesSectionData,
+  ObsidianHomeCopy,
   ReviewsSectionData,
   TrustSectionData,
 } from '@/lib/homepage-config-types';
+import { DEFAULT_OBSIDIAN_COPY } from '@/lib/homepage-config-types';
 import type { CardProduct } from '@/lib/products-data';
+import { useCmsEdit } from '@/components/cms/cms-edit-context';
 import { formatBnText, formatRating } from '@/lib/format-bn';
 import { getDefaultImageForHint, resolveImageUrl } from '@/lib/default-images';
 import { ObsidianHeader } from './ObsidianHeader';
@@ -23,6 +26,13 @@ interface ObsidianHomeProps {
   categories?: CategoriesSectionData;
   reviews?: ReviewsSectionData;
   trust?: TrustSectionData;
+  /** Editable copy for the hard-styled sections (defaults when omitted). */
+  copy?: ObsidianHomeCopy;
+  /** Dot-paths into the live HomepageConfig for the visual editor. When set,
+   *  the matching section's fields are tagged `data-cms-field`. */
+  categoriesPath?: string;
+  reviewsPath?: string;
+  trustPath?: string;
 }
 
 /* ---- scroll-driven day->night sky (4-stop hyperlapse from demo) ---- */
@@ -93,9 +103,15 @@ function useScrollSky(rootRef: React.RefObject<HTMLDivElement | null>) {
 function Spotlight({
   product,
   categories,
+  categoriesPath,
+  editing,
+  copy,
 }: {
   product: ObsidianCard | null;
   categories?: CategoriesSectionData;
+  categoriesPath?: string;
+  editing?: boolean;
+  copy: ObsidianHomeCopy['spotlight'];
 }) {
   if (!product) return null;
   const img = (imageUrl: string, hint: string) =>
@@ -109,8 +125,20 @@ function Spotlight({
         {categories && (
           <div className="spot-cats" id="categories">
             <div className="ocs-head" data-ob-reveal>
-              <span className="ob-tag dark">{categories.label}</span>
-              <h3 className="ocs-title bn-serif">{categories.title}</h3>
+              <span
+                className="ob-tag dark"
+                data-cms-field={categoriesPath ? `${categoriesPath}.label` : undefined}
+                data-cms-label="Category section label"
+              >
+                {categories.label}
+              </span>
+              <h3
+                className="ocs-title bn-serif"
+                data-cms-field={categoriesPath ? `${categoriesPath}.title` : undefined}
+                data-cms-label="Category section title"
+              >
+                {categories.title}
+              </h3>
             </div>
             <div className="ocs-grid">
               <Link href={categories.featured.href} className="ocs-card feat">
@@ -118,25 +146,52 @@ function Spotlight({
                 <img
                   src={img(categories.featured.imageUrl, categories.featured.imageHint)}
                   alt={categories.featured.displayName}
+                  data-cms-field={categoriesPath ? `${categoriesPath}.featured.imageUrl` : undefined}
+                  data-cms-type={categoriesPath ? 'image' : undefined}
+                  data-cms-label="Featured category image"
                 />
                 <div className="ocs-veil" />
                 <div className="ocs-body">
-                  <h4 className="bn-serif">{categories.featured.displayName}</h4>
-                  {categories.featured.subtitle && (
-                    <p className="bn">{formatBnText(categories.featured.subtitle)}</p>
+                  <h4
+                    className="bn-serif"
+                    data-cms-field={categoriesPath ? `${categoriesPath}.featured.displayName` : undefined}
+                    data-cms-label="Featured category name"
+                  >
+                    {categories.featured.displayName}
+                  </h4>
+                  {(categories.featured.subtitle || editing) && (
+                    <p
+                      className="bn"
+                      data-cms-field={categoriesPath ? `${categoriesPath}.featured.subtitle` : undefined}
+                      data-cms-label="Featured category subtitle"
+                    >
+                      {formatBnText(categories.featured.subtitle)}
+                    </p>
                   )}
-                  <span className="ocs-go bn">দেখুন →</span>
+                  <span className="ocs-go bn">{copy.categoryGo}</span>
                 </div>
               </Link>
               <div className="ocs-stack">
                 {categories.stacked.map((cat, i) => (
                   <Link key={`${cat.categorySlug}-${i}`} href={cat.href} className="ocs-card">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img(cat.imageUrl, cat.imageHint)} alt={cat.displayName} />
+                    <img
+                      src={img(cat.imageUrl, cat.imageHint)}
+                      alt={cat.displayName}
+                      data-cms-field={categoriesPath ? `${categoriesPath}.stacked.${i}.imageUrl` : undefined}
+                      data-cms-type={categoriesPath ? 'image' : undefined}
+                      data-cms-label={`Category ${i + 1} image`}
+                    />
                     <div className="ocs-veil" />
                     <div className="ocs-body">
-                      <h4 className="bn-serif">{cat.displayName}</h4>
-                      <span className="ocs-go bn">দেখুন →</span>
+                      <h4
+                        className="bn-serif"
+                        data-cms-field={categoriesPath ? `${categoriesPath}.stacked.${i}.displayName` : undefined}
+                        data-cms-label={`Category ${i + 1} name`}
+                      >
+                        {cat.displayName}
+                      </h4>
+                      <span className="ocs-go bn">{copy.categoryGo}</span>
                     </div>
                   </Link>
                 ))}
@@ -150,24 +205,46 @@ function Spotlight({
             {/* Two-part unified tag (reference SPOTLIGHT badge): existing
                 "ALMA SPOTLIGHT" string split into a solid-black + white half. */}
             <span className="spot-badge">
-              <span className="sb-dark">ALMA</span>
-              <span className="sb-light">SPOTLIGHT</span>
+              <span className="sb-dark" data-cms-field="obsidianCopy.spotlight.badgeDark" data-cms-label="Spotlight badge (dark)">
+                {copy.badgeDark}
+              </span>
+              <span className="sb-light" data-cms-field="obsidianCopy.spotlight.badgeLight" data-cms-label="Spotlight badge (light)">
+                {copy.badgeLight}
+              </span>
             </span>
             <h2 className="spot-title">
-              CRAFTED FOR
+              <span data-cms-field="obsidianCopy.spotlight.titleLine1" data-cms-label="Spotlight title line 1">
+                {copy.titleLine1}
+              </span>
               <br />
-              EVERY OCCASION
+              <span data-cms-field="obsidianCopy.spotlight.titleLine2" data-cms-label="Spotlight title line 2">
+                {copy.titleLine2}
+              </span>
             </h2>
             <div className="spot-body">
-              <p className="bn">প্রিমিয়াম কাপড়, নিখুঁত সেলাই — প্রতিটি পাঞ্জাবিতে আলমার স্বাক্ষর।</p>
-              <p>Handpicked fabrics, tailored to perfection — delivered across Bangladesh.</p>
+              <p className="bn" data-cms-field="obsidianCopy.spotlight.bodyBn" data-cms-label="Spotlight body (Bangla)">
+                {copy.bodyBn}
+              </p>
+              <p data-cms-field="obsidianCopy.spotlight.bodyEn" data-cms-label="Spotlight body (English)">
+                {copy.bodyEn}
+              </p>
             </div>
             <div className="spot-cta">
-              <Link href="/products?category=panjabi" className="ob-btn dark solid">
-                Shop Panjabi
+              <Link
+                href={copy.ctaPrimaryHref}
+                className="ob-btn dark solid"
+                data-cms-field="obsidianCopy.spotlight.ctaPrimary"
+                data-cms-label="Spotlight primary button"
+              >
+                {copy.ctaPrimary}
               </Link>
-              <Link href="/products" className="ob-btn dark">
-                View Collection
+              <Link
+                href={copy.ctaSecondaryHref}
+                className="ob-btn dark"
+                data-cms-field="obsidianCopy.spotlight.ctaSecondary"
+                data-cms-label="Spotlight secondary button"
+              >
+                {copy.ctaSecondary}
               </Link>
             </div>
           </div>
@@ -182,10 +259,12 @@ function Spotlight({
               <Link
                 href={product.href}
                 className="spot-what-btn"
-                data-text="এটা কী?"
-                aria-label="এটা কী?"
+                data-text={copy.whatButton}
+                aria-label={copy.whatButton}
+                data-cms-field="obsidianCopy.spotlight.whatButton"
+                data-cms-label="Spotlight 'What's this' button"
               >
-                এটা কী?
+                {copy.whatButton}
               </Link>
             </div>
           </div>
@@ -197,16 +276,30 @@ function Spotlight({
 
 const PC_MODS = ['tall feat glow-violet', '', '', '', '', 'wide glow-gold', '', ''];
 
-function ProductsGrid({ products }: { products: ObsidianCard[] }) {
+function ProductsGrid({
+  products,
+  copy,
+}: {
+  products: ObsidianCard[];
+  copy: ObsidianHomeCopy['products'];
+}) {
   return (
     <section className="products" id="products">
       <div className="container">
         <div className="products-head" data-ob-reveal>
           <h3>
-            <span className="dot" /> ALMA COLLECTION
+            <span className="dot" />{' '}
+            <span data-cms-field="obsidianCopy.products.heading" data-cms-label="Products heading">
+              {copy.heading}
+            </span>
           </h3>
-          <Link href="/products" className="see-all bn">
-            সব পণ্য দেখুন ▶
+          <Link
+            href={copy.viewAllHref}
+            className="see-all bn"
+            data-cms-field="obsidianCopy.products.viewAll"
+            data-cms-label="Products 'view all' link"
+          >
+            {copy.viewAll}
           </Link>
         </div>
         <div className="pgrid">
@@ -228,7 +321,13 @@ function ProductsGrid({ products }: { products: ObsidianCard[] }) {
   );
 }
 
-function ShineBand({ products }: { products: ObsidianCard[] }) {
+function ShineBand({
+  products,
+  copy,
+}: {
+  products: ObsidianCard[];
+  copy: ObsidianHomeCopy['shine'];
+}) {
   const track = [...products, ...products];
   return (
     <div className="shine">
@@ -238,11 +337,17 @@ function ShineBand({ products }: { products: ObsidianCard[] }) {
           <span />
           <span />
         </div>
-        <span className="ob-tag dark">ALMA COLLECTION</span>
+        <span className="ob-tag dark" data-cms-field="obsidianCopy.shine.tag" data-cms-label="Shine band tag">
+          {copy.tag}
+        </span>
         <h3 className="shine-title" data-ob-reveal>
-          যে পাঞ্জাবিতে আপনি
+          <span data-cms-field="obsidianCopy.shine.titleLine1" data-cms-label="Shine title line 1">
+            {copy.titleLine1}
+          </span>
           <br />
-          নিজেই মুগ্ধ হবেন
+          <span data-cms-field="obsidianCopy.shine.titleLine2" data-cms-label="Shine title line 2">
+            {copy.titleLine2}
+          </span>
         </h3>
       </div>
       <div className="shine-row">
@@ -265,26 +370,75 @@ function ShineBand({ products }: { products: ObsidianCard[] }) {
   );
 }
 
-function Reviews({ data }: { data?: ReviewsSectionData }) {
+function Reviews({
+  data,
+  basePath,
+  editing,
+}: {
+  data?: ReviewsSectionData;
+  basePath?: string;
+  editing?: boolean;
+}) {
   if (!data || data.items.length === 0) return null;
   return (
     <section className="ob-reviews" id="reviews">
       <div className="container">
         <div className="obr-head" data-ob-reveal>
-          <h3 className="bn-serif">{data.title}</h3>
-          {data.verifiedLabel && <span className="obr-verified bn">✔ {data.verifiedLabel}</span>}
+          <h3
+            className="bn-serif"
+            data-cms-field={basePath ? `${basePath}.title` : undefined}
+            data-cms-label="Reviews heading"
+          >
+            {data.title}
+          </h3>
+          {(data.verifiedLabel || editing) && (
+            <span
+              className="obr-verified bn"
+              data-cms-field={basePath ? `${basePath}.verifiedLabel` : undefined}
+              data-cms-label="Reviews verified label"
+            >
+              ✔ {data.verifiedLabel}
+            </span>
+          )}
         </div>
         <div className="obr-grid">
-          {data.items.slice(0, 6).map((r) => (
+          {data.items.slice(0, 6).map((r, i) => (
             <figure className="obr-card" key={r.id}>
               <div className="obr-stars" aria-label={`${r.rating} / 5`}>
                 {'★'.repeat(Math.round(r.rating))}
-                <span className="obr-rate">{formatRating(r.rating)}</span>
+                <span
+                  className="obr-rate"
+                  data-cms-field={basePath ? `${basePath}.items.${i}.rating` : undefined}
+                  data-cms-type={basePath ? 'number' : undefined}
+                  data-cms-label={`Review ${i + 1} rating (1–5)`}
+                >
+                  {formatRating(r.rating)}
+                </span>
               </div>
-              <blockquote className="obr-text bn">{formatBnText(r.text)}</blockquote>
+              <blockquote
+                className="obr-text bn"
+                data-cms-field={basePath ? `${basePath}.items.${i}.text` : undefined}
+                data-cms-label={`Review ${i + 1} text`}
+              >
+                {formatBnText(r.text)}
+              </blockquote>
               <figcaption className="obr-meta">
-                <span className="obr-name bn">{r.name}</span>
-                {r.city && <span className="obr-city bn">{r.city}</span>}
+                <span
+                  className="obr-name bn"
+                  data-cms-field={basePath ? `${basePath}.items.${i}.name` : undefined}
+                  data-cms-label={`Review ${i + 1} customer name`}
+                >
+                  {r.name}
+                </span>
+                {(r.city || editing) && (
+                  <span
+                    className="obr-city bn"
+                    data-cms-field={basePath ? `${basePath}.items.${i}.city` : undefined}
+                    data-cms-label={`Review ${i + 1} city`}
+                  >
+                    {r.city}
+                  </span>
+                )}
               </figcaption>
             </figure>
           ))}
@@ -350,7 +504,7 @@ function ObTrustGlyph({ index }: { index: number }) {
   );
 }
 
-function TrustBadges({ data }: { data?: TrustSectionData }) {
+function TrustBadges({ data, basePath }: { data?: TrustSectionData; basePath?: string }) {
   if (!data || data.items.length === 0) return null;
   return (
     <section className="ob-trust" id="trust">
@@ -361,8 +515,20 @@ function TrustBadges({ data }: { data?: TrustSectionData }) {
               <span className="obt-icon" aria-hidden>
                 <ObTrustGlyph index={i} />
               </span>
-              <h4 className="obt-title bn-serif">{item.title}</h4>
-              <p className="obt-text bn">{formatBnText(item.text)}</p>
+              <h4
+                className="obt-title bn-serif"
+                data-cms-field={basePath ? `${basePath}.items.${i}.title` : undefined}
+                data-cms-label={`Trust badge ${i + 1} title`}
+              >
+                {item.title}
+              </h4>
+              <p
+                className="obt-text bn"
+                data-cms-field={basePath ? `${basePath}.items.${i}.text` : undefined}
+                data-cms-label={`Trust badge ${i + 1} text`}
+              >
+                {formatBnText(item.text)}
+              </p>
             </div>
           ))}
         </div>
@@ -371,16 +537,20 @@ function TrustBadges({ data }: { data?: TrustSectionData }) {
   );
 }
 
-const CATS = ['পাঞ্জাবি', 'ইসলামিক', 'এক্সেসরিজ', 'ইলেকট্রনিক্স', 'হোম ও ডেকর', 'ফ্যামিলি সেট'];
-
-function CatsMarquee() {
-  const items = [...CATS, ...CATS];
+function CatsMarquee({ copy }: { copy: ObsidianHomeCopy['cats'] }) {
+  const base = copy.items;
+  const items = [...base, ...base];
   return (
     <div className="cats" id="cats">
       <div className="cats-row">
         <div className="cats-track">
           {items.map((c, i) => (
-            <span className="ci" key={`${c}-${i}`}>
+            <span
+              className="ci"
+              key={`${c}-${i}`}
+              data-cms-field={`obsidianCopy.cats.items.${i % base.length}`}
+              data-cms-label="Category marquee item"
+            >
               {c}
               <span className="csep" aria-hidden />
             </span>
@@ -388,8 +558,13 @@ function CatsMarquee() {
         </div>
       </div>
       <div className="cats-cta">
-        <Link href="/products" className="ob-btn dark solid">
-          সব পণ্য দেখুন
+        <Link
+          href={copy.ctaHref}
+          className="ob-btn dark solid"
+          data-cms-field="obsidianCopy.cats.cta"
+          data-cms-label="Category marquee button"
+        >
+          {copy.cta}
         </Link>
       </div>
     </div>
@@ -398,9 +573,21 @@ function CatsMarquee() {
 
 /* --------------------------------- root --------------------------------- */
 
-export function ObsidianHome({ products, hero, categories, reviews, trust }: ObsidianHomeProps) {
+export function ObsidianHome({
+  products,
+  hero,
+  categories,
+  reviews,
+  trust,
+  copy = DEFAULT_OBSIDIAN_COPY,
+  categoriesPath,
+  reviewsPath,
+  trustPath,
+}: ObsidianHomeProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   useScrollSky(rootRef);
+  const cms = useCmsEdit();
+  const editing = cms?.editing ?? false;
 
   const { cards, heroPool, spotlight, grid, shine, strip } = buildObsidianSlots(products);
 
@@ -439,12 +626,18 @@ export function ObsidianHome({ products, hero, categories, reviews, trust }: Obs
       <ObsidianHeader navImageSets={navImageSets} />
       <main id="top">
         <ObsidianHero hero={hero} products={heroPool} />
-        <Spotlight product={spotlight} categories={categories} />
-        <ProductsGrid products={grid} />
-        <ShineBand products={shine} />
-        <Reviews data={reviews} />
-        <TrustBadges data={trust} />
-        <CatsMarquee />
+        <Spotlight
+          product={spotlight}
+          categories={categories}
+          categoriesPath={categoriesPath}
+          editing={editing}
+          copy={copy.spotlight}
+        />
+        <ProductsGrid products={grid} copy={copy.products} />
+        <ShineBand products={shine} copy={copy.shine} />
+        <Reviews data={reviews} basePath={reviewsPath} editing={editing} />
+        <TrustBadges data={trust} basePath={trustPath} />
+        <CatsMarquee copy={copy.cats} />
       </main>
       <ObsidianFooter stripImages={strip} />
     </div>

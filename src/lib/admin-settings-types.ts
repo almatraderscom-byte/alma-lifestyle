@@ -1,3 +1,55 @@
+/** One link inside a footer column or the header nav. */
+export interface NavLinkConfig {
+  label: string;
+  href: string;
+  /** Header-only: renders the floating contact-icon cluster on hover. */
+  social?: boolean;
+}
+
+export interface FooterColumnConfig {
+  title: string;
+  links: NavLinkConfig[];
+}
+
+/** Admin override for a static content/legal page (about, faq, privacy, …).
+ *  Every field is optional: an unset field falls back to the page's built-in
+ *  default, so an empty override changes nothing on the live page. */
+export interface ContentPageConfig {
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  heroWord?: string;
+  lastUpdated?: string;
+  /** Optional raw-HTML body. When set, it replaces the page's built-in prose. */
+  bodyHtml?: string;
+  /** Per-page SEO overrides (fall back to the page's built-in metadata). */
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+}
+
+/** Slugs of the editable content pages, in the order shown in admin. */
+export const CONTENT_PAGE_SLUGS = [
+  'about',
+  'faq',
+  'delivery',
+  'refund',
+  'privacy',
+  'terms',
+  'size-guide',
+] as const;
+export type ContentPageSlug = (typeof CONTENT_PAGE_SLUGS)[number];
+
+export const CONTENT_PAGE_LABELS: Record<ContentPageSlug, string> = {
+  about: 'About (আমাদের সম্পর্কে)',
+  faq: 'FAQ (সচরাচর জিজ্ঞাসা)',
+  delivery: 'Delivery (ডেলিভারি)',
+  refund: 'Refund (রিটার্ন ও রিফান্ড)',
+  privacy: 'Privacy (প্রাইভেসি)',
+  terms: 'Terms (শর্তাবলী)',
+  'size-guide': 'Size Guide (সাইজ গাইড)',
+};
+
 export interface AppSettings {
   storeName: string;
   tagline: string;
@@ -42,9 +94,56 @@ export interface AppSettings {
   emailFromName: string;
   emailFromAddress: string;
   lowStockThreshold: number;
+  // Footer & navigation chrome (admin-editable)
+  footerTagline: string;
+  footerColumns: FooterColumnConfig[];
+  footerCopyright: string;
+  footerLegalLine: string;
+  headerNav: NavLinkConfig[];
+  /** Per-page overrides for the static content/legal pages, keyed by slug. */
+  contentPages: Record<string, ContentPageConfig>;
   createdAt: string;
   updatedAt: string;
 }
+
+/** Current storefront footer columns — the defaults shown until the owner edits them. */
+export const DEFAULT_FOOTER_COLUMNS: FooterColumnConfig[] = [
+  {
+    title: 'শপ',
+    links: [
+      { label: 'সব পণ্য', href: '/products' },
+      { label: 'পাঞ্জাবি', href: '/products?category=panjabi' },
+      { label: 'ইসলামিক', href: '/products?category=islamic' },
+      { label: 'এক্সেসরিজ', href: '/products?category=accessories' },
+    ],
+  },
+  {
+    title: 'কোম্পানি',
+    links: [
+      { label: 'আমাদের সম্পর্কে', href: '/about' },
+      { label: 'যোগাযোগ', href: '/contact' },
+      { label: 'ডেলিভারি', href: '/delivery' },
+      { label: 'অর্ডার ট্র্যাক', href: '/track' },
+    ],
+  },
+  {
+    title: 'সাপোর্ট',
+    links: [
+      { label: 'সচরাচর জিজ্ঞাসা', href: '/faq' },
+      { label: 'রিটার্ন ও রিফান্ড', href: '/refund' },
+      { label: 'প্রাইভেসি পলিসি', href: '/privacy' },
+      { label: 'শর্তাবলী', href: '/terms' },
+    ],
+  },
+];
+
+/** Current storefront header nav — defaults until the owner edits them. */
+export const DEFAULT_HEADER_NAV: NavLinkConfig[] = [
+  { label: 'পাঞ্জাবি', href: '/products?category=panjabi' },
+  { label: 'কালেকশন', href: '/products' },
+  { label: 'সব পণ্য', href: '/products' },
+  { label: 'যোগাযোগ', href: '/contact', social: true },
+];
 
 export function getDefaultAppSettings(): AppSettings {
   const now = new Date().toISOString();
@@ -92,6 +191,13 @@ export function getDefaultAppSettings(): AppSettings {
     emailFromName: 'ALMA Lifestyle',
     emailFromAddress: 'orders@alma.com',
     lowStockThreshold: 10,
+    footerTagline:
+      'প্রিমিয়াম পাঞ্জাবি, ইসলামিক এসেনশিয়ালস ও লাইফস্টাইল পণ্য — সেই মুহূর্তগুলোর জন্য যেগুলো সত্যিই গুরুত্বপূর্ণ।',
+    footerColumns: DEFAULT_FOOTER_COLUMNS,
+    footerCopyright: '© 2026 Alma Lifestyle',
+    footerLegalLine: 'Terms of Service · Privacy Notice',
+    headerNav: DEFAULT_HEADER_NAV,
+    contentPages: {},
     createdAt: now,
     updatedAt: now,
   };

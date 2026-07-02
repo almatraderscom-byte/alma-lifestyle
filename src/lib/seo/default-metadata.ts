@@ -21,6 +21,38 @@ const DEFAULT_KEYWORDS = [
   'Islamic Products Dhaka',
 ];
 
+/**
+ * Metadata for a static content/legal page, applying the admin per-page SEO
+ * overrides (AppSettings.contentPages[slug]) on top of the page's built-in
+ * title/description. Unset overrides fall back to the built-ins, so an empty
+ * override changes nothing.
+ */
+export function buildContentPageMetadata(
+  settings: AppSettings,
+  slug: string,
+  fallback: { title: string; description: string }
+): Metadata {
+  const override = settings.contentPages?.[slug];
+  const title = override?.seoTitle?.trim() || fallback.title;
+  const description = override?.seoDescription?.trim() || fallback.description;
+  const keywords = override?.seoKeywords
+    ?.split(',')
+    .map((k) => k.trim())
+    .filter(Boolean);
+
+  // `absolute` so the root layout's `%s | ALMA Lifestyle` title template does
+  // NOT re-append the store name (the built-in titles already carry it, and a
+  // custom SEO title should render verbatim).
+  const metadata: Metadata = {
+    title: { absolute: title },
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
+  };
+  if (keywords && keywords.length > 0) metadata.keywords = keywords;
+  return metadata;
+}
+
 export function buildRootMetadata(
   settings: AppSettings,
   faviconHref: string | null

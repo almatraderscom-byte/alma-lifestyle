@@ -172,7 +172,7 @@ export default function AdminProductsPage() {
               onClick={() => setStatusFilter(s)}
               className={
                 statusFilter === s
-                  ? 'rounded-lg bg-[#C97D5D] text-white px-4 py-2 text-sm font-medium min-h-10'
+                  ? 'rounded-lg bg-[var(--ob-violet)] text-white px-4 py-2 text-sm font-medium min-h-10'
                   : 'rounded-lg border border-neutral-300 px-4 py-2 text-sm min-h-10 hover:bg-neutral-50'
               }
             >

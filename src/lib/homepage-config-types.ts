@@ -227,9 +227,88 @@ export type HomepageSectionConfig = {
   };
 }[HomepageSectionId];
 
+/**
+ * Editable copy for the Obsidian (cinematic) homepage layout. These strings
+ * used to be hard-coded inside `ObsidianHome.tsx`; they now live in the homepage
+ * config so the owner can edit every line from the visual editor.
+ */
+export interface ObsidianSpotlightCopy {
+  badgeDark: string;
+  badgeLight: string;
+  titleLine1: string;
+  titleLine2: string;
+  bodyBn: string;
+  bodyEn: string;
+  ctaPrimary: string;
+  ctaPrimaryHref: string;
+  ctaSecondary: string;
+  ctaSecondaryHref: string;
+  whatButton: string;
+  categoryGo: string;
+}
+
+export interface ObsidianProductsCopy {
+  heading: string;
+  viewAll: string;
+  viewAllHref: string;
+}
+
+export interface ObsidianShineCopy {
+  tag: string;
+  titleLine1: string;
+  titleLine2: string;
+}
+
+export interface ObsidianCatsCopy {
+  items: string[];
+  cta: string;
+  ctaHref: string;
+}
+
+export interface ObsidianHomeCopy {
+  spotlight: ObsidianSpotlightCopy;
+  products: ObsidianProductsCopy;
+  shine: ObsidianShineCopy;
+  cats: ObsidianCatsCopy;
+}
+
+export const DEFAULT_OBSIDIAN_COPY: ObsidianHomeCopy = {
+  spotlight: {
+    badgeDark: 'ALMA',
+    badgeLight: 'SPOTLIGHT',
+    titleLine1: 'CRAFTED FOR',
+    titleLine2: 'EVERY OCCASION',
+    bodyBn: 'প্রিমিয়াম কাপড়, নিখুঁত সেলাই — প্রতিটি পাঞ্জাবিতে আলমার স্বাক্ষর।',
+    bodyEn: 'Handpicked fabrics, tailored to perfection — delivered across Bangladesh.',
+    ctaPrimary: 'Shop Panjabi',
+    ctaPrimaryHref: '/products?category=panjabi',
+    ctaSecondary: 'View Collection',
+    ctaSecondaryHref: '/products',
+    whatButton: 'এটা কী?',
+    categoryGo: 'দেখুন →',
+  },
+  products: {
+    heading: 'ALMA COLLECTION',
+    viewAll: 'সব পণ্য দেখুন ▶',
+    viewAllHref: '/products',
+  },
+  shine: {
+    tag: 'ALMA COLLECTION',
+    titleLine1: 'যে পাঞ্জাবিতে আপনি',
+    titleLine2: 'নিজেই মুগ্ধ হবেন',
+  },
+  cats: {
+    items: ['পাঞ্জাবি', 'ইসলামিক', 'এক্সেসরিজ', 'ইলেকট্রনিক্স', 'হোম ও ডেকর', 'ফ্যামিলি সেট'],
+    cta: 'সব পণ্য দেখুন',
+    ctaHref: '/products',
+  },
+};
+
 export interface HomepageConfig {
   sections: HomepageSectionConfig[];
   extras?: HomepageExtras;
+  /** Editable copy for the Obsidian/cinematic homepage layout. */
+  obsidianCopy?: ObsidianHomeCopy;
   lastSaved: string;
   /** Overridden by site_config.cinematic_mode_enabled when set */
   cinematicMode?: boolean;

@@ -206,7 +206,7 @@ export function CinematicContentEditor({
   return (
     <div className="space-y-6">
       <CinematicModeBanner variant="cinematic-tab" cinematicOn={cinematicModeOn ?? true} />
-      <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
+      <div className="rounded-lg border border-[var(--ob-violet)]/30 bg-[var(--ob-violet)]/5 px-3 py-2 text-xs text-neutral-700">
         Edit cinematic-only copy and media. Changes appear on the live homepage after save (60s
         revalidate).
       </div>
@@ -214,7 +214,7 @@ export function CinematicContentEditor({
 
       <section
         id="pinned-chapters-editor"
-        className="rounded-xl border-2 border-[#C97D5D]/50 bg-[#FFF9F5] p-4 space-y-4 shadow-sm"
+        className="rounded-xl border-2 border-[var(--ob-violet)]/50 bg-[#FFF9F5] p-4 space-y-4 shadow-sm"
       >
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-neutral-900">
@@ -241,7 +241,7 @@ export function CinematicContentEditor({
 
 <button
   type="button"
-  className="text-sm font-medium text-[#C97D5D]"
+  className="text-sm font-medium text-[var(--ob-violet)]"
   onClick={() => {
     const defaults = getDefaultCinematicContent();
     const template = defaults.chapters.stages[0] ?? {
@@ -267,7 +267,7 @@ export function CinematicContentEditor({
 
         {content.chapters.stages.map((stage, index) => (
           <div key={index} className="rounded-lg border border-neutral-100 p-4 space-y-3">
-            <p className="text-xs font-semibold text-[#C97D5D]">Stage {index + 1}</p>
+            <p className="text-xs font-semibold text-[var(--ob-violet)]">Stage {index + 1}</p>
             <Input
               label="Eyebrow"
               value={stage.eyebrow}
@@ -286,7 +286,7 @@ export function CinematicContentEditor({
 />
 
             {!stage.cta && (
-              <div className="space-y-2 rounded-lg border border-[#C97D5D]/30 bg-white p-3">
+              <div className="space-y-2 rounded-lg border border-[var(--ob-violet)]/30 bg-white p-3">
                 <Select
                   label={`স্টেজ ${index + 1} — পাঞ্জাবি পণ্য (ছবির উৎস) / Stage ${index + 1} panjabi product`}
                   value={stage.productSlug ?? ''}
@@ -492,7 +492,7 @@ export function CinematicContentEditor({
               if (file) void handleVideoUpload(file);
               e.target.value = '';
             }}
-            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded file:border-0 file:bg-[#C97D5D] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
+            className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded file:border-0 file:bg-[var(--ob-violet)] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
           />
           {uploadingVideo && <p className="text-xs text-neutral-500">Uploading video…</p>}
         </div>

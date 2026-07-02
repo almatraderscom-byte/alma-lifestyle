@@ -1,5 +1,5 @@
 import { HomePageRenderer } from '@/components/home/HomePageRenderer';
-import { ObsidianHome } from '@/components/home/obsidian/ObsidianHome';
+import { HomeCmsEditProvider } from '@/components/home/obsidian/HomeCmsEditProvider';
 import { getDefaultHomepageConfig } from '@/lib/homepage-config';
 import { toCardProduct } from '@/lib/products-data';
 import {
@@ -18,19 +18,13 @@ export default async function HomePage() {
     ]);
     const config = await loadHomepageConfigServer(catalog);
 
-    const categoriesSection = config.sections.find((s) => s.id === 'categories');
-    const reviewsSection = config.sections.find((s) => s.id === 'reviews');
-    const trustSection = config.sections.find((s) => s.id === 'trust');
-
     const products = catalog.map(toCardProduct);
 
     return (
-      <ObsidianHome
+      <HomeCmsEditProvider
+        initialConfig={config}
         products={products}
         hero={cinematicContent.hero}
-        categories={categoriesSection?.id === 'categories' ? categoriesSection.data : undefined}
-        reviews={reviewsSection?.id === 'reviews' ? reviewsSection.data : undefined}
-        trust={trustSection?.id === 'trust' ? trustSection.data : undefined}
       />
     );
   } catch (err) {

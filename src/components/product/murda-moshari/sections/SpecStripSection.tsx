@@ -35,10 +35,14 @@ function AnimatedSpecValue({
   target,
   label,
   unit,
+  labelPath,
+  unitPath,
 }: {
   target: number;
   label: string;
   unit: string;
+  labelPath: string;
+  unitPath: string;
 }) {
   const reduced = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,8 +84,18 @@ function AnimatedSpecValue({
           animate={{ opacity: 1 }}
           transition={transition({ duration: duration(0.25) })}
         >
-          <p className="font-bn-body mt-1 text-sm text-charcoal/70">{unit}</p>
-          <p className="font-bn-body mt-2 text-xs uppercase tracking-widest text-charcoal/60">
+          <p
+            data-cms-field={unitPath}
+            data-cms-label="Spec unit"
+            className="font-bn-body mt-1 text-sm text-charcoal/70"
+          >
+            {unit}
+          </p>
+          <p
+            data-cms-field={labelPath}
+            data-cms-label="Spec label"
+            className="font-bn-body mt-2 text-xs uppercase tracking-widest text-charcoal/60"
+          >
             {label}
           </p>
         </motion.div>
@@ -93,9 +107,9 @@ function AnimatedSpecValue({
 export function SpecStripSection() {
   const { specs } = useMurdaPage();
   const specRows = [
-    { target: 10.5, label: specs.length.label, unit: specs.length.unit },
-    { target: 6.5, label: specs.width.label, unit: specs.width.unit },
-    { target: 6.5, label: specs.height.label, unit: specs.height.unit },
+    { target: 10.5, label: specs.length.label, unit: specs.length.unit, key: 'length' },
+    { target: 6.5, label: specs.width.label, unit: specs.width.unit, key: 'width' },
+    { target: 6.5, label: specs.height.label, unit: specs.height.unit, key: 'height' },
   ];
   const reduced = useReducedMotion();
   const Wrapper = reduced ? 'section' : motion.section;
@@ -121,6 +135,8 @@ export function SpecStripSection() {
               target={spec.target}
               label={spec.label}
               unit={spec.unit}
+              labelPath={`specs.${spec.key}.label`}
+              unitPath={`specs.${spec.key}.unit`}
             />
           ))}
         </div>

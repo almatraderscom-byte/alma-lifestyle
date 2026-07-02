@@ -90,7 +90,7 @@ export default function NotificationLogsPage() {
           <button
             type="button"
             onClick={() => void loadLogs()}
-            className="px-4 py-2 rounded-lg bg-[#C97D5D] text-white text-sm font-medium hover:bg-[#b06d4f]"
+            className="px-4 py-2 rounded-lg bg-[var(--ob-violet)] text-white text-sm font-medium hover:bg-[var(--ob-violet-2)]"
           >
             Refresh
           </button>
@@ -102,7 +102,7 @@ export default function NotificationLogsPage() {
           type="button"
           onClick={() => setFilter('all')}
           className={`px-3 py-1 rounded-lg text-sm ${
-            filter === 'all' ? 'bg-[#2A2622] text-white' : 'bg-neutral-200 text-neutral-800'
+            filter === 'all' ? 'bg-[#0b0b14] text-white' : 'bg-neutral-200 text-neutral-800'
           }`}
         >
           All ({filter === 'all' ? logs.length : '…'})
@@ -193,7 +193,7 @@ export default function NotificationLogsPage() {
               {log.order_id && (
                 <p>
                   <strong>Order:</strong>{' '}
-                  <Link href="/admin/orders" className="text-[#C97D5D] underline">
+                  <Link href="/admin/orders" className="text-[var(--ob-violet)] underline">
                     {log.order_id}
                   </Link>
                 </p>

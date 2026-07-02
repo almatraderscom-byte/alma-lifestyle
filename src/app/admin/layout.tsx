@@ -1,5 +1,6 @@
 import { Inter, Playfair_Display } from 'next/font/google';
 import { AdminShell } from '@/components/admin/AdminShell';
+import './admin-theme.css';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${inter.variable} ${playfair.variable} font-sans antialiased`}
+      className={`admin-app ${inter.variable} ${playfair.variable} font-sans antialiased`}
       style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
     >
       <AdminShell>{children}</AdminShell>

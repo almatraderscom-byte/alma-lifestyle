@@ -382,7 +382,7 @@ export function LandingContentEditor({
               <span className="font-medium text-neutral-900">{titleBn}</span>
               <span className="text-xs text-neutral-500">{titleEn}</span>
               {sectionDirty(key) && (
-                <span className="ml-auto h-2 w-2 rounded-full bg-[#C97D5D]" title="Edited" />
+                <span className="ml-auto h-2 w-2 rounded-full bg-[var(--ob-violet)]" title="Edited" />
               )}
             </button>
             {openKey === key && (

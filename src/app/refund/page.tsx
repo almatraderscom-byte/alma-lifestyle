@@ -1,14 +1,21 @@
 import type { Metadata } from 'next';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import { PageLayout } from '@/components/legal/PageLayout';
 
-export const metadata: Metadata = {
-  title: 'ফেরত নীতিমালা | ALMA Lifestyle',
-  description: 'ALMA Lifestyle এর return এবং refund policy। সহজ ফেরত প্রক্রিয়া।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'refund', {
+    title: 'ফেরত নীতিমালা | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle এর return এবং refund policy। সহজ ফেরত প্রক্রিয়া।',
+  });
+}
 
 export default function RefundPage() {
   return (
     <PageLayout
+      slug="refund"
       badge="নীতিমালা"
       heroWord="REFUND"
       title="ফেরত ও রিফান্ড নীতিমালা"

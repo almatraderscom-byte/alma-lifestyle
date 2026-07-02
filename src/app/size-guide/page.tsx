@@ -1,15 +1,22 @@
 import type { Metadata } from 'next';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
 
-export const metadata: Metadata = {
-  title: 'সাইজ গাইড | ALMA Lifestyle',
-  description: 'ALMA Lifestyle পোশাকের সঠিক সাইজ বেছে নিতে আমাদের size guide দেখুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'size-guide', {
+    title: 'সাইজ গাইড | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle পোশাকের সঠিক সাইজ বেছে নিতে আমাদের size guide দেখুন।',
+  });
+}
 
 export default function SizeGuidePage() {
   return (
     <PageLayout
+      slug="size-guide"
       badge="সাহায্য"
       heroWord="SIZE GUIDE"
       title="সাইজ গাইড"

@@ -148,7 +148,7 @@ export default function AdminCategoriesPage() {
       {editing && (
         <form
           onSubmit={handleSave}
-          className="rounded-xl border border-[#C97D5D]/40 bg-white p-4 space-y-4 shadow-sm"
+          className="rounded-xl border border-[var(--ob-violet)]/40 bg-white p-4 space-y-4 shadow-sm"
         >
           <h2 className="font-semibold text-neutral-900">
             {items.some((c) => c.id === editing.id) ? 'Edit category' : 'New category'}
@@ -186,7 +186,7 @@ export default function AdminCategoriesPage() {
               onChange={(e) =>
                 setEditing((c) => (c ? { ...c, showInMenu: e.target.checked } : c))
               }
-              className="h-4 w-4 accent-[#C97D5D]"
+              className="h-4 w-4 accent-[var(--ob-violet)]"
             />
             Show in navigation menu
           </label>
@@ -197,7 +197,7 @@ export default function AdminCategoriesPage() {
               onChange={(e) =>
                 setEditing((c) => (c ? { ...c, active: e.target.checked } : c))
               }
-              className="h-4 w-4 accent-[#C97D5D]"
+              className="h-4 w-4 accent-[var(--ob-violet)]"
             />
             Active (visible on storefront)
           </label>
@@ -227,7 +227,7 @@ export default function AdminCategoriesPage() {
                 <AdminCustomerLink
                   href={`/products?category=${cat.slug}`}
                   label="View on customer site →"
-                  className="text-xs font-medium text-[#C97D5D] hover:underline mt-1 inline-block"
+                  className="text-xs font-medium text-[var(--ob-violet)] hover:underline mt-1 inline-block"
                 />
               </div>
               <div className="flex gap-2 shrink-0">

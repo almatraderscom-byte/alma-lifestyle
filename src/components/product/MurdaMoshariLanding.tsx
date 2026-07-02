@@ -10,7 +10,8 @@ import {
   CinematicOverlay,
   readMurdaOverlaySeen,
 } from '@/components/product/murda-moshari/CinematicOverlay';
-import { MurdaPageProvider, useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
+import { useMurdaPage } from '@/components/product/murda-moshari/MurdaPageContext';
+import { CmsEditProvider } from '@/components/cms/CmsEditProvider';
 import { MurdaStickyOrderBar } from '@/components/product/murda-moshari/MurdaStickyOrderBar';
 import { ScrollProgressBar } from '@/components/product/murda-moshari/ScrollProgressBar';
 import { SectionBridge } from '@/components/product/murda-moshari/SectionBridge';
@@ -169,8 +170,8 @@ export function MurdaMoshariLanding({ product, content }: MurdaMoshariLandingPro
   );
 
   return (
-    <MurdaPageProvider page={page}>
+    <CmsEditProvider slug={product.slug} initialContent={page}>
       <MurdaMoshariLandingInner product={product} />
-    </MurdaPageProvider>
+    </CmsEditProvider>
   );
 }

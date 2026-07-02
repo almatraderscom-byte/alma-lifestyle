@@ -53,6 +53,11 @@ export function ObsidianProductGallery({
   const active = displayImages[activeIndex] ?? displayImages[0];
   const hasMultiple = displayImages.length > 1;
 
+  // Only real product images (index-aligned with the AdminProduct.images the
+  // visual editor saves) are click-to-edit. When we fell back to a synthetic
+  // default/placeholder there is no DB row to write, so we leave it untagged.
+  const editable = images.length > 0;
+
   // Report active colour up to the shell whenever the visible image changes.
   useEffect(() => {
     onActiveColor?.(hexFromBgClass(active?.bgClass));
@@ -72,6 +77,9 @@ export function ObsidianProductGallery({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.55, ease: EASE }}
+            data-cms-field={editable ? `images.${activeIndex}.url` : undefined}
+            data-cms-type={editable ? 'image' : undefined}
+            data-cms-label={editable ? `Product image ${activeIndex + 1}` : undefined}
           >
             {active?.url ? (
               <Image
@@ -104,6 +112,9 @@ export function ObsidianProductGallery({
               aria-label={`ছবি ${index + 1}`}
               aria-selected={index === activeIndex}
               role="tab"
+              data-cms-field={editable ? `images.${index}.url` : undefined}
+              data-cms-type={editable ? 'image' : undefined}
+              data-cms-label={editable ? `Product image ${index + 1}` : undefined}
             >
               {img.url ? (
                 // eslint-disable-next-line @next/next/no-img-element

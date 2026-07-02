@@ -103,7 +103,7 @@ export function AdminSidebar({
       )}
       <aside
         className={cn(
-          'fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-[#2A2622] text-white transition-all duration-300',
+          'fixed lg:sticky top-0 left-0 z-50 flex h-screen flex-col bg-[#0b0b14] text-white transition-all duration-300',
           collapsed ? 'w-16' : 'w-60',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -142,7 +142,7 @@ export function AdminSidebar({
                     onClick={() => setOpen(!open)}
                     className={cn(
                       'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                      active && 'border-l-4 border-[#C97D5D] bg-white/10',
+                      active && 'border-l-4 border-[var(--ob-violet)] bg-white/10',
                       !active && 'hover:bg-white/5',
                       collapsed && 'justify-center px-2'
                     )}
@@ -170,7 +170,7 @@ export function AdminSidebar({
                                 child.href === '/admin/products' &&
                                 pathname === '/admin/products'
                             )
-                              ? 'text-[#C97D5D] font-medium'
+                              ? 'text-[var(--ob-violet)] font-medium'
                               : 'text-white/70 hover:text-white'
                           )}
                         >
@@ -194,7 +194,7 @@ export function AdminSidebar({
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative',
-                  active && 'border-l-4 border-[#C97D5D] bg-white/10',
+                  active && 'border-l-4 border-[var(--ob-violet)] bg-white/10',
                   !active && 'hover:bg-white/5',
                   collapsed && 'justify-center px-2'
                 )}
@@ -204,7 +204,7 @@ export function AdminSidebar({
                 {badge > 0 && (
                   <span
                     className={cn(
-                      'rounded-full bg-[#C97D5D] text-[10px] font-bold px-1.5 py-0.5 min-w-[1.25rem] text-center',
+                      'rounded-full bg-[var(--ob-violet)] text-[10px] font-bold px-1.5 py-0.5 min-w-[1.25rem] text-center',
                       collapsed && 'absolute -top-1 -right-1'
                     )}
                   >
@@ -254,7 +254,7 @@ export function AdminSidebar({
             {collapsed ? '→' : '← Collapse'}
           </button>
           <div className={cn('flex items-center gap-3 px-2', collapsed && 'justify-center')}>
-            <div className="h-9 w-9 rounded-full bg-[#C97D5D] flex items-center justify-center text-sm font-semibold shrink-0">
+            <div className="h-9 w-9 rounded-full bg-[var(--ob-violet)] flex items-center justify-center text-sm font-semibold shrink-0">
               {user?.name?.[0] ?? 'A'}
             </div>
             {!collapsed && (

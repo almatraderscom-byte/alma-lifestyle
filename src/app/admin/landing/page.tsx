@@ -48,7 +48,7 @@ export default async function AdminLandingListPage() {
             </div>
             <Link
               href={`/admin/landing/${row.product_slug}`}
-              className="text-sm font-medium text-[#C97D5D] hover:underline shrink-0"
+              className="text-sm font-medium text-[var(--ob-violet)] hover:underline shrink-0"
             >
               Edit
             </Link>

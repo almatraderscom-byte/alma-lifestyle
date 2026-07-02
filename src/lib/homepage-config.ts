@@ -28,9 +28,34 @@ import type {
   HomepageConfig,
   HomepageSectionConfig,
   HomepageSectionId,
+  ObsidianHomeCopy,
   SectionDataMap,
 } from '@/lib/homepage-config-types';
-import { DEFAULT_SECTION_ORDER } from '@/lib/homepage-config-types';
+import { DEFAULT_OBSIDIAN_COPY, DEFAULT_SECTION_ORDER } from '@/lib/homepage-config-types';
+
+/**
+ * Deep-merge saved Obsidian homepage copy over defaults so newly-added fields
+ * always fall back to a sensible default (never render as blank/undefined).
+ */
+function mergeObsidianCopy(
+  saved: Partial<ObsidianHomeCopy> | undefined,
+  defaults: ObsidianHomeCopy
+): ObsidianHomeCopy {
+  if (!saved) return defaults;
+  return {
+    spotlight: { ...defaults.spotlight, ...saved.spotlight },
+    products: { ...defaults.products, ...saved.products },
+    shine: { ...defaults.shine, ...saved.shine },
+    cats: {
+      ...defaults.cats,
+      ...saved.cats,
+      items:
+        Array.isArray(saved.cats?.items) && saved.cats.items.length > 0
+          ? saved.cats.items
+          : defaults.cats.items,
+    },
+  };
+}
 import { getDefaultHomepageExtras, mergeHomepageExtras } from '@/lib/homepage-extras';
 import { migrateBrandStorySection, migrateCommunitySection } from '@/lib/homepage-migrations';
 import { ensureImageSlots } from '@/lib/homepage-image-slots';
@@ -228,6 +253,7 @@ export function getDefaultHomepageConfig(): HomepageConfig {
   return {
     sections,
     extras: getDefaultHomepageExtras(),
+    obsidianCopy: DEFAULT_OBSIDIAN_COPY,
     lastSaved: new Date().toISOString(),
   };
 }
@@ -280,6 +306,10 @@ export function mergeHomepageConfig(
     ...saved,
     sections: sections.sort((a, b) => a.order - b.order) as HomepageSectionConfig[],
     extras: mergeHomepageExtras(saved.extras, defaults.extras ?? getDefaultHomepageExtras()),
+    obsidianCopy: mergeObsidianCopy(
+      saved.obsidianCopy,
+      defaults.obsidianCopy ?? DEFAULT_OBSIDIAN_COPY
+    ),
     lastSaved: saved.lastSaved || defaults.lastSaved,
   };
 }

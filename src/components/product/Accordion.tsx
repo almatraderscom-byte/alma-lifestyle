@@ -8,6 +8,10 @@ export interface AccordionItem {
   id: string;
   title: string;
   content: string;
+  /** Optional `data-cms-field` dot-path for the visual editor (tags the body). */
+  cmsField?: string;
+  /** Optional human label shown by the visual editor. */
+  cmsLabel?: string;
 }
 
 interface AccordionProps {
@@ -50,7 +54,11 @@ export function Accordion({ items, defaultOpenId, className }: AccordionProps) {
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="px-4 pb-4 font-bn-body text-base text-text-light leading-relaxed">
+                  <p
+                    className="px-4 pb-4 font-bn-body text-base text-text-light leading-relaxed"
+                    data-cms-field={item.cmsField}
+                    data-cms-label={item.cmsLabel}
+                  >
                     {item.content}
                   </p>
                 </motion.div>

@@ -279,7 +279,7 @@ export function SmartImageUpload({
         className={cn(
           'relative cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors',
           uploading ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400',
-          dragOver && 'border-[#C97D5D] bg-[#C97D5D]/5'
+          dragOver && 'border-[var(--ob-violet)] bg-[var(--ob-violet)]/5'
         )}
       >
         <input

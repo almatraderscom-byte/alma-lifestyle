@@ -139,7 +139,7 @@ export default function NotificationTestPage() {
         <h1 className="text-2xl font-semibold text-neutral-900">Notification test</h1>
         <Link
           href="/admin/notifications/logs"
-          className="text-sm font-medium text-[#C97D5D] hover:underline"
+          className="text-sm font-medium text-[var(--ob-violet)] hover:underline"
         >
           View notification logs →
         </Link>
@@ -193,7 +193,7 @@ export default function NotificationTestPage() {
           type="button"
           onClick={testWhatsApp}
           disabled={loading}
-          className="px-4 py-2 rounded-lg bg-[#C97D5D] text-white text-sm font-medium hover:bg-[#b06d4f] disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-[var(--ob-violet)] text-white text-sm font-medium hover:bg-[var(--ob-violet-2)] disabled:opacity-50"
         >
           Test WhatsApp
         </button>

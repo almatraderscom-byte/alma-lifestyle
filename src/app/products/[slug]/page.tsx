@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MurdaMoshariLanding } from '@/components/product/MurdaMoshariLanding';
-import { ObsidianProductDetail } from '@/components/obsidian/ObsidianProductDetail';
+import { ProductCmsEditProvider } from '@/components/obsidian/ProductCmsEditProvider';
 import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-content';
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
@@ -85,7 +85,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           buildProductBreadcrumbJsonLd(slug, product.title),
         ]}
       />
-      <ObsidianProductDetail product={product} catalogProducts={catalogProducts} />
+      <ProductCmsEditProvider product={product} catalogProducts={catalogProducts} />
     </>
   );
 }

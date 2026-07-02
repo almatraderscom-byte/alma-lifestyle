@@ -1,15 +1,21 @@
 import type { Metadata } from 'next';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import { PageLayout } from '@/components/legal/PageLayout';
 
-export const metadata: Metadata = {
-  title: 'আমাদের সম্পর্কে | ALMA Lifestyle',
-  description:
-    'ALMA Lifestyle - বাংলাদেশের প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা। আমাদের গল্প এবং মিশন জানুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'about', {
+    title: 'আমাদের সম্পর্কে | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle - বাংলাদেশের প্রিমিয়াম লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা। আমাদের গল্প এবং মিশন জানুন।',
+  });
+}
 
 export default function AboutPage() {
   return (
     <PageLayout
+      slug="about"
       badge="আমাদের সম্পর্কে"
       heroWord="ABOUT"
       title="ALMA Lifestyle এর গল্প"

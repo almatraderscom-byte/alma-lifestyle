@@ -44,7 +44,7 @@ export function AdminTestUpload() {
       <p className="text-xs text-neutral-600">
         Uploads to Supabase <code className="bg-white px-1">homepage-images</code> via{' '}
         <code className="bg-white px-1">POST /api/v1/upload</code>.{' '}
-        <a href="/admin/test-upload" className="text-[#C97D5D] underline">
+        <a href="/admin/test-upload" className="text-[var(--ob-violet)] underline">
           Full step-by-step test page →
         </a>
       </p>

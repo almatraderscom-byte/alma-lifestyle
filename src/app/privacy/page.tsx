@@ -1,14 +1,21 @@
 import type { Metadata } from 'next';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import { PageLayout } from '@/components/legal/PageLayout';
 
-export const metadata: Metadata = {
-  title: 'গোপনীয়তা নীতিমালা | ALMA Lifestyle',
-  description: 'ALMA Lifestyle আপনার ব্যক্তিগত তথ্য কীভাবে সুরক্ষিত রাখে।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'privacy', {
+    title: 'গোপনীয়তা নীতিমালা | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle আপনার ব্যক্তিগত তথ্য কীভাবে সুরক্ষিত রাখে।',
+  });
+}
 
 export default function PrivacyPage() {
   return (
     <PageLayout
+      slug="privacy"
       badge="নীতিমালা"
       heroWord="PRIVACY"
       title="গোপনীয়তা নীতিমালা"

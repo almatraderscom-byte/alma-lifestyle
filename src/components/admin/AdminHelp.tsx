@@ -42,7 +42,7 @@ export function AdminHelp() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-[#C97D5D] text-white text-lg font-bold shadow-lg hover:bg-[#b06d4f]"
+        className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--ob-violet)] text-white text-lg font-bold shadow-lg hover:bg-[var(--ob-violet-2)]"
         aria-label="Help"
       >
         ?
@@ -78,7 +78,7 @@ export function AdminHelp() {
               ))}
               <a
                 href="#"
-                className="block text-center text-sm font-medium text-[#C97D5D] hover:underline py-2"
+                className="block text-center text-sm font-medium text-[var(--ob-violet)] hover:underline py-2"
                 onClick={(e) => e.preventDefault()}
               >
                 Watch Tutorial Video

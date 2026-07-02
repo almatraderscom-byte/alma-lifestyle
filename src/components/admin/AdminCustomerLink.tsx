@@ -10,7 +10,7 @@ interface AdminCustomerLinkProps {
 export function AdminCustomerLink({
   href,
   label = 'View on customer site →',
-  className = 'text-sm font-medium text-[#C97D5D] hover:underline inline-flex items-center gap-1',
+  className = 'text-sm font-medium text-[var(--ob-violet)] hover:underline inline-flex items-center gap-1',
 }: AdminCustomerLinkProps) {
   const url = href.includes('?') ? `${href}&_=${Date.now()}` : `${href}?_=${Date.now()}`;
 

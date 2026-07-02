@@ -31,10 +31,18 @@ export function ReviewGallerySection() {
   return (
     <Wrapper className="bg-white py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <h2 className="font-bn-heading text-center text-2xl text-charcoal md:text-3xl">
+        <h2
+          data-cms-field="reviews.heading"
+          data-cms-label="Reviews heading"
+          className="font-bn-heading text-center text-2xl text-charcoal md:text-3xl"
+        >
           {reviews.heading}
         </h2>
-        <p className="font-bn-body mt-3 text-center text-sm text-charcoal/70 md:text-base">
+        <p
+          data-cms-field="reviews.subheading"
+          data-cms-label="Reviews subheading"
+          className="font-bn-body mt-3 text-center text-sm text-charcoal/70 md:text-base"
+        >
           {reviews.subheading}
         </p>
         <div className="relative mt-10 md:static">
@@ -74,7 +82,12 @@ export function ReviewGallerySection() {
                   })}
                 >
                   <div className="rounded-2xl bg-white p-2">
-                    <div className="relative aspect-square overflow-hidden rounded-xl">
+                    <div
+                      data-cms-field={`reviews.images.${index}`}
+                      data-cms-label="Review image"
+                      data-cms-type="image"
+                      className="relative aspect-square overflow-hidden rounded-xl"
+                    >
                       <Image
                         src={src}
                         alt={formatBnText(`গ্রাহক রিভিউ ${index + 1}`)}
@@ -83,7 +96,11 @@ export function ReviewGallerySection() {
                         sizes="(max-width: 768px) 85vw, 33vw"
                       />
                     </div>
-                    <p className="font-bn-body mt-3 flex items-center justify-center gap-1.5 text-sm text-charcoal/70">
+                    <p
+                      data-cms-field="reviews.verifiedLabel"
+                      data-cms-label="Verified label"
+                      className="font-bn-body mt-3 flex items-center justify-center gap-1.5 text-sm text-charcoal/70"
+                    >
                       {!reduced ? (
                         <motion.svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
                           <motion.path

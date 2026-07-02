@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 const SWATCHES: { value: CategoryColorClass; label: string; color: string }[] = [
   { value: 'bg-maroon', label: 'Maroon', color: '#6B2D3C' },
-  { value: 'bg-terracotta', label: 'Terracotta', color: '#C97D5D' },
+  { value: 'bg-terracotta', label: 'Terracotta', color: 'var(--ob-violet)' },
   { value: 'bg-emerald', label: 'Emerald', color: '#2D6B4F' },
   { value: 'bg-mustard', label: 'Mustard', color: '#C4A035' },
 ];

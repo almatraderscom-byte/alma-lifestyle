@@ -43,6 +43,8 @@ function FeatureCard({
   index: number;
   cols: number;
 }) {
+  const titlePath = `features.items.${index}.title`;
+  const descPath = `features.items.${index}.desc`;
   const reduced = useReducedMotion();
   const { duration, stagger, transition } = useMurdaMotionTiming();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -64,8 +66,20 @@ function FeatureCard({
       >
         <Icon className="h-8 w-8" strokeWidth={1.5} aria-hidden />
       </motion.div>
-      <h3 className="font-bn-heading mt-4 text-lg font-bold text-charcoal">{title}</h3>
-      <p className="font-bn-body mt-2 text-sm leading-relaxed text-charcoal/70">{desc}</p>
+      <h3
+        data-cms-field={titlePath}
+        data-cms-label="Feature title"
+        className="font-bn-heading mt-4 text-lg font-bold text-charcoal"
+      >
+        {title}
+      </h3>
+      <p
+        data-cms-field={descPath}
+        data-cms-label="Feature description"
+        className="font-bn-body mt-2 text-sm leading-relaxed text-charcoal/70"
+      >
+        {desc}
+      </p>
     </>
   );
 
@@ -129,10 +143,18 @@ export function FeatureGridSection() {
   return (
     <Wrapper className="bg-white py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-4" style={{ perspective: '1000px' }}>
-        <h2 className="font-bn-heading text-center text-2xl text-charcoal md:text-3xl">
+        <h2
+          data-cms-field="features.heading"
+          data-cms-label="Features heading"
+          className="font-bn-heading text-center text-2xl text-charcoal md:text-3xl"
+        >
           {features.heading}
         </h2>
-        <p className="font-bn-body mt-3 text-center text-sm text-charcoal/70 md:text-base">
+        <p
+          data-cms-field="features.subheading"
+          data-cms-label="Features subheading"
+          className="font-bn-body mt-3 text-center text-sm text-charcoal/70 md:text-base"
+        >
           {features.subheading}
         </p>
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
