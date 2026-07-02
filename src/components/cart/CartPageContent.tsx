@@ -272,6 +272,7 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
                 href={hasUnavailableItems ? '#' : '/checkout'}
                 aria-disabled={hasUnavailableItems}
                 className="ob-cc-cta"
+                data-alma-target="cart-checkout"
               >
                 {pickUiText(settings, 'cart.checkout', CART.checkout)} →
               </Link>
@@ -283,6 +284,7 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
                 rel="noopener noreferrer"
                 onClick={() => trackLead()}
                 className="ob-cc-wa"
+                data-alma-target="cart-whatsapp"
               >
                 {CART.whatsappOrder}
               </a>

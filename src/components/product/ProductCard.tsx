@@ -149,6 +149,7 @@ export function ProductCard({
     >
       <Link
         href={product.href}
+        data-product-slug={productSlug}
         className={cn(
           'block relative overflow-hidden rounded-sm bg-cream pattern-overlay-dark',
           'shadow-md transition-shadow duration-[400ms] ease-out',

@@ -195,7 +195,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
           ))}
         </div>
 
-        <p className="font-bn-heading text-3xl font-bold text-primary">
+        <p className="font-bn-heading text-3xl font-bold text-primary" data-alma-target="pdp-price">
           {formatBdtPrice(active.price)}
         </p>
 
@@ -244,7 +244,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3" data-alma-target="pdp-add-to-cart">
           <button
             type="button"
             onClick={handleAddToBag}
@@ -262,7 +262,10 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
         </div>
 
         {members.length > 1 && (
-          <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-5 space-y-4">
+          <div
+            className="rounded-xl border-2 border-accent/30 bg-accent/5 p-5 space-y-4"
+            data-alma-target="family-set-box"
+          >
             <h2 className="font-bn-heading text-lg font-bold text-primary">
               👨‍👩‍👧‍👦 ফ্যামিলি সেট — সবগুলো একসাথে কিনুন
             </h2>

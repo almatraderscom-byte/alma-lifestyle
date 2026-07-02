@@ -353,7 +353,12 @@ function ProductsGrid({
           {products.map((p, i) => {
             const r = resolveImageSlot(imageSlots, `grid-${i}`, p.imageUrl);
             return (
-            <Link key={p.id} href={p.href} className={`pcard ${PC_MODS[i] ?? ''}`.trim()}>
+            <Link
+              key={p.id}
+              href={p.href}
+              className={`pcard ${PC_MODS[i] ?? ''}`.trim()}
+              data-product-slug={p.href.replace('/products/', '')}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={r.src}

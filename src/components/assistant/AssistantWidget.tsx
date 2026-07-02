@@ -11,6 +11,7 @@ import {
 } from '@/components/assistant/spotlight';
 import { useVoice } from '@/context/VoiceContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { useCart } from '@/context/CartContext';
 import { formatBdtPrice } from '@/lib/format-bn';
 
 /**
@@ -42,6 +43,8 @@ interface ChatMessage {
   /** status entries only: unique id + completion flag for the ✓ */
   sid?: string;
   done?: boolean;
+  /** Hidden turns go to the model but never render (system nudges). */
+  hidden?: boolean;
 }
 
 const NAV_DELAY_MS = 1200;
@@ -78,8 +81,27 @@ export function AssistantWidget() {
   const settings = useStoreSettings();
   const assistant = settings.assistant;
   const { play } = useVoice();
+  const { items: cartItems } = useCart();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Live context sent with every message: where the customer is + what's in
+  // the cart — this is what lets the model act like a real shop concierge
+  // ("সিস্টেম" note: the cart summary the model uses for proactive selling).
+  const liveContext = useCallback((): string => {
+    const parts: string[] = [`কাস্টমার এখন এই পেজে: ${pathname}`];
+    if (cartItems.length) {
+      const summary = cartItems
+        .slice(0, 6)
+        .map((i) => `${i.title} (৳${i.priceSnapshot} × ${i.quantity})`)
+        .join(', ');
+      parts.push(`কার্টে আছে: ${summary}`);
+    } else {
+      parts.push('কার্ট এখন খালি');
+    }
+    if (pageContext) parts.push(pageContext);
+    return parts.join(' | ').slice(0, 1350);
+  }, [pathname, cartItems, pageContext]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -121,8 +143,15 @@ export function AssistantWidget() {
     setMessages((cur) => [...cur, { role: 'status', text, sid, done: false }]);
     return sid;
   }, []);
-  const finishStatus = useCallback((sid: string) => {
-    setMessages((cur) => cur.map((m) => (m.sid === sid ? { ...m, done: true } : m)));
+  /** Complete a status chip — a failed lookup says so instead of lying ✓. */
+  const finishStatus = useCallback((sid: string, ok = true) => {
+    setMessages((cur) =>
+      cur.map((m) =>
+        m.sid === sid
+          ? { ...m, done: true, text: ok ? m.text : 'এই পেজে দেখানোর মতো খুঁজে পাইনি' }
+          : m
+      )
+    );
   }, []);
 
   // After an assistant-triggered navigation lands, run the spotlight/tour it
@@ -131,10 +160,11 @@ export function AssistantWidget() {
     const pending = takePendingSpotlight();
     if (!pending) return;
     const sid = pushStatus('হাইলাইট করছি — Highlighting');
-    const run = pending.tour?.length
-      ? runSpotlightTour(pending.tour)
-      : runSpotlight(pending.key!);
-    void run.then(() => finishStatus(sid));
+    if (pending.tour?.length) {
+      void runSpotlightTour(pending.tour).then((shown) => finishStatus(sid, shown > 0));
+    } else {
+      void runSpotlight(pending.key!).then((ok) => finishStatus(sid, ok));
+    }
   }, [pathname, pushStatus, finishStatus]);
 
   // Voice cue when the panel opens.
@@ -152,8 +182,12 @@ export function AssistantWidget() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // Self-reference so send() can schedule a delayed follow-up send().
+  const sendRef = useRef<((raw: string, opts?: { hidden?: boolean }) => Promise<void>) | null>(
+    null
+  );
   const send = useCallback(
-    async (raw: string) => {
+    async (raw: string, opts?: { hidden?: boolean }) => {
       const text = raw.trim();
       if (!text || busy) return;
       setInput('');
@@ -162,7 +196,11 @@ export function AssistantWidget() {
       let history: ChatMessage[] = [];
       setMessages((cur) => {
         history = cur;
-        return [...cur, { role: 'user', text }, { role: 'assistant', text: '' }];
+        return [
+          ...cur,
+          { role: 'user', text, hidden: opts?.hidden },
+          { role: 'assistant', text: '' },
+        ];
       });
 
       const patchLast = (patch: Partial<ChatMessage>) =>
@@ -193,7 +231,7 @@ export function AssistantWidget() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
-          body: JSON.stringify({ messages: chatTurns, context: pageContext ?? undefined }),
+          body: JSON.stringify({ messages: chatTurns, context: liveContext() }),
         });
         if (!res.ok || !res.body) {
           fail();
@@ -252,12 +290,23 @@ export function AssistantWidget() {
                   finishStatus(sid);
                   router.push(target);
                 }, NAV_DELAY_MS);
+                // Concierge nudge: after leading the customer to the cart,
+                // the assistant follows up on its own (praise + offer help)
+                // using the live cart context — no visible synthetic turn.
+                if (target.split('?')[0] === '/cart') {
+                  setTimeout(() => {
+                    void sendRef.current?.(
+                      '(সিস্টেম নোট: কাস্টমার এইমাত্র কার্ট পেজে এসেছে। প্রেক্ষাপটের কার্ট-তথ্য দেখে নিজে থেকে ২-৩ বাক্যের আন্তরিক বার্তা দাও — প্রোডাক্টের প্রশংসা + অর্ডার সম্পন্ন করতে কী করতে হবে + সাহায্যের প্রস্তাব।)',
+                      { hidden: true }
+                    );
+                  }, NAV_DELAY_MS + 2200);
+                }
               } else if (evt.tour?.length) {
                 const sid = pushStatus('প্রোডাক্টগুলো ঘুরিয়ে দেখাচ্ছি — Highlighting');
-                void runSpotlightTour(evt.tour).then(() => finishStatus(sid));
+                void runSpotlightTour(evt.tour).then((shown) => finishStatus(sid, shown > 0));
               } else if (evt.highlight) {
                 const sid = pushStatus('হাইলাইট করছি — Highlighting');
-                void runSpotlight(evt.highlight).then(() => finishStatus(sid));
+                void runSpotlight(evt.highlight).then((ok) => finishStatus(sid, ok));
               }
             }
           }
@@ -273,7 +322,7 @@ export function AssistantWidget() {
     },
     [
       busy,
-      pageContext,
+      liveContext,
       pathname,
       router,
       pushStatus,
@@ -282,6 +331,10 @@ export function AssistantWidget() {
       settings.whatsappNumber,
     ]
   );
+
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -346,6 +399,15 @@ export function AssistantWidget() {
             )}
             <button
               type="button"
+              className={hasChat ? 'alma-ai-min' : 'alma-ai-min alma-ai-min--solo'}
+              onClick={closeAssistant}
+              aria-label="ছোট করুন"
+              title="ছোট করুন (চ্যাট থেকে যাবে)"
+            >
+              —
+            </button>
+            <button
+              type="button"
               className="alma-ai-close"
               onClick={closeAssistant}
               aria-label="বন্ধ করুন"
@@ -369,7 +431,7 @@ export function AssistantWidget() {
             )}
 
             {messages.map((m, i) =>
-              m.role === 'status' ? (
+              m.hidden ? null : m.role === 'status' ? (
                 <div key={m.sid ?? i} className={`alma-ai-status${m.done ? ' done' : ''}`}>
                   <span className="alma-ai-status-ic" aria-hidden>
                     {m.done ? '✓' : ''}

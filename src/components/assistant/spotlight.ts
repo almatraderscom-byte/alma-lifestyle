@@ -73,15 +73,16 @@ function findTarget(key: string, timeoutMs = FIND_TIMEOUT_MS): Promise<HTMLEleme
   });
 }
 
-/** Run the spotlight effect on a named target. Resolves when finished
- *  (or immediately if the target can't be found on this page). */
+/** Run the spotlight effect on a named target. Resolves when the effect
+ *  finished — `false` means the target wasn't on this page and nothing was
+ *  shown (so the caller can tell the customer instead of silently ✓-ing). */
 export async function runSpotlight(
   key: string,
   opts?: { holdMs?: number; findTimeoutMs?: number }
-): Promise<void> {
+): Promise<boolean> {
   const holdMs = opts?.holdMs ?? HOLD_MS;
   const el = await findTarget(key, opts?.findTimeoutMs);
-  if (!el) return;
+  if (!el) return false;
 
   // Only one spotlight at a time.
   activeCleanup?.();
@@ -217,21 +218,25 @@ export async function runSpotlight(
     const wait = () => (done ? resolve() : setTimeout(wait, 120));
     wait();
   });
+  return true;
 }
 
 /** Sequential product tour — spotlights each product card one after another
  *  (shorter hold per item). Missing cards are skipped, so a stale slug never
- *  stalls the tour. */
-export async function runSpotlightTour(slugs: string[]): Promise<void> {
+ *  stalls the tour. Returns how many products were actually shown. */
+export async function runSpotlightTour(slugs: string[]): Promise<number> {
+  let shown = 0;
   for (let i = 0; i < slugs.length; i++) {
     // First item gets the full find timeout (page may still be rendering);
     // later items are already on-page or genuinely missing.
-    await runSpotlight(`product:${slugs[i]}`, {
+    const ok = await runSpotlight(`product:${slugs[i]}`, {
       holdMs: TOUR_HOLD_MS,
       findTimeoutMs: i === 0 ? FIND_TIMEOUT_MS : 1500,
     });
+    if (ok) shown += 1;
     if (i < slugs.length - 1) await new Promise((r) => setTimeout(r, 260));
   }
+  return shown;
 }
 
 /* ------------- pending spotlight across a client-side navigation ------------- */

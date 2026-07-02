@@ -32,15 +32,15 @@ const bodySchema = z.object({
     )
     .min(1)
     .max(24),
-  /** Optional page/product context, e.g. "Customer is viewing: <title>". */
-  context: z.string().max(600).optional(),
+  /** Optional live context: current page, cart contents, viewed product. */
+  context: z.string().max(1400).optional(),
 });
 
 /* Small in-memory rate limit (per serverless instance) — enough to stop
  * accidental loops and casual abuse without external infra. */
 const hits = new Map<string, { n: number; at: number }>();
 const RATE_WINDOW_MS = 5 * 60 * 1000;
-const RATE_MAX = 30;
+const RATE_MAX = 60;
 function rateLimited(ip: string): boolean {
   const now = Date.now();
   const h = hits.get(ip);
