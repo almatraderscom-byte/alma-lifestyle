@@ -4,6 +4,7 @@ import type { AppSettings } from '@/lib/admin-settings-types';
 import type { CatalogProduct } from '@/lib/products-data';
 import { loadCatalogProductsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import { HIGHLIGHT_TARGETS } from '@/lib/highlight-targets';
+import { PRODUCT_TYPE_LABELS_BN } from '@/lib/product-design-types';
 
 /**
  * ALMA assistant knowledge base — the system prompt handed to Gemini.
@@ -80,6 +81,25 @@ export async function getAssistantKnowledge(): Promise<AssistantKnowledge> {
 
   const catalogBlock = products.slice(0, 120).map(productLine).join('\n');
 
+  // Family matching sets, spelled out MEMBER BY MEMBER (father/son/mother/
+  // daughter) so the model never under-reports what a set contains.
+  const familyGroups = new Map<string, CatalogProduct>();
+  for (const p of products) {
+    const gid = p.designGroupId;
+    if (gid && p.designGroupMembers && p.designGroupMembers.length > 1 && !familyGroups.has(gid)) {
+      familyGroups.set(gid, p);
+    }
+  }
+  const familyBlock = [...familyGroups.values()]
+    .map((g) => {
+      const members = (g.designGroupMembers ?? []).map((m) => {
+        const label = m.productType ? PRODUCT_TYPE_LABELS_BN[m.productType] : 'সদস্য';
+        return `${label}: ${m.title} (৳${m.price}, slug:${m.slug})`;
+      });
+      return `- ${g.designGroupName || g.title} — এই সেটে ${members.length} জনের পোশাক আছে: ${members.join(' | ')} — পুরো সেট এক পেজে: /products/${g.slug}`;
+    })
+    .join('\n');
+
   const pages = [
     '/ — হোমপেজ',
     '/products — সব পণ্য',
@@ -104,6 +124,7 @@ export async function getAssistantKnowledge(): Promise<AssistantKnowledge> {
     '## আচরণ',
     '- ডিফল্টে বাংলায় উত্তর দাও; কাস্টমার ইংরেজিতে লিখলে ইংরেজিতে উত্তর দাও।',
     '- ছোট, আন্তরিক, বিক্রয়-সহায়ক উত্তর দাও (২–৪ বাক্য)। সালাম দিলে সালামের জবাব দাও।',
+    '- প্রতিটি উত্তরের শেষে একটা ছোট প্রাসঙ্গিক follow-up প্রশ্ন করো — যেমন "কোনটা পছন্দ হয়েছে?", "সাইজ বা দামের ব্যাপারে জানতে চান?", "আর কিছু দেখাবো?" — যেন কথোপকথন থেমে না যায়।',
     '- দাম, স্টক বা পণ্যের তথ্য কখনো বানিয়ে বলবে না — শুধু নিচের ক্যাটালগ থেকে বলবে। ক্যাটালগে না থাকলে বলো জানা নেই এবং WhatsApp-এ যোগাযোগের পরামর্শ দাও।',
     '- অর্ডার নেওয়া, পেমেন্ট নেওয়া বা ব্যক্তিগত তথ্য চাওয়া তোমার কাজ নয় — অর্ডার করতে চাইলে পণ্যের পেজে নিয়ে যাও বা কার্টে যেতে বলো।',
     '- দোকানের বাইরের বিষয়ে (রাজনীতি, ধর্মীয় বিতর্ক, অন্য ব্র্যান্ড ইত্যাদি) ভদ্রভাবে বলো তুমি শুধু ALMA-র কেনাকাটায় সাহায্য করতে পারো।',
@@ -116,8 +137,10 @@ export async function getAssistantKnowledge(): Promise<AssistantKnowledge> {
     ...Object.entries(HIGHLIGHT_TARGETS).map(
       ([key, t]) => `  - ${key} → ${t.description} (পেজ: ${t.page})`
     ),
+    '- কাস্টমার কোনো ধরনের প্রোডাক্ট "দেখাতে" বললে (যেমন "জায়নামাজগুলো দেখান") — পেজে নিয়ে গিয়ে প্রোডাক্টগুলো এক এক করে হাইলাইট করে ঘুরিয়ে দেখাও: উত্তরের শেষে [[NAV:/products?...]] এর সাথে [[TOUR:slug1|slug2|slug3]] দাও (ক্যাটালগ থেকে ২–৪টি slug)। TOUR দিলে আলাদা PRODUCT ট্যাগ লাগবে না।',
     '- উদাহরণ: "আমাদের ফ্যামিলি ম্যাচিং কালেকশনটা দেখাচ্ছি! [[NAV:/]] [[HIGHLIGHT:family-matching]]"',
     '- উদাহরণ (একই পেজে): "এই যে, দামটা এখানে দেখুন! [[HIGHLIGHT:pdp-price]]"',
+    '- উদাহরণ (প্রোডাক্ট ট্যুর): "চলুন, জায়নামাজগুলো ঘুরিয়ে দেখাই! [[NAV:/products?category=islamic]] [[TOUR:jaynamaz-1|jaynamaz-2|jaynamaz-3]]"',
     '',
     '## দোকানের তথ্য',
     ...storeFacts,
@@ -127,6 +150,13 @@ export async function getAssistantKnowledge(): Promise<AssistantKnowledge> {
     '',
     '## পণ্য ক্যাটালগ (লাইভ)',
     catalogBlock || '(ক্যাটালগ এখন লোড হয়নি — পণ্যের প্রশ্নে WhatsApp-এ যোগাযোগের পরামর্শ দাও)',
+    ...(familyBlock
+      ? [
+          '',
+          '## ফ্যামিলি ম্যাচিং সেট — সদস্য তালিকা (এটাই চূড়ান্ত সত্য; এর বাইরে কিছু বলবে না)',
+          familyBlock,
+        ]
+      : []),
     ...(extra ? ['', '## মালিকের অতিরিক্ত নির্দেশনা', extra] : []),
   ].join('\n');
 

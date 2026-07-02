@@ -103,8 +103,8 @@
   font-size: 11.5px;
   color: #b9aee0;
 }
-.alma-ai-close {
-  margin-left: auto;
+.alma-ai-close,
+.alma-ai-clear {
   width: 30px;
   height: 30px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -113,8 +113,20 @@
   color: #d9d2f2;
   font-size: 13px;
   cursor: pointer;
+  flex-shrink: 0;
 }
-.alma-ai-close:hover {
+.alma-ai-clear {
+  margin-left: auto;
+  font-size: 12px;
+}
+.alma-ai-close {
+  margin-left: auto;
+}
+.alma-ai-clear + .alma-ai-close {
+  margin-left: 8px;
+}
+.alma-ai-close:hover,
+.alma-ai-clear:hover {
   background: rgba(255, 255, 255, 0.14);
 }
 
@@ -122,12 +134,22 @@
 .alma-ai-list {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 255, 0.4) transparent;
+  /* Chat scrolling must never chain to the page (Lenis would grab it). */
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+/* Inner wrapper is always ≥ container + 2px, so the list is ALWAYS a real
+   scroll container — gesture/touch scrolls target it and overscroll-behavior
+   can contain them (a non-overflowing box is skipped by the compositor and
+   the page would scroll instead). */
+.alma-ai-list-inner {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 92, 255, 0.4) transparent;
+  padding: 16px 14px;
+  min-height: calc(100% + 2px);
 }
 .alma-ai-msg {
   max-width: 86%;
@@ -249,15 +271,42 @@
   color: #8d84ad;
 }
 
-.alma-ai-nav-notice {
-  align-self: center;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(124, 92, 255, 0.2);
-  border: 1px solid rgba(160, 135, 255, 0.4);
-  color: #d9d2f2;
+/* Inline action-status chips ("নেভিগেট করছি ✓" — the ElevenLabs pattern). */
+.alma-ai-status {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 15px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(160, 135, 255, 0.28);
+  color: #cfc5f2;
   font-size: 12.5px;
   animation: almaPanelIn 0.25s ease;
+}
+.alma-ai-status-ic {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  flex-shrink: 0;
+  /* running: spinner ring */
+  border: 2px solid rgba(160, 135, 255, 0.3);
+  border-top-color: #a087ff;
+  animation: almaHlSpin 0.8s linear infinite;
+}
+.alma-ai-status.done .alma-ai-status-ic {
+  border: none;
+  animation: none;
+  background: #19c37d;
+  color: #fff;
+  font-weight: 700;
+}
+.alma-ai-status.done {
+  color: #ddd6f7;
 }
 
 /* -------------------------------- Input bar ------------------------------- */

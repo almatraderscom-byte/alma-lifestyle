@@ -55,7 +55,8 @@ function rateLimited(ip: string): boolean {
 const NAV_RE = /\[\[NAV:([^\]]+)\]\]/g;
 const PRODUCT_RE = /\[\[PRODUCT:([^\]]+)\]\]/g;
 const HIGHLIGHT_RE = /\[\[HIGHLIGHT:([^\]]+)\]\]/g;
-const TAG_RE = /\[\[(?:NAV|PRODUCT|HIGHLIGHT):[^\]]*\]\]/g;
+const TOUR_RE = /\[\[TOUR:([^\]]+)\]\]/g;
+const TAG_RE = /\[\[(?:NAV|PRODUCT|HIGHLIGHT|TOUR):[^\]]*\]\]/g;
 /** A possibly-incomplete action tag at the chunk tail ("[", "[[NAV:/pro" …).
  *  Held back until it completes or the stream ends — worst case a literal
  *  "[" is briefly delayed, never lost. */
@@ -186,6 +187,12 @@ export async function POST(request: NextRequest) {
           [...fullText.matchAll(HIGHLIGHT_RE)]
             .map((m) => m[1].trim())
             .find((k) => isHighlightKey(k)) ?? null;
+        // Sequential product tour — validated against the live catalog.
+        const tour = [...fullText.matchAll(TOUR_RE)]
+          .flatMap((m) => m[1].split(/[|,]/))
+          .map((s) => s.trim())
+          .filter((slug) => products.some((p) => p.slug === slug))
+          .slice(0, 4);
         const cards = [...fullText.matchAll(PRODUCT_RE)]
           .map((m) => m[1].trim())
           .slice(0, 3)
@@ -201,7 +208,15 @@ export async function POST(request: NextRequest) {
           }));
 
         controller.enqueue(
-          encoder.encode(sseEvent({ done: true, nav: nav ?? null, highlight, products: cards }))
+          encoder.encode(
+            sseEvent({
+              done: true,
+              nav: nav ?? null,
+              highlight,
+              tour: tour.length ? tour : null,
+              products: cards,
+            })
+          )
         );
       } catch (err) {
         console.error('[assistant] stream error', err);
