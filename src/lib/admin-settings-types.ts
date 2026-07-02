@@ -50,6 +50,48 @@ export const CONTENT_PAGE_LABELS: Record<ContentPageSlug, string> = {
   'size-guide': 'Size Guide (সাইজ গাইড)',
 };
 
+/** ALMA AI assistant (Gemini-powered storefront concierge) — admin-tunable. */
+export interface AssistantSettings {
+  enabled: boolean;
+  /** Display name shown in the chat header, e.g. "আলমা". */
+  name: string;
+  /** First message the assistant shows when the panel opens. */
+  greeting: string;
+  /** Quick-tap suggestion chips shown under the greeting. */
+  suggestions: string[];
+  /** Owner's extra instructions appended to the AI system prompt. */
+  extraInstructions: string;
+}
+
+/** One pre-recorded voice clip (ElevenLabs-generated) played by the storefront. */
+export interface VoiceClipSetting {
+  enabled: boolean;
+  /** Optional hosted URL override; empty = bundled /voice/<key>.mp3. */
+  url: string;
+}
+
+export const VOICE_CLIP_KEYS = [
+  'greeting',
+  'priceReveal',
+  'familyHook',
+  'addToCart',
+  'assistantOpen',
+] as const;
+export type VoiceClipKey = (typeof VOICE_CLIP_KEYS)[number];
+
+export const VOICE_CLIP_LABELS: Record<VoiceClipKey, string> = {
+  greeting: 'হোমপেজ সালাম/গ্রিটিং (প্রথম ভিজিটে)',
+  priceReveal: 'প্রোডাক্ট দামে ক্লিক করলে',
+  familyHook: 'ফ্যামিলি ম্যাচিং সেট পেজে (অটো হুক)',
+  addToCart: 'কার্টে যোগ করলে',
+  assistantOpen: 'AI সহকারী খুললে',
+};
+
+export interface VoiceSettings {
+  enabled: boolean;
+  clips: Record<VoiceClipKey, VoiceClipSetting>;
+}
+
 export interface AppSettings {
   storeName: string;
   tagline: string;
@@ -105,8 +147,42 @@ export interface AppSettings {
   /** Overrides for user-facing shop/cart/checkout UI labels, keyed by dot-path
    *  (e.g. "cart.title"). Blank/unset keys fall back to the built-in copy. */
   uiCopy: Record<string, string>;
+  /** ALMA AI assistant (chat concierge) config. */
+  assistant: AssistantSettings;
+  /** Pre-recorded voice clip playback config. */
+  voice: VoiceSettings;
   createdAt: string;
   updatedAt: string;
+}
+
+export function getDefaultAssistantSettings(): AssistantSettings {
+  return {
+    enabled: true,
+    name: 'আলমা',
+    greeting:
+      'আসসালামু আলাইকুম! 🌙 আমি আলমা — ALMA Lifestyle-এর AI সহকারী। পাঞ্জাবি, ফ্যামিলি ম্যাচিং সেট, দাম, ডেলিভারি — যেকোনো প্রশ্ন করুন, আমি সাহায্য করছি।',
+    suggestions: [
+      'ফ্যামিলি ম্যাচিং সেট দেখান',
+      'ডেলিভারি চার্জ কত?',
+      'নতুন কালেকশন কী আছে?',
+      'অর্ডার কীভাবে করব?',
+    ],
+    extraInstructions: '',
+  };
+}
+
+export function getDefaultVoiceSettings(): VoiceSettings {
+  const clip = (): VoiceClipSetting => ({ enabled: true, url: '' });
+  return {
+    enabled: true,
+    clips: {
+      greeting: clip(),
+      priceReveal: clip(),
+      familyHook: clip(),
+      addToCart: clip(),
+      assistantOpen: clip(),
+    },
+  };
 }
 
 /** Current storefront footer columns — the defaults shown until the owner edits them. */
@@ -202,6 +278,8 @@ export function getDefaultAppSettings(): AppSettings {
     headerNav: DEFAULT_HEADER_NAV,
     contentPages: {},
     uiCopy: {},
+    assistant: getDefaultAssistantSettings(),
+    voice: getDefaultVoiceSettings(),
     createdAt: now,
     updatedAt: now,
   };

@@ -6,6 +6,7 @@ import { PDP } from '@/lib/content';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
+import { useVoice } from '@/context/VoiceContext';
 import { trackAddToCartLine, trackLead } from '@/lib/pixel';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import {
@@ -32,6 +33,7 @@ interface ObsidianProductDetailsProps {
 export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps) {
   const router = useRouter();
   const { addItem } = useCart();
+  const { play } = useVoice();
   const { showToast } = useToast();
   const settings = useStoreSettings();
   const cms = useCmsEdit();
@@ -67,6 +69,7 @@ export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps)
       quantity: payload.quantity ?? 1,
       unitPriceBdt: payload.priceSnapshot ?? product.price,
     });
+    play('addToCart');
     showToast(PDP.toastAdded);
   }
 
