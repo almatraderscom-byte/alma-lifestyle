@@ -123,6 +123,21 @@ export function CmsEditLayer() {
     };
   }, [editing, syncSelRect]);
 
+  // The image currently shown on the page for the selected slot — used as the
+  // image-adjust preview source when no explicit url override is set. Read once
+  // per selection. MUST stay above the early returns below (Rules of Hooks):
+  // non-admin renders return early with fewer hooks, and a hook that only
+  // executes once editing turns on crashes React with "Rendered more hooks
+  // than during the previous render" — taking the whole page down.
+  const fallbackSrc = useMemo(() => {
+    if (!selection) return '';
+    const img =
+      selection.el instanceof HTMLImageElement
+        ? selection.el
+        : selection.el.querySelector('img');
+    return img?.currentSrc || img?.src || '';
+  }, [selection]);
+
   // ---- Not an admin: minimal prompt only ----
   if (cms && cms.active && !cms.isAdmin) {
     const next = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -164,18 +179,6 @@ export function CmsEditLayer() {
     cms.setField(selection.path, { ...slot, ...next });
     requestAnimationFrame(syncSelRect);
   };
-
-  // The image currently shown on the page for this slot — used as the preview
-  // source when no explicit url override is set. Read once per selection.
-  const fallbackSrc = useMemo(() => {
-    if (!selection) return '';
-    const img =
-      selection.el instanceof HTMLImageElement
-        ? selection.el
-        : selection.el.querySelector('img');
-    return img?.currentSrc || img?.src || '';
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection]);
 
   const previewSrc = slot.url || fallbackSrc;
 
