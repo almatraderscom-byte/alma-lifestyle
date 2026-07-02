@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAssistant } from '@/context/AssistantContext';
+import { flushPendingSpotlight, queueSpotlight, runSpotlight } from '@/components/assistant/spotlight';
 import { useVoice } from '@/context/VoiceContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { formatBdtPrice } from '@/lib/format-bn';
@@ -39,6 +40,13 @@ export function AssistantWidget() {
   const assistant = settings.assistant;
   const { play } = useVoice();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // After an assistant-triggered navigation lands, run the spotlight it
+  // queued for the destination page (ElevenLabs-style guided highlight).
+  useEffect(() => {
+    flushPendingSpotlight();
+  }, [pathname]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -119,6 +127,7 @@ export function AssistantWidget() {
               t?: string;
               done?: boolean;
               nav?: string | null;
+              highlight?: string | null;
               products?: ProductCard[];
               error?: string;
             };
@@ -139,13 +148,19 @@ export function AssistantWidget() {
               gotDone = true;
               if (evt.products?.length) patchLast({ products: evt.products });
               if (!streamed && !evt.products?.length) fail();
-              if (evt.nav) {
+              const samePage = evt.nav && evt.nav.split('?')[0] === pathname;
+              if (evt.nav && !samePage) {
+                // Highlight on the destination page runs after the route
+                // change (queued through sessionStorage, flushed on landing).
+                if (evt.highlight) queueSpotlight(evt.highlight);
                 setNavNotice(true);
                 const target = evt.nav;
                 setTimeout(() => {
                   setNavNotice(false);
                   router.push(target);
                 }, NAV_DELAY_MS);
+              } else if (evt.highlight) {
+                void runSpotlight(evt.highlight);
               }
             }
           }

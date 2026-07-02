@@ -33,7 +33,7 @@ export function HomepageFAQ({ content }: HomepageFAQProps) {
   const sectionTitle = content?.sectionTitle ?? 'সাধারণ প্রশ্ন';
 
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding bg-white" data-alma-target="faq">
       <div className="mx-auto max-w-3xl">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 20 }}

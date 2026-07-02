@@ -52,7 +52,11 @@ export function FamilyMatchingShowcase({ data: dataProp }: FamilyMatchingShowcas
   const cardsParallaxY = useTransform(scrollYProgress, [0, 1], [16, -16]);
 
   return (
-    <section ref={sectionRef} className="section-padding bg-cream overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="section-padding bg-cream overflow-hidden"
+      data-alma-target="family-matching"
+    >
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <motion.div

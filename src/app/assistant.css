@@ -327,6 +327,93 @@
   opacity: 0.65;
 }
 
+/* ==========================================================================
+   GUIDED SPOTLIGHT — the assistant highlights a page section: backdrop
+   blurs/dims around it, the target zooms forward inside a pulsing neon ring.
+   Four fixed panels form the "hole", so the target itself never gets
+   filtered and no stacking-context tricks are needed.
+   ========================================================================== */
+/* Enter/exit fades are JS-driven (inline opacity) — CSS transitions freeze in
+   occluded windows, which would leave the whole effect invisible. */
+.alma-hl-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9980;
+  pointer-events: none;
+  opacity: 0;
+}
+.alma-hl-panel {
+  position: fixed;
+  background: rgba(6, 5, 14, 0.52);
+  /* Single blur pass only — extra filter functions (saturate etc.) add a
+     colour-matrix pass per frame, expensive on weaker Windows GPUs. */
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+/* No backdrop-filter support → deepen the dim so focus still reads. */
+@supports not (backdrop-filter: blur(1px)) {
+  .alma-hl-panel {
+    background: rgba(6, 5, 14, 0.72);
+  }
+}
+.alma-hl-ring {
+  position: fixed;
+  border-radius: 18px;
+  border: 2px solid rgba(180, 150, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.5),
+    0 0 22px 2px rgba(124, 92, 255, 0.65),
+    0 0 60px 6px rgba(124, 92, 255, 0.35),
+    inset 0 0 26px rgba(124, 92, 255, 0.22);
+  animation: almaHlNeon 1.3s ease-in-out infinite;
+}
+/* Gold secondary shimmer sweeping the ring (dual-tone Obsidian neon). */
+.alma-hl-ring::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 24px;
+  border: 1px solid rgba(216, 169, 78, 0.55);
+  box-shadow: 0 0 26px 2px rgba(216, 169, 78, 0.3);
+  opacity: 0;
+  animation: almaHlGold 1.3s ease-in-out infinite 0.65s;
+}
+@keyframes almaHlNeon {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 255, 0.5),
+      0 0 22px 2px rgba(124, 92, 255, 0.65),
+      0 0 60px 6px rgba(124, 92, 255, 0.35),
+      inset 0 0 26px rgba(124, 92, 255, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(160, 130, 255, 0.85),
+      0 0 34px 6px rgba(124, 92, 255, 0.9),
+      0 0 90px 14px rgba(124, 92, 255, 0.5),
+      inset 0 0 36px rgba(124, 92, 255, 0.32);
+  }
+}
+@keyframes almaHlGold {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+/* The highlighted element itself: gentle zoom-forward, GPU-composited. */
+.alma-hl-target {
+  transform: scale(1.035) translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alma-hl-target {
+    transform: none;
+  }
+  .alma-hl-ring,
+  .alma-hl-ring::after {
+    animation: none;
+  }
+}
+
 /* Mobile: keep the launcher clear of the WhatsApp button and thumbs. */
 @media (max-width: 640px) {
   .alma-ai-fab {
