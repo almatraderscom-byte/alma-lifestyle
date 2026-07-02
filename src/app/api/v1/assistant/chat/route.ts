@@ -188,11 +188,24 @@ export async function POST(request: NextRequest) {
             .map((m) => m[1].trim())
             .find((k) => isHighlightKey(k)) ?? null;
         // Sequential product tour — validated against the live catalog.
-        const tour = [...fullText.matchAll(TOUR_RE)]
+        let tour = [...fullText.matchAll(TOUR_RE)]
           .flatMap((m) => m[1].split(/[|,]/))
           .map((s) => s.trim())
           .filter((slug) => products.some((p) => p.slug === slug))
           .slice(0, 4);
+        // Deterministic fallback: when the assistant navigates to a category
+        // listing without a (valid) tour, walk the top products of that
+        // category anyway — the guided showcase shouldn't depend on the
+        // model remembering exact slugs.
+        if (!tour.length && !fullText.match(HIGHLIGHT_RE)?.length && nav?.startsWith('/products?')) {
+          const cat = new URLSearchParams(nav.split('?')[1]).get('category');
+          if (cat) {
+            tour = products
+              .filter((p) => p.categorySlug === cat)
+              .slice(0, 3)
+              .map((p) => p.slug);
+          }
+        }
         const cards = [...fullText.matchAll(PRODUCT_RE)]
           .map((m) => m[1].trim())
           .slice(0, 3)
