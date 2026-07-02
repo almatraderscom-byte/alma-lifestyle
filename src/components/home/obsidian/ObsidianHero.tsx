@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
+import type { HomepageImageSlotAdjust } from '@/lib/homepage-config-types';
+import { resolveImageSlot } from '@/lib/homepage-image-slots';
 import type { ObsidianCard } from './obsidian-data';
 
 interface ObsidianHeroProps {
   hero?: CinematicHeroContent;
   products: ObsidianCard[];
+  /** Per-slot image overrides + framing for the hero coverflow (`hero-0`…). */
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
 }
 
 /** A coverflow slide is either a real product card or the CMS hero video.
@@ -49,7 +53,7 @@ function cardStyle(i: number, active: number, n: number): React.CSSProperties {
   };
 }
 
-export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
+export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) {
   const heroVideoSrc = hero?.videoSrc?.trim() ?? '';
   const heroPosterSrc = hero?.posterSrc?.trim() ?? '';
 
@@ -248,8 +252,20 @@ export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
                     style={{ objectPosition: p.objectPosition }}
                   />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.card.imageUrl} alt={p.card.title} />
+                  (() => {
+                    const r = resolveImageSlot(imageSlots, `hero-${i}`, p.card.imageUrl);
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={r.src}
+                        alt={p.card.title}
+                        data-cms-field={`imageSlots.hero-${i}`}
+                        data-cms-type="image-adjust"
+                        data-cms-label={`Hero card image ${i + 1}`}
+                        style={r.style}
+                      />
+                    );
+                  })()
                 )}
                 <div className="veil" />
               </div>
@@ -351,7 +367,7 @@ export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
                     )
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.card.imageUrl} alt="" />
+                    <img src={resolveImageSlot(imageSlots, `hero-${i}`, p.card.imageUrl).src} alt="" />
                   )}
                 </button>
               ))}

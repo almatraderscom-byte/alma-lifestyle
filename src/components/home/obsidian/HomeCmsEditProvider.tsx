@@ -74,6 +74,7 @@ function deriveSections(config: HomepageConfig) {
         ? (trustSection.data as TrustSectionData)
         : undefined,
     copy: (config.obsidianCopy ?? DEFAULT_OBSIDIAN_COPY) as ObsidianHomeCopy,
+    imageSlots: config.imageSlots,
     // Dot-paths into the live config so the visual editor can tag each field.
     // `undefined` when the section is absent (→ its elements stay untagged).
     categoriesPath: catIndex >= 0 ? `sections.${catIndex}.data` : undefined,
@@ -194,7 +195,7 @@ export function HomeCmsEditProvider({
     [active, isAdmin, editing, dirty, saving, savedAt, error, config, getField, setField, save, discard]
   );
 
-  const { categories, reviews, trust, copy, categoriesPath, reviewsPath, trustPath } =
+  const { categories, reviews, trust, copy, imageSlots, categoriesPath, reviewsPath, trustPath } =
     deriveSections(config);
 
   return (
@@ -206,6 +207,7 @@ export function HomeCmsEditProvider({
         reviews={reviews}
         trust={trust}
         copy={copy}
+        imageSlots={imageSlots}
         categoriesPath={categoriesPath}
         reviewsPath={reviewsPath}
         trustPath={trustPath}

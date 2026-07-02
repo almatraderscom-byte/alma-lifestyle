@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useCmsEdit } from '@/components/cms/cms-edit-context';
 
 /**
@@ -25,6 +25,10 @@ interface Selection {
 const OUTLINE_COLOR = '#7c5cff';
 const Z = 2_147_483_000;
 
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
 function rectOf(el: HTMLElement) {
   const r = el.getBoundingClientRect();
   return { top: r.top, left: r.left, width: r.width, height: r.height };
@@ -39,6 +43,9 @@ export function CmsEditLayer() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const editing = cms?.editing ?? false;
 
@@ -138,8 +145,74 @@ export function CmsEditLayer() {
   // its current value is empty/undefined (e.g. an optional compare-at price the
   // owner wants to add). Clearing the box writes `undefined`.
   const isNumberField = selection?.fieldType === 'number';
+  const isImageAdjust = selection?.fieldType === 'image-adjust';
   const numericInput = isNumber || isNumberField;
   const editable = isString || isNumber || isNumberField;
+
+  // ---- image-adjust: focal-point / zoom editor for homepage image slots ----
+  // Value shape: { url?, posX?, posY?, zoom? } | undefined. posX/posY are
+  // objectPosition percentages (0–100, default 50), zoom is a scale (default 1).
+  const slot = (typeof rawValue === 'object' && rawValue !== null ? rawValue : {}) as {
+    url?: string;
+    posX?: number;
+    posY?: number;
+    zoom?: number;
+  };
+
+  const patchSlot = (next: Partial<typeof slot>) => {
+    if (!selection) return;
+    cms.setField(selection.path, { ...slot, ...next });
+    requestAnimationFrame(syncSelRect);
+  };
+
+  // The image currently shown on the page for this slot — used as the preview
+  // source when no explicit url override is set. Read once per selection.
+  const fallbackSrc = useMemo(() => {
+    if (!selection) return '';
+    const img =
+      selection.el instanceof HTMLImageElement
+        ? selection.el
+        : selection.el.querySelector('img');
+    return img?.currentSrc || img?.src || '';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selection]);
+
+  const previewSrc = slot.url || fallbackSrc;
+
+  const onPreviewPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: slot.posX ?? 50,
+      startPosY: slot.posY ?? 50,
+    };
+    setDragging(true);
+  };
+
+  const onPreviewPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    const box = previewRef.current;
+    if (!d || !box) return;
+    const w = box.clientWidth || 1;
+    const h = box.clientHeight || 1;
+    // Image-follows-mouse: dragging the photo right reveals more of its LEFT
+    // side, which means objectPosition X decreases. Same logic vertically.
+    const posX = clamp(d.startPosX - ((e.clientX - d.startX) / w) * 100, 0, 100);
+    const posY = clamp(d.startPosY - ((e.clientY - d.startY) / h) * 100, 0, 100);
+    patchSlot({ posX, posY });
+  };
+
+  const onPreviewPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    setDragging(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      /* pointer already released */
+    }
+  };
 
   const commit = (raw: string) => {
     if (!selection) return;
@@ -178,7 +251,13 @@ export function CmsEditLayer() {
         );
         return;
       }
-      cms.setField(selection.path, body.data.url);
+      if (selection.fieldType === 'image-adjust') {
+        const cur = cms.getField(selection.path);
+        const base = (typeof cur === 'object' && cur !== null ? cur : {}) as Record<string, unknown>;
+        cms.setField(selection.path, { ...base, url: body.data.url });
+      } else {
+        cms.setField(selection.path, body.data.url);
+      }
       requestAnimationFrame(syncSelRect);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
@@ -254,6 +333,126 @@ export function CmsEditLayer() {
                 value={typeof rawValue === 'string' ? rawValue : ''}
                 onChange={(e) => commit(e.target.value)}
                 placeholder="or paste an image URL / path"
+                style={{ ...textareaStyle, marginTop: 10, resize: 'none' }}
+              />
+            </div>
+          ) : isImageAdjust ? (
+            <div>
+              <div
+                ref={previewRef}
+                onPointerDown={onPreviewPointerDown}
+                onPointerMove={onPreviewPointerMove}
+                onPointerUp={onPreviewPointerUp}
+                onPointerCancel={onPreviewPointerUp}
+                style={{
+                  position: 'relative',
+                  width: 288,
+                  maxWidth: '100%',
+                  aspectRatio: '3 / 4',
+                  overflow: 'hidden',
+                  borderRadius: 10,
+                  background: '#0b0a12',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  cursor: dragging ? 'grabbing' : 'grab',
+                  touchAction: 'none',
+                  userSelect: 'none',
+                }}
+              >
+                {previewSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewSrc}
+                    alt="Adjust preview"
+                    draggable={false}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: `${slot.posX ?? 50}% ${slot.posY ?? 50}%`,
+                      transform: `scale(${slot.zoom ?? 1})`,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%',
+                      fontSize: 12,
+                      opacity: 0.6,
+                    }}
+                  >
+                    No image set.
+                  </div>
+                )}
+              </div>
+
+              <p style={{ fontSize: 12, opacity: 0.7, margin: '8px 0 0' }}>
+                ছবিটি টেনে সরান — গুরুত্বপূর্ণ অংশ মাঝে আনুন
+              </p>
+
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+                  Zoom {(slot.zoom ?? 1).toFixed(1)}×
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={2.5}
+                  step={0.05}
+                  value={slot.zoom ?? 1}
+                  onChange={(e) => patchSlot({ zoom: Number(e.target.value) })}
+                  style={{ width: '100%', accentColor: OUTLINE_COLOR }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button
+                  style={ghostBtnStyle}
+                  onClick={() =>
+                    cms.setField(selection.path, {
+                      ...slot,
+                      posX: undefined,
+                      posY: undefined,
+                      zoom: undefined,
+                    })
+                  }
+                >
+                  Reset position
+                </button>
+                <label
+                  style={{
+                    ...primaryBtnStyle,
+                    textAlign: 'center',
+                    cursor: uploading ? 'default' : 'pointer',
+                    opacity: uploading ? 0.6 : 1,
+                  }}
+                >
+                  {uploading ? 'Uploading…' : 'Upload / replace'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploading}
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadFile(f);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+              {uploadError && (
+                <p style={{ color: '#ff6b6b', fontSize: 12, margin: '8px 0 0' }}>{uploadError}</p>
+              )}
+              <input
+                type="text"
+                value={slot.url ?? ''}
+                onChange={(e) => patchSlot({ url: e.target.value || undefined })}
+                placeholder="or paste an image URL"
                 style={{ ...textareaStyle, marginTop: 10, resize: 'none' }}
               />
             </div>
