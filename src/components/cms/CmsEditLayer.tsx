@@ -84,8 +84,24 @@ export function CmsEditLayer() {
   useEffect(() => {
     if (!editing) return;
 
+    /** Resolve the tagged element at a pointer event. `closest()` alone misses
+     *  the tagged product images, because decorative overlays (`.veil`,
+     *  `.pc-veil`, gradient shims) sit ON TOP of them and become the event
+     *  target — the img is a sibling underneath, not an ancestor. So when the
+     *  target chain has no tag, hit-test through the full stack under the
+     *  cursor with elementsFromPoint (it returns overlays AND the elements
+     *  beneath them, including ancestors). */
+    const fieldElAt = (e: MouseEvent): HTMLElement | null => {
+      const direct = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-cms-field]');
+      if (direct) return direct;
+      for (const el of document.elementsFromPoint(e.clientX, e.clientY)) {
+        if (el instanceof HTMLElement && el.hasAttribute('data-cms-field')) return el;
+      }
+      return null;
+    };
+
     const onOver = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-cms-field]');
+      const el = fieldElAt(e);
       if (!el || panelRef.current?.contains(el)) {
         setHoverRect(null);
         return;
@@ -102,7 +118,7 @@ export function CmsEditLayer() {
     const onClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (panelRef.current?.contains(target)) return; // clicks inside the editor UI
-      const el = target?.closest<HTMLElement>('[data-cms-field]');
+      const el = fieldElAt(e);
       if (!el) return;
       // Intercept so editable links/buttons don't navigate or submit while editing.
       e.preventDefault();
