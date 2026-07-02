@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
 
 interface ObsidianFooterProps {
   stripImages: string[];
@@ -128,9 +130,54 @@ function useWordmarkRipple(wordRef: React.RefObject<HTMLDivElement | null>) {
   }, [wordRef]);
 }
 
+/** Facebook / Instagram / WhatsApp glyphs, reused for whichever links the owner
+ *  has configured in admin settings. */
+const SOCIAL_ICON: Record<'facebook' | 'instagram' | 'whatsapp', React.ReactNode> = {
+  facebook: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14 9h3l.4-3H14V4.5c0-.9.3-1.5 1.6-1.5H17V.3C16.7.3 15.6.2 14.4.2 11.9.2 10.3 1.7 10.3 4.4V6H7.5v3h2.8v11H14V9Z" />
+    </svg>
+  ),
+  instagram: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+    </svg>
+  ),
+  whatsapp: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.8-4.3-.2-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2.3 1.3 1.1 2.3 1.5 2.6 1.6.3.1.5.1.7-.1l.9-1c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.2.1.9-.1 1.4Z" />
+    </svg>
+  ),
+};
+
 export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
   const wordRef = useRef<HTMLDivElement | null>(null);
   useWordmarkRipple(wordRef);
+  const settings = useStoreSettings();
+
+  // Only surface the channels the owner has actually filled in (admin → settings).
+  const socials: { key: string; href: string; label: string; icon: React.ReactNode }[] = [
+    settings.facebookUrl && {
+      key: 'facebook',
+      href: settings.facebookUrl,
+      label: 'Facebook',
+      icon: SOCIAL_ICON.facebook,
+    },
+    settings.instagramUrl && {
+      key: 'instagram',
+      href: settings.instagramUrl,
+      label: 'Instagram',
+      icon: SOCIAL_ICON.instagram,
+    },
+    (settings.whatsappNumber || settings.contactPhone) && {
+      key: 'whatsapp',
+      href: buildWhatsAppHref(settings),
+      label: 'WhatsApp',
+      icon: SOCIAL_ICON.whatsapp,
+    },
+  ].filter(Boolean) as { key: string; href: string; label: string; icon: React.ReactNode }[];
 
   return (
     <footer className="ob-footer" id="footer">
@@ -144,25 +191,21 @@ export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
               প্রিমিয়াম পাঞ্জাবি, ইসলামিক এসেনশিয়ালস ও লাইফস্টাইল পণ্য — সেই মুহূর্তগুলোর জন্য যেগুলো
               সত্যিই গুরুত্বপূর্ণ।
             </p>
-            <div className="socials">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M14 9h3l.4-3H14V4.5c0-.9.3-1.5 1.6-1.5H17V.3C16.7.3 15.6.2 14.4.2 11.9.2 10.3 1.7 10.3 4.4V6H7.5v3h2.8v11H14V9Z" />
-                </svg>
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.7" />
-                  <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
-                  <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
-                </svg>
-              </a>
-              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.8-4.3-.2-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2.3 1.3 1.1 2.3 1.5 2.6 1.6.3.1.5.1.7-.1l.9-1c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.2.1.9-.1 1.4Z" />
-                </svg>
-              </a>
-            </div>
+            {socials.length > 0 && (
+              <div className="socials">
+                {socials.map((s) => (
+                  <a
+                    key={s.key}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           {COLUMNS.map((col) => (
             <div className="foot-col bn" key={col.title}>

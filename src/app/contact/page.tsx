@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
 import { WhatsAppLink } from '@/components/ui/WhatsAppLink';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 export const metadata: Metadata = {
   title: 'যোগাযোগ | ALMA Lifestyle',
@@ -9,7 +10,18 @@ export const metadata: Metadata = {
     'ALMA Lifestyle এর সাথে যোগাযোগ করুন। WhatsApp, ফোন, ইমেইল এর মাধ্যমে আমাদের সাথে কথা বলুন।',
 };
 
-export default function ContactPage() {
+/** Turn a stored phone (e.g. `8801307777733`) into a local display form. */
+function formatLocalPhone(raw: string): string {
+  const digits = (raw || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.startsWith('880') ? `0${digits.slice(3)}` : digits;
+}
+
+export default async function ContactPage() {
+  const settings = await loadPublicSettingsServer();
+  const phoneDigits = (settings.contactPhone || '').replace(/\D/g, '');
+  const phoneDisplay = formatLocalPhone(settings.contactPhone);
+
   return (
     <PageLayout
       badge="যোগাযোগ"
@@ -30,10 +42,12 @@ export default function ContactPage() {
               </span>
               <div>
                 <h3 className="mb-1 font-medium text-charcoal">ফোন / WhatsApp</h3>
-                <a href="tel:+8801307777733" className="text-lg text-terracotta hover:underline">
-                  01307-777733
+                <a href={`tel:+${phoneDigits}`} className="text-lg text-terracotta hover:underline">
+                  {phoneDisplay}
                 </a>
-                <p className="mt-1 text-sm text-text-light">সকাল ৯টা - রাত ১০টা</p>
+                {settings.businessHours && (
+                  <p className="mt-1 text-sm text-text-light">{settings.businessHours}</p>
+                )}
               </div>
             </div>
 
@@ -43,8 +57,11 @@ export default function ContactPage() {
               </span>
               <div>
                 <h3 className="mb-1 font-medium text-charcoal">ইমেইল</h3>
-                <a href="mailto:admin@almatraders.com" className="text-terracotta hover:underline">
-                  admin@almatraders.com
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="text-terracotta hover:underline"
+                >
+                  {settings.contactEmail}
                 </a>
                 <p className="mt-1 text-sm text-text-light">২৪ ঘন্টার মধ্যে উত্তর</p>
               </div>
@@ -56,7 +73,7 @@ export default function ContactPage() {
               </span>
               <div>
                 <h3 className="mb-1 font-medium text-charcoal">ঠিকানা</h3>
-                <p>ঢাকা, বাংলাদেশ</p>
+                <p>{settings.physicalAddress}</p>
                 <p className="mt-1 text-sm text-text-light">পুরো বাংলাদেশে ডেলিভারি</p>
               </div>
             </div>
@@ -67,8 +84,7 @@ export default function ContactPage() {
               </span>
               <div>
                 <h3 className="mb-1 font-medium text-charcoal">সময়সূচি</h3>
-                <p>শনি - বৃহস্পতি: সকাল ৯টা - রাত ১০টা</p>
-                <p>শুক্রবার: দুপুর ২টা - রাত ১০টা</p>
+                <p>{settings.businessHours}</p>
               </div>
             </div>
           </div>
@@ -76,24 +92,28 @@ export default function ContactPage() {
           <div className="mt-8">
             <h3 className="mb-3 font-bn-heading font-medium text-charcoal">আমাদের ফলো করুন</h3>
             <div className="flex gap-3">
-              <a
-                href="https://facebook.com/almalifestyle"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 font-bn-body text-white hover:bg-blue-700"
-                aria-label="Facebook"
-              >
-                f
-              </a>
-              <a
-                href="https://instagram.com/almalifestyle"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:opacity-90"
-                aria-label="Instagram"
-              >
-                ig
-              </a>
+              {settings.facebookUrl && (
+                <a
+                  href={settings.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 font-bn-body text-white hover:bg-blue-700"
+                  aria-label="Facebook"
+                >
+                  f
+                </a>
+              )}
+              {settings.instagramUrl && (
+                <a
+                  href={settings.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:opacity-90"
+                  aria-label="Instagram"
+                >
+                  ig
+                </a>
+              )}
               <WhatsAppLink
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald font-bn-body text-white hover:opacity-90"
                 aria-label="WhatsApp"
