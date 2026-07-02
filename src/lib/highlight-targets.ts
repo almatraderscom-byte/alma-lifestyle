@@ -40,7 +40,10 @@ export const HIGHLIGHT_TARGETS: Record<string, HighlightTarget> = {
     page: '/',
   },
   'family-matching': {
-    selectors: ['[data-alma-target="family-matching"]'],
+    // The dedicated showcase exists only on the editorial layout; on the live
+    // Obsidian home the products grid (which carries the family sets) is the
+    // right thing to point at.
+    selectors: ['[data-alma-target="family-matching"]', '#products'],
     description: 'ফ্যামিলি ম্যাচিং সেট শোকেস (বাবা-ছেলে/মা-মেয়ে ম্যাচিং)',
     page: '/',
   },
@@ -50,9 +53,11 @@ export const HIGHLIGHT_TARGETS: Record<string, HighlightTarget> = {
     page: '/',
   },
   faq: {
-    selectors: ['[data-alma-target="faq"]'],
-    description: 'সচরাচর জিজ্ঞাসা (FAQ) সেকশন',
-    page: '/',
+    // No FAQ section on the Obsidian home — the /faq content page is the
+    // destination; highlighting its <main> frames the whole FAQ list.
+    selectors: ['[data-alma-target="faq"]', 'main'],
+    description: 'সচরাচর জিজ্ঞাসা (FAQ) — /faq পেজে NAV দিয়ে নিয়ে যাও',
+    page: '/faq',
   },
   trust: {
     selectors: ['#trust'],
