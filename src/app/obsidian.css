@@ -473,9 +473,21 @@
   border-radius: 16px;
   overflow: hidden;
   background: #0d1a20;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+  /* White hairline drawn as an INSET box-shadow ring, not a real `border`.
+     `.c-in` is 3D-rotated + scaled every frame by the sway rAF loop; a real 1px
+     border on that transformed plane is re-rasterised each frame on Windows
+     Chrome (ANGLE/Direct3D) and renders as a fat, shimmering white stroke
+     ("kape"). macOS's compositor hides this, so it only showed on Windows.
+     An inset ring is painted into the card's own composited texture (promoted
+     via will-change) and is GPU-transformed once — identical hairline on Mac,
+     no thickening/flicker on Windows. */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 40px 90px -30px rgba(0, 0, 0, 0.7);
   transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
   transition: transform 0.4s var(--ob-ease);
 }
 .obsidian-home .c-in img,
