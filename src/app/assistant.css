@@ -2,50 +2,120 @@
    ALMA AI ASSISTANT + VOICE DOCK — global floating widgets (Obsidian look)
    ========================================================================== */
 
-/* ---- Launcher (floating pill, bottom-right, above the WhatsApp button) ---- */
+/* ---- Launcher: living orb character (eyes glance left/right + blink, smile,
+   spinning aurora ring, gentle float) with the name pill below. Every
+   animation here is transform/opacity-only — GPU-composited, Windows-safe. ---- */
 .alma-ai-fab {
   position: fixed;
   right: 18px;
   bottom: 86px;
   z-index: 60;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 10px 18px 10px 12px;
-  border: 1px solid rgba(180, 160, 255, 0.45);
-  border-radius: 999px;
-  background: linear-gradient(135deg, #1b1430 0%, #2a1d52 55%, #40276b 100%);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  gap: 9px;
+  border: none;
+  background: none;
+  padding: 0;
   cursor: pointer;
-  box-shadow:
-    0 0 0 1px rgba(124, 92, 255, 0.25),
-    0 8px 30px -8px rgba(124, 92, 255, 0.55),
-    0 18px 44px -18px rgba(0, 0, 0, 0.6);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease;
 }
 .alma-ai-fab:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow:
-    0 0 0 1px rgba(124, 92, 255, 0.4),
-    0 10px 36px -8px rgba(124, 92, 255, 0.7),
-    0 22px 50px -18px rgba(0, 0, 0, 0.65);
+  transform: translateY(-3px) scale(1.04);
 }
-.alma-ai-fab-orb {
+.alma-ai-avatar {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  animation: almaFloat 3.4s ease-in-out infinite;
+}
+/* rotating aurora rim */
+.alma-ai-avatar-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: conic-gradient(from 0deg, #00e0a0, #1f7bff, #7c5cff, #ff2d55, #ffb524, #00e0a0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: almaHlSpin 4.5s linear infinite;
+  opacity: 0.9;
+}
+.alma-ai-avatar-orb {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 26%, #cfc0ff 0%, #8f6fff 40%, #5b3fd6 75%, #3c2696);
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #cfc0ff, #7c5cff 62%, #4a2fb8);
-  box-shadow: 0 0 14px rgba(124, 92, 255, 0.8);
-  font-size: 15px;
-  animation: almaOrbPulse 2.6s ease-in-out infinite;
+  box-shadow:
+    0 0 0 2px rgba(180, 150, 255, 0.35),
+    0 0 26px 3px rgba(124, 92, 255, 0.6),
+    0 16px 36px -12px rgba(0, 0, 0, 0.7);
 }
-@keyframes almaOrbPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(124, 92, 255, 0.65); }
-  50% { box-shadow: 0 0 20px rgba(124, 92, 255, 1); }
+/* smile */
+.alma-ai-avatar-orb::after {
+  content: '';
+  position: absolute;
+  bottom: 19px;
+  left: 50%;
+  width: 11px;
+  height: 6px;
+  margin-left: -5.5px;
+  border-bottom: 2.5px solid rgba(255, 255, 255, 0.92);
+  border-radius: 0 0 11px 11px;
+}
+.alma-ai-eyes {
+  display: flex;
+  gap: 7px;
+  margin-top: -8px;
+  animation: almaGlance 5.2s ease-in-out infinite;
+}
+.alma-ai-eye {
+  width: 8px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation: almaBlink 4.6s infinite;
+}
+@keyframes almaGlance {
+  0%, 20%   { transform: translateX(0); }
+  28%, 42%  { transform: translateX(-6px); }
+  50%, 68%  { transform: translateX(6px); }
+  76%, 100% { transform: translateX(0); }
+}
+@keyframes almaBlink {
+  0%, 46%, 52%, 100% { transform: scaleY(1); }
+  48%, 50% { transform: scaleY(0.08); }
+}
+@keyframes almaFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.alma-ai-fab-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2a1d52, #40276b);
+  border: 1px solid rgba(180, 160, 255, 0.5);
+  padding: 6px 17px;
+  border-radius: 999px;
+  box-shadow: 0 8px 22px -8px rgba(124, 92, 255, 0.65);
+}
+@media (prefers-reduced-motion: reduce) {
+  .alma-ai-avatar,
+  .alma-ai-avatar-ring,
+  .alma-ai-eyes,
+  .alma-ai-eye {
+    animation: none;
+  }
 }
 
 /* ------------------------------- Chat panel ------------------------------- */
@@ -125,6 +195,64 @@
 .alma-ai-min:hover,
 .alma-ai-clear:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+/* ------------------ Owner trust card (top of the chat) ------------------ */
+.alma-ai-owner {
+  display: flex;
+  gap: 12px;
+  padding: 13px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.16), rgba(216, 169, 78, 0.08));
+  border: 1px solid rgba(180, 160, 255, 0.3);
+}
+.alma-ai-owner img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 215, 140, 0.65);
+  box-shadow: 0 0 14px rgba(216, 169, 78, 0.35);
+  flex-shrink: 0;
+}
+.alma-ai-owner-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.alma-ai-owner-txt strong {
+  font-size: 13.5px;
+  color: #fff;
+}
+.alma-ai-owner-txt small {
+  font-size: 11.5px;
+  color: #d9c9a8;
+}
+.alma-ai-owner-txt p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #cfc5f2;
+  margin: 2px 0 6px;
+}
+.alma-ai-owner-txt a {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: #1faa53;
+  padding: 6px 13px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px -6px rgba(31, 170, 83, 0.7);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.alma-ai-owner-txt a:hover {
+  background: #24c05f;
+  transform: translateY(-1px);
 }
 
 /* ------------------------------ Message list ------------------------------ */

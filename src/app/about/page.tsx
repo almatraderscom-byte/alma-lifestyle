@@ -21,6 +21,48 @@ export default function AboutPage() {
       title="ALMA Lifestyle এর গল্প"
       subtitle="এলিগেন্স, কমফোর্ট এবং আধুনিক লাইফস্টাইলের এক বিশ্বস্ত ঠিকানা"
     >
+      {/* Founder card — real face + story: the strongest trust signal an
+          online shop can show (also feeds E-E-A-T for SEO). */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '20px',
+          alignItems: 'center',
+          padding: '22px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, rgba(124,92,255,0.08), rgba(216,169,78,0.08))',
+          border: '1px solid rgba(124,92,255,0.2)',
+          margin: '8px 0 28px',
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/owner/maruf.jpg"
+          alt="Maruf Chowdhury — ALMA Lifestyle এর প্রতিষ্ঠাতা"
+          style={{
+            width: '110px',
+            height: '110px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '3px solid rgba(216,169,78,0.6)',
+            boxShadow: '0 8px 24px rgba(124,92,255,0.25)',
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ flex: 1, minWidth: '220px' }}>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '1.05em' }}>Maruf Chowdhury</p>
+          <p style={{ margin: '2px 0 8px', fontSize: '0.85em', opacity: 0.75 }}>
+            প্রতিষ্ঠাতা, ALMA Lifestyle
+          </p>
+          <p style={{ margin: 0, fontSize: '0.95em' }}>
+            &ldquo;আমার স্বপ্ন ছিল এমন একটা ব্র্যান্ড — যেখানে পুরো পরিবার একসাথে সাজবে,
+            প্রিমিয়াম কোয়ালিটিতে, কিন্তু সাধ্যের দামে। প্রতিটা অর্ডারের পেছনে আমি নিজে
+            আছি — কোনো প্রশ্ন থাকলে WhatsApp-এ সরাসরি আমার সাথেই কথা হবে, ইনশাআল্লাহ।&rdquo;
+          </p>
+        </div>
+      </div>
+
       <h2>আমাদের শুরু</h2>
       <p>
         ALMA Lifestyle তৈরি হয়েছে একটি বিশ্বাস থেকে — সবাই deserve করে প্রিমিয়াম স্টাইল ও মান,

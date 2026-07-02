@@ -13,6 +13,7 @@ import { useVoice } from '@/context/VoiceContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
 import { formatBdtPrice } from '@/lib/format-bn';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
 
 /**
  * ALMA AI assistant — floating concierge widget (ElevenLabs/Hostinger-style).
@@ -357,7 +358,9 @@ export function AssistantWidget() {
 
   return (
     <>
-      {/* Floating launcher */}
+      {/* Floating launcher — living orb character: aurora ring spins around a
+          glowing violet orb whose eyes glance left/right and blink (all
+          transform-only animations, GPU-composited). */}
       {!open && (
         <button
           type="button"
@@ -365,8 +368,14 @@ export function AssistantWidget() {
           onClick={() => openAssistant()}
           aria-label={`${assistant.name} — AI সহকারী`}
         >
-          <span className="alma-ai-fab-orb" aria-hidden>
-            ✦
+          <span className="alma-ai-avatar" aria-hidden>
+            <span className="alma-ai-avatar-ring" />
+            <span className="alma-ai-avatar-orb">
+              <span className="alma-ai-eyes">
+                <span className="alma-ai-eye" />
+                <span className="alma-ai-eye" />
+              </span>
+            </span>
           </span>
           <span className="alma-ai-fab-label">{assistant.name}</span>
         </button>
@@ -424,6 +433,28 @@ export function AssistantWidget() {
 
           <div className="alma-ai-list bn" ref={listRef}>
             <div className="alma-ai-list-inner">
+            {/* Owner trust card — the real human behind the AI persona. */}
+            {assistant.showOwnerCard && (
+              <div className="alma-ai-owner">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={assistant.ownerPhotoUrl} alt={assistant.ownerName} />
+                <div className="alma-ai-owner-txt">
+                  <strong>{settings.storeName}</strong>
+                  <small>মালিক: {assistant.ownerName}</small>
+                  <p>{assistant.ownerCardText}</p>
+                  <a
+                    href={buildWhatsAppHref(
+                      settings,
+                      'আসসালামু আলাইকুম, ALMA Lifestyle সম্পর্কে জানতে চাই।'
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    📱 মালিকের সাথে কথা বলুন
+                  </a>
+                </div>
+              </div>
+            )}
             <div className="alma-ai-msg is-bot">{assistant.greeting}</div>
 
             {!hasChat && assistant.suggestions.length > 0 && (
