@@ -151,13 +151,13 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
         }}
         className={cn(
           'flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-10 text-center cursor-pointer transition-colors',
-          dragOver ? 'border-[#C97D5D] bg-[#C97D5D]/5' : 'border-neutral-300 hover:border-neutral-400 bg-neutral-50',
+          dragOver ? 'border-[var(--ob-violet)] bg-[var(--ob-violet)]/5' : 'border-neutral-300 hover:border-neutral-400 bg-neutral-50',
           uploading && 'opacity-60 pointer-events-none'
         )}
       >
         {uploading ? (
           <p className="text-sm text-neutral-600 flex items-center gap-2">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C97D5D] border-t-transparent" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--ob-violet)] border-t-transparent" />
             Optimizing & uploading…
           </p>
         ) : (
@@ -201,7 +201,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
                   <div className="h-full w-full bg-neutral-200" />
                 )}
                 {img.isFeatured && (
-                  <span className="absolute top-2 left-2 rounded bg-[#C97D5D] px-2 py-0.5 text-[10px] font-semibold text-white uppercase">
+                  <span className="absolute top-2 left-2 rounded bg-[var(--ob-violet)] px-2 py-0.5 text-[10px] font-semibold text-white uppercase">
                     Featured
                   </span>
                 )}

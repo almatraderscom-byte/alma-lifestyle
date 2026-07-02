@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-xs font-semibold text-neutral-500 uppercase">Products</p>
                   {searchResults.productHits.map((p) => (
-                    <Link key={p.id} href={`/admin/products/${p.id}/edit`} className="block py-1 text-[#C97D5D] hover:underline">
+                    <Link key={p.id} href={`/admin/products/${p.id}/edit`} className="block py-1 text-[var(--ob-violet)] hover:underline">
                       {p.title}
                     </Link>
                   ))}
@@ -190,7 +190,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-xs font-semibold text-neutral-500 uppercase">Orders</p>
                   {searchResults.orderHits.map((o) => (
-                    <Link key={o.id} href="/admin/orders" className="block py-1 text-[#C97D5D] hover:underline">
+                    <Link key={o.id} href="/admin/orders" className="block py-1 text-[var(--ob-violet)] hover:underline">
                       {o.orderNumber} — {o.customerName}
                     </Link>
                   ))}
@@ -200,7 +200,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-xs font-semibold text-neutral-500 uppercase">Customers</p>
                   {searchResults.customerHits.map((o) => (
-                    <Link key={o.id} href="/admin/customers" className="block py-1 text-[#C97D5D] hover:underline">
+                    <Link key={o.id} href="/admin/customers" className="block py-1 text-[var(--ob-violet)] hover:underline">
                       {o.customerName} ({o.customerPhone})
                     </Link>
                   ))}
@@ -228,11 +228,11 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-900">Today&apos;s Sales</h2>
-          <p className="text-2xl font-semibold text-[#C97D5D] mt-1">৳ {todayRevenue.toLocaleString('en-US')}</p>
+          <p className="text-2xl font-semibold text-[var(--ob-violet)] mt-1">৳ {todayRevenue.toLocaleString('en-US')}</p>
           <div className="flex items-end gap-2 h-32 mt-6">
             {hourlySales.map((h, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full rounded-t bg-[#C97D5D]/80" style={{ height: `${Math.max(h, 8)}%` }} />
+                <div className="w-full rounded-t bg-[var(--ob-violet)]/80" style={{ height: `${Math.max(h, 8)}%` }} />
                 <span className="text-[9px] text-neutral-400">{i * 2}:00</span>
               </div>
             ))}
@@ -259,7 +259,7 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-3 space-y-4">
           <h2 className="text-lg font-semibold text-neutral-900">Recent Orders</h2>
           <Table columns={orderColumns} data={recentOrders} rowKey={(o) => o.id} />
-          <Link href="/admin/orders" className="text-sm font-medium text-[#C97D5D] hover:underline">
+          <Link href="/admin/orders" className="text-sm font-medium text-[var(--ob-violet)] hover:underline">
             View All Orders →
           </Link>
         </div>
@@ -296,7 +296,7 @@ export default function AdminDashboardPage() {
             </ul>
             <Link
               href="/admin/products"
-              className="text-sm font-medium text-[#C97D5D] mt-4 inline-block hover:underline"
+              className="text-sm font-medium text-[var(--ob-violet)] mt-4 inline-block hover:underline"
             >
               Manage Inventory →
             </Link>

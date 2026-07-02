@@ -51,7 +51,7 @@ function ToggleRow({
   return (
     <label className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2 text-sm">
       <span className="font-medium text-neutral-700">Show section on homepage</span>
-      <input type="checkbox" checked={enabled} onChange={onToggle} className="h-4 w-4 accent-[#C97D5D]" />
+      <input type="checkbox" checked={enabled} onChange={onToggle} className="h-4 w-4 accent-[var(--ob-violet)]" />
     </label>
   );
 }
@@ -99,7 +99,7 @@ export function HeroEditor({
             <button type="button" className="text-red-600 text-sm shrink-0" onClick={() => onChange({ ...data, badges: data.badges.filter((_, j) => j !== i) })}>Remove</button>
           </div>
         ))}
-        <button type="button" className="text-sm text-[#C97D5D] font-medium" onClick={() => onChange({ ...data, badges: [...data.badges, 'New badge'] })}>+ Add badge</button>
+        <button type="button" className="text-sm text-[var(--ob-violet)] font-medium" onClick={() => onChange({ ...data, badges: [...data.badges, 'New badge'] })}>+ Add badge</button>
       </div>
       </div>
     </div>
@@ -337,7 +337,7 @@ export function ReviewsEditor({ data, onChange }: EditorProps<ReviewsSectionData
       ))}
       <button
         type="button"
-        className="text-sm text-[#C97D5D] font-medium"
+        className="text-sm text-[var(--ob-violet)] font-medium"
         onClick={() =>
           onChange({
             ...data,
@@ -444,7 +444,7 @@ export function CommunityEditor({ data, onChange }: EditorProps<CommunitySection
       ))}
       <button
         type="button"
-        className="text-sm font-medium text-[#C97D5D]"
+        className="text-sm font-medium text-[var(--ob-violet)]"
         onClick={() =>
           setTiles([
             ...tiles,
@@ -503,7 +503,7 @@ export function OurProcessEditor({
             type="checkbox"
             checked={data.show !== false}
             onChange={(e) => onChange({ ...data, show: e.target.checked })}
-            className="h-4 w-4 accent-[#C97D5D]"
+            className="h-4 w-4 accent-[var(--ob-violet)]"
           />
         </label>
         <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Text content</p>
@@ -642,7 +642,7 @@ export function TrustEditor({ data, onChange }: EditorProps<TrustSectionData>) {
       ))}
       <button
         type="button"
-        className="text-sm text-[#C97D5D] font-medium"
+        className="text-sm text-[var(--ob-violet)] font-medium"
         onClick={() =>
           onChange({
             ...data,

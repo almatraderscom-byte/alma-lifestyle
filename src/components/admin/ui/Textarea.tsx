@@ -21,7 +21,7 @@ export function Textarea({ label, error, hint, className, id, ...props }: Textar
         id={inputId}
         className={cn(
           'w-full rounded-lg border px-3 py-2 text-sm text-neutral-900 resize-y',
-          'focus:outline-none focus:ring-2 focus:ring-[#C97D5D]/30 focus:border-[#C97D5D]',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--ob-violet)]/30 focus:border-[var(--ob-violet)]',
           error ? 'border-red-500' : 'border-neutral-300 bg-white',
           className
         )}

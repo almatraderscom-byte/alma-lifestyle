@@ -89,13 +89,13 @@ export function AdminProductsTable({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/admin/products/${p.id}/edit`}
-              className="font-medium text-[#C97D5D] hover:underline"
+              className="font-medium text-[var(--ob-violet)] hover:underline"
             >
               {p.title}
             </Link>
             {typeBadge(p.productType)}
             {p.designGroupId && !nested && (
-              <span className="text-[10px] rounded-full bg-[#C97D5D]/15 text-[#C97D5D] px-2 py-0.5 font-medium">
+              <span className="text-[10px] rounded-full bg-[var(--ob-violet)]/15 text-[var(--ob-violet)] px-2 py-0.5 font-medium">
                 Matching set
               </span>
             )}
@@ -195,7 +195,7 @@ export function AdminProductsTable({
               >
                 {expanded ? '▼' : '▶'}
               </button>
-              <span className="inline-flex rounded-full bg-[#C97D5D] text-white text-xs px-2.5 py-0.5 font-semibold">
+              <span className="inline-flex rounded-full bg-[var(--ob-violet)] text-white text-xs px-2.5 py-0.5 font-semibold">
                 Design Group
               </span>
               <span className="font-semibold text-neutral-900">{row.designName}</span>
@@ -210,7 +210,7 @@ export function AdminProductsTable({
                 {men && (
                   <Link
                     href={`/admin/products/${men.id}/edit`}
-                    className="text-sm text-[#C97D5D] hover:underline"
+                    className="text-sm text-[var(--ob-violet)] hover:underline"
                   >
                     Edit men&apos;s (primary) →
                   </Link>

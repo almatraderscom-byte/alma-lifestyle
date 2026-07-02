@@ -60,7 +60,7 @@ export default function EditProductPage({
             <code className="text-xs bg-neutral-100 px-1">a1b2c3d4-e5f6-...</code>
           </p>
         )}
-        <Link href="/admin/products" className="text-[#C97D5D] mt-4 inline-block">
+        <Link href="/admin/products" className="text-[var(--ob-violet)] mt-4 inline-block">
           ← Back to products
         </Link>
       </div>

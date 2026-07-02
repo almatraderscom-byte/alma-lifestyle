@@ -51,7 +51,7 @@ export function EditableSection({ sectionId, sectionName, children }: EditableSe
       style={{
         outlineWidth: 3,
         outlineStyle: isHovered || isSelected ? 'solid' : 'dashed',
-        outlineColor: isHovered || isSelected ? '#C97D5D' : 'transparent',
+        outlineColor: isHovered || isSelected ? 'var(--ob-violet)' : 'transparent',
         outlineOffset: -3,
       }}
     >
@@ -62,7 +62,7 @@ export function EditableSection({ sectionId, sectionName, children }: EditableSe
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-2 left-2 z-50 flex items-center gap-2 rounded-md bg-[#C97D5D] px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
+            className="absolute top-2 left-2 z-50 flex items-center gap-2 rounded-md bg-[var(--ob-violet)] px-3 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none"
           >
             <EditIcon />
             {isSelected ? `Editing ${label}` : `Edit ${label}`}

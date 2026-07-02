@@ -37,7 +37,7 @@ export function StatsCard({ title, value, change, icon, href }: StatsCardProps) 
 
   if (href) {
     return (
-      <a href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97D5D] rounded-xl">
+      <a href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ob-violet)] rounded-xl">
         {inner}
       </a>
     );

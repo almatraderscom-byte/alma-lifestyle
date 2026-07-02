@@ -34,7 +34,7 @@ export function FamilyMatchingEditor({ data, onChange }: FamilyMatchingEditorPro
             type="checkbox"
             checked={data.show !== false}
             onChange={(e) => onChange({ ...data, show: e.target.checked })}
-            className="h-4 w-4 accent-[#C97D5D]"
+            className="h-4 w-4 accent-[var(--ob-violet)]"
           />
         </label>
 

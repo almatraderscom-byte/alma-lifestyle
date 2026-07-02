@@ -409,7 +409,7 @@ export function HomepageBuilder() {
             className={cn(
               'rounded-md px-3 py-1.5 font-medium transition-colors',
               builderTab === 'sections'
-                ? 'bg-[#C97D5D] text-white'
+                ? 'bg-[var(--ob-violet)] text-white'
                 : 'text-neutral-600 hover:text-neutral-900'
             )}
             onClick={() => setBuilderTab('sections')}
@@ -421,7 +421,7 @@ export function HomepageBuilder() {
             className={cn(
               'rounded-md px-3 py-1.5 font-medium transition-colors',
               builderTab === 'cinematic'
-                ? 'bg-[#C97D5D] text-white'
+                ? 'bg-[var(--ob-violet)] text-white'
                 : 'text-neutral-600 hover:text-neutral-900'
             )}
             onClick={() => setBuilderTab('cinematic')}
@@ -477,7 +477,7 @@ export function HomepageBuilder() {
             onClick={() => setMobileTab(tab)}
             className={cn(
               'flex-1 py-3 text-sm font-medium capitalize',
-              mobileTab === tab ? 'text-[#C97D5D] border-b-2 border-[#C97D5D]' : 'text-neutral-500'
+              mobileTab === tab ? 'text-[var(--ob-violet)] border-b-2 border-[var(--ob-violet)]' : 'text-neutral-500'
             )}
           >
             {tab}
@@ -488,7 +488,7 @@ export function HomepageBuilder() {
       <div className="flex flex-1 min-h-0">
         <div
           className={cn(
-            'w-full lg:w-[40%] overflow-y-auto border-r border-neutral-200 bg-[#FAFAFA] p-4 space-y-4',
+            'w-full lg:w-[40%] overflow-y-auto border-r border-neutral-200 bg-[#08070d] p-4 space-y-4',
             mobileTab === 'preview' && 'hidden lg:block'
           )}
         >
@@ -503,8 +503,8 @@ export function HomepageBuilder() {
             />
           ) : (
             <>
-          <div className="rounded-lg border border-[#C97D5D]/30 bg-[#C97D5D]/5 px-3 py-2 text-xs text-neutral-700">
-            <span className="font-semibold text-[#C97D5D]">Visual editor:</span> click any block in the
+          <div className="rounded-lg border border-[var(--ob-violet)]/30 bg-[var(--ob-violet)]/5 px-3 py-2 text-xs text-neutral-700">
+            <span className="font-semibold text-[var(--ob-violet)]">Visual editor:</span> click any block in the
             preview (desktop) or use the panels below.
           </div>
 
@@ -537,7 +537,7 @@ export function HomepageBuilder() {
                   <span className="flex-1 font-medium text-neutral-800">{sectionLabel(section.id)}</span>
                   <button
                     type="button"
-                    className="p-1 text-neutral-500 hover:text-[#C97D5D]"
+                    className="p-1 text-neutral-500 hover:text-[var(--ob-violet)]"
                     title={section.enabled ? 'Hide section' : 'Show section'}
                     onClick={() => updateConfig((c) => toggleSectionEnabled(c, section.id))}
                   >
@@ -555,7 +555,7 @@ export function HomepageBuilder() {
               className={cn(
                 'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
                 openSection === section.id
-                  ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                  ? 'border-[var(--ob-violet)] ring-1 ring-[var(--ob-violet)]/30'
                   : 'border-neutral-200'
               )}
             >
@@ -594,7 +594,7 @@ export function HomepageBuilder() {
             className={cn(
               'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
               openSection === 'family-matching'
-                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                ? 'border-[var(--ob-violet)] ring-1 ring-[var(--ob-violet)]/30'
                 : 'border-neutral-200'
             )}
           >
@@ -625,7 +625,7 @@ export function HomepageBuilder() {
             className={cn(
               'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
               openSection === 'our-process'
-                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                ? 'border-[var(--ob-violet)] ring-1 ring-[var(--ob-violet)]/30'
                 : 'border-neutral-200'
             )}
           >
@@ -656,7 +656,7 @@ export function HomepageBuilder() {
             className={cn(
               'rounded-lg border bg-white shadow-sm overflow-hidden transition-colors',
               openSection === 'homepage-cta'
-                ? 'border-[#C97D5D] ring-1 ring-[#C97D5D]/30'
+                ? 'border-[var(--ob-violet)] ring-1 ring-[var(--ob-violet)]/30'
                 : 'border-neutral-200'
             )}
           >
@@ -690,8 +690,8 @@ export function HomepageBuilder() {
         </div>
 
         <div className="hidden lg:flex flex-1 min-h-0 flex-col w-[60%] bg-neutral-100">
-          <div className="flex shrink-0 items-center gap-3 border-b border-[#C97D5D]/40 bg-cream px-4 py-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C97D5D] text-white text-xs">
+          <div className="flex shrink-0 items-center gap-3 border-b border-[var(--ob-violet)]/40 bg-cream px-4 py-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ob-violet)] text-white text-xs">
               💡
             </span>
             <div>

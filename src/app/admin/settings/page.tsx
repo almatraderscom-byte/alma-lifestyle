@@ -92,7 +92,7 @@ export default function AdminSettingsPage() {
             onClick={() => setTab(t)}
             className={cn(
               'shrink-0 px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors',
-              tab === t ? 'border-[#C97D5D] text-[#C97D5D]' : 'border-transparent text-neutral-500 hover:text-neutral-800'
+              tab === t ? 'border-[var(--ob-violet)] text-[var(--ob-violet)]' : 'border-transparent text-neutral-500 hover:text-neutral-800'
             )}
           >
             {t}
@@ -315,7 +315,7 @@ function Toggle({
   return (
     <label className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2.5 text-sm">
       <span className="font-medium text-neutral-700">{label}</span>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[#C97D5D]" />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[var(--ob-violet)]" />
     </label>
   );
 }

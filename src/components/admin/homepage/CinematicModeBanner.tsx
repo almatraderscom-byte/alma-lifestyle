@@ -19,7 +19,7 @@ export function CinematicModeBanner({
     return (
       <div
         className={cn(
-          'rounded-lg border-2 border-[#C97D5D] bg-[#FAFAFA] px-3 py-2.5 text-sm text-neutral-900',
+          'rounded-lg border-2 border-[var(--ob-violet)] bg-[#08070d] px-3 py-2.5 text-sm text-neutral-900',
           className
         )}
         role="note"
@@ -36,7 +36,7 @@ export function CinematicModeBanner({
   return (
     <div
       className={cn(
-        'rounded-lg border-2 border-[#C97D5D] bg-[#FAFAFA] px-3 py-2.5 text-sm text-neutral-900',
+        'rounded-lg border-2 border-[var(--ob-violet)] bg-[#08070d] px-3 py-2.5 text-sm text-neutral-900',
         className
       )}
       role="note"

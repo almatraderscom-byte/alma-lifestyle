@@ -44,7 +44,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return (
       <AdminAuthProvider>
         <AdminToastProvider>
-          <div className="font-sans min-h-screen bg-[#FAFAFA] text-neutral-900">{children}</div>
+          <div className="font-sans min-h-screen bg-[#08070d] text-neutral-900">{children}</div>
         </AdminToastProvider>
       </AdminAuthProvider>
     );
@@ -93,7 +93,7 @@ function AdminLayoutInner({
   const isHomepageBuilder = breadcrumbs.includes('Homepage Builder');
 
   return (
-    <div className="font-sans min-h-screen bg-[#FAFAFA] text-neutral-900 flex">
+    <div className="font-sans min-h-screen bg-[#08070d] text-neutral-900 flex">
       <AdminSidebar
         collapsed={collapsed}
         onToggleCollapse={toggleCollapse}

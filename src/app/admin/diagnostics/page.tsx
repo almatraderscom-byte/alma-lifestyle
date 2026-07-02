@@ -15,7 +15,7 @@ export default async function DiagnosticsPage() {
 
   return (
     <div className="max-w-4xl p-8">
-      <Link href="/admin/settings" className="text-sm text-[#C97D5D] hover:underline">
+      <Link href="/admin/settings" className="text-sm text-[var(--ob-violet)] hover:underline">
         ← Settings
       </Link>
       <h1 className="mb-6 mt-2 text-3xl font-bold">Favicon Diagnostics</h1>
