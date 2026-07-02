@@ -54,9 +54,12 @@ function withCopy(config: HomepageConfig): HomepageConfig {
 }
 
 function deriveSections(config: HomepageConfig) {
-  const categoriesSection = config.sections.find((s) => s.id === 'categories');
-  const reviewsSection = config.sections.find((s) => s.id === 'reviews');
-  const trustSection = config.sections.find((s) => s.id === 'trust');
+  const catIndex = config.sections.findIndex((s) => s.id === 'categories');
+  const reviewIndex = config.sections.findIndex((s) => s.id === 'reviews');
+  const trustIndex = config.sections.findIndex((s) => s.id === 'trust');
+  const categoriesSection = catIndex >= 0 ? config.sections[catIndex] : undefined;
+  const reviewsSection = reviewIndex >= 0 ? config.sections[reviewIndex] : undefined;
+  const trustSection = trustIndex >= 0 ? config.sections[trustIndex] : undefined;
   return {
     categories:
       categoriesSection?.id === 'categories'
@@ -71,6 +74,11 @@ function deriveSections(config: HomepageConfig) {
         ? (trustSection.data as TrustSectionData)
         : undefined,
     copy: (config.obsidianCopy ?? DEFAULT_OBSIDIAN_COPY) as ObsidianHomeCopy,
+    // Dot-paths into the live config so the visual editor can tag each field.
+    // `undefined` when the section is absent (→ its elements stay untagged).
+    categoriesPath: catIndex >= 0 ? `sections.${catIndex}.data` : undefined,
+    reviewsPath: reviewIndex >= 0 ? `sections.${reviewIndex}.data` : undefined,
+    trustPath: trustIndex >= 0 ? `sections.${trustIndex}.data` : undefined,
   };
 }
 
@@ -186,7 +194,8 @@ export function HomeCmsEditProvider({
     [active, isAdmin, editing, dirty, saving, savedAt, error, config, getField, setField, save, discard]
   );
 
-  const { categories, reviews, trust, copy } = deriveSections(config);
+  const { categories, reviews, trust, copy, categoriesPath, reviewsPath, trustPath } =
+    deriveSections(config);
 
   return (
     <CmsEditContext.Provider value={value}>
@@ -197,6 +206,9 @@ export function HomeCmsEditProvider({
         reviews={reviews}
         trust={trust}
         copy={copy}
+        categoriesPath={categoriesPath}
+        reviewsPath={reviewsPath}
+        trustPath={trustPath}
       />
       {active ? <CmsEditLayer /> : null}
     </CmsEditContext.Provider>

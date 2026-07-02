@@ -68,11 +68,29 @@ const SCALAR_KEYS = Object.keys(FIELD_TO_DISPLAY);
  */
 const SAVE_KEYS = [...SCALAR_KEYS, 'images'];
 
-/** Keep only the given keys (that are defined) from a working copy. */
+/**
+ * Keep only the given keys that hold a *defined* value. Used to re-apply edits
+ * made before the full AdminProduct GET resolves, so a half-built seed never
+ * overwrites a real fetched field with `undefined`.
+ */
 function pick(working: Record<string, unknown>, keys: string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const key of keys) {
     if (working[key] !== undefined) out[key] = working[key];
+  }
+  return out;
+}
+
+/**
+ * Build the PATCH payload slice. Post-GET the working copy is the authoritative
+ * full record, so we forward every present key — *including* ones deliberately
+ * cleared to `undefined` (e.g. removing a compare-at price), which `pick` would
+ * otherwise drop and silently keep the old value.
+ */
+function pickForSave(working: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (key in working) out[key] = working[key];
   }
   return out;
 }
@@ -210,7 +228,7 @@ export function ProductCmsEditProvider({
     setSaving(true);
     setError(null);
     try {
-      const payload: AdminProduct = { ...fullAdmin, ...pick(working, SAVE_KEYS) } as AdminProduct;
+      const payload: AdminProduct = { ...fullAdmin, ...pickForSave(working, SAVE_KEYS) } as AdminProduct;
       const res = await fetch(`/api/v1/products/${encodeURIComponent(product.id)}`, {
         method: 'PATCH',
         credentials: 'same-origin',

@@ -134,11 +134,22 @@ export function CmsEditLayer() {
   const rawValue = selection ? cms.getField(selection.path) : undefined;
   const isString = typeof rawValue === 'string';
   const isNumber = typeof rawValue === 'number';
-  const editable = isString || isNumber;
+  // A field can declare `data-cms-type="number"` so it stays editable even when
+  // its current value is empty/undefined (e.g. an optional compare-at price the
+  // owner wants to add). Clearing the box writes `undefined`.
+  const isNumberField = selection?.fieldType === 'number';
+  const numericInput = isNumber || isNumberField;
+  const editable = isString || isNumber || isNumberField;
 
   const commit = (raw: string) => {
     if (!selection) return;
-    cms.setField(selection.path, isNumber ? Number(raw) : raw);
+    let next: unknown = raw;
+    if (numericInput) {
+      const trimmed = raw.trim();
+      const n = Number(trimmed);
+      next = trimmed === '' || !Number.isFinite(n) ? undefined : n;
+    }
+    cms.setField(selection.path, next);
     requestAnimationFrame(syncSelRect);
   };
 
@@ -249,10 +260,16 @@ export function CmsEditLayer() {
           ) : editable ? (
             <textarea
               autoFocus
-              value={isNumber ? String(rawValue) : (rawValue as string) ?? ''}
+              value={
+                numericInput
+                  ? typeof rawValue === 'number'
+                    ? String(rawValue)
+                    : ''
+                  : (rawValue as string) ?? ''
+              }
               onChange={(e) => commit(e.target.value)}
-              rows={isNumber ? 1 : 5}
-              inputMode={isNumber ? 'numeric' : undefined}
+              rows={numericInput ? 1 : 5}
+              inputMode={numericInput ? 'numeric' : undefined}
               style={textareaStyle}
             />
           ) : (

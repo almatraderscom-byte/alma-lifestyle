@@ -8,8 +8,14 @@ import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useCart } from '@/context/CartContext';
 import { trackAddToCartLine, trackLead } from '@/lib/pixel';
 import { catalogToCartItem } from '@/lib/cart-helpers';
-import { formatRating, formatReviewCount, toBanglaNumber } from '@/lib/format-bn';
+import {
+  formatBdtPrice,
+  formatRating,
+  formatReviewCount,
+  toBanglaNumber,
+} from '@/lib/format-bn';
 import type { CatalogProduct } from '@/lib/products-data';
+import { useCmsEdit } from '@/components/cms/cms-edit-context';
 import { useToast } from '@/components/ui/Toast';
 import { SizeChart } from '@/components/product/SizeChart';
 import { Accordion } from '@/components/product/Accordion';
@@ -28,6 +34,8 @@ export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps)
   const { addItem } = useCart();
   const { showToast } = useToast();
   const settings = useStoreSettings();
+  const cms = useCmsEdit();
+  const editing = cms?.editing ?? false;
 
   const [selectedColorId, setSelectedColorId] = useState(product.colors[0]?.id ?? '');
   const [selectedSize, setSelectedSize] = useState(
@@ -106,13 +114,44 @@ export function ObsidianProductDetails({ product }: ObsidianProductDetailsProps)
         </p>
       </div>
 
-      <div data-cms-field="priceBdt" data-cms-label="Price (৳)">
+      <div data-cms-field="priceBdt" data-cms-type="number" data-cms-label="Price (৳)">
         <AnimatedPrice
           price={product.price}
           compareAtPrice={product.compareAtPrice}
           discountPercent={discountPercent}
         />
       </div>
+
+      {/* Compare-at ("কাটা দাম") editor — only rendered in the visual editor, so
+          customers never see it. Handles both adding a strike price when none
+          exists and editing/removing an existing one. */}
+      {editing && (
+        <div
+          className="ob-pdp-compare-edit"
+          data-cms-field="compareAtPriceBdt"
+          data-cms-type="number"
+          data-cms-label="কাটা দাম / Compare-at price (৳)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 8,
+            padding: '6px 12px',
+            borderRadius: 999,
+            border: '1px dashed rgba(124,92,255,0.7)',
+            background: 'rgba(124,92,255,0.08)',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          <span aria-hidden>🏷️</span>
+          {product.compareAtPrice && product.compareAtPrice > product.price ? (
+            <span>কাটা দাম: {formatBdtPrice(product.compareAtPrice)}</span>
+          ) : (
+            <span>কাটা দাম যোগ করুন (খালি রাখলে থাকবে না)</span>
+          )}
+        </div>
+      )}
 
       {product.colors.length > 0 && (
         <div className="ob-pdp-field">
