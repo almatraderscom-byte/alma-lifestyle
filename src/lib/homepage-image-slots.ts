@@ -8,9 +8,44 @@ import type {
 export type { HomepageImageSlot };
 
 /**
+ * Framing style for an adjusted image slot: objectPosition + zoom-with-pan.
+ *
+ * Repositioning uses TWO mechanisms because `object-position` alone can only
+ * shift along the axis where the cover-fit image overflows its box — on the
+ * other axis the image fits exactly and objectPosition is a no-op (which made
+ * vertical drags feel dead). So when zoomed, posX/posY additionally drive a
+ * translate() into the slack created by scale(zoom): at zoom z the scaled
+ * image extends (z-1)/2 of the box beyond every edge, so a full posX swing
+ * (0↔100) maps to exactly that much translate — pan works on BOTH axes with
+ * no gaps at the extremes.
+ */
+export function imageSlotStyle(
+  slot: HomepageImageSlotAdjust | undefined
+): React.CSSProperties | undefined {
+  const hasPos = slot?.posX !== undefined || slot?.posY !== undefined;
+  const z = slot?.zoom && slot.zoom > 1 ? slot.zoom : 1;
+  if (!hasPos && z === 1) return undefined;
+
+  const px = slot?.posX ?? 50;
+  const py = slot?.posY ?? 50;
+  const style: React.CSSProperties = {
+    objectPosition: `${px}% ${py}%`,
+    transformOrigin: 'center',
+  };
+  if (z > 1) {
+    // % of the element's own box; (50-pos)/50 ∈ [-1, 1] scaled to the zoom slack.
+    const slack = ((z - 1) / 2) * 100;
+    const tx = ((50 - px) / 50) * slack;
+    const ty = ((50 - py) / 50) * slack;
+    style.transform = `translate(${tx.toFixed(2)}%, ${ty.toFixed(2)}%) scale(${z})`;
+  }
+  return style;
+}
+
+/**
  * Resolve a per-slot image override for the Obsidian homepage. Returns the
  * effective `src` (override URL when set, otherwise the catalog fallback) and an
- * inline `style` for framing (objectPosition + zoom). When the slot has no
+ * inline `style` for framing (objectPosition + zoom/pan). When the slot has no
  * pos/zoom adjustments the `style` is `undefined` so the element renders exactly
  * as before (zero visual change).
  */
@@ -21,19 +56,7 @@ export function resolveImageSlot(
 ): { src: string; style: React.CSSProperties | undefined } {
   const slot = slots?.[key];
   const src = slot?.url?.trim() || fallbackUrl;
-  const hasPos = slot?.posX !== undefined || slot?.posY !== undefined;
-  const hasZoom = slot?.zoom !== undefined && slot.zoom !== 1;
-  if (!hasPos && !hasZoom) {
-    return { src, style: undefined };
-  }
-  return {
-    src,
-    style: {
-      objectPosition: `${slot?.posX ?? 50}% ${slot?.posY ?? 50}%`,
-      transform: slot?.zoom && slot.zoom !== 1 ? `scale(${slot.zoom})` : undefined,
-      transformOrigin: 'center',
-    },
-  };
+  return { src, style: imageSlotStyle(slot) };
 }
 
 export function emptyImageSlot(

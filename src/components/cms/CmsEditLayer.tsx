@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useCmsEdit } from '@/components/cms/cms-edit-context';
+import { imageSlotStyle } from '@/lib/homepage-image-slots';
 
 /**
  * The visual editing chrome laid over the live page. Rendered only when
@@ -152,6 +153,15 @@ export function CmsEditLayer() {
         ? selection.el
         : selection.el.querySelector('img');
     return img?.currentSrc || img?.src || '';
+  }, [selection]);
+
+  // Match the preview box to the live element's aspect ratio so a drag in the
+  // preview maps 1:1 onto the page (a 3/4 box previewing a wide banner lies).
+  // Same Rules-of-Hooks warning as above: keep this before the early returns.
+  const previewAspect = useMemo(() => {
+    if (!selection) return 3 / 4;
+    const r = selection.el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 ? r.width / r.height : 3 / 4;
   }, [selection]);
 
   // ---- Not an admin: minimal prompt only ----
@@ -367,7 +377,8 @@ export function CmsEditLayer() {
                   position: 'relative',
                   width: 288,
                   maxWidth: '100%',
-                  aspectRatio: '3 / 4',
+                  aspectRatio: String(previewAspect),
+                  maxHeight: 340,
                   overflow: 'hidden',
                   borderRadius: 10,
                   background: '#0b0a12',
@@ -387,8 +398,9 @@ export function CmsEditLayer() {
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      objectPosition: `${slot.posX ?? 50}% ${slot.posY ?? 50}%`,
-                      transform: `scale(${slot.zoom ?? 1})`,
+                      // Same framing math as the live element (objectPosition +
+                      // translate-into-zoom-slack), so the preview never lies.
+                      ...(imageSlotStyle(slot) ?? { objectPosition: '50% 50%' }),
                       pointerEvents: 'none',
                     }}
                   />
@@ -410,7 +422,8 @@ export function CmsEditLayer() {
               </div>
 
               <p style={{ fontSize: 12, opacity: 0.7, margin: '8px 0 0' }}>
-                ছবিটি টেনে সরান — গুরুত্বপূর্ণ অংশ মাঝে আনুন
+                ছবিটি টেনে সরান — গুরুত্বপূর্ণ অংশ মাঝে আনুন। যেদিকে টানা যাচ্ছে না,
+                একটু জুম করলেই সেদিকেও সরানো যাবে।
               </p>
 
               <div style={{ marginTop: 12 }}>
