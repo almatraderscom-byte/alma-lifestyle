@@ -1,14 +1,18 @@
 import type { Metadata } from 'next';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
 import { WhatsAppLink } from '@/components/ui/WhatsAppLink';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
-export const metadata: Metadata = {
-  title: 'যোগাযোগ | ALMA Lifestyle',
-  description:
-    'ALMA Lifestyle এর সাথে যোগাযোগ করুন। WhatsApp, ফোন, ইমেইল এর মাধ্যমে আমাদের সাথে কথা বলুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'contact', {
+    title: 'যোগাযোগ | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle এর সাথে যোগাযোগ করুন। WhatsApp, ফোন, ইমেইল এর মাধ্যমে আমাদের সাথে কথা বলুন।',
+  });
+}
 
 /** Turn a stored phone (e.g. `8801307777733`) into a local display form. */
 function formatLocalPhone(raw: string): string {

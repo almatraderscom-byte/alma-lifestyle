@@ -1,15 +1,22 @@
 import type { Metadata } from 'next';
+import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
 
-export const metadata: Metadata = {
-  title: 'শর্তাবলী | ALMA Lifestyle',
-  description: 'ALMA Lifestyle এর service ব্যবহারের terms and conditions।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'terms', {
+    title: 'শর্তাবলী | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle এর service ব্যবহারের terms and conditions।',
+  });
+}
 
 export default function TermsPage() {
   return (
     <PageLayout
+      slug="terms"
       badge="নীতিমালা"
       heroWord="TERMS"
       title="শর্তাবলী"

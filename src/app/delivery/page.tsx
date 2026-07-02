@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
+import { buildContentPageMetadata } from '@/lib/seo/default-metadata';
 import Link from 'next/link';
 import { PageLayout } from '@/components/legal/PageLayout';
 import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 import { getFreeDeliveryThreshold, getZoneCharges } from '@/lib/delivery-settings';
 import { toBanglaNumber } from '@/lib/format-bn';
 
-export const metadata: Metadata = {
-  title: 'ডেলিভারি নীতিমালা | ALMA Lifestyle',
-  description: 'ALMA Lifestyle এর ডেলিভারি সময়, চার্জ এবং policy সম্পর্কে বিস্তারিত জানুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await loadPublicSettingsServer();
+  return buildContentPageMetadata(settings, 'delivery', {
+    title: 'ডেলিভারি নীতিমালা | ALMA Lifestyle',
+    description:
+      'ALMA Lifestyle এর ডেলিভারি সময়, চার্জ এবং policy সম্পর্কে বিস্তারিত জানুন।',
+  });
+}
 
 function formatLocalPhone(raw: string): string {
   const digits = (raw || '').replace(/\D/g, '');
@@ -26,6 +31,7 @@ export default async function DeliveryPage() {
 
   return (
     <PageLayout
+      slug="delivery"
       badge="নীতিমালা"
       heroWord="DELIVERY"
       title="ডেলিভারি নীতিমালা"

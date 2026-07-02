@@ -11,6 +11,45 @@ export interface FooterColumnConfig {
   links: NavLinkConfig[];
 }
 
+/** Admin override for a static content/legal page (about, faq, privacy, …).
+ *  Every field is optional: an unset field falls back to the page's built-in
+ *  default, so an empty override changes nothing on the live page. */
+export interface ContentPageConfig {
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  heroWord?: string;
+  lastUpdated?: string;
+  /** Optional raw-HTML body. When set, it replaces the page's built-in prose. */
+  bodyHtml?: string;
+  /** Per-page SEO overrides (fall back to the page's built-in metadata). */
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+}
+
+/** Slugs of the editable content pages, in the order shown in admin. */
+export const CONTENT_PAGE_SLUGS = [
+  'about',
+  'faq',
+  'delivery',
+  'refund',
+  'privacy',
+  'terms',
+  'size-guide',
+] as const;
+export type ContentPageSlug = (typeof CONTENT_PAGE_SLUGS)[number];
+
+export const CONTENT_PAGE_LABELS: Record<ContentPageSlug, string> = {
+  about: 'About (আমাদের সম্পর্কে)',
+  faq: 'FAQ (সচরাচর জিজ্ঞাসা)',
+  delivery: 'Delivery (ডেলিভারি)',
+  refund: 'Refund (রিটার্ন ও রিফান্ড)',
+  privacy: 'Privacy (প্রাইভেসি)',
+  terms: 'Terms (শর্তাবলী)',
+  'size-guide': 'Size Guide (সাইজ গাইড)',
+};
+
 export interface AppSettings {
   storeName: string;
   tagline: string;
@@ -61,6 +100,8 @@ export interface AppSettings {
   footerCopyright: string;
   footerLegalLine: string;
   headerNav: NavLinkConfig[];
+  /** Per-page overrides for the static content/legal pages, keyed by slug. */
+  contentPages: Record<string, ContentPageConfig>;
   createdAt: string;
   updatedAt: string;
 }
@@ -156,6 +197,7 @@ export function getDefaultAppSettings(): AppSettings {
     footerCopyright: '© 2026 Alma Lifestyle',
     footerLegalLine: 'Terms of Service · Privacy Notice',
     headerNav: DEFAULT_HEADER_NAV,
+    contentPages: {},
     createdAt: now,
     updatedAt: now,
   };

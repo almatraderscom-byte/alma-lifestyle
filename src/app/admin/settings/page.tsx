@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '@/lib/admin-store';
-import type { AppSettings, FooterColumnConfig, NavLinkConfig } from '@/lib/admin-settings-types';
+import type {
+  AppSettings,
+  ContentPageConfig,
+  FooterColumnConfig,
+  NavLinkConfig,
+} from '@/lib/admin-settings-types';
+import { CONTENT_PAGE_SLUGS, CONTENT_PAGE_LABELS } from '@/lib/admin-settings-types';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
@@ -17,6 +23,7 @@ const TABS = [
   'Store Information',
   'Social Media',
   'Footer & Navigation',
+  'Content Pages',
   'Delivery & Shipping',
   'Payment',
   'Currency & Pricing',
@@ -192,6 +199,10 @@ export default function AdminSettingsPage() {
 
         {tab === 'Footer & Navigation' && (
           <FooterNavEditor form={form} patch={patch} />
+        )}
+
+        {tab === 'Content Pages' && (
+          <ContentPagesEditor form={form} patch={patch} />
         )}
 
         {tab === 'Delivery & Shipping' && (
@@ -485,6 +496,95 @@ function FooterNavEditor({
             </button>
           </div>
         ))}
+      </section>
+    </div>
+  );
+}
+
+/**
+ * Editor for the static content/legal pages (about, faq, delivery, refund,
+ * privacy, terms, size-guide). Each field overrides the page's built-in
+ * default; leaving a field blank keeps the current live content. The body is
+ * optional raw HTML — when filled it replaces the whole page body.
+ */
+function ContentPagesEditor({
+  form,
+  patch,
+}: {
+  form: AppSettings;
+  patch: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+}) {
+  const [slug, setSlug] = useState<string>(CONTENT_PAGE_SLUGS[0]);
+  const pages = form.contentPages ?? {};
+  const page: ContentPageConfig = pages[slug] ?? {};
+
+  const update = (next: Partial<ContentPageConfig>) =>
+    patch('contentPages', { ...pages, [slug]: { ...page, ...next } });
+
+  return (
+    <div className="space-y-5">
+      <label className="space-y-1.5 block">
+        <span className="text-sm font-medium text-neutral-800">Page</span>
+        <select
+          className="w-full min-h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+        >
+          {CONTENT_PAGE_SLUGS.map((s) => (
+            <option key={s} value={s}>
+              {CONTENT_PAGE_LABELS[s]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <p className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600">
+        যেকোনো ঘর খালি রাখলে ওই পেজের বর্তমান লেখা অপরিবর্তিত থাকবে। Leave a field blank to
+        keep the current built-in content for that page.
+      </p>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input label="Badge" value={page.badge ?? ''} onChange={(e) => update({ badge: e.target.value })} />
+        <Input label="Hero word (Latin)" value={page.heroWord ?? ''} onChange={(e) => update({ heroWord: e.target.value })} />
+      </div>
+      <Input label="Title" value={page.title ?? ''} onChange={(e) => update({ title: e.target.value })} />
+      <Input label="Subtitle" value={page.subtitle ?? ''} onChange={(e) => update({ subtitle: e.target.value })} />
+      <Input label="Last updated" value={page.lastUpdated ?? ''} onChange={(e) => update({ lastUpdated: e.target.value })} />
+      <div>
+        <Textarea
+          label="Body (HTML — optional, replaces the whole page body)"
+          rows={12}
+          value={page.bodyHtml ?? ''}
+          onChange={(e) => update({ bodyHtml: e.target.value })}
+          placeholder="<h2>শিরোনাম</h2>\n<p>...</p>"
+        />
+        <p className="mt-1 text-xs text-neutral-500">
+          HTML ট্যাগ ব্যবহার করুন: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;,
+          &lt;table&gt;। খালি রাখলে পেজের নিজস্ব লেখা দেখাবে।
+        </p>
+      </div>
+
+      <section className="space-y-3 rounded-lg border border-neutral-200 p-4">
+        <h3 className="text-base font-semibold text-neutral-900">SEO (এই পেজের জন্য)</h3>
+        <Input
+          label="Meta title"
+          value={page.seoTitle ?? ''}
+          onChange={(e) => update({ seoTitle: e.target.value })}
+          placeholder="Google-এ দেখানো শিরোনাম"
+        />
+        <Textarea
+          label="Meta description"
+          rows={3}
+          value={page.seoDescription ?? ''}
+          onChange={(e) => update({ seoDescription: e.target.value })}
+          placeholder="সার্চ রেজাল্টে দেখানো সংক্ষিপ্ত বর্ণনা (~155 অক্ষর)"
+        />
+        <Input
+          label="Keywords (কমা দিয়ে আলাদা করুন)"
+          value={page.seoKeywords ?? ''}
+          onChange={(e) => update({ seoKeywords: e.target.value })}
+          placeholder="পাঞ্জাবি, ডেলিভারি, ..."
+        />
       </section>
     </div>
   );
