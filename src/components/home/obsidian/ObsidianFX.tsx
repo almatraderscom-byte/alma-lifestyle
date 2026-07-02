@@ -216,7 +216,11 @@ function initWebGL(): () => void {
       '  float pulse = 0.7 + 0.3*sin(uTime*0.9 - d*10.0);' +
       '  vec3 col = mix(uColorA, uColorB, smoothstep(0.2,0.62,d));' +
       '  float glow = smoothstep(0.9,0.0,d)*0.28;' +
-      '  float i = line*fade*pulse*1.5 + glow;' +
+      // Clamp to [0,1]: the canvas backbuffer is premultiplied-alpha, so any
+      // fragment where rgb > a is an INVALID premultiplied colour. Mac/Metal
+      // tolerates it; Windows/ANGLE-D3D11 composites it as undefined hyper-
+      // bright output — the oversaturated "fat ring" flash on slide change.
+      '  float i = clamp(line*fade*pulse*1.5 + glow, 0.0, 1.0);' +
       '  gl_FragColor = vec4(col*i, i);' +
       '}',
   });
