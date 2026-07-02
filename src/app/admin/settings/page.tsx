@@ -396,6 +396,33 @@ function AiVoiceEditor({
             patch('assistant', { ...assistant, extraInstructions: e.target.value })
           }
         />
+
+        <div className="rounded-lg border border-neutral-200 p-3 space-y-3">
+          <Toggle
+            label="মালিকের পরিচয় কার্ড (চ্যাটের শুরুতে ছবি + WhatsApp)"
+            checked={assistant.showOwnerCard}
+            onChange={(v) => patch('assistant', { ...assistant, showOwnerCard: v })}
+          />
+          <Input
+            label="মালিকের নাম"
+            value={assistant.ownerName}
+            onChange={(e) => patch('assistant', { ...assistant, ownerName: e.target.value })}
+          />
+          <SmartImageUpload
+            specKey="logo"
+            value={assistant.ownerPhotoUrl}
+            onChange={(v) => patch('assistant', { ...assistant, ownerPhotoUrl: v })}
+            upload={{ mode: 'api', folder: 'branding', bucket: 'homepage-images' }}
+          />
+          <Textarea
+            label="কার্ডের লেখা"
+            rows={2}
+            value={assistant.ownerCardText}
+            onChange={(e) =>
+              patch('assistant', { ...assistant, ownerCardText: e.target.value })
+            }
+          />
+        </div>
         <p className="text-sm text-neutral-600">
           AI মডেল: Google Gemini 2.5 — সার্ভারের <code>GEMINI_API_KEY</code> এনভায়রনমেন্ট
           ভেরিয়েবল সেট থাকলে সহকারী কাজ করবে।

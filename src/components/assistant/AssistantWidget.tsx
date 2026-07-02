@@ -3,18 +3,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAssistant } from '@/context/AssistantContext';
-import { flushPendingSpotlight, queueSpotlight, runSpotlight } from '@/components/assistant/spotlight';
+import {
+  queueSpotlight,
+  runSpotlight,
+  runSpotlightTour,
+  takePendingSpotlight,
+} from '@/components/assistant/spotlight';
 import { useVoice } from '@/context/VoiceContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { useCart } from '@/context/CartContext';
 import { formatBdtPrice } from '@/lib/format-bn';
+import { buildWhatsAppHref } from '@/lib/whatsapp';
 
 /**
  * ALMA AI assistant — floating concierge widget (ElevenLabs/Hostinger-style).
  *
  * Streams replies from /api/v1/assistant/chat (Gemini 2.5) as SSE. The final
- * SSE event may carry `nav` (a storefront path the assistant wants to take
- * the customer to — executed with a short heads-up bubble) and `products`
- * (tappable product cards rendered under the reply).
+ * SSE event may carry actions the widget executes while narrating them with
+ * inline status chips ("নেভিগেট করছি ✓", "হাইলাইট করছি ✓" — the ElevenLabs
+ * pattern): `nav` (route change), `highlight` (guided spotlight), `tour`
+ * (sequential product spotlights) and `products` (tappable cards).
+ *
+ * The conversation persists in localStorage so a customer who leaves and
+ * comes back continues where they left off.
  */
 
 interface ProductCard {
@@ -27,33 +38,135 @@ interface ProductCard {
 }
 
 interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'status';
   text: string;
   products?: ProductCard[];
+  /** status entries only: unique id + completion flag for the ✓ */
+  sid?: string;
+  done?: boolean;
+  /** Hidden turns go to the model but never render (system nudges). */
+  hidden?: boolean;
 }
 
-const NAV_DELAY_MS = 1400;
+const NAV_DELAY_MS = 1200;
+const HISTORY_KEY = 'alma-ai-history-v1';
+const HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const HISTORY_MAX = 40;
+
+function loadHistory(): ChatMessage[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as { at: number; messages: ChatMessage[] };
+    if (!Array.isArray(parsed.messages) || Date.now() - parsed.at > HISTORY_TTL_MS) return [];
+    // Anything that was mid-flight when the page closed is finished now.
+    return parsed.messages.map((m) => (m.role === 'status' ? { ...m, done: true } : m));
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(messages: ChatMessage[]): void {
+  try {
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify({ at: Date.now(), messages: messages.slice(-HISTORY_MAX) })
+    );
+  } catch {
+    /* storage unavailable/full — history is best-effort */
+  }
+}
 
 export function AssistantWidget() {
   const { open, pageContext, openAssistant, closeAssistant } = useAssistant();
   const settings = useStoreSettings();
   const assistant = settings.assistant;
   const { play } = useVoice();
+  const { items: cartItems } = useCart();
   const router = useRouter();
   const pathname = usePathname();
 
-  // After an assistant-triggered navigation lands, run the spotlight it
-  // queued for the destination page (ElevenLabs-style guided highlight).
-  useEffect(() => {
-    flushPendingSpotlight();
-  }, [pathname]);
+  // Live context sent with every message: where the customer is + what's in
+  // the cart — this is what lets the model act like a real shop concierge
+  // ("সিস্টেম" note: the cart summary the model uses for proactive selling).
+  const liveContext = useCallback((): string => {
+    const parts: string[] = [`কাস্টমার এখন এই পেজে: ${pathname}`];
+    if (cartItems.length) {
+      const summary = cartItems
+        .slice(0, 6)
+        .map((i) => `${i.title} (৳${i.priceSnapshot} × ${i.quantity})`)
+        .join(', ');
+      parts.push(`কার্টে আছে: ${summary}`);
+    } else {
+      parts.push('কার্ট এখন খালি');
+    }
+    if (pageContext) parts.push(pageContext);
+    return parts.join(' | ').slice(0, 1350);
+  }, [pathname, cartItems, pageContext]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [navNotice, setNavNotice] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const hydrated = useRef(false);
+
+  // Wheel over the panel scrolls the CHAT, never the page. Must be a native
+  // non-passive listener: the compositor scrolls the page directly (scroll
+  // chaining past the too-short list) before React's delegated handler runs,
+  // so stopPropagation alone can't contain it.
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const onWheel = (e: WheelEvent) => {
+      const list = listRef.current;
+      if (list) list.scrollTop += e.deltaY;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    panel.addEventListener('wheel', onWheel, { passive: false });
+    return () => panel.removeEventListener('wheel', onWheel);
+  }, [open]);
+
+  // Restore the conversation once on mount, then persist every change.
+  useEffect(() => {
+    setMessages(loadHistory());
+    hydrated.current = true;
+  }, []);
+  useEffect(() => {
+    if (hydrated.current) saveHistory(messages);
+  }, [messages]);
+
+  const pushStatus = useCallback((text: string): string => {
+    const sid = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setMessages((cur) => [...cur, { role: 'status', text, sid, done: false }]);
+    return sid;
+  }, []);
+  /** Complete a status chip — a failed lookup says so instead of lying ✓. */
+  const finishStatus = useCallback((sid: string, ok = true) => {
+    setMessages((cur) =>
+      cur.map((m) =>
+        m.sid === sid
+          ? { ...m, done: true, text: ok ? m.text : 'এই পেজে দেখানোর মতো খুঁজে পাইনি' }
+          : m
+      )
+    );
+  }, []);
+
+  // After an assistant-triggered navigation lands, run the spotlight/tour it
+  // queued for the destination page — with a visible status chip.
+  useEffect(() => {
+    const pending = takePendingSpotlight();
+    if (!pending) return;
+    const sid = pushStatus('হাইলাইট করছি — Highlighting');
+    if (pending.tour?.length) {
+      void runSpotlightTour(pending.tour).then((shown) => finishStatus(sid, shown > 0));
+    } else {
+      void runSpotlight(pending.key!).then((ok) => finishStatus(sid, ok));
+    }
+  }, [pathname, pushStatus, finishStatus]);
 
   // Voice cue when the panel opens.
   const wasOpen = useRef(false);
@@ -70,21 +183,36 @@ export function AssistantWidget() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // Self-reference so send() can schedule a delayed follow-up send().
+  const sendRef = useRef<((raw: string, opts?: { hidden?: boolean }) => Promise<void>) | null>(
+    null
+  );
   const send = useCallback(
-    async (raw: string) => {
+    async (raw: string, opts?: { hidden?: boolean }) => {
       const text = raw.trim();
       if (!text || busy) return;
       setInput('');
       setBusy(true);
 
-      const history: ChatMessage[] = [...messages, { role: 'user', text }];
-      setMessages([...history, { role: 'assistant', text: '' }]);
+      let history: ChatMessage[] = [];
+      setMessages((cur) => {
+        history = cur;
+        return [
+          ...cur,
+          { role: 'user', text, hidden: opts?.hidden },
+          { role: 'assistant', text: '' },
+        ];
+      });
 
       const patchLast = (patch: Partial<ChatMessage>) =>
         setMessages((cur) => {
           const next = [...cur];
-          const last = next[next.length - 1];
-          if (last?.role === 'assistant') next[next.length - 1] = { ...last, ...patch };
+          for (let i = next.length - 1; i >= 0; i--) {
+            if (next[i].role === 'assistant') {
+              next[i] = { ...next[i], ...patch };
+              break;
+            }
+          }
           return next;
         });
 
@@ -96,17 +224,24 @@ export function AssistantWidget() {
       try {
         const controller = new AbortController();
         abortRef.current = controller;
+        const chatTurns = [...history, { role: 'user' as const, text }]
+          .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
+          .slice(-16)
+          .map((m) => ({ role: m.role as 'user' | 'assistant', text: m.text }));
         const res = await fetch('/api/v1/assistant/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
-          body: JSON.stringify({
-            messages: history.slice(-16).map((m) => ({ role: m.role, text: m.text })),
-            context: pageContext ?? undefined,
-          }),
+          body: JSON.stringify({ messages: chatTurns, context: liveContext() }),
         });
         if (!res.ok || !res.body) {
-          fail();
+          if (res.status === 429) {
+            patchLast({
+              text: 'এই মুহূর্তে একটু ভিড় চলছে! 🙏 এক-দুই মিনিট পরে আবার লিখুন, আমি এখানেই আছি।',
+            });
+          } else {
+            fail();
+          }
           return;
         }
 
@@ -128,6 +263,7 @@ export function AssistantWidget() {
               done?: boolean;
               nav?: string | null;
               highlight?: string | null;
+              tour?: string[] | null;
               products?: ProductCard[];
               error?: string;
             };
@@ -148,19 +284,36 @@ export function AssistantWidget() {
               gotDone = true;
               if (evt.products?.length) patchLast({ products: evt.products });
               if (!streamed && !evt.products?.length) fail();
+
               const samePage = evt.nav && evt.nav.split('?')[0] === pathname;
               if (evt.nav && !samePage) {
-                // Highlight on the destination page runs after the route
-                // change (queued through sessionStorage, flushed on landing).
-                if (evt.highlight) queueSpotlight(evt.highlight);
-                setNavNotice(true);
+                // Queue on-arrival effects, then navigate — each step gets
+                // its own status chip, ElevenLabs-style.
+                if (evt.tour?.length) queueSpotlight({ tour: evt.tour });
+                else if (evt.highlight) queueSpotlight({ key: evt.highlight });
+                const sid = pushStatus('পেজে নিয়ে যাচ্ছি — Navigating');
                 const target = evt.nav;
                 setTimeout(() => {
-                  setNavNotice(false);
+                  finishStatus(sid);
                   router.push(target);
                 }, NAV_DELAY_MS);
+                // Concierge nudge: after leading the customer to the cart,
+                // the assistant follows up on its own (praise + offer help)
+                // using the live cart context — no visible synthetic turn.
+                if (target.split('?')[0] === '/cart') {
+                  setTimeout(() => {
+                    void sendRef.current?.(
+                      '(সিস্টেম নোট: কাস্টমার এইমাত্র কার্ট পেজে এসেছে। প্রেক্ষাপটের কার্ট-তথ্য দেখে নিজে থেকে ২-৩ বাক্যের আন্তরিক বার্তা দাও — প্রোডাক্টের প্রশংসা + অর্ডার সম্পন্ন করতে কী করতে হবে + সাহায্যের প্রস্তাব।)',
+                      { hidden: true }
+                    );
+                  }, NAV_DELAY_MS + 2200);
+                }
+              } else if (evt.tour?.length) {
+                const sid = pushStatus('প্রোডাক্টগুলো ঘুরিয়ে দেখাচ্ছি — Highlighting');
+                void runSpotlightTour(evt.tour).then((shown) => finishStatus(sid, shown > 0));
               } else if (evt.highlight) {
-                void runSpotlight(evt.highlight);
+                const sid = pushStatus('হাইলাইট করছি — Highlighting');
+                void runSpotlight(evt.highlight).then((ok) => finishStatus(sid, ok));
               }
             }
           }
@@ -174,14 +327,40 @@ export function AssistantWidget() {
         abortRef.current = null;
       }
     },
-    [busy, messages, pageContext, router, settings.whatsappCountryCode, settings.whatsappNumber]
+    [
+      busy,
+      liveContext,
+      pathname,
+      router,
+      pushStatus,
+      finishStatus,
+      settings.whatsappCountryCode,
+      settings.whatsappNumber,
+    ]
   );
+
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   if (!assistant?.enabled) return null;
 
+  const hasChat = messages.some((m) => m.role !== 'status');
+
   return (
     <>
-      {/* Floating launcher */}
+      {/* Floating launcher — living orb character: aurora ring spins around a
+          glowing violet orb whose eyes glance left/right and blink (all
+          transform-only animations, GPU-composited). */}
       {!open && (
         <button
           type="button"
@@ -189,16 +368,31 @@ export function AssistantWidget() {
           onClick={() => openAssistant()}
           aria-label={`${assistant.name} — AI সহকারী`}
         >
-          <span className="alma-ai-fab-orb" aria-hidden>
-            ✦
+          <span className="alma-ai-avatar" aria-hidden>
+            <span className="alma-ai-avatar-ring" />
+            <span className="alma-ai-avatar-orb">
+              <span className="alma-ai-eyes">
+                <span className="alma-ai-eye" />
+                <span className="alma-ai-eye" />
+              </span>
+            </span>
           </span>
           <span className="alma-ai-fab-label">{assistant.name}</span>
         </button>
       )}
 
-      {/* Chat panel */}
+      {/* Chat panel. Wheel/touch events must never leak to the page: Lenis
+          (the storefront's scroll engine) listens on window and would scroll
+          the PAGE while the customer tries to scroll the CHAT. */}
       {open && (
-        <div className="alma-ai-panel" role="dialog" aria-label={`${assistant.name} AI সহকারী`}>
+        <div
+          ref={panelRef}
+          className="alma-ai-panel"
+          role="dialog"
+          aria-label={`${assistant.name} AI সহকারী`}
+          data-lenis-prevent
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           <div className="alma-ai-head">
             <span className="alma-ai-head-orb" aria-hidden>
               ✦
@@ -207,6 +401,26 @@ export function AssistantWidget() {
               <strong className="bn">{assistant.name}</strong>
               <span className="bn">ALMA AI সহকারী</span>
             </div>
+            {hasChat && (
+              <button
+                type="button"
+                className="alma-ai-clear bn"
+                onClick={clearHistory}
+                aria-label="চ্যাট মুছুন"
+                title="চ্যাট মুছুন"
+              >
+                🗑
+              </button>
+            )}
+            <button
+              type="button"
+              className={hasChat ? 'alma-ai-min' : 'alma-ai-min alma-ai-min--solo'}
+              onClick={closeAssistant}
+              aria-label="ছোট করুন"
+              title="ছোট করুন (চ্যাট থেকে যাবে)"
+            >
+              —
+            </button>
             <button
               type="button"
               className="alma-ai-close"
@@ -218,9 +432,32 @@ export function AssistantWidget() {
           </div>
 
           <div className="alma-ai-list bn" ref={listRef}>
+            <div className="alma-ai-list-inner">
+            {/* Owner trust card — the real human behind the AI persona. */}
+            {assistant.showOwnerCard && (
+              <div className="alma-ai-owner">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={assistant.ownerPhotoUrl} alt={assistant.ownerName} />
+                <div className="alma-ai-owner-txt">
+                  <strong>{settings.storeName}</strong>
+                  <small>মালিক: {assistant.ownerName}</small>
+                  <p>{assistant.ownerCardText}</p>
+                  <a
+                    href={buildWhatsAppHref(
+                      settings,
+                      'আসসালামু আলাইকুম, ALMA Lifestyle সম্পর্কে জানতে চাই।'
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    📱 মালিকের সাথে কথা বলুন
+                  </a>
+                </div>
+              </div>
+            )}
             <div className="alma-ai-msg is-bot">{assistant.greeting}</div>
 
-            {messages.length === 0 && assistant.suggestions.length > 0 && (
+            {!hasChat && assistant.suggestions.length > 0 && (
               <div className="alma-ai-chips">
                 {assistant.suggestions.map((s) => (
                   <button key={s} type="button" onClick={() => send(s)} className="bn">
@@ -230,55 +467,60 @@ export function AssistantWidget() {
               </div>
             )}
 
-            {messages.map((m, i) => (
-              <div key={i} className={`alma-ai-msg ${m.role === 'user' ? 'is-user' : 'is-bot'}`}>
-                {m.text ||
-                  (m.role === 'assistant' && busy && i === messages.length - 1 ? (
-                    <span className="alma-ai-typing" aria-label="লিখছে…">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                  ) : (
-                    m.text
-                  ))}
-                {m.products && m.products.length > 0 && (
-                  <div className="alma-ai-cards">
-                    {m.products.map((p) => (
-                      <button
-                        key={p.slug}
-                        type="button"
-                        className="alma-ai-card"
-                        onClick={() => {
-                          closeAssistant();
-                          router.push(p.href);
-                        }}
-                      >
-                        {p.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.image} alt={p.title} loading="lazy" />
-                        ) : (
-                          <span className="alma-ai-card-ph" aria-hidden>
-                            ✦
-                          </span>
-                        )}
-                        <span className="alma-ai-card-txt">
-                          <strong>{p.title}</strong>
-                          <em>
-                            {formatBdtPrice(p.price)}
-                            {p.compareAtPrice && p.compareAtPrice > p.price ? (
-                              <s>{formatBdtPrice(p.compareAtPrice)}</s>
-                            ) : null}
-                          </em>
-                        </span>
-                      </button>
+            {messages.map((m, i) =>
+              m.hidden ? null : m.role === 'status' ? (
+                <div key={m.sid ?? i} className={`alma-ai-status${m.done ? ' done' : ''}`}>
+                  <span className="alma-ai-status-ic" aria-hidden>
+                    {m.done ? '✓' : ''}
+                  </span>
+                  {m.text}
+                </div>
+              ) : (
+                <div key={i} className={`alma-ai-msg ${m.role === 'user' ? 'is-user' : 'is-bot'}`}>
+                  {m.text ||
+                    (m.role === 'assistant' && busy && i === messages.length - 1 ? (
+                      <span className="alma-ai-typing" aria-label="লিখছে…">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    ) : (
+                      m.text
                     ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {navNotice && <div className="alma-ai-nav-notice">পেজে নিয়ে যাচ্ছি… ✨</div>}
+                  {m.products && m.products.length > 0 && (
+                    <div className="alma-ai-cards">
+                      {m.products.map((p) => (
+                        <button
+                          key={p.slug}
+                          type="button"
+                          className="alma-ai-card"
+                          onClick={() => router.push(p.href)}
+                        >
+                          {p.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={p.image} alt={p.title} loading="lazy" />
+                          ) : (
+                            <span className="alma-ai-card-ph" aria-hidden>
+                              ✦
+                            </span>
+                          )}
+                          <span className="alma-ai-card-txt">
+                            <strong>{p.title}</strong>
+                            <em>
+                              {formatBdtPrice(p.price)}
+                              {p.compareAtPrice && p.compareAtPrice > p.price ? (
+                                <s>{formatBdtPrice(p.compareAtPrice)}</s>
+                              ) : null}
+                            </em>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+            </div>
           </div>
 
           <form

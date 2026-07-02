@@ -32,15 +32,15 @@ const bodySchema = z.object({
     )
     .min(1)
     .max(24),
-  /** Optional page/product context, e.g. "Customer is viewing: <title>". */
-  context: z.string().max(600).optional(),
+  /** Optional live context: current page, cart contents, viewed product. */
+  context: z.string().max(1400).optional(),
 });
 
 /* Small in-memory rate limit (per serverless instance) — enough to stop
  * accidental loops and casual abuse without external infra. */
 const hits = new Map<string, { n: number; at: number }>();
 const RATE_WINDOW_MS = 5 * 60 * 1000;
-const RATE_MAX = 30;
+const RATE_MAX = 60;
 function rateLimited(ip: string): boolean {
   const now = Date.now();
   const h = hits.get(ip);
@@ -55,7 +55,8 @@ function rateLimited(ip: string): boolean {
 const NAV_RE = /\[\[NAV:([^\]]+)\]\]/g;
 const PRODUCT_RE = /\[\[PRODUCT:([^\]]+)\]\]/g;
 const HIGHLIGHT_RE = /\[\[HIGHLIGHT:([^\]]+)\]\]/g;
-const TAG_RE = /\[\[(?:NAV|PRODUCT|HIGHLIGHT):[^\]]*\]\]/g;
+const TOUR_RE = /\[\[TOUR:([^\]]+)\]\]/g;
+const TAG_RE = /\[\[(?:NAV|PRODUCT|HIGHLIGHT|TOUR):[^\]]*\]\]/g;
 /** A possibly-incomplete action tag at the chunk tail ("[", "[[NAV:/pro" …).
  *  Held back until it completes or the stream ends — worst case a literal
  *  "[" is briefly delayed, never lost. */
@@ -118,6 +119,11 @@ export async function POST(request: NextRequest) {
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => '');
     console.error('[assistant] Gemini error', upstream.status, detail.slice(0, 300));
+    // Surface quota exhaustion distinctly so the widget can say "busy, try
+    // again shortly" instead of pointing every hiccup at WhatsApp.
+    if (upstream.status === 429) {
+      return apiError('Assistant is busy', 429, 'GEMINI_QUOTA');
+    }
     return apiError('Assistant is temporarily unavailable', 502, 'GEMINI_ERROR');
   }
 
@@ -186,6 +192,25 @@ export async function POST(request: NextRequest) {
           [...fullText.matchAll(HIGHLIGHT_RE)]
             .map((m) => m[1].trim())
             .find((k) => isHighlightKey(k)) ?? null;
+        // Sequential product tour — validated against the live catalog.
+        let tour = [...fullText.matchAll(TOUR_RE)]
+          .flatMap((m) => m[1].split(/[|,]/))
+          .map((s) => s.trim())
+          .filter((slug) => products.some((p) => p.slug === slug))
+          .slice(0, 4);
+        // Deterministic fallback: when the assistant navigates to a category
+        // listing without a (valid) tour, walk the top products of that
+        // category anyway — the guided showcase shouldn't depend on the
+        // model remembering exact slugs.
+        if (!tour.length && !fullText.match(HIGHLIGHT_RE)?.length && nav?.startsWith('/products?')) {
+          const cat = new URLSearchParams(nav.split('?')[1]).get('category');
+          if (cat) {
+            tour = products
+              .filter((p) => p.categorySlug === cat)
+              .slice(0, 3)
+              .map((p) => p.slug);
+          }
+        }
         const cards = [...fullText.matchAll(PRODUCT_RE)]
           .map((m) => m[1].trim())
           .slice(0, 3)
@@ -201,7 +226,15 @@ export async function POST(request: NextRequest) {
           }));
 
         controller.enqueue(
-          encoder.encode(sseEvent({ done: true, nav: nav ?? null, highlight, products: cards }))
+          encoder.encode(
+            sseEvent({
+              done: true,
+              nav: nav ?? null,
+              highlight,
+              tour: tour.length ? tour : null,
+              products: cards,
+            })
+          )
         );
       } catch (err) {
         console.error('[assistant] stream error', err);

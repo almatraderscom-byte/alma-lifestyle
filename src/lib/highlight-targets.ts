@@ -65,14 +65,29 @@ export const HIGHLIGHT_TARGETS: Record<string, HighlightTarget> = {
     page: '/',
   },
   'pdp-price': {
-    selectors: ['.ob-pdp-price'],
+    selectors: ['.ob-pdp-price', '[data-alma-target="pdp-price"]'],
     description: 'প্রোডাক্ট পেজের দাম/অফার',
     page: '/products/<slug>',
   },
   'pdp-add-to-cart': {
-    selectors: ['.ob-pdp-cta'],
+    selectors: ['.ob-pdp-cta', '[data-alma-target="pdp-add-to-cart"]'],
     description: 'প্রোডাক্ট পেজের "কার্টে যোগ করুন / এখনই কিনুন" বাটন',
     page: '/products/<slug>',
+  },
+  'family-set-box': {
+    selectors: ['[data-alma-target="family-set-box"]'],
+    description: 'ম্যাচিং সেট পেজের "ফ্যামিলি সেট একসাথে কিনুন" বক্স (ডিসকাউন্টসহ)',
+    page: '/products/<slug> (ম্যাচিং সেট)',
+  },
+  'cart-checkout': {
+    selectors: ['[data-alma-target="cart-checkout"]'],
+    description: 'কার্ট পেজের Checkout বাটন — অর্ডার করার পথ দেখাতে এটাই হাইলাইট করো',
+    page: '/cart',
+  },
+  'cart-whatsapp': {
+    selectors: ['[data-alma-target="cart-whatsapp"]'],
+    description: 'কার্ট পেজের "Order on WhatsApp" বাটন',
+    page: '/cart',
   },
 };
 

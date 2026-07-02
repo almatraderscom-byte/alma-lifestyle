@@ -21,6 +21,7 @@ import { HIGHLIGHT_TARGETS, isHighlightKey } from '@/lib/highlight-targets';
  */
 
 const HOLD_MS = 2600;
+const TOUR_HOLD_MS = 2100;
 const FADE_MS = 420;
 const FIND_TIMEOUT_MS = 6000;
 const FIND_INTERVAL_MS = 180;
@@ -28,9 +29,31 @@ const RING_PAD = 12;
 
 let activeCleanup: (() => void) | null = null;
 
-function findTarget(key: string): Promise<HTMLElement | null> {
-  if (!isHighlightKey(key)) return Promise.resolve(null);
-  const { selectors } = HIGHLIGHT_TARGETS[key];
+/** Selector candidates for a target: a registry key ("categories") or a
+ *  product reference ("product:<slug>") pointing at that product's card link
+ *  on whatever listing/grid page is currently shown. */
+function selectorsFor(key: string): string[] | null {
+  if (key.startsWith('product:')) {
+    const slug = key.slice('product:'.length).replace(/["'\\]/g, '');
+    if (!slug) return null;
+    const href = `a[href="/products/${slug}"], a[href^="/products/${slug}?"]`;
+    // Grid/listing cards first — a bare match could land on the homepage
+    // hero's CTA, whose href rotates with the carousel.
+    return [
+      `[data-product-slug="${slug}"]`,
+      `#products :is(${href})`,
+      `.pgrid :is(${href})`,
+      `main :is(${href})`,
+      `a[href="/products/${slug}"]`,
+      `a[href^="/products/${slug}?"]`,
+    ];
+  }
+  return isHighlightKey(key) ? HIGHLIGHT_TARGETS[key].selectors : null;
+}
+
+function findTarget(key: string, timeoutMs = FIND_TIMEOUT_MS): Promise<HTMLElement | null> {
+  const selectors = selectorsFor(key);
+  if (!selectors) return Promise.resolve(null);
   const lookup = () => {
     for (const sel of selectors) {
       const el = document.querySelector<HTMLElement>(sel);
@@ -43,18 +66,23 @@ function findTarget(key: string): Promise<HTMLElement | null> {
     const tick = () => {
       const el = lookup();
       if (el) return resolve(el);
-      if (Date.now() - started > FIND_TIMEOUT_MS) return resolve(null);
+      if (Date.now() - started > timeoutMs) return resolve(null);
       setTimeout(tick, FIND_INTERVAL_MS);
     };
     tick();
   });
 }
 
-/** Run the spotlight effect on a named target. Resolves when finished
- *  (or immediately if the target can't be found on this page). */
-export async function runSpotlight(key: string): Promise<void> {
-  const el = await findTarget(key);
-  if (!el) return;
+/** Run the spotlight effect on a named target. Resolves when the effect
+ *  finished — `false` means the target wasn't on this page and nothing was
+ *  shown (so the caller can tell the customer instead of silently ✓-ing). */
+export async function runSpotlight(
+  key: string,
+  opts?: { holdMs?: number; findTimeoutMs?: number }
+): Promise<boolean> {
+  const holdMs = opts?.holdMs ?? HOLD_MS;
+  const el = await findTarget(key, opts?.findTimeoutMs);
+  if (!el) return false;
 
   // Only one spotlight at a time.
   activeCleanup?.();
@@ -181,7 +209,7 @@ export async function runSpotlight(key: string): Promise<void> {
 
   // enter → hold → fade
   fadeTo(1, 380);
-  holdTimer = window.setTimeout(fadeOut, HOLD_MS);
+  holdTimer = window.setTimeout(fadeOut, holdMs);
   window.addEventListener('pointerdown', dismiss, true);
   window.addEventListener('wheel', dismiss, { capture: true, passive: true });
   window.addEventListener('keydown', dismiss, true);
@@ -190,37 +218,69 @@ export async function runSpotlight(key: string): Promise<void> {
     const wait = () => (done ? resolve() : setTimeout(wait, 120));
     wait();
   });
+  return true;
+}
+
+/** Sequential product tour — spotlights each product card one after another
+ *  (shorter hold per item). Missing cards are skipped, so a stale slug never
+ *  stalls the tour. Returns how many products were actually shown. */
+export async function runSpotlightTour(slugs: string[]): Promise<number> {
+  let shown = 0;
+  for (let i = 0; i < slugs.length; i++) {
+    // First item gets the full find timeout (page may still be rendering);
+    // later items are already on-page or genuinely missing.
+    const ok = await runSpotlight(`product:${slugs[i]}`, {
+      holdMs: TOUR_HOLD_MS,
+      findTimeoutMs: i === 0 ? FIND_TIMEOUT_MS : 1500,
+    });
+    if (ok) shown += 1;
+    if (i < slugs.length - 1) await new Promise((r) => setTimeout(r, 260));
+  }
+  return shown;
 }
 
 /* ------------- pending spotlight across a client-side navigation ------------- */
 
-// Debug/QA handle — lets the owner (or a test) trigger any spotlight from the
-// console: window.__almaSpotlight('family-matching')
+// Debug/QA handles — trigger from the console:
+//   window.__almaSpotlight('family-matching')
+//   window.__almaSpotlightTour(['slug-a', 'slug-b'])
 if (typeof window !== 'undefined') {
-  (window as unknown as { __almaSpotlight?: typeof runSpotlight }).__almaSpotlight = runSpotlight;
+  const w = window as unknown as {
+    __almaSpotlight?: typeof runSpotlight;
+    __almaSpotlightTour?: typeof runSpotlightTour;
+  };
+  w.__almaSpotlight = runSpotlight;
+  w.__almaSpotlightTour = runSpotlightTour;
 }
 
 const PENDING_KEY = 'alma-hl-pending';
 const PENDING_TTL_MS = 20_000;
 
-export function queueSpotlight(key: string): void {
+export interface PendingSpotlight {
+  key?: string;
+  tour?: string[];
+}
+
+export function queueSpotlight(pending: PendingSpotlight): void {
   try {
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ key, at: Date.now() }));
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...pending, at: Date.now() }));
   } catch {
     /* storage unavailable */
   }
 }
 
-/** Consume and run a queued spotlight (called after route changes). */
-export function flushPendingSpotlight(): void {
+/** Consume the queued spotlight (if fresh). The caller runs it — that lets
+ *  the chat widget show its "Highlighting…" status chip around the effect. */
+export function takePendingSpotlight(): PendingSpotlight | null {
   try {
     const raw = sessionStorage.getItem(PENDING_KEY);
-    if (!raw) return;
+    if (!raw) return null;
     sessionStorage.removeItem(PENDING_KEY);
-    const { key, at } = JSON.parse(raw) as { key: string; at: number };
-    if (Date.now() - at > PENDING_TTL_MS) return;
-    void runSpotlight(key);
+    const parsed = JSON.parse(raw) as PendingSpotlight & { at: number };
+    if (Date.now() - parsed.at > PENDING_TTL_MS) return null;
+    if (!parsed.key && !parsed.tour?.length) return null;
+    return { key: parsed.key, tour: parsed.tour };
   } catch {
-    /* corrupt entry — drop it */
+    return null;
   }
 }

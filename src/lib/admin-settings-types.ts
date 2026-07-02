@@ -61,6 +61,11 @@ export interface AssistantSettings {
   suggestions: string[];
   /** Owner's extra instructions appended to the AI system prompt. */
   extraInstructions: string;
+  /** Owner trust card at the top of the chat (photo + intro + WhatsApp). */
+  showOwnerCard: boolean;
+  ownerName: string;
+  ownerPhotoUrl: string;
+  ownerCardText: string;
 }
 
 /** One pre-recorded voice clip (ElevenLabs-generated) played by the storefront. */
@@ -168,6 +173,11 @@ export function getDefaultAssistantSettings(): AssistantSettings {
       'অর্ডার কীভাবে করব?',
     ],
     extraInstructions: '',
+    showOwnerCard: true,
+    ownerName: 'Maruf Chowdhury',
+    ownerPhotoUrl: '/owner/maruf.jpg',
+    ownerCardText:
+      'আমি আলমা — ওনার AI সহকারী। সরাসরি মালিকের সাথে কথা বলতে চাইলে WhatsApp করুন 👇',
   };
 }
 

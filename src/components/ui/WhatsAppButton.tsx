@@ -36,14 +36,25 @@ export function WhatsAppButton() {
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
+      {/* Owner's face on the WhatsApp button — this channel really IS the
+          owner replying, so the human photo belongs here. */}
+      {settings.assistant?.ownerPhotoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={settings.assistant.ownerPhotoUrl}
+          alt={settings.assistant.ownerName || 'Owner'}
+          className="h-8 w-8 -ml-1 rounded-full object-cover border-2 border-white/70 shadow"
+        />
+      ) : null}
       <span className="relative flex h-6 w-6 items-center justify-center">
         {!reduceMotion && (
           <span className="absolute inset-0 rounded-full bg-white/20 animate-pulse motion-reduce:hidden" />
         )}
         <WhatsAppIcon />
       </span>
-      <span className="hidden sm:inline font-bn-body text-sm font-medium pr-1">
-        {WHATSAPP.label}
+      <span className="hidden sm:flex flex-col leading-tight pr-1">
+        <span className="font-bn-body text-sm font-semibold">মালিকের সাথে কথা বলুন</span>
+        <span className="font-bn-body text-[11px] text-white/85">{WHATSAPP.label}</span>
       </span>
     </motion.a>
   );
