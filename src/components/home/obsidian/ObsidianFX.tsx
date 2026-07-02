@@ -76,18 +76,47 @@ function initWebGL(): () => void {
   let H = host.clientHeight || window.innerHeight;
   const DPR = Math.min(window.devicePixelRatio || 1, 1.8);
 
+  // OPAQUE canvas — deliberately NOT alpha:true. With a transparent canvas the
+  // browser compositor must blend the scene's additive output (rings, glow
+  // sprites, particles all write rgb > alpha) against the DOM behind it.
+  // That's an invalid premultiplied colour: Mac/Metal quietly dims it, but
+  // Windows Chromium (ANGLE/D3D11) composites it as clipped, blazing,
+  // hard-edged bands — the "cut/flash" ring glitch on slide changes. Opaque
+  // rendering keeps ALL accumulation inside the GPU framebuffer (identical on
+  // every platform); the hero base gradient is drawn in-scene below.
   let renderer: any;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   } catch {
     return () => {};
   }
   renderer.setPixelRatio(DPR);
   renderer.setSize(W, H, false);
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(0x0a0817, 1);
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x0a0916, 0.085);
+
+  // In-scene copy of the .hero CSS base gradient (the CSS layer is hidden
+  // behind the now-opaque canvas; it remains as the no-WebGL fallback).
+  {
+    const bg = document.createElement('canvas');
+    bg.width = 1024;
+    bg.height = 640;
+    const bgx = bg.getContext('2d')!;
+    const grd = bgx.createRadialGradient(1024 * 0.7, 640 * 0.16, 0, 1024 * 0.7, 640 * 0.16, 1024 * 1.1);
+    grd.addColorStop(0, '#201941');
+    grd.addColorStop(0.38, '#130f26');
+    grd.addColorStop(0.7, '#0a0817');
+    grd.addColorStop(1, '#06050c');
+    bgx.fillStyle = grd;
+    bgx.fillRect(0, 0, 1024, 640);
+    // No colour-space tag: the renderer outputs linear/passthrough in this
+    // vendored build, so an untagged texture reproduces the CSS hex colours
+    // exactly (tagging it sRGB would decode-darken the gradient).
+    const bgTex = new THREE.CanvasTexture(bg);
+    scene.background = bgTex;
+  }
   const camera = new THREE.PerspectiveCamera(46, W / H, 0.1, 100);
   camera.position.set(0, 0, 9);
 
