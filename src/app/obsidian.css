@@ -948,6 +948,9 @@ html:has(.obsidian-home) body {
    two solid-colour offset copies of the pill split out and snap back. */
 .obsidian-home .spot-what-btn {
   position: relative;
+  /* Now a <button> (launches the AI assistant) — kill UA button chrome. */
+  border: none;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;

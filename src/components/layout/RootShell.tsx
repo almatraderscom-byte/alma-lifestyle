@@ -11,6 +11,10 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { NavMenuProvider } from '@/context/NavMenuContext';
+import { AssistantProvider } from '@/context/AssistantContext';
+import { VoiceProvider } from '@/context/VoiceContext';
+import { AssistantWidget } from '@/components/assistant/AssistantWidget';
+import { VoiceDock } from '@/components/voice/VoiceDock';
 import { isEmbedPreviewMode } from '@/lib/homepage-config';
 import { isObsidianChromeRoute, isHomeRoute } from '@/lib/storefront/obsidian-routes';
 import type { HeaderNavItem } from '@/lib/nav-menu';
@@ -34,18 +38,24 @@ function StorefrontProviders({
         <NavMenuProvider items={navItems}>
           <CartProvider>
             <WishlistProvider>
-              {overlays ? (
-                <Suspense fallback={null}>
-                  <RouteProgressBar />
-                </Suspense>
-              ) : null}
-              <main className="min-h-0 flex-1">{children}</main>
-              {overlays ? (
-                <>
-                  <ScrollToTop />
-                  <WhatsAppButton />
-                </>
-              ) : null}
+              <VoiceProvider>
+                <AssistantProvider>
+                  {overlays ? (
+                    <Suspense fallback={null}>
+                      <RouteProgressBar />
+                    </Suspense>
+                  ) : null}
+                  <main className="min-h-0 flex-1">{children}</main>
+                  {overlays ? (
+                    <>
+                      <ScrollToTop />
+                      <WhatsAppButton />
+                    </>
+                  ) : null}
+                  <AssistantWidget />
+                  <VoiceDock />
+                </AssistantProvider>
+              </VoiceProvider>
             </WishlistProvider>
           </CartProvider>
         </NavMenuProvider>
@@ -58,16 +68,22 @@ function StorefrontProviders({
       <NavMenuProvider items={navItems}>
         <CartProvider>
           <WishlistProvider>
-            <Suspense fallback={null}>
-              <RouteProgressBar />
-            </Suspense>
-            <Suspense fallback={<header className="sticky top-0 z-40 h-16 border-b bg-white lg:h-20" />}>
-              <Header />
-            </Suspense>
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <ScrollToTop />
-            <WhatsAppButton />
+            <VoiceProvider>
+              <AssistantProvider>
+                <Suspense fallback={null}>
+                  <RouteProgressBar />
+                </Suspense>
+                <Suspense fallback={<header className="sticky top-0 z-40 h-16 border-b bg-white lg:h-20" />}>
+                  <Header />
+                </Suspense>
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <ScrollToTop />
+                <WhatsAppButton />
+                <AssistantWidget />
+                <VoiceDock />
+              </AssistantProvider>
+            </VoiceProvider>
           </WishlistProvider>
         </CartProvider>
       </NavMenuProvider>

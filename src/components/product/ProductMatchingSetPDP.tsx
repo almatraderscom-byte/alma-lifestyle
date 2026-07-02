@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FAMILY_SET_DISCOUNT_BDT,
@@ -11,6 +11,7 @@ import type { CatalogProduct } from '@/lib/products-data';
 import { formatBdtPrice, toBanglaNumber } from '@/lib/format-bn';
 import { PDP } from '@/lib/content';
 import { useCart } from '@/context/CartContext';
+import { useVoice } from '@/context/VoiceContext';
 import { catalogToCartItem } from '@/lib/cart-helpers';
 import { trackAddToCart, trackAddToCartLine } from '@/lib/pixel';
 import { useToast } from '@/components/ui/Toast';
@@ -34,7 +35,16 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
   const members = product.designGroupMembers ?? [product];
   const router = useRouter();
   const { addItem } = useCart();
+  const { play } = useVoice();
   const { showToast } = useToast();
+
+  // Family matching set sales hook — the pre-recorded ALMA voice plays once
+  // per session when a customer lands on a matching-set page (after the
+  // browser's first-gesture audio unlock).
+  useEffect(() => {
+    play('familyHook', { oncePerSession: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initialId =
     members.find((m) => m.slug === product.slug)?.id ?? members[0]?.id;
@@ -97,6 +107,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
       quantity: payload.quantity ?? 1,
       unitPriceBdt: payload.priceSnapshot ?? active.price,
     });
+    play('addToCart');
     showToast(PDP.toastAdded);
   }
 
@@ -137,6 +148,7 @@ export function ProductMatchingSetPDP({ product }: ProductMatchingSetPDPProps) {
         item_price: line.unitPriceBdt,
       })),
     });
+    play('addToCart');
     showToast(PDP.toastAdded);
     router.push('/cart');
   }

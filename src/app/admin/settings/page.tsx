@@ -8,7 +8,14 @@ import type {
   FooterColumnConfig,
   NavLinkConfig,
 } from '@/lib/admin-settings-types';
-import { CONTENT_PAGE_SLUGS, CONTENT_PAGE_LABELS } from '@/lib/admin-settings-types';
+import {
+  CONTENT_PAGE_SLUGS,
+  CONTENT_PAGE_LABELS,
+  VOICE_CLIP_KEYS,
+  VOICE_CLIP_LABELS,
+  getDefaultAssistantSettings,
+  getDefaultVoiceSettings,
+} from '@/lib/admin-settings-types';
 import { UI_COPY_FIELDS } from '@/lib/ui-copy';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
@@ -31,6 +38,7 @@ const TABS = [
   'Currency & Pricing',
   'SEO',
   'Email Notifications',
+  'AI & Voice',
 ] as const;
 
 type TabId = (typeof TABS)[number];
@@ -319,9 +327,118 @@ export default function AdminSettingsPage() {
           </>
         )}
 
+        {tab === 'AI & Voice' && (
+          <AiVoiceEditor form={form} patch={patch} />
+        )}
+
         <Button type="submit">Save Changes</Button>
       </form>
     </div>
+  );
+}
+
+/**
+ * "AI & Voice" tab — controls the ALMA AI assistant (Gemini chat concierge)
+ * and the pre-recorded voice clips. The Gemini API key itself lives in the
+ * GEMINI_API_KEY server env var (never in these settings).
+ */
+function AiVoiceEditor({
+  form,
+  patch,
+}: {
+  form: AppSettings;
+  patch: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+}) {
+  const assistant = form.assistant ?? getDefaultAssistantSettings();
+  const voice = form.voice ?? getDefaultVoiceSettings();
+  const defaultClips = getDefaultVoiceSettings().clips;
+
+  return (
+    <>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">ALMA AI সহকারী</h2>
+        <Toggle
+          label="AI সহকারী চালু (সব পেজে ফ্লোটিং চ্যাট)"
+          checked={assistant.enabled}
+          onChange={(v) => patch('assistant', { ...assistant, enabled: v })}
+        />
+        <Input
+          label="সহকারীর নাম"
+          value={assistant.name}
+          onChange={(e) => patch('assistant', { ...assistant, name: e.target.value })}
+        />
+        <Textarea
+          label="গ্রিটিং মেসেজ (চ্যাট খুললে প্রথম মেসেজ)"
+          rows={3}
+          value={assistant.greeting}
+          onChange={(e) => patch('assistant', { ...assistant, greeting: e.target.value })}
+        />
+        <Textarea
+          label="সাজেশন চিপ (প্রতি লাইনে একটি প্রশ্ন)"
+          rows={4}
+          value={assistant.suggestions.join('\n')}
+          onChange={(e) =>
+            patch('assistant', {
+              ...assistant,
+              suggestions: e.target.value
+                .split('\n')
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .slice(0, 6),
+            })
+          }
+        />
+        <Textarea
+          label="AI-কে অতিরিক্ত নির্দেশনা (ঐচ্ছিক — যেমন অফার, টোন, নিয়ম)"
+          rows={4}
+          value={assistant.extraInstructions}
+          onChange={(e) =>
+            patch('assistant', { ...assistant, extraInstructions: e.target.value })
+          }
+        />
+        <p className="text-sm text-neutral-600">
+          AI মডেল: Google Gemini 2.5 — সার্ভারের <code>GEMINI_API_KEY</code> এনভায়রনমেন্ট
+          ভেরিয়েবল সেট থাকলে সহকারী কাজ করবে।
+        </p>
+      </section>
+
+      <section className="space-y-3 border-t border-neutral-200 pt-5">
+        <h2 className="text-lg font-semibold text-neutral-900">ভয়েস ক্লিপ</h2>
+        <Toggle
+          label="ভয়েস ফিচার চালু"
+          checked={voice.enabled}
+          onChange={(v) => patch('voice', { ...voice, enabled: v })}
+        />
+        <p className="text-sm text-neutral-600">
+          প্রতিটি ক্লিপের ডিফল্ট ফাইল: <code>/voice/&lt;key&gt;.mp3</code> (সাইটের সাথে ডিপ্লয়
+          হয়)। চাইলে নিচে হোস্টেড MP3 URL দিয়ে override করা যায়। ফাইল না থাকলে সাইট চুপচাপ
+          থাকে — কোনো এরর হয় না।
+        </p>
+        {VOICE_CLIP_KEYS.map((key) => {
+          const clip = voice.clips?.[key] ?? defaultClips[key];
+          const patchClip = (next: Partial<typeof clip>) =>
+            patch('voice', {
+              ...voice,
+              clips: { ...defaultClips, ...voice.clips, [key]: { ...clip, ...next } },
+            });
+          return (
+            <div key={key} className="rounded-lg border border-neutral-200 p-3 space-y-2">
+              <Toggle
+                label={`${VOICE_CLIP_LABELS[key]} (${key}.mp3)`}
+                checked={clip.enabled}
+                onChange={(v) => patchClip({ enabled: v })}
+              />
+              <Input
+                label="Hosted MP3 URL (ঐচ্ছিক override)"
+                value={clip.url}
+                placeholder={`/voice/${key}.mp3`}
+                onChange={(e) => patchClip({ url: e.target.value })}
+              />
+            </div>
+          );
+        })}
+      </section>
+    </>
   );
 }
 

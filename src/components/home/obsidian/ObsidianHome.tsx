@@ -13,6 +13,7 @@ import type {
 import { DEFAULT_OBSIDIAN_COPY } from '@/lib/homepage-config-types';
 import type { CardProduct } from '@/lib/products-data';
 import { useCmsEdit } from '@/components/cms/cms-edit-context';
+import { useAssistant } from '@/context/AssistantContext';
 import { formatBnText, formatRating } from '@/lib/format-bn';
 import { getDefaultImageForHint, resolveImageUrl } from '@/lib/default-images';
 import { resolveImageSlot } from '@/lib/homepage-image-slots';
@@ -119,6 +120,7 @@ function Spotlight({
   copy: ObsidianHomeCopy['spotlight'];
   imageSlots?: Record<string, HomepageImageSlotAdjust>;
 }) {
+  const { openAssistant } = useAssistant();
   if (!product) return null;
   const img = (imageUrl: string, hint: string) =>
     resolveImageUrl(imageUrl, getDefaultImageForHint(hint));
@@ -290,19 +292,25 @@ function Spotlight({
             <span className="spot-bgword" aria-hidden>
               {product.categoryLabel}
             </span>
-            {/* Floating mesh-gradient capsule "rod" with the chromatic-glitch
-                "What's this?" button (existing এটা কী? string). */}
+            {/* Floating mesh-gradient capsule "rod" — the chromatic-glitch
+                "এটা কী?" button now launches the ALMA AI assistant with the
+                spotlight product as conversation context. */}
             <div className="spot-rod">
-              <Link
-                href={product.href}
+              <button
+                type="button"
                 className="spot-what-btn"
                 data-text={copy.whatButton}
                 aria-label={copy.whatButton}
                 data-cms-field="obsidianCopy.spotlight.whatButton"
                 data-cms-label="Spotlight 'What's this' button"
+                onClick={() =>
+                  openAssistant(
+                    `কাস্টমার হোমপেজের স্পটলাইট সেকশন থেকে এসেছে। স্পটলাইট পণ্য: ${product.title} (দাম ${product.priceText}, লিংক ${product.href})`
+                  )
+                }
               >
                 {copy.whatButton}
-              </Link>
+              </button>
             </div>
           </div>
         </div>

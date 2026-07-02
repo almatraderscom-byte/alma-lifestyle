@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./obsidian.css";
+@import "./assistant.css";
 
 :root {
   --primary: #2a2622;

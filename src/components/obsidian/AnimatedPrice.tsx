@@ -8,6 +8,7 @@ import {
   type Variants,
 } from 'framer-motion';
 import { formatBdtPrice, formatDiscountPercent } from '@/lib/format-bn';
+import { useVoice } from '@/context/VoiceContext';
 
 interface AnimatedPriceProps {
   /** Current / offer price (product.price) — always shown. */
@@ -33,7 +34,10 @@ const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
  */
 export function AnimatedPrice({ price, compareAtPrice, discountPercent }: AnimatedPriceProps) {
   const reduce = useReducedMotion();
+  const { play } = useVoice();
   const hasDiscount = Boolean(compareAtPrice && compareAtPrice > price && discountPercent);
+  // Tapping the price plays the pre-recorded offer voice clip (ALMA voice).
+  const onPriceClick = () => play('priceReveal');
 
   // Gate the animation until the block is on screen (or immediately when
   // reduced motion is requested), so the reveal lands as the user reaches it.
@@ -66,7 +70,7 @@ export function AnimatedPrice({ price, compareAtPrice, discountPercent }: Animat
   // No discount → render the offer price cleanly, no strike, no choreography.
   if (!hasDiscount) {
     return (
-      <div className="ob-pdp-price price" ref={rootRef}>
+      <div className="ob-pdp-price price" ref={rootRef} onClick={onPriceClick}>
         <span className="ob-pdp-now">{formatBdtPrice(price)}</span>
       </div>
     );
@@ -102,7 +106,7 @@ export function AnimatedPrice({ price, compareAtPrice, discountPercent }: Animat
   const animate = reduce ? 'show' : started ? 'show' : 'hidden';
 
   return (
-    <div className="ob-pdp-price price ob-pdp-price--deal" ref={rootRef}>
+    <div className="ob-pdp-price price ob-pdp-price--deal" ref={rootRef} onClick={onPriceClick}>
       <motion.span
         className="was"
         variants={wasVariants}
