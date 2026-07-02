@@ -45,20 +45,85 @@ type FbqFn = ((command: string, event?: string, params?: object) => void) & {
   callMethod?: (...args: unknown[]) => void;
 };
 
+type GtagFn = (...args: unknown[]) => void;
+
 declare global {
   interface Window {
     fbq?: FbqFn;
+    gtag?: GtagFn;
   }
 }
 
 const DEFAULT_CURRENCY: PixelCurrency = 'BDT';
 const PURCHASE_DEDUPE_PREFIX = 'alma-pixel-purchase-';
 
+/**
+ * GA4 mirror — every funnel event this module sends to the Meta Pixel is also
+ * sent to Google Analytics 4 (the gtag.js already loaded by GoogleAnalytics.tsx),
+ * mapped to GA4's standard e-commerce names. Before this, GA4 only received
+ * pageviews, so the site showed traffic but 0 conversions — 'purchase' is a GA4
+ * default key event, so revenue/conversion reporting lights up from this alone.
+ */
+const GA4_EVENT_NAME: Record<string, string> = {
+  Purchase: 'purchase',
+  AddToCart: 'add_to_cart',
+  InitiateCheckout: 'begin_checkout',
+  ViewContent: 'view_item',
+  Search: 'search',
+  Lead: 'generate_lead',
+};
+
+function ga4Mirror(event: string, params?: object): void {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  const name = GA4_EVENT_NAME[event];
+  if (!name) return;
+
+  const p = (params ?? {}) as {
+    value?: number;
+    currency?: string;
+    contents?: PixelContentItem[];
+    content_ids?: string[];
+    content_name?: string;
+    order_id?: string;
+    search_string?: string;
+  };
+
+  if (name === 'search') {
+    if (p.search_string) window.gtag('event', 'search', { search_term: p.search_string });
+    return;
+  }
+  if (name === 'generate_lead') {
+    window.gtag('event', 'generate_lead', {});
+    return;
+  }
+
+  const out: Record<string, unknown> = {
+    currency: p.currency ?? DEFAULT_CURRENCY,
+    value: p.value ?? 0,
+  };
+  if (p.contents?.length) {
+    out.items = p.contents.map((c) => ({ item_id: c.id, quantity: c.quantity, price: c.item_price }));
+  } else if (name === 'view_item' && p.content_ids?.length) {
+    out.items = [{ item_id: p.content_ids[0], item_name: p.content_name, price: p.value ?? 0 }];
+  }
+  if (name === 'purchase' && p.order_id) out.transaction_id = p.order_id;
+
+  window.gtag('event', name, out);
+}
+
 function pixelTrack(event: string, params?: object): void {
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     void import('@/lib/pixel-dev').then(({ recordPixelEvent }) => {
       recordPixelEvent(event, params as Record<string, unknown> | undefined, 'pixel.ts');
     });
+  }
+
+  // GA4 first — gtag loads independently of the Meta Pixel, so analytics keeps
+  // working even when fbq is blocked (ad blockers commonly kill fbq only).
+  try {
+    ga4Mirror(event, params);
+  } catch {
+    /* analytics must never break the shop */
   }
 
   if (typeof window === 'undefined' || !window.fbq) {
