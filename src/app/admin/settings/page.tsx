@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '@/lib/admin-store';
-import type { AppSettings } from '@/lib/admin-settings-types';
+import type { AppSettings, FooterColumnConfig, NavLinkConfig } from '@/lib/admin-settings-types';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
@@ -16,6 +16,7 @@ const TABS = [
   'Homepage',
   'Store Information',
   'Social Media',
+  'Footer & Navigation',
   'Delivery & Shipping',
   'Payment',
   'Currency & Pricing',
@@ -189,6 +190,10 @@ export default function AdminSettingsPage() {
           </>
         )}
 
+        {tab === 'Footer & Navigation' && (
+          <FooterNavEditor form={form} patch={patch} />
+        )}
+
         {tab === 'Delivery & Shipping' && (
           <>
             <section className="space-y-4 rounded-lg border border-neutral-200 p-4">
@@ -317,5 +322,170 @@ function Toggle({
       <span className="font-medium text-neutral-700">{label}</span>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[var(--ob-violet)]" />
     </label>
+  );
+}
+
+/**
+ * Editor for the storefront footer (brand tagline, link columns, copyright)
+ * and the header navigation. Everything here drives {@link ObsidianFooter} and
+ * {@link ObsidianHeader} on the live site via AppSettings.
+ */
+function FooterNavEditor({
+  form,
+  patch,
+}: {
+  form: AppSettings;
+  patch: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+}) {
+  const columns = form.footerColumns ?? [];
+  const nav = form.headerNav ?? [];
+
+  const setColumns = (next: FooterColumnConfig[]) => patch('footerColumns', next);
+  const setNav = (next: NavLinkConfig[]) => patch('headerNav', next);
+
+  const updateColumn = (ci: number, next: Partial<FooterColumnConfig>) =>
+    setColumns(columns.map((c, i) => (i === ci ? { ...c, ...next } : c)));
+  const updateLink = (ci: number, li: number, next: Partial<NavLinkConfig>) =>
+    updateColumn(ci, {
+      links: columns[ci].links.map((l, i) => (i === li ? { ...l, ...next } : l)),
+    });
+
+  return (
+    <div className="space-y-6">
+      <Textarea
+        label="Footer tagline (ফুটার ট্যাগলাইন)"
+        rows={3}
+        value={form.footerTagline}
+        onChange={(e) => patch('footerTagline', e.target.value)}
+      />
+
+      {/* ---- Footer columns ---- */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold text-neutral-900">Footer columns</h3>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setColumns([...columns, { title: 'New column', links: [] }])}
+          >
+            + Column
+          </Button>
+        </div>
+        {columns.map((col, ci) => (
+          <div key={ci} className="space-y-3 rounded-lg border border-neutral-200 p-4">
+            <div className="flex items-end gap-2">
+              <Input
+                label={`Column ${ci + 1} title`}
+                value={col.title}
+                onChange={(e) => updateColumn(ci, { title: e.target.value })}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setColumns(columns.filter((_, i) => i !== ci))}
+              >
+                Remove
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {col.links.map((l, li) => (
+                <div key={li} className="flex items-center gap-2">
+                  <Input
+                    value={l.label}
+                    placeholder="Label"
+                    onChange={(e) => updateLink(ci, li, { label: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Input
+                    value={l.href}
+                    placeholder="/path"
+                    onChange={(e) => updateLink(ci, li, { href: e.target.value })}
+                    className="flex-1"
+                  />
+                  <button
+                    type="button"
+                    className="text-neutral-500 hover:text-red-600"
+                    aria-label="Remove link"
+                    onClick={() =>
+                      updateColumn(ci, { links: col.links.filter((_, i) => i !== li) })
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => updateColumn(ci, { links: [...col.links, { label: '', href: '' }] })}
+              >
+                + Link
+              </Button>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input
+          label="Copyright line"
+          value={form.footerCopyright}
+          onChange={(e) => patch('footerCopyright', e.target.value)}
+        />
+        <Input
+          label="Legal line"
+          value={form.footerLegalLine}
+          onChange={(e) => patch('footerLegalLine', e.target.value)}
+        />
+      </div>
+
+      {/* ---- Header navigation ---- */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold text-neutral-900">Header navigation</h3>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setNav([...nav, { label: '', href: '' }])}
+          >
+            + Nav item
+          </Button>
+        </div>
+        {nav.map((item, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 p-3">
+            <Input
+              value={item.label}
+              placeholder="Label"
+              onChange={(e) => setNav(nav.map((n, j) => (j === i ? { ...n, label: e.target.value } : n)))}
+              className="flex-1 min-w-[8rem]"
+            />
+            <Input
+              value={item.href}
+              placeholder="/path"
+              onChange={(e) => setNav(nav.map((n, j) => (j === i ? { ...n, href: e.target.value } : n)))}
+              className="flex-1 min-w-[8rem]"
+            />
+            <label className="flex items-center gap-1.5 text-xs text-neutral-600 whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={!!item.social}
+                onChange={(e) => setNav(nav.map((n, j) => (j === i ? { ...n, social: e.target.checked } : n)))}
+                className="h-4 w-4 accent-[var(--ob-violet)]"
+              />
+              Contact icons
+            </label>
+            <button
+              type="button"
+              className="text-neutral-500 hover:text-red-600"
+              aria-label="Remove nav item"
+              onClick={() => setNav(nav.filter((_, j) => j !== i))}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }

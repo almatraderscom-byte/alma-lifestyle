@@ -4,42 +4,13 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
+import { DEFAULT_FOOTER_COLUMNS } from '@/lib/admin-settings-types';
 
 interface ObsidianFooterProps {
   stripImages: string[];
 }
 
 const WORDMARK = 'ALMA LIFESTYLE';
-
-const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
-  {
-    title: 'শপ',
-    links: [
-      { label: 'সব পণ্য', href: '/products' },
-      { label: 'পাঞ্জাবি', href: '/products?category=panjabi' },
-      { label: 'ইসলামিক', href: '/products?category=islamic' },
-      { label: 'এক্সেসরিজ', href: '/products?category=accessories' },
-    ],
-  },
-  {
-    title: 'কোম্পানি',
-    links: [
-      { label: 'আমাদের সম্পর্কে', href: '/about' },
-      { label: 'যোগাযোগ', href: '/contact' },
-      { label: 'ডেলিভারি', href: '/delivery' },
-      { label: 'অর্ডার ট্র্যাক', href: '/track' },
-    ],
-  },
-  {
-    title: 'সাপোর্ট',
-    links: [
-      { label: 'সচরাচর জিজ্ঞাসা', href: '/faq' },
-      { label: 'রিটার্ন ও রিফান্ড', href: '/refund' },
-      { label: 'প্রাইভেসি পলিসি', href: '/privacy' },
-      { label: 'শর্তাবলী', href: '/terms' },
-    ],
-  },
-];
 
 /** Giant wordmark: constant per-letter 3D float + cursor-reactive refraction
  *  glow (cyan/orange chromatic split). Ported from the demo — always animating,
@@ -179,6 +150,11 @@ export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
     },
   ].filter(Boolean) as { key: string; href: string; label: string; icon: React.ReactNode }[];
 
+  const columns =
+    settings.footerColumns && settings.footerColumns.length > 0
+      ? settings.footerColumns
+      : DEFAULT_FOOTER_COLUMNS;
+
   return (
     <footer className="ob-footer" id="footer">
       <div className="container">
@@ -187,10 +163,7 @@ export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
             <Link href="/" className="ob-logo">
               ALMA
             </Link>
-            <p className="bn">
-              প্রিমিয়াম পাঞ্জাবি, ইসলামিক এসেনশিয়ালস ও লাইফস্টাইল পণ্য — সেই মুহূর্তগুলোর জন্য যেগুলো
-              সত্যিই গুরুত্বপূর্ণ।
-            </p>
+            {settings.footerTagline && <p className="bn">{settings.footerTagline}</p>}
             {socials.length > 0 && (
               <div className="socials">
                 {socials.map((s) => (
@@ -207,11 +180,11 @@ export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
               </div>
             )}
           </div>
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div className="foot-col bn" key={col.title}>
               <h5>{col.title}</h5>
               {col.links.map((l) => (
-                <Link key={l.label} href={l.href}>
+                <Link key={`${l.label}-${l.href}`} href={l.href}>
                   {l.label}
                 </Link>
               ))}
@@ -239,8 +212,8 @@ export function ObsidianFooter({ stripImages }: ObsidianFooterProps) {
 
       <div className="container">
         <div className="foot-legal">
-          <span>© 2026 Alma Lifestyle</span>
-          <span>Terms of Service · Privacy Notice</span>
+          <span>{settings.footerCopyright}</span>
+          <span>{settings.footerLegalLine}</span>
         </div>
       </div>
     </footer>

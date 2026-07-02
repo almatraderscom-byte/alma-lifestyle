@@ -4,20 +4,17 @@ import { useEffect, useState } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { formatItemCount } from '@/lib/format-bn';
 import { FloatingImageArray, type FloatingSocial } from '@/components/obsidian/FloatingImageArray';
+import { DEFAULT_HEADER_NAV } from '@/lib/admin-settings-types';
 
 const CONTACT_SOCIALS: FloatingSocial[] = ['whatsapp', 'facebook', 'instagram', 'call'];
 
-const NAV: Array<{ label: string; href: string; kind: 'products' | 'social' }> = [
-  { label: 'পাঞ্জাবি', href: '/products?category=panjabi', kind: 'products' },
-  { label: 'কালেকশন', href: '/products', kind: 'products' },
-  { label: 'সব পণ্য', href: '/products', kind: 'products' },
-  { label: 'যোগাযোগ', href: '/contact', kind: 'social' },
-];
-
 export function ObsidianHeader({ navImageSets }: { navImageSets?: string[][] } = {}) {
   const { itemCount } = useCart();
+  const settings = useStoreSettings();
+  const NAV = settings.headerNav && settings.headerNav.length > 0 ? settings.headerNav : DEFAULT_HEADER_NAV;
 
   // Each nav link owns its OWN category-specific, de-duplicated image set.
   const imgsFor = (i: number) => navImageSets?.[i] ?? [];
@@ -65,7 +62,7 @@ export function ObsidianHeader({ navImageSets }: { navImageSets?: string[][] } =
           <nav className="ob-nav-links bn ob-nav-bold" aria-label="Primary">
             {NAV.map((item, i) => {
               const link = <Link href={item.href}>{item.label}</Link>;
-              if (item.kind === 'social') {
+              if (item.social) {
                 return (
                   <FloatingImageArray key={`${item.label}-${i}`} socials={CONTACT_SOCIALS}>
                     {link}
