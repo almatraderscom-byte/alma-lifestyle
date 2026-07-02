@@ -327,6 +327,114 @@
   opacity: 0.65;
 }
 
+/* ==========================================================================
+   GUIDED SPOTLIGHT — the assistant highlights a page section: backdrop
+   blurs/dims around it, the target zooms forward inside a pulsing neon ring.
+   Four fixed panels form the "hole", so the target itself never gets
+   filtered and no stacking-context tricks are needed.
+   ========================================================================== */
+/* Enter/exit fades are JS-driven (inline opacity) — CSS transitions freeze in
+   occluded windows, which would leave the whole effect invisible. */
+.alma-hl-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9980;
+  pointer-events: none;
+  opacity: 0;
+}
+.alma-hl-panel {
+  position: fixed;
+  background: rgba(6, 5, 14, 0.52);
+  /* Single blur pass only — extra filter functions (saturate etc.) add a
+     colour-matrix pass per frame, expensive on weaker Windows GPUs. */
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+/* No backdrop-filter support → deepen the dim so focus still reads. */
+@supports not (backdrop-filter: blur(1px)) {
+  .alma-hl-panel {
+    background: rgba(6, 5, 14, 0.72);
+  }
+}
+/* Aurora ring — a rotating conic gradient clipped to a 3px rim by the
+   double-mask trick. The gradient square (sized to the rect's diagonal via
+   --alma-hl-d) is painted ONCE and spins with a transform, so the whole
+   animation is GPU-composited — zero per-frame repaint (Windows-safe,
+   unlike animating gradient angles). */
+.alma-hl-ring {
+  position: fixed;
+  border-radius: 20px;
+  padding: 3px;
+  overflow: hidden;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+.alma-hl-ring::before,
+.alma-hl-glow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--alma-hl-d, 200vmax);
+  height: var(--alma-hl-d, 200vmax);
+  margin: calc(var(--alma-hl-d, 200vmax) / -2);
+  background: conic-gradient(
+    from 0deg,
+    #00e0a0,
+    #1f7bff,
+    #7c5cff,
+    #ff2d55,
+    #ffb524,
+    #00e0a0
+  );
+}
+/* Only the crisp rim rotates — composited transform, painted once. */
+.alma-hl-ring::before {
+  animation: almaHlSpin 3.2s linear infinite;
+}
+/* Soft aurora bloom around the ring. Its gradient is STATIC on purpose:
+   a rotating child inside a blurred parent would force a full re-blur every
+   frame (the Windows GPU trap). The blur rasters once; only cheap composited
+   opacity breathes. */
+.alma-hl-glow {
+  position: fixed;
+  border-radius: 26px;
+  overflow: hidden;
+  filter: blur(20px);
+  opacity: 0.55;
+  animation: almaHlBreathe 1.6s ease-in-out infinite;
+}
+@keyframes almaHlSpin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes almaHlBreathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.68; }
+}
+/* The highlighted element itself: gentle zoom-forward, GPU-composited. */
+.alma-hl-target {
+  transform: scale(1.035) translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alma-hl-target {
+    transform: none;
+  }
+  .alma-hl-ring::before,
+  .alma-hl-glow {
+    animation: none;
+  }
+}
+
 /* Mobile: keep the launcher clear of the WhatsApp button and thumbs. */
 @media (max-width: 640px) {
   .alma-ai-fab {

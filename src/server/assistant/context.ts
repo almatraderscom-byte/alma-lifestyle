@@ -3,6 +3,7 @@ import 'server-only';
 import type { AppSettings } from '@/lib/admin-settings-types';
 import type { CatalogProduct } from '@/lib/products-data';
 import { loadCatalogProductsServer, loadPublicSettingsServer } from '@/lib/storefront/server-data';
+import { HIGHLIGHT_TARGETS } from '@/lib/highlight-targets';
 
 /**
  * ALMA assistant knowledge base — the system prompt handed to Gemini.
@@ -110,7 +111,13 @@ export async function getAssistantKnowledge(): Promise<AssistantKnowledge> {
     '## অ্যাকশন ট্যাগ (উইজেট এগুলো বোঝে; কাস্টমার দেখে না)',
     '- কাস্টমারকে কোনো পেজে নিয়ে যেতে চাইলে উত্তরের একদম শেষে লেখো: [[NAV:/path]] (সর্বোচ্চ ১টি, শুধু নিচের পেজ-তালিকার internal path)।',
     '- নির্দিষ্ট পণ্য সাজেস্ট করলে উত্তরের শেষে লেখো: [[PRODUCT:slug]] (সর্বোচ্চ ৩টি)।',
-    '- উদাহরণ: "আমাদের ফ্যামিলি ম্যাচিং সেটগুলো দেখাচ্ছি! [[NAV:/products]]"',
+    '- পেজের কোনো নির্দিষ্ট সেকশন কাস্টমারকে চোখে আঙুল দিয়ে দেখাতে চাইলে লেখো: [[HIGHLIGHT:key]] (সর্বোচ্চ ১টি) — সাইট তখন ওই সেকশনটা নিয়ন আলোয় হাইলাইট করে দেখায়। অন্য পেজের সেকশন হলে NAV এর সাথে দাও: আগে [[NAV:/]] তারপর [[HIGHLIGHT:family-matching]]।',
+    '- HIGHLIGHT key-তালিকা:',
+    ...Object.entries(HIGHLIGHT_TARGETS).map(
+      ([key, t]) => `  - ${key} → ${t.description} (পেজ: ${t.page})`
+    ),
+    '- উদাহরণ: "আমাদের ফ্যামিলি ম্যাচিং কালেকশনটা দেখাচ্ছি! [[NAV:/]] [[HIGHLIGHT:family-matching]]"',
+    '- উদাহরণ (একই পেজে): "এই যে, দামটা এখানে দেখুন! [[HIGHLIGHT:pdp-price]]"',
     '',
     '## দোকানের তথ্য',
     ...storeFacts,

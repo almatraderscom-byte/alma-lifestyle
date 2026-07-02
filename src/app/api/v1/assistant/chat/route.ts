@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getAssistantKnowledge } from '@/server/assistant/context';
+import { isHighlightKey } from '@/lib/highlight-targets';
 import { apiError } from '@/server/api/response';
 
 export const runtime = 'nodejs';
@@ -53,7 +54,8 @@ function rateLimited(ip: string): boolean {
 
 const NAV_RE = /\[\[NAV:([^\]]+)\]\]/g;
 const PRODUCT_RE = /\[\[PRODUCT:([^\]]+)\]\]/g;
-const TAG_RE = /\[\[(?:NAV|PRODUCT):[^\]]*\]\]/g;
+const HIGHLIGHT_RE = /\[\[HIGHLIGHT:([^\]]+)\]\]/g;
+const TAG_RE = /\[\[(?:NAV|PRODUCT|HIGHLIGHT):[^\]]*\]\]/g;
 /** A possibly-incomplete action tag at the chunk tail ("[", "[[NAV:/pro" …).
  *  Held back until it completes or the stream ends — worst case a literal
  *  "[" is briefly delayed, never lost. */
@@ -180,6 +182,10 @@ export async function POST(request: NextRequest) {
         const nav = [...fullText.matchAll(NAV_RE)]
           .map((m) => m[1].trim())
           .find((p) => p.startsWith('/'));
+        const highlight =
+          [...fullText.matchAll(HIGHLIGHT_RE)]
+            .map((m) => m[1].trim())
+            .find((k) => isHighlightKey(k)) ?? null;
         const cards = [...fullText.matchAll(PRODUCT_RE)]
           .map((m) => m[1].trim())
           .slice(0, 3)
@@ -195,7 +201,7 @@ export async function POST(request: NextRequest) {
           }));
 
         controller.enqueue(
-          encoder.encode(sseEvent({ done: true, nav: nav ?? null, products: cards }))
+          encoder.encode(sseEvent({ done: true, nav: nav ?? null, highlight, products: cards }))
         );
       } catch (err) {
         console.error('[assistant] stream error', err);
