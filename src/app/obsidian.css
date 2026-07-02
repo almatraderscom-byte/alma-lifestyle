@@ -38,6 +38,16 @@
   --strip-op: 0.2;
 }
 
+/* Dark backstop for the whole document while the Obsidian home is mounted:
+   if a slow Windows GPU ever drops a raster tile mid slide-transition, the
+   compositor paints the DOCUMENT background in its place — white by default,
+   which reads as a harsh white flash under the additive ring canvases. Keep
+   it hero-dark so a dropped tile is invisible instead of blinding. */
+html:has(.obsidian-home),
+html:has(.obsidian-home) body {
+  background-color: #06050c;
+}
+
 /* registering --theme as a real colour lets it INTERPOLATE — a plain var()
    background jumps instantly, this gives the smooth cross-fade */
 @property --theme {
@@ -497,6 +507,7 @@
   transform-style: preserve-3d;
   transition: transform 0.4s var(--ob-ease);
   will-change: transform;
+  backface-visibility: hidden;
 }
 .obsidian-home .c-in img,
 .obsidian-home .c-in video {
