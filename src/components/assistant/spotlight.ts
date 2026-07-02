@@ -99,6 +99,11 @@ export async function runSpotlight(key: string): Promise<void> {
     root.appendChild(p);
     return p;
   });
+  // Aurora bloom (blurred, behind) + crisp rotating conic ring (in front) —
+  // the ElevenLabs-style multi-colour glow, but animated.
+  const glow = document.createElement('div');
+  glow.className = 'alma-hl-glow';
+  root.appendChild(glow);
   const ring = document.createElement('div');
   ring.className = 'alma-hl-ring';
   root.appendChild(ring);
@@ -117,7 +122,13 @@ export async function runSpotlight(key: string): Promise<void> {
     pb.style.cssText = `top:${bottom}px;left:0;right:0;bottom:0`;
     pl.style.cssText = `top:${top}px;left:0;width:${left}px;height:${bottom - top}px`;
     pr.style.cssText = `top:${top}px;left:${right}px;right:0;height:${bottom - top}px`;
-    ring.style.cssText = `top:${top}px;left:${left}px;width:${right - left}px;height:${bottom - top}px`;
+    const w = right - left;
+    const h = bottom - top;
+    // --alma-hl-d sizes the rotating conic square to the rect's diagonal, so
+    // the sweep always covers the ring (and no bigger — GPU texture stays small).
+    const d = Math.ceil(Math.hypot(w, h));
+    ring.style.cssText = `top:${top}px;left:${left}px;width:${w}px;height:${h}px;--alma-hl-d:${d}px`;
+    glow.style.cssText = `top:${top - 8}px;left:${left - 8}px;width:${w + 16}px;height:${h + 16}px;--alma-hl-d:${d + 32}px`;
   };
   anchor();
   // Re-anchor on a timer (rAF pauses in occluded windows) so mid-effect
