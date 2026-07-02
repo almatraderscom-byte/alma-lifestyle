@@ -10,6 +10,7 @@ import { SplitBadge } from '@/components/obsidian/SplitBadge';
 import { FloatingWord } from '@/components/obsidian/FloatingWord';
 import { useCart } from '@/context/CartContext';
 import { CART, SITE } from '@/lib/content';
+import { pickUiText } from '@/lib/ui-copy';
 import { getZoneCharges, getFreeDeliveryThreshold } from '@/lib/delivery-settings';
 import { trackLead } from '@/lib/pixel';
 import { buildWhatsAppHref } from '@/lib/whatsapp';
@@ -73,7 +74,7 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
       <div className="container">
         <SplitBadge dark="ALMA" light="ব্যাগ" />
         <FloatingWord text="YOUR BAG" tone="light" className="doc-hero-word" />
-        <h1 className="doc-hero-title bn-serif">{CART.title}</h1>
+        <h1 className="doc-hero-title bn-serif">{pickUiText(settings, 'cart.title', CART.title)}</h1>
         {hydrated && items.length > 0 && (
           <p className="doc-hero-sub bn">{formatItemCount(itemCount)}</p>
         )}
@@ -103,10 +104,10 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
             <div className="ob-cart-empty px-6 py-20 text-center">
               <EmptyBagIcon className="ob-cart-empty-icon mx-auto h-20 w-20" />
               <h2 className="font-bn-heading text-2xl font-bold text-white mt-6">
-                {CART.emptyTitle}
+                {pickUiText(settings, 'cart.emptyTitle', CART.emptyTitle)}
               </h2>
               <Link href={CART.emptyHref} className="ob-btn solid mt-8">
-                {CART.emptyCta}
+                {pickUiText(settings, 'cart.continueShopping', CART.emptyCta)}
               </Link>
             </div>
           </div>
@@ -272,7 +273,7 @@ export function CartPageContent({ recommendations = [] }: CartPageContentProps) 
                 aria-disabled={hasUnavailableItems}
                 className="ob-cc-cta"
               >
-                {CART.checkout} →
+                {pickUiText(settings, 'cart.checkout', CART.checkout)} →
               </Link>
 
               <p className="text-center font-bn-body text-sm text-white/40">{CART.whatsappOr}</p>

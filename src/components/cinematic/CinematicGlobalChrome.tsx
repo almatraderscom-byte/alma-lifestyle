@@ -39,6 +39,9 @@ export function CinematicGlobalChrome() {
   }, []);
 
   if (!enabled) return null;
+  // The admin panel ships its own lightweight cursor comet (AdminCursorComet) and
+  // must never run the legacy CustomCursor / ParticleAtmosphere / progress bars.
+  if (pathname?.startsWith('/admin')) return null;
   // Every Obsidian-chrome route (the homepage AND every reskinned sub-page) ships
   // its own cursor comet + particle/ripple field via ObsidianFX. The legacy
   // cinematic chrome (CustomCursor, ParticleAtmosphere, RouteTransitionBar, etc.)

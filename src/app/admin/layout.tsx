@@ -1,5 +1,6 @@
 import { Inter, Playfair_Display } from 'next/font/google';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { AdminCursorComet } from '@/components/admin/AdminCursorComet';
 import './admin-theme.css';
 
 const inter = Inter({
@@ -26,6 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       className={`admin-app ${inter.variable} ${playfair.variable} font-sans antialiased`}
       style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
     >
+      <AdminCursorComet />
       <AdminShell>{children}</AdminShell>
     </div>
   );

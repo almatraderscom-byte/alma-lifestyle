@@ -15,6 +15,7 @@ import { Input } from '@/components/admin/ui/Input';
 import type { AdminOrder } from '@/lib/admin-store';
 import { shouldUseApi } from '@/lib/data-source';
 import { SyncStatusWidget } from '@/components/admin/SyncStatusWidget';
+import { AlmaBrandedLoader } from '@/components/layout/AlmaBrandedLoader';
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
@@ -137,7 +138,7 @@ export default function AdminDashboardPage() {
     .reduce((s, o) => s + o.totalBdt, 0);
 
   if (loading) {
-    return <p className="text-neutral-500">Loading dashboard…</p>;
+    return <AlmaBrandedLoader className="min-h-[60vh]" />;
   }
 
   if (loadError) {

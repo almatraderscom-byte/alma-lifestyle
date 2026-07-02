@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DistrictSelector } from '@/components/checkout/DistrictSelector';
 import { CHECKOUT } from '@/lib/content';
+import { pickUiText } from '@/lib/ui-copy';
 import { getZoneLabel } from '@/lib/delivery';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
@@ -130,7 +131,7 @@ export function CheckoutForm({
     <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8" noValidate>
       <fieldset className="space-y-4">
         <legend className="font-bn-heading text-xl font-bold text-white mb-2">
-          {CHECKOUT.customerSection}
+          {pickUiText(settings, 'checkout.customerSection', CHECKOUT.customerSection)}
         </legend>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -173,7 +174,7 @@ export function CheckoutForm({
 
       <fieldset className="space-y-4">
         <legend className="font-bn-heading text-xl font-bold text-white mb-2">
-          {CHECKOUT.addressSection}
+          {pickUiText(settings, 'checkout.addressSection', CHECKOUT.addressSection)}
         </legend>
 
         <DistrictSelector
@@ -223,7 +224,7 @@ export function CheckoutForm({
 
       <fieldset className="space-y-3">
         <legend className="font-bn-heading text-xl font-bold text-white mb-2">
-          {CHECKOUT.paymentSection}
+          {pickUiText(settings, 'checkout.paymentSection', CHECKOUT.paymentSection)}
         </legend>
 
         {settings.codEnabled && (

@@ -102,6 +102,9 @@ export interface AppSettings {
   headerNav: NavLinkConfig[];
   /** Per-page overrides for the static content/legal pages, keyed by slug. */
   contentPages: Record<string, ContentPageConfig>;
+  /** Overrides for user-facing shop/cart/checkout UI labels, keyed by dot-path
+   *  (e.g. "cart.title"). Blank/unset keys fall back to the built-in copy. */
+  uiCopy: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -198,6 +201,7 @@ export function getDefaultAppSettings(): AppSettings {
     footerLegalLine: 'Terms of Service · Privacy Notice',
     headerNav: DEFAULT_HEADER_NAV,
     contentPages: {},
+    uiCopy: {},
     createdAt: now,
     updatedAt: now,
   };

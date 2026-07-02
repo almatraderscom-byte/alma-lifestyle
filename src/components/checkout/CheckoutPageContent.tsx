@@ -11,6 +11,7 @@ import { OrderSubmittingAnimation } from '@/components/checkout/OrderSubmittingA
 import { useCart } from '@/context/CartContext';
 import { fetchLiveCartPrices } from '@/lib/cart-live-prices';
 import { CART, CHECKOUT } from '@/lib/content';
+import { pickUiText } from '@/lib/ui-copy';
 import { getDeliveryCharge } from '@/lib/delivery';
 import { formatBdtPrice, formatVariantLabel } from '@/lib/format-bn';
 import { createPlacedOrder, saveLastOrder } from '@/lib/orders';
@@ -373,7 +374,9 @@ export function CheckoutPageContent() {
               disabled={submitDisabled || isSubmitting}
               className="ob-cc-cta flex-1 px-4 text-base"
             >
-              {isSubmitting ? CHECKOUT.submitting : `${CHECKOUT.submit} →`}
+              {isSubmitting
+                ? CHECKOUT.submitting
+                : `${pickUiText(settings, 'checkout.submit', CHECKOUT.submit)} →`}
             </button>
           </div>
         </div>

@@ -37,6 +37,13 @@
 .admin-app .bg-white\/95 { background-color: rgba(18, 18, 31, 0.88); }
 .admin-app .bg-white\/90 { background-color: rgba(18, 18, 31, 0.9); }
 .admin-app .bg-white\/60 { background-color: var(--admin-hover); }
+/* Hardcoded light cream backgrounds baked into a few admin components (the
+   product-table "Design Group" rows, the cinematic editor panel). Without these
+   the light text on light cream is unreadable — remap to dark surfaces. */
+.admin-app .bg-\[\#faf8f6\] { background-color: var(--admin-surface); }
+.admin-app .hover\:bg-\[\#f5f0eb\]:hover { background-color: var(--admin-hover); }
+.admin-app .bg-\[\#FFF9F5\] { background-color: var(--admin-surface); }
+.admin-app .bg-\[\#FAF7F2\] { background-color: var(--admin-surface); }
 .admin-app .bg-neutral-50 { background-color: var(--admin-surface-2); }
 .admin-app .bg-neutral-100 { background-color: var(--admin-hover); }
 .admin-app .bg-\[\#FAFAFA\] { background-color: var(--admin-bg); }

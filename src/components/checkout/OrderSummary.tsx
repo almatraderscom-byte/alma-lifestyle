@@ -2,6 +2,7 @@
 
 import { CartItemThumbnail } from '@/components/cart/CartItemThumbnail';
 import { CART, CHECKOUT } from '@/lib/content';
+import { pickUiText } from '@/lib/ui-copy';
 import { formatBdtPrice } from '@/lib/format-bn';
 import { getDeliveryCharge, isFreeDelivery } from '@/lib/delivery';
 import { FREE_DELIVERY_THRESHOLD } from '@/lib/bangladesh-districts';
@@ -50,7 +51,7 @@ export function OrderSummary({
           compact ? 'text-lg' : 'text-xl'
         )}
       >
-        {CHECKOUT.orderSummaryTitle}
+        {pickUiText(settings, 'checkout.orderSummaryTitle', CHECKOUT.orderSummaryTitle)}
       </h2>
 
       <ul
@@ -133,7 +134,9 @@ export function OrderSummary({
           disabled={submitDisabled || isSubmitting}
           className="ob-cc-cta"
         >
-          {isSubmitting ? CHECKOUT.submitting : `${CHECKOUT.submit} →`}
+          {isSubmitting
+            ? CHECKOUT.submitting
+            : `${pickUiText(settings, 'checkout.submit', CHECKOUT.submit)} →`}
         </button>
       )}
 

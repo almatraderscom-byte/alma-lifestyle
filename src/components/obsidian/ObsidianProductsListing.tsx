@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProductFiltersPanel } from '@/components/product/ProductFiltersPanel';
 import { PRODUCTS_PAGE } from '@/lib/content';
+import { pickUiText } from '@/lib/ui-copy';
+import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { shouldUseStaticDemoCatalog } from '@/lib/storefront/catalog-source';
 import {
   CATALOG_PRODUCTS,
@@ -57,6 +59,8 @@ export function ObsidianProductsListing({
         : [];
   const searchParams = useSearchParams();
   const router = useRouter();
+  const settings = useStoreSettings();
+  const productsTitle = pickUiText(settings, 'products.title', PRODUCTS_PAGE.titleAll);
 
   const categoryParam = searchParams.get('category') as CategorySlug | null;
   const sortParam = (searchParams.get('sort') as SortKey) || 'newest';
@@ -111,8 +115,8 @@ export function ObsidianProductsListing({
     if (appliedFilters.categories.length === 1) {
       return CATEGORY_LABELS[appliedFilters.categories[0]];
     }
-    return PRODUCTS_PAGE.titleAll;
-  }, [appliedFilters.categories]);
+    return productsTitle;
+  }, [appliedFilters.categories, productsTitle]);
 
   const filtered = useMemo(() => {
     const list = filterCatalogProducts(catalogSource, appliedFilters);
@@ -184,7 +188,7 @@ export function ObsidianProductsListing({
               className={`shop-cat${!activeCat ? ' on' : ''}`}
               onClick={() => selectCategory(null)}
             >
-              {PRODUCTS_PAGE.titleAll}
+              {productsTitle}
             </button>
             {CATEGORY_ORDER.map((cat) => (
               <button
@@ -245,7 +249,15 @@ export function ObsidianProductsListing({
           </div>
 
           {pagination.items.length === 0 ? (
-            <ObEmptyState onReset={resetFilters} />
+            <ObEmptyState
+              onReset={resetFilters}
+              emptyTitle={pickUiText(settings, 'products.emptyTitle', PRODUCTS_PAGE.emptyTitle)}
+              emptySubtitle={pickUiText(
+                settings,
+                'products.emptySubtitle',
+                PRODUCTS_PAGE.emptySubtitle
+              )}
+            />
           ) : (
             <>
               <div className="ob-shop-grid">
@@ -304,14 +316,22 @@ export function ObsidianProductsListing({
   );
 }
 
-function ObEmptyState({ onReset }: { onReset: () => void }) {
+function ObEmptyState({
+  onReset,
+  emptyTitle,
+  emptySubtitle,
+}: {
+  onReset: () => void;
+  emptyTitle: string;
+  emptySubtitle: string;
+}) {
   return (
     <div className="ob-empty" data-ob-reveal>
       <p className="ob-empty-emoji" aria-hidden>
         😔
       </p>
-      <h2 className="bn-serif">{PRODUCTS_PAGE.emptyTitle}</h2>
-      <p className="bn">{PRODUCTS_PAGE.emptySubtitle}</p>
+      <h2 className="bn-serif">{emptyTitle}</h2>
+      <p className="bn">{emptySubtitle}</p>
       <button type="button" className="ob-btn dark solid" onClick={onReset}>
         {PRODUCTS_PAGE.emptyReset}
       </button>

@@ -9,6 +9,7 @@ import type {
   NavLinkConfig,
 } from '@/lib/admin-settings-types';
 import { CONTENT_PAGE_SLUGS, CONTENT_PAGE_LABELS } from '@/lib/admin-settings-types';
+import { UI_COPY_FIELDS } from '@/lib/ui-copy';
 import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Textarea } from '@/components/admin/ui/Textarea';
@@ -24,6 +25,7 @@ const TABS = [
   'Social Media',
   'Footer & Navigation',
   'Content Pages',
+  'Shop / Cart / Checkout Text',
   'Delivery & Shipping',
   'Payment',
   'Currency & Pricing',
@@ -203,6 +205,10 @@ export default function AdminSettingsPage() {
 
         {tab === 'Content Pages' && (
           <ContentPagesEditor form={form} patch={patch} />
+        )}
+
+        {tab === 'Shop / Cart / Checkout Text' && (
+          <UiCopyEditor form={form} patch={patch} />
         )}
 
         {tab === 'Delivery & Shipping' && (
@@ -586,6 +592,46 @@ function ContentPagesEditor({
           placeholder="পাঞ্জাবি, ডেলিভারি, ..."
         />
       </section>
+    </div>
+  );
+}
+
+/**
+ * Editor for the most visible user-facing labels on the Shop (products),
+ * Cart, and Checkout pages. Each row overrides one label; leaving it blank
+ * keeps the current built-in text, so nothing changes on the live site until
+ * the owner types something. The placeholder shows the current value.
+ */
+function UiCopyEditor({
+  form,
+  patch,
+}: {
+  form: AppSettings;
+  patch: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+}) {
+  const uiCopy = form.uiCopy ?? {};
+
+  const setKey = (key: string, value: string) =>
+    patch('uiCopy', { ...uiCopy, [key]: value });
+
+  return (
+    <div className="space-y-5">
+      <p className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600">
+        কোনো ঘর খালি রাখলে ওই লেখাটি বর্তমান অবস্থায় থাকবে। Leave a field blank to keep the
+        current text — the grey placeholder shows what customers see today.
+      </p>
+
+      <div className="space-y-4">
+        {UI_COPY_FIELDS.map((field) => (
+          <Input
+            key={field.key}
+            label={field.label}
+            value={uiCopy[field.key] ?? ''}
+            placeholder={field.fallback}
+            onChange={(e) => setKey(field.key, e.target.value)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
