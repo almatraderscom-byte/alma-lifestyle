@@ -304,11 +304,34 @@ export const DEFAULT_OBSIDIAN_COPY: ObsidianHomeCopy = {
   },
 };
 
+/**
+ * Per-slot image override + framing adjustment for the Obsidian homepage's
+ * catalog-derived imagery (hero coverflow, spotlight, product grid, shine band,
+ * footer strip). Every field optional: when all unset the slot renders its
+ * original catalog image with no reframing.
+ */
+export interface HomepageImageSlotAdjust {
+  /** Replacement image URL. When empty/absent the slot keeps its catalog image. */
+  url?: string;
+  /** objectPosition X, 0–100 (%). Default 50. */
+  posX?: number;
+  /** objectPosition Y, 0–100 (%). Default 50. */
+  posY?: number;
+  /** CSS scale factor, 1–2.5. Default 1 (no zoom). */
+  zoom?: number;
+}
+
 export interface HomepageConfig {
   sections: HomepageSectionConfig[];
   extras?: HomepageExtras;
   /** Editable copy for the Obsidian/cinematic homepage layout. */
   obsidianCopy?: ObsidianHomeCopy;
+  /**
+   * Per-slot image overrides for the Obsidian homepage, keyed by slot id
+   * (`hero-0`…`hero-5`, `spotlight`, `grid-0`…`grid-7`, `shine-0`…`shine-7`,
+   * `strip-0`…`strip-11`). See {@link HomepageImageSlotAdjust}.
+   */
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
   lastSaved: string;
   /** Overridden by site_config.cinematic_mode_enabled when set */
   cinematicMode?: boolean;

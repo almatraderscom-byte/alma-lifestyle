@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
 import type {
   CategoriesSectionData,
+  HomepageImageSlotAdjust,
   ObsidianHomeCopy,
   ReviewsSectionData,
   TrustSectionData,
@@ -14,6 +15,7 @@ import type { CardProduct } from '@/lib/products-data';
 import { useCmsEdit } from '@/components/cms/cms-edit-context';
 import { formatBnText, formatRating } from '@/lib/format-bn';
 import { getDefaultImageForHint, resolveImageUrl } from '@/lib/default-images';
+import { resolveImageSlot } from '@/lib/homepage-image-slots';
 import { ObsidianHeader } from './ObsidianHeader';
 import { ObsidianHero } from './ObsidianHero';
 import { ObsidianFooter } from './ObsidianFooter';
@@ -28,6 +30,8 @@ interface ObsidianHomeProps {
   trust?: TrustSectionData;
   /** Editable copy for the hard-styled sections (defaults when omitted). */
   copy?: ObsidianHomeCopy;
+  /** Per-slot image overrides + framing (hero/spotlight/grid/shine/strip). */
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
   /** Dot-paths into the live HomepageConfig for the visual editor. When set,
    *  the matching section's fields are tagged `data-cms-field`. */
   categoriesPath?: string;
@@ -106,16 +110,24 @@ function Spotlight({
   categoriesPath,
   editing,
   copy,
+  imageSlots,
 }: {
   product: ObsidianCard | null;
   categories?: CategoriesSectionData;
   categoriesPath?: string;
   editing?: boolean;
   copy: ObsidianHomeCopy['spotlight'];
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
 }) {
   if (!product) return null;
   const img = (imageUrl: string, hint: string) =>
     resolveImageUrl(imageUrl, getDefaultImageForHint(hint));
+  // Spotlight product image is not part of the base design (the visual is the
+  // floating rod over a ghost word). We only render an <img> here when the owner
+  // has set a spotlight override URL, so the base layout is unchanged. The
+  // element is always tagged so the visual editor can attach to it in edit mode.
+  const spot = resolveImageSlot(imageSlots, 'spotlight', '');
+  const showSpotImg = !!spot.src;
   return (
     <section className="spotlight" id="spotlight">
       <div className="spot-ghost">PANJABI</div>
@@ -248,7 +260,32 @@ function Spotlight({
               </Link>
             </div>
           </div>
-          <div className="spot-visual">
+          <div className="spot-visual" style={{ overflow: 'hidden' }}>
+            {/* Owner-overridable spotlight image. Not shown in the base design —
+                only rendered when an override URL is set (or while editing, so
+                the field is selectable). Sits behind the rod, fills the frame. */}
+            {(showSpotImg || editing) && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={spot.src || img(product.imageUrl, product.categoryLabel)}
+                alt=""
+                aria-hidden
+                data-cms-field="imageSlots.spotlight"
+                data-cms-type="image-adjust"
+                data-cms-label="Spotlight image"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  zIndex: 1,
+                  opacity: showSpotImg ? 1 : 0.001,
+                  borderRadius: 24,
+                  ...(spot.style ?? {}),
+                }}
+              />
+            )}
             {/* Large faint background word behind the floating graphic. */}
             <span className="spot-bgword" aria-hidden>
               {product.categoryLabel}
@@ -279,9 +316,11 @@ const PC_MODS = ['tall feat glow-violet', '', '', '', '', 'wide glow-gold', '', 
 function ProductsGrid({
   products,
   copy,
+  imageSlots,
 }: {
   products: ObsidianCard[];
   copy: ObsidianHomeCopy['products'];
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
 }) {
   return (
     <section className="products" id="products">
@@ -303,10 +342,19 @@ function ProductsGrid({
           </Link>
         </div>
         <div className="pgrid">
-          {products.map((p, i) => (
+          {products.map((p, i) => {
+            const r = resolveImageSlot(imageSlots, `grid-${i}`, p.imageUrl);
+            return (
             <Link key={p.id} href={p.href} className={`pcard ${PC_MODS[i] ?? ''}`.trim()}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imageUrl} alt={p.title} />
+              <img
+                src={r.src}
+                alt={p.title}
+                data-cms-field={`imageSlots.grid-${i}`}
+                data-cms-type="image-adjust"
+                data-cms-label={`Grid image ${i + 1}`}
+                style={r.style}
+              />
               <div className="pc-veil" />
               <span className="pc-cat">{p.categoryLabel}</span>
               <div className="pc-body">
@@ -314,7 +362,8 @@ function ProductsGrid({
                 <p>{p.codeText ? `${p.codeText} · ${p.priceText}` : p.priceText}</p>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -324,9 +373,11 @@ function ProductsGrid({
 function ShineBand({
   products,
   copy,
+  imageSlots,
 }: {
   products: ObsidianCard[];
   copy: ObsidianHomeCopy['shine'];
+  imageSlots?: Record<string, HomepageImageSlotAdjust>;
 }) {
   const track = [...products, ...products];
   return (
@@ -352,10 +403,23 @@ function ShineBand({
       </div>
       <div className="shine-row">
         <div className="shine-track">
-          {track.map((p, i) => (
-            <div className={`scard${i % products.length === 1 ? ' hi' : ''}`} key={`${p.id}-${i}`}>
+          {track.map((p, i) => {
+            const slotIndex = i % products.length;
+            const r = resolveImageSlot(imageSlots, `shine-${slotIndex}`, p.imageUrl);
+            // Track is duplicated for the marquee loop; only tag the first copy
+            // so each slot key appears once for the visual editor.
+            const isFirstCopy = i < products.length;
+            return (
+            <div className={`scard${slotIndex === 1 ? ' hi' : ''}`} key={`${p.id}-${i}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imageUrl} alt="" />
+              <img
+                src={r.src}
+                alt=""
+                data-cms-field={isFirstCopy ? `imageSlots.shine-${slotIndex}` : undefined}
+                data-cms-type={isFirstCopy ? 'image-adjust' : undefined}
+                data-cms-label={isFirstCopy ? `Shine image ${slotIndex + 1}` : undefined}
+                style={r.style}
+              />
               <div className="sc-in">
                 <h5>{p.heroTitle}</h5>
                 <p>
@@ -363,7 +427,8 @@ function ShineBand({
                 </p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -580,6 +645,7 @@ export function ObsidianHome({
   reviews,
   trust,
   copy = DEFAULT_OBSIDIAN_COPY,
+  imageSlots,
   categoriesPath,
   reviewsPath,
   trustPath,
@@ -590,6 +656,10 @@ export function ObsidianHome({
   const editing = cms?.editing ?? false;
 
   const { cards, heroPool, spotlight, grid, shine, strip } = buildObsidianSlots(products);
+
+  // Footer strip: apply per-slot URL overrides (position/zoom not applied here —
+  // the footer receives a plain string[]). Empty override → keep catalog image.
+  const stripImages = strip.map((url, i) => resolveImageSlot(imageSlots, `strip-${i}`, url).src);
 
   // Category-specific, de-duplicated image pools for the nav-hover reveal.
   // NAV order: [পাঞ্জাবি, কালেকশন, সব পণ্য, যোগাযোগ(social — no images)].
@@ -625,21 +695,22 @@ export function ObsidianHome({
       <ObsidianFX />
       <ObsidianHeader navImageSets={navImageSets} />
       <main id="top">
-        <ObsidianHero hero={hero} products={heroPool} />
+        <ObsidianHero hero={hero} products={heroPool} imageSlots={imageSlots} />
         <Spotlight
           product={spotlight}
           categories={categories}
           categoriesPath={categoriesPath}
           editing={editing}
           copy={copy.spotlight}
+          imageSlots={imageSlots}
         />
-        <ProductsGrid products={grid} copy={copy.products} />
-        <ShineBand products={shine} copy={copy.shine} />
+        <ProductsGrid products={grid} copy={copy.products} imageSlots={imageSlots} />
+        <ShineBand products={shine} copy={copy.shine} imageSlots={imageSlots} />
         <Reviews data={reviews} basePath={reviewsPath} editing={editing} />
         <TrustBadges data={trust} basePath={trustPath} />
         <CatsMarquee copy={copy.cats} />
       </main>
-      <ObsidianFooter stripImages={strip} />
+      <ObsidianFooter stripImages={stripImages} />
     </div>
   );
 }
