@@ -385,12 +385,18 @@
   height: 100vh;
   min-height: 720px;
   overflow: hidden;
-  /* Saturated, LIVE-theme hero base: a rich colour bloom in the upper/centre-right
-     (where the orb floats) that cross-fades hue with the carousel via the
-     registered `--theme` @property — so the background visibly "pops" and syncs
-     with the 3D. Lower-left stays deep-dark so the white overlay text reads. */
+  /* Blend modes inside the hero must never composite against page content
+     behind it (Windows/D3D backdrop readback glitches during animation). */
+  isolation: isolate;
+  /* STATIC dark base — deliberately NOT driven by --theme. Animating a
+     registered custom property that feeds a full-viewport gradient forces
+     Windows Chromium to re-rasterize the whole hero on the main thread every
+     frame of the 1.2s theme transition; raster tiles miss frames and the
+     canvases above composite over half-painted tiles ("cut" rings). The
+     per-slide colour now lives in the two .hero-wash layers below, which
+     cross-fade via compositor-only opacity. */
   background:
-    radial-gradient(125% 95% at 70% 16%, color-mix(in srgb, var(--theme, #7c5cff) 46%, #17122e) 0%, #130f26 38%, #0a0817 70%, #06050c 100%);
+    radial-gradient(125% 95% at 70% 16%, #201941 0%, #130f26 38%, #0a0817 70%, #06050c 100%);
 }
 .obsidian-home .hero::after {
   content: '';
@@ -398,10 +404,12 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  mix-blend-mode: screen;
-  /* Stronger, theme-driven accent glow toward the orb; a warm gold kicker low-left. */
+  /* No mix-blend-mode here: blended DOM layers over the WebGL/2D canvases
+     trigger slow backdrop readbacks on Windows (ANGLE/D3D11) that flicker
+     during the slide transition. Plain alpha over a near-black base reads
+     the same as `screen`. Warm gold kicker low-left; the theme-coloured
+     glow is carried by the .hero-wash cross-fade layers instead. */
   background:
-    radial-gradient(58% 52% at 74% 30%, color-mix(in srgb, var(--theme, #7c5cff) 60%, transparent), transparent 62%),
     radial-gradient(46% 40% at 22% 72%, rgba(216, 169, 78, 0.16), transparent 62%);
 }
 .obsidian-home .hero-wash {
@@ -409,12 +417,19 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  mix-blend-mode: screen;
-  transition:
-    background 1.15s var(--ob-ease),
-    opacity 1.15s var(--ob-ease);
+  /* Cross-fade is opacity-ONLY (GPU compositor) — never transition the
+     background gradient itself: gradient interpolation repaints the full
+     viewport every frame, which is the root of the Windows slide glitch.
+     Two stacked wash layers swap via inline opacity from ObsidianHero. */
+  transition: opacity 1.15s var(--ob-ease);
   opacity: 0.95;
-  background: radial-gradient(72% 62% at 62% 40%, var(--wash, rgba(124, 92, 255, 0.34)), transparent 66%);
+  background: radial-gradient(72% 62% at 62% 40%, rgba(124, 92, 255, 0.4), transparent 66%);
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.obsidian-home .hero-wash.wash-b {
+  opacity: 0;
 }
 .obsidian-home .hero-ghost {
   position: absolute;
@@ -464,7 +479,11 @@
     transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 0.8s var(--ob-ease),
     filter 0.8s var(--ob-ease);
-  will-change: transform;
+  /* Promote every animated channel so the whole coverflow transition stays on
+     the compositor (Windows drops filter/opacity to main-thread paint without
+     the hint, flashing during slides). */
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
   cursor: pointer;
 }
 .obsidian-home .c-in {
@@ -477,12 +496,17 @@
   box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
   transform-style: preserve-3d;
   transition: transform 0.4s var(--ob-ease);
+  will-change: transform;
 }
 .obsidian-home .c-in img,
 .obsidian-home .c-in video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Own GPU layer per media element — stops the one-frame white flicker
+     Windows Chromium shows on images inside animating preserve-3d planes. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .obsidian-home .c-card .veil {
   position: absolute;
@@ -1576,6 +1600,13 @@
   height: 100%;
   display: block;
   pointer-events: none;
+  /* Pin each canvas to its own compositor layer. Without the explicit
+     promotion Windows Chromium folds them into the hero's raster tiles, so
+     any DOM repaint during a slide change re-composites the rings mid-frame
+     (the "cutting" artifact). */
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Ambient ripple + particle field — 2D canvas above the orb, below content. */
@@ -1588,24 +1619,30 @@
   display: block;
   pointer-events: none;
   opacity: 1;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
-/* White-flash cut on slide change. */
+/* White-flash cut on slide change. Solid layer + opacity-only keyframes: the
+   old mix-blend-mode:overlay version forced a backdrop readback over the live
+   canvases every frame, which is a known Windows/ANGLE flicker source. */
 .obsidian-home .hero-flash {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: #fff;
+  background: radial-gradient(80% 80% at 55% 42%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.45) 70%);
   opacity: 0;
-  mix-blend-mode: overlay;
+  transform: translateZ(0);
+  will-change: opacity;
 }
 .obsidian-home .hero-flash.fire {
   animation: obHeroFlash 0.5s ease-out;
 }
 @keyframes obHeroFlash {
   0% { opacity: 0; }
-  18% { opacity: 0.5; }
+  18% { opacity: 0.22; }
   100% { opacity: 0; }
 }
 
@@ -1643,7 +1680,10 @@
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  mix-blend-mode: screen;
+  /* No mix-blend-mode: a full-viewport blended canvas over the animating hero
+     canvases stalls the Windows/D3D compositor. The trail already draws with
+     canvas 'lighter' compositing internally, so it stays luminous without it. */
+  transform: translateZ(0);
 }
 
 /* Lenis smooth-scroll base CSS (we vendor only lenis.min.js, so its stylesheet

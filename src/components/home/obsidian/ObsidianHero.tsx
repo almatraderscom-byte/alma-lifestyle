@@ -75,6 +75,9 @@ export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
+  const washARef = useRef<HTMLDivElement | null>(null);
+  const washBRef = useRef<HTMLDivElement | null>(null);
+  const washFront = useRef<0 | 1>(0);
   const activeRef = useRef(0);
   activeRef.current = active;
 
@@ -173,14 +176,29 @@ export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
   // wash + the spotlight section below, in sync with the active carousel card.
   useEffect(() => {
     const theme = HERO_THEMES[active % HERO_THEMES.length];
-    // The `--theme`/`--wash` custom props MUST be set on the `.obsidian-home`
-    // wrapper, not on <html>: `.obsidian-home` re-declares `--theme` locally
-    // (with the interpolating @property transition), which would otherwise
-    // shadow anything set on documentElement and freeze the sections below.
+    // The `--theme` custom prop MUST be set on the `.obsidian-home` wrapper,
+    // not on <html>: `.obsidian-home` re-declares `--theme` locally (with the
+    // interpolating @property transition), which would otherwise shadow
+    // anything set on documentElement and freeze the sections below.
     const root = (document.querySelector('.obsidian-home') as HTMLElement | null)?.style;
     if (root) {
       root.setProperty('--theme', theme);
-      root.setProperty('--wash', hexRGBA(theme, 0.34));
+    }
+    // Hero colour bloom: cross-fade between TWO stacked wash layers by opacity
+    // only. The previous single layer transitioned its background gradient,
+    // which forced a full-viewport main-thread repaint every frame — the root
+    // cause of the Windows (Chromium/ANGLE) slide-change glitch. Opacity
+    // cross-fades run entirely on the GPU compositor.
+    const washBg = `radial-gradient(72% 62% at 62% 40%, ${hexRGBA(theme, 0.4)}, transparent 66%)`;
+    const a = washARef.current;
+    const b = washBRef.current;
+    if (a && b) {
+      const front = washFront.current === 0 ? a : b;
+      const back = washFront.current === 0 ? b : a;
+      back.style.background = washBg;
+      back.style.opacity = '0.95';
+      front.style.opacity = '0';
+      washFront.current = washFront.current === 0 ? 1 : 0;
     }
     if (typeof window !== 'undefined' && typeof window.almaTheme === 'function') {
       window.almaTheme(theme);
@@ -198,7 +216,10 @@ export function ObsidianHero({ hero, products }: ObsidianHeroProps) {
           where WebGL is unavailable). Sits just above the orb, below the content. */}
       <canvas id="ripple" className="hero-ripple" aria-hidden />
 
-      <div className="hero-wash" aria-hidden />
+      {/* Two stacked wash layers — the active theme colour cross-fades between
+          them via compositor-only opacity (see the theming effect above). */}
+      <div className="hero-wash" ref={washARef} aria-hidden />
+      <div className="hero-wash wash-b" ref={washBRef} aria-hidden />
       <div className="hero-ghost anton" aria-hidden>
         {ghost}
       </div>
