@@ -182,12 +182,16 @@ export function ObsidianHero({ hero, products, imageSlots, overlay }: ObsidianHe
     f.classList.add('fire');
   }, [active]);
 
+  // The coverflow keeps auto-rotating even in the visual editor — the admin
+  // Homepage Builder preview is *always* in edit mode, so pausing here would
+  // freeze the whole slideshow on slot 0. The per-card "পণ্য বদলান" buttons are
+  // keyed by fixed slot index, so rotation never disturbs product picking.
   const resetAuto = useCallback(() => {
     if (timer.current) clearInterval(timer.current);
-    if (n > 1 && !editing) {
+    if (n > 1) {
       timer.current = setInterval(() => setActive((a) => (a + 1) % n), 5000);
     }
-  }, [n, editing]);
+  }, [n]);
 
   useEffect(() => {
     resetAuto();
