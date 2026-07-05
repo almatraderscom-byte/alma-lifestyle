@@ -129,13 +129,15 @@ export function buildRootMetadata(
     };
   }
 
-  if (faviconHref) {
-    metadata.icons = {
-      icon: [{ url: faviconHref, type: 'image/png' }],
-      apple: [{ url: faviconHref }],
-      shortcut: [{ url: faviconHref }],
-    };
-  }
+  // Admin-set favicon wins; otherwise default to the bundled ALMA ring-mark
+  // (derived from the site's loading animation) so the brand icon always shows.
+  const iconHref = faviconHref ?? '/brand/alma-mark.png';
+  const appleHref = faviconHref ?? '/brand/alma-mark-180.png';
+  metadata.icons = {
+    icon: [{ url: iconHref, type: 'image/png' }],
+    apple: [{ url: appleHref }],
+    shortcut: [{ url: iconHref }],
+  };
 
   return metadata;
 }

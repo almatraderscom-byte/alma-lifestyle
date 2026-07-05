@@ -4,6 +4,7 @@ import { loadPublicSettingsServer } from '@/lib/storefront/server-data';
 
 /** Email-safe brand tokens (inline styles only). */
 export const EMAIL_BRAND = {
+  // legacy heritage palette (kept for backwards-compat consumers)
   terracotta: '#C97D5D',
   maroon: '#6B2737',
   maroonDark: '#8B3A4F',
@@ -14,6 +15,40 @@ export const EMAIL_BRAND = {
   successBg: '#DEF7DD',
   successText: '#2D5F4F',
   white: '#FFFFFF',
+
+  // "Obsidian Luxe" — mirrors the storefront hero + loading-animation mark.
+  // Deep obsidian, warm gold foil, electric violet. Used by all order emails.
+  obsidianStage: '#141118', // outer canvas behind the card
+  obsidian: '#0c0f16', // card surface
+  obsidianDeep: '#07070c', // footer / deepest
+  panel: '#101320', // inset panels (address, trust, table rows)
+  panelGrad1: '#171a2a',
+  panelGrad2: '#0e1017',
+  plaqueGrad1: '#12141f',
+  plaqueGrad2: '#0e1017',
+  headerGlow: '#191c2e', // radial header top
+  adminGlow: '#191634', // radial header top (admin, violet)
+  gold: '#d8a94e',
+  goldLight: '#ecc074',
+  goldDeep: '#c9a24e',
+  violet: '#7c5cff',
+  violetLight: '#9a86ff',
+  violetSoft: '#8a6dff',
+  ivory: '#f5f1e8',
+  ivorySoft: '#dcd8ea',
+  ivoryDim: '#e7e3f2',
+  mutedText: '#8f8ca8',
+  mutedText2: '#9a97b5',
+  faintText: '#6a6880',
+  hairline: 'rgba(255,255,255,0.08)',
+  hairlineSoft: 'rgba(255,255,255,0.06)',
+  goldBorder: 'rgba(216,169,78,0.28)',
+  goldBorderSoft: 'rgba(216,169,78,0.22)',
+  violetBorder: 'rgba(124,92,255,0.28)',
+  green: '#25D366',
+  greenInk: '#04310f',
+  greenText: '#6fcf97',
+  greenSoft: '#8ee0ac',
 } as const;
 
 export const EMAIL_CONTACT = {
@@ -28,6 +63,8 @@ export type EmailBrandingContext = {
   logoUrl: string;
   /** Where logoUrl was resolved from (debug) */
   logoSource: 'logo' | 'favicon' | 'proxy' | 'static';
+  /** ALMA ring-mark (transparent PNG) for dark email headers/footers. */
+  markUrl: string;
   siteUrl: string;
   trackUrl: string;
   supportPhone: string;
@@ -93,6 +130,7 @@ export async function getEmailBrandingContext(): Promise<EmailBrandingContext> {
   return {
     logoUrl,
     logoSource,
+    markUrl: `${siteUrl}/brand/alma-mark-email.png`,
     siteUrl,
     trackUrl: `${siteUrl}/track`,
     supportPhone: EMAIL_CONTACT.phoneDisplay,
