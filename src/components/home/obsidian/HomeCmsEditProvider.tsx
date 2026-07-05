@@ -142,11 +142,17 @@ export function HomeCmsEditProvider({
     () =>
       products.map((p) => {
         const card = toObsidianCard(p);
+        // The code token (e.g. "133") for display; the raw title still carries
+        // the "Product Code: 133" text, so include it + slug in the search
+        // haystack — owners look products up by code, not just name.
+        const code = (card.codeText ?? '').replace(/^\s*product\s*code\s*/i, '').trim();
         return {
           id: card.id,
           title: card.heroTitle,
           imageUrl: card.imageUrl,
           priceText: card.priceText,
+          code,
+          search: `${card.title} ${card.codeText ?? ''} ${card.slug}`.toLowerCase(),
         };
       }),
     [products]

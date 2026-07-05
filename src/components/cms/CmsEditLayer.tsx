@@ -336,7 +336,7 @@ export function CmsEditLayer() {
               const products = cms.products ?? [];
               const q = productQuery.trim().toLowerCase();
               const shown = q
-                ? products.filter((p) => p.title.toLowerCase().includes(q))
+                ? products.filter((p) => (p.search ?? p.title.toLowerCase()).includes(q))
                 : products;
               const pick = (id: string | undefined) => {
                 cms.setField(selection.path, id);
@@ -365,16 +365,23 @@ export function CmsEditLayer() {
                     type="text"
                     value={productQuery}
                     onChange={(e) => setProductQuery(e.target.value)}
-                    placeholder="পণ্য খুঁজুন…"
-                    style={{ ...textareaStyle, resize: 'none', marginBottom: 8 }}
+                    placeholder="নাম বা কোড দিয়ে খুঁজুন… (যেমন 133)"
+                    style={{ ...textareaStyle, resize: 'none', marginBottom: 6 }}
                   />
+                  <p style={{ fontSize: 11, opacity: 0.55, margin: '0 0 8px' }}>
+                    {q
+                      ? `${shown.length} টি মিলেছে (মোট ${products.length})`
+                      : `মোট ${products.length} টি পণ্য`}
+                  </p>
                   <div
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 6,
-                      maxHeight: 340,
+                      maxHeight: 'min(56vh, 460px)',
                       overflowY: 'auto',
+                      overscrollBehavior: 'contain',
+                      WebkitOverflowScrolling: 'touch',
                     }}
                   >
                     <button
@@ -386,7 +393,7 @@ export function CmsEditLayer() {
                         ↺ স্বয়ংক্রিয় (ডিফল্ট পণ্য)
                       </span>
                     </button>
-                    {shown.slice(0, 80).map((p) => (
+                    {shown.map((p) => (
                       <button
                         key={p.id}
                         type="button"
@@ -406,8 +413,19 @@ export function CmsEditLayer() {
                             background: '#0b0a12',
                           }}
                         />
-                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.3 }}>
-                          {p.title}
+                        <span
+                          style={{
+                            flex: 1,
+                            minWidth: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                          }}
+                        >
+                          <span style={{ fontSize: 13, lineHeight: 1.3 }}>{p.title}</span>
+                          {p.code && (
+                            <span style={{ fontSize: 11, opacity: 0.6 }}>কোড {p.code}</span>
+                          )}
                         </span>
                         <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: 'nowrap' }}>
                           {p.priceText}
@@ -693,6 +711,12 @@ const panelStyle: React.CSSProperties = {
   right: 16,
   width: 320,
   maxWidth: 'calc(100vw - 32px)',
+  // Never let the panel grow past the viewport — otherwise a long product list
+  // (or the image-adjust controls on a short screen) runs off the bottom with no
+  // way to scroll to it.
+  maxHeight: 'calc(100vh - 32px)',
+  overflowY: 'auto',
+  overscrollBehavior: 'contain',
   background: '#14131c',
   color: '#eef',
   border: '1px solid rgba(255,255,255,0.12)',

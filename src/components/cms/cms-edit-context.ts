@@ -20,6 +20,10 @@ export interface CmsPickerProduct {
   title: string;
   imageUrl: string;
   priceText: string;
+  /** Product-code token for display (e.g. "133"), empty when the title had none. */
+  code?: string;
+  /** Lowercased haystack (name + code + slug) the picker searches against. */
+  search: string;
 }
 
 export interface CmsEditContextValue {
