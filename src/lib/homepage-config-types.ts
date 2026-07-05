@@ -321,11 +321,39 @@ export interface HomepageImageSlotAdjust {
   zoom?: number;
 }
 
+/**
+ * Editable copy for the static chrome around the Obsidian hero overlay. These
+ * labels are shared by every slide (they are not product data), so the owner can
+ * rename them without any risk of drifting out of sync with the catalog. The
+ * product name / code / price shown on each card always come from the live
+ * product the owner assigns to that slot (see {@link HomepageConfig.heroProductIds}).
+ */
+export interface HeroOverlayConfig {
+  hotBadge?: string;
+  shopNow?: string;
+  seeAll?: string;
+}
+
+export const DEFAULT_HERO_OVERLAY: HeroOverlayConfig = {
+  hotBadge: 'HOT',
+  shopNow: 'Shop Now',
+  seeAll: 'সব পণ্য দেখুন ▶',
+};
+
 export interface HomepageConfig {
   sections: HomepageSectionConfig[];
   extras?: HomepageExtras;
   /** Editable copy for the Obsidian/cinematic homepage layout. */
   obsidianCopy?: ObsidianHomeCopy;
+  /** Owner-editable static labels for the hero overlay (HOT / Shop Now / see-all). */
+  heroOverlay?: HeroOverlayConfig;
+  /**
+   * Products the owner has pinned to the hero coverflow, one per 3D card slot
+   * (index 0 = first product card). A set id shows that exact product — with its
+   * live image, name and price. An empty/absent slot falls back to the
+   * auto-picked signature product, so the hero never renders a blank card.
+   */
+  heroProductIds?: string[];
   /**
    * Per-slot image overrides for the Obsidian homepage, keyed by slot id
    * (`hero-0`…`hero-5`, `spotlight`, `grid-0`…`grid-7`, `shine-0`…`shine-7`,

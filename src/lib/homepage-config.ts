@@ -28,10 +28,15 @@ import type {
   HomepageConfig,
   HomepageSectionConfig,
   HomepageSectionId,
+  HeroOverlayConfig,
   ObsidianHomeCopy,
   SectionDataMap,
 } from '@/lib/homepage-config-types';
-import { DEFAULT_OBSIDIAN_COPY, DEFAULT_SECTION_ORDER } from '@/lib/homepage-config-types';
+import {
+  DEFAULT_HERO_OVERLAY,
+  DEFAULT_OBSIDIAN_COPY,
+  DEFAULT_SECTION_ORDER,
+} from '@/lib/homepage-config-types';
 
 /**
  * Deep-merge saved Obsidian homepage copy over defaults so newly-added fields
@@ -55,6 +60,18 @@ function mergeObsidianCopy(
           : defaults.cats.items,
     },
   };
+}
+
+/**
+ * Merge saved hero-overlay labels over defaults so newly-added labels always
+ * fall back to a sensible default (never render blank/undefined).
+ */
+function mergeHeroOverlay(
+  saved: HeroOverlayConfig | undefined,
+  defaults: HeroOverlayConfig
+): HeroOverlayConfig {
+  if (!saved) return defaults;
+  return { ...defaults, ...saved };
 }
 import { getDefaultHomepageExtras, mergeHomepageExtras } from '@/lib/homepage-extras';
 import { migrateBrandStorySection, migrateCommunitySection } from '@/lib/homepage-migrations';
@@ -254,6 +271,7 @@ export function getDefaultHomepageConfig(): HomepageConfig {
     sections,
     extras: getDefaultHomepageExtras(),
     obsidianCopy: DEFAULT_OBSIDIAN_COPY,
+    heroOverlay: DEFAULT_HERO_OVERLAY,
     lastSaved: new Date().toISOString(),
   };
 }
@@ -309,6 +327,10 @@ export function mergeHomepageConfig(
     obsidianCopy: mergeObsidianCopy(
       saved.obsidianCopy,
       defaults.obsidianCopy ?? DEFAULT_OBSIDIAN_COPY
+    ),
+    heroOverlay: mergeHeroOverlay(
+      saved.heroOverlay,
+      defaults.heroOverlay ?? DEFAULT_HERO_OVERLAY
     ),
     lastSaved: saved.lastSaved || defaults.lastSaved,
   };

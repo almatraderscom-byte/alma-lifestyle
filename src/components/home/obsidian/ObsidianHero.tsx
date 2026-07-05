@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
-import type { HomepageImageSlotAdjust } from '@/lib/homepage-config-types';
+import type { HeroOverlayConfig, HomepageImageSlotAdjust } from '@/lib/homepage-config-types';
 import { resolveImageSlot } from '@/lib/homepage-image-slots';
+import { useCmsEdit } from '@/components/cms/cms-edit-context';
 import type { ObsidianCard } from './obsidian-data';
 
 interface ObsidianHeroProps {
@@ -12,6 +13,15 @@ interface ObsidianHeroProps {
   products: ObsidianCard[];
   /** Per-slot image overrides + framing for the hero coverflow (`hero-0`…). */
   imageSlots?: Record<string, HomepageImageSlotAdjust>;
+  /** Owner overrides for the overlay text (product name/code/price + labels). */
+  overlay?: HeroOverlayConfig;
+}
+
+/** First non-empty trimmed string, else the fallback. Keeps overlay overrides
+ *  falling back to live product data whenever the owner leaves a box blank. */
+function pickText(override: string | undefined, fallback: string): string {
+  const t = override?.trim();
+  return t ? t : fallback;
 }
 
 /** A coverflow slide is either a real product card or the CMS hero video.
@@ -53,13 +63,22 @@ function cardStyle(i: number, active: number, n: number): React.CSSProperties {
   };
 }
 
-export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) {
+export function ObsidianHero({ hero, products, imageSlots, overlay }: ObsidianHeroProps) {
+  // In the visual editor we freeze the auto-rotation so the owner can click and
+  // edit the overlay text of the visible card without it sliding away mid-edit.
+  const editing = useCmsEdit()?.editing ?? false;
   const heroVideoSrc = hero?.videoSrc?.trim() ?? '';
   const heroPosterSrc = hero?.posterSrc?.trim() ?? '';
 
   // Build the coverflow: the CMS hero video (if any) becomes the FIRST 3D card,
   // in place of a product image; the rest are product cards. No background video.
-  const productSlides: HeroSlide[] = products.map((c) => ({ kind: 'product', key: c.id, card: c }));
+  // Key includes the slot index so pinning the same product to two cards can't
+  // collide React keys.
+  const productSlides: HeroSlide[] = products.map((c, i) => ({
+    kind: 'product',
+    key: `${c.id}-${i}`,
+    card: c,
+  }));
   const slides: HeroSlide[] = (
     heroVideoSrc
       ? [
@@ -75,6 +94,10 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
       : productSlides
   ).slice(0, 6);
   const n = slides.length || 1;
+  // The video (when present) occupies slot 0, so a product card at coverflow
+  // index `i` maps to product-pool index `i - videoOffset` — the slot the owner
+  // pins a product to via `heroProductIds`.
+  const videoOffset = heroVideoSrc ? 1 : 0;
   const [active, setActive] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -161,10 +184,10 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
 
   const resetAuto = useCallback(() => {
     if (timer.current) clearInterval(timer.current);
-    if (n > 1) {
+    if (n > 1 && !editing) {
       timer.current = setInterval(() => setActive((a) => (a + 1) % n), 5000);
     }
-  }, [n]);
+  }, [n, editing]);
 
   useEffect(() => {
     resetAuto();
@@ -268,6 +291,38 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
                   })()
                 )}
                 <div className="veil" />
+                {editing && p.kind === 'product' && (
+                  <button
+                    type="button"
+                    className="hero-pick-product"
+                    data-cms-field={`heroProductIds.${i - videoOffset}`}
+                    data-cms-type="product"
+                    data-cms-label={`Hero card ${i - videoOffset + 1} product`}
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      zIndex: 6,
+                      pointerEvents: 'auto',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(255,255,255,0.85)',
+                      background: 'rgba(124,92,255,0.92)',
+                      color: '#fff',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    🔄 পণ্য বদলান
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -279,13 +334,28 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
 
       <div className="hero-overlay">
         <div className="container">
-          <div className="ov-left">
+          {/* `.hero-overlay` is pointer-events:none so the orb/ripple behind it
+              stay mouse-reactive. In the visual editor we re-enable pointer
+              events here so the owner can click the overlay text to edit it. */}
+          <div
+            className="ov-left"
+            style={editing ? { pointerEvents: 'auto' } : undefined}
+          >
             {current && current.kind === 'product' && (
               <>
                 <div className="ov-tags">
-                  <span className="ob-tag">
-                    <span aria-hidden>🔥</span> HOT
+                  <span
+                    className="ob-tag"
+                    data-cms-field="heroOverlay.hotBadge"
+                    data-cms-type="text"
+                    data-cms-label="HOT badge"
+                  >
+                    <span aria-hidden>🔥</span>{' '}
+                    {pickText(overlay?.hotBadge, 'HOT')}
                   </span>
+                  {/* Category, name, code and price are always the live product's
+                      own values — the owner controls them by assigning a product
+                      to the card (the "পণ্য বদলান" button on the 3D card). */}
                   <span className="ob-tag bn">{current.card.categoryLabel}</span>
                 </div>
                 <h1
@@ -307,8 +377,14 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
                   )}
                 </div>
                 <div className="ov-cta">
-                  <Link href={current.card.href} className="ob-btn solid">
-                    Shop Now
+                  <Link
+                    href={current.card.href}
+                    className="ob-btn solid"
+                    data-cms-field="heroOverlay.shopNow"
+                    data-cms-type="text"
+                    data-cms-label="Shop Now button"
+                  >
+                    {pickText(overlay?.shopNow, 'Shop Now')}
                   </Link>
                 </div>
               </>
@@ -316,8 +392,14 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
             {current && current.kind === 'video' && (
               <>
                 <div className="ov-tags">
-                  <span className="ob-tag">
-                    <span aria-hidden>🔥</span> HOT
+                  <span
+                    className="ob-tag"
+                    data-cms-field="heroOverlay.hotBadge"
+                    data-cms-type="text"
+                    data-cms-label="HOT badge"
+                  >
+                    <span aria-hidden>🔥</span>{' '}
+                    {pickText(overlay?.hotBadge, 'HOT')}
                   </span>
                   <span className="ob-tag bn">{hero?.eyebrow || 'সিগনেচার'}</span>
                 </div>
@@ -332,8 +414,14 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
                   {hero?.subheading || 'ALMA LIFESTYLE · SIGNATURE COLLECTION'}
                 </div>
                 <div className="ov-cta">
-                  <Link href="/products" className="ob-btn solid">
-                    Shop Now
+                  <Link
+                    href="/products"
+                    className="ob-btn solid"
+                    data-cms-field="heroOverlay.shopNow"
+                    data-cms-type="text"
+                    data-cms-label="Shop Now button"
+                  >
+                    {pickText(overlay?.shopNow, 'Shop Now')}
                   </Link>
                 </div>
               </>
@@ -341,8 +429,14 @@ export function ObsidianHero({ hero, products, imageSlots }: ObsidianHeroProps) 
           </div>
 
           <div className="ov-right">
-            <Link href="/products" className="see-all bn">
-              সব পণ্য দেখুন ▶
+            <Link
+              href="/products"
+              className="see-all bn"
+              data-cms-field="heroOverlay.seeAll"
+              data-cms-type="text"
+              data-cms-label="See all products link"
+            >
+              {pickText(overlay?.seeAll, 'সব পণ্য দেখুন ▶')}
             </Link>
             <div className="thumbs">
               {slides.map((p, i) => (

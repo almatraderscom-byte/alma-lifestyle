@@ -11,6 +11,17 @@ import { createContext, useContext } from 'react';
  * `content` is intentionally typed as `unknown` — the layer only ever touches it
  * through `getField`/`setField` (dot-path access), so it stays surface-agnostic.
  */
+/**
+ * A product the visual editor can pin to a slot (e.g. a hero coverflow card).
+ * Kept deliberately small — just what the picker list needs to render + save.
+ */
+export interface CmsPickerProduct {
+  id: string;
+  title: string;
+  imageUrl: string;
+  priceText: string;
+}
+
 export interface CmsEditContextValue {
   /** URL requested edit mode (`?edit=1`). */
   active: boolean;
@@ -25,6 +36,9 @@ export interface CmsEditContextValue {
   content: unknown;
   /** Where uploaded images land (Supabase folder + bucket). */
   uploadConfig: { folder: string; bucket: string };
+  /** Catalog products offered by `data-cms-type="product"` pickers. Optional —
+   *  surfaces that have no product pickers (e.g. the murda landing) omit it. */
+  products?: CmsPickerProduct[];
   getField: (path: string) => unknown;
   setField: (path: string, value: unknown) => void;
   save: () => Promise<void>;

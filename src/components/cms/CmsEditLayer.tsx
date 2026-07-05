@@ -43,6 +43,7 @@ export function CmsEditLayer() {
   const [selRect, setSelRect] = useState<ReturnType<typeof rectOf> | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [productQuery, setProductQuery] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
@@ -63,6 +64,7 @@ export function CmsEditLayer() {
 
   useLayoutEffect(() => {
     setUploadError(null);
+    setProductQuery('');
     if (!selection) {
       setSelRect(null);
       return;
@@ -125,7 +127,11 @@ export function CmsEditLayer() {
       e.preventDefault();
       e.stopPropagation();
       const path = el.getAttribute('data-cms-field') || '';
-      const fieldType = el.getAttribute('data-cms-type') || 'text';
+      // Keep the attribute verbatim (no 'text' default): an explicit
+      // `data-cms-type="text"` opts a field into being editable even when its
+      // stored value is still empty/undefined (e.g. a per-slot overlay override
+      // that falls back to live product data until the owner types something).
+      const fieldType = el.getAttribute('data-cms-type') || '';
       setSelection({ path, label: labelFor(el, path), el, fieldType });
       setHoverRect(null);
     };
@@ -186,9 +192,13 @@ export function CmsEditLayer() {
   // its current value is empty/undefined (e.g. an optional compare-at price the
   // owner wants to add). Clearing the box writes `undefined`.
   const isNumberField = selection?.fieldType === 'number';
+  // Explicit text fields stay editable even while empty (undefined), so an
+  // overlay override the owner hasn't set yet still opens a text box.
+  const isTextField = selection?.fieldType === 'text';
   const isImageAdjust = selection?.fieldType === 'image-adjust';
+  const isProduct = selection?.fieldType === 'product';
   const numericInput = isNumber || isNumberField;
-  const editable = isString || isNumber || isNumberField;
+  const editable = isString || isNumber || isNumberField || isTextField;
 
   // ---- image-adjust: focal-point / zoom editor for homepage image slots ----
   // Value shape: { url?, posX?, posY?, zoom? } | undefined. posX/posY are
@@ -321,7 +331,104 @@ export function CmsEditLayer() {
             </button>
           </div>
 
-          {selection.fieldType === 'image' ? (
+          {isProduct ? (
+            (() => {
+              const products = cms.products ?? [];
+              const q = productQuery.trim().toLowerCase();
+              const shown = q
+                ? products.filter((p) => p.title.toLowerCase().includes(q))
+                : products;
+              const pick = (id: string | undefined) => {
+                cms.setField(selection.path, id);
+                requestAnimationFrame(syncSelRect);
+              };
+              const rowStyle = (selected: boolean): React.CSSProperties => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                width: '100%',
+                padding: 8,
+                borderRadius: 8,
+                textAlign: 'left',
+                cursor: 'pointer',
+                background: selected ? 'rgba(124,92,255,0.18)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${selected ? OUTLINE_COLOR : 'rgba(255,255,255,0.10)'}`,
+                color: '#fff',
+              });
+              return (
+                <div>
+                  <p style={{ fontSize: 12, opacity: 0.7, margin: '0 0 8px' }}>
+                    এই 3D কার্ডে যে পণ্যটি দেখাতে চান সেটি বাছুন — ছবি, নাম ও দাম
+                    স্বয়ংক্রিয়ভাবে সেই পণ্য থেকে আসবে।
+                  </p>
+                  <input
+                    type="text"
+                    value={productQuery}
+                    onChange={(e) => setProductQuery(e.target.value)}
+                    placeholder="পণ্য খুঁজুন…"
+                    style={{ ...textareaStyle, resize: 'none', marginBottom: 8 }}
+                  />
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      maxHeight: 340,
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => pick(undefined)}
+                      style={rowStyle(!rawValue)}
+                    >
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>
+                        ↺ স্বয়ংক্রিয় (ডিফল্ট পণ্য)
+                      </span>
+                    </button>
+                    {shown.slice(0, 80).map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => pick(p.id)}
+                        style={rowStyle(p.id === rawValue)}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={p.imageUrl}
+                          alt=""
+                          style={{
+                            width: 40,
+                            height: 52,
+                            objectFit: 'cover',
+                            borderRadius: 4,
+                            flexShrink: 0,
+                            background: '#0b0a12',
+                          }}
+                        />
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.3 }}>
+                          {p.title}
+                        </span>
+                        <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: 'nowrap' }}>
+                          {p.priceText}
+                        </span>
+                      </button>
+                    ))}
+                    {products.length === 0 && (
+                      <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
+                        কোনো পণ্য পাওয়া যায়নি।
+                      </p>
+                    )}
+                    {products.length > 0 && shown.length === 0 && (
+                      <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
+                        &quot;{productQuery}&quot;-এর সাথে মিল নেই।
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()
+          ) : selection.fieldType === 'image' ? (
             <div>
               {typeof rawValue === 'string' && rawValue ? (
                 // eslint-disable-next-line @next/next/no-img-element

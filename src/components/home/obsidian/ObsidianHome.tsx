@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { CinematicHeroContent } from '@/lib/cinematic-content-types';
 import type {
   CategoriesSectionData,
+  HeroOverlayConfig,
   HomepageImageSlotAdjust,
   ObsidianHomeCopy,
   ReviewsSectionData,
@@ -33,6 +34,10 @@ interface ObsidianHomeProps {
   copy?: ObsidianHomeCopy;
   /** Per-slot image overrides + framing (hero/spotlight/grid/shine/strip). */
   imageSlots?: Record<string, HomepageImageSlotAdjust>;
+  /** Owner-editable static labels for the hero overlay. */
+  heroOverlay?: HeroOverlayConfig;
+  /** Products pinned to each hero coverflow slot (index 0 = first card). */
+  heroProductIds?: string[];
   /** Dot-paths into the live HomepageConfig for the visual editor. When set,
    *  the matching section's fields are tagged `data-cms-field`. */
   categoriesPath?: string;
@@ -659,6 +664,8 @@ export function ObsidianHome({
   trust,
   copy = DEFAULT_OBSIDIAN_COPY,
   imageSlots,
+  heroOverlay,
+  heroProductIds,
   categoriesPath,
   reviewsPath,
   trustPath,
@@ -669,6 +676,21 @@ export function ObsidianHome({
   const editing = cms?.editing ?? false;
 
   const { cards, heroPool, spotlight, grid, shine, strip } = buildObsidianSlots(products);
+
+  // Resolve the hero coverflow slot-by-slot: a pinned product id wins, otherwise
+  // the auto-picked signature card fills the slot. Falling back per-slot means a
+  // half-configured hero never renders a blank card. Capped at 6 (the coverflow's
+  // max), and honours a pin placed beyond the auto pool's length.
+  const cardById = new Map(cards.map((c) => [c.id, c]));
+  const heroSlotCount = Math.min(
+    6,
+    Math.max(heroPool.length, heroProductIds?.length ?? 0)
+  );
+  const heroCards: ObsidianCard[] = Array.from({ length: heroSlotCount }, (_, i) => {
+    const pinnedId = heroProductIds?.[i];
+    const pinned = pinnedId ? cardById.get(pinnedId) : undefined;
+    return pinned ?? heroPool[i];
+  }).filter((c): c is ObsidianCard => Boolean(c));
 
   // Footer strip: apply per-slot URL overrides (position/zoom not applied here —
   // the footer receives a plain string[]). Empty override → keep catalog image.
@@ -708,7 +730,12 @@ export function ObsidianHome({
       <ObsidianFX />
       <ObsidianHeader navImageSets={navImageSets} />
       <main id="top">
-        <ObsidianHero hero={hero} products={heroPool} imageSlots={imageSlots} />
+        <ObsidianHero
+          hero={hero}
+          products={heroCards}
+          imageSlots={imageSlots}
+          overlay={heroOverlay}
+        />
         <Spotlight
           product={spotlight}
           categories={categories}

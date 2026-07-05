@@ -21,9 +21,11 @@ import { getByPath, setByPath } from '@/lib/cms/object-path';
 import {
   CmsEditContext,
   type CmsEditContextValue,
+  type CmsPickerProduct,
 } from '@/components/cms/cms-edit-context';
 import { CmsEditLayer } from '@/components/cms/CmsEditLayer';
 import { ObsidianHome } from './ObsidianHome';
+import { toObsidianCard } from './obsidian-data';
 
 /**
  * Homepage counterpart to the murda {@link CmsEditProvider}. It wraps the live
@@ -75,6 +77,8 @@ function deriveSections(config: HomepageConfig) {
         : undefined,
     copy: (config.obsidianCopy ?? DEFAULT_OBSIDIAN_COPY) as ObsidianHomeCopy,
     imageSlots: config.imageSlots,
+    heroOverlay: config.heroOverlay,
+    heroProductIds: config.heroProductIds,
     // Dot-paths into the live config so the visual editor can tag each field.
     // `undefined` when the section is absent (→ its elements stay untagged).
     categoriesPath: catIndex >= 0 ? `sections.${catIndex}.data` : undefined,
@@ -132,6 +136,22 @@ export function HomeCmsEditProvider({
 
   const editing = active && isAdmin;
 
+  // Flattened catalog for the hero product picker: id + the exact name/price/
+  // image the coverflow would show, so the list mirrors the live card.
+  const pickerProducts = useMemo<CmsPickerProduct[]>(
+    () =>
+      products.map((p) => {
+        const card = toObsidianCard(p);
+        return {
+          id: card.id,
+          title: card.heroTitle,
+          imageUrl: card.imageUrl,
+          priceText: card.priceText,
+        };
+      }),
+    [products]
+  );
+
   const getField = useCallback((path: string) => getByPath(config, path), [config]);
 
   const setField = useCallback((path: string, value: unknown) => {
@@ -187,16 +207,27 @@ export function HomeCmsEditProvider({
       error,
       content: config,
       uploadConfig: UPLOAD_CONFIG,
+      products: pickerProducts,
       getField,
       setField,
       save,
       discard,
     }),
-    [active, isAdmin, editing, dirty, saving, savedAt, error, config, getField, setField, save, discard]
+    [active, isAdmin, editing, dirty, saving, savedAt, error, config, pickerProducts, getField, setField, save, discard]
   );
 
-  const { categories, reviews, trust, copy, imageSlots, categoriesPath, reviewsPath, trustPath } =
-    deriveSections(config);
+  const {
+    categories,
+    reviews,
+    trust,
+    copy,
+    imageSlots,
+    heroOverlay,
+    heroProductIds,
+    categoriesPath,
+    reviewsPath,
+    trustPath,
+  } = deriveSections(config);
 
   return (
     <CmsEditContext.Provider value={value}>
@@ -208,6 +239,8 @@ export function HomeCmsEditProvider({
         trust={trust}
         copy={copy}
         imageSlots={imageSlots}
+        heroOverlay={heroOverlay}
+        heroProductIds={heroProductIds}
         categoriesPath={categoriesPath}
         reviewsPath={reviewsPath}
         trustPath={trustPath}
