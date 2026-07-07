@@ -34,6 +34,7 @@ import {
   slugForDesignMember,
   DISPLAY_ORDER_BY_TYPE,
   PRODUCT_TYPE_LABELS_ADMIN,
+  SIZE_PRESETS,
   type GirlAgeGroup,
 } from '@/lib/product-design-types';
 import { useAdminToast } from '@/context/AdminToastContext';
@@ -45,6 +46,28 @@ import {
 } from '@/components/admin/products/SimpleProductColorVariants';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+
+/**
+ * Size options for a variant row, driven by the product type so the dropdown
+ * matches the real size system (men 38–54, boy 16–36, women S–XXL, girl age
+ * ranges). Always includes the variant's current value so an existing/legacy
+ * size is never silently dropped when the row renders.
+ */
+function sizeOptionsForType(
+  type: AdminProduct['productType'],
+  currentValue: string
+): { value: string; label: string }[] {
+  let base: string[];
+  if (type === 'girl_two_piece') {
+    base = GIRL_AGE_GROUPS.map((age) => GIRL_VARIANT_SIZE_BN[age]);
+  } else if (type && type !== 'simple' && SIZE_PRESETS[type as keyof typeof SIZE_PRESETS]) {
+    base = SIZE_PRESETS[type as keyof typeof SIZE_PRESETS];
+  } else {
+    base = SIZES;
+  }
+  const values = currentValue && !base.includes(currentValue) ? [currentValue, ...base] : base;
+  return values.map((s) => ({ value: s, label: s }));
+}
 const COUNTRIES = [
   { value: 'BD', label: 'Bangladesh' },
   { value: 'IN', label: 'India' },
@@ -190,7 +213,9 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
     if (!dirty || !isEdit || !initial) return;
     const timer = window.setInterval(() => {
       if (!form.title.trim()) return;
-      void updateProduct(initial.id, { ...form, status: 'draft', updatedAt: new Date().toISOString() });
+      // Preserve the product's own status — never downgrade a published
+      // product to draft on autosave (that would pull it off the storefront).
+      void updateProduct(initial.id, { ...form, updatedAt: new Date().toISOString() });
       setDraftSavedAt(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
     }, 30000);
     return () => window.clearInterval(timer);
@@ -295,12 +320,13 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
   }
 
   function addVariant() {
+    const defaultSize = sizeOptionsForType(form.productType, '')[0]?.value ?? 'M';
     const variant: ProductVariant = {
       id: uid('var'),
-      size: 'M',
+      size: defaultSize,
       color: 'Default',
       stock: 0,
-      sku: `${form.sku}-M`,
+      sku: `${form.sku}-${defaultSize}`,
     };
     update('variants', [...(form.variants ?? []), variant]);
     update('hasVariants', true);
@@ -574,6 +600,12 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
                 </div>
               )}
             </>
+          ) : form.productType === 'girl_two_piece' ? (
+            <p className="text-sm text-neutral-600">
+              Girl&apos;s Two Piece stock is set per age size (১-৫, ৬-৯, ১০-১৪ বছর) in the{' '}
+              <strong>Product type</strong> section above. Those age rows are the
+              variants for this product.
+            </p>
           ) : (
             <>
           <label className="flex items-center gap-2 text-sm font-medium text-neutral-800 mb-4">
@@ -607,7 +639,7 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
                     label="Size"
                     value={v.size}
                     onChange={(e) => updateVariant(v.id, { size: e.target.value })}
-                    options={SIZES.map((s) => ({ value: s, label: s }))}
+                    options={sizeOptionsForType(form.productType, v.size)}
                   />
                   <Input
                     label="Color"
@@ -791,10 +823,10 @@ export function ProductForm({ initial, isEdit, prefill }: ProductFormProps) {
                 Cancel
               </Button>
             </Link>
-            <Button variant="secondary" loading={saving} onClick={() => { persist('draft', true); setDirty(false); }}>
+            <Button variant="secondary" loading={saving} onClick={() => persist('draft', true)}>
               Save Draft
             </Button>
-            <Button loading={saving} onClick={() => { persist('published'); setDirty(false); }}>
+            <Button loading={saving} onClick={() => persist('published')}>
               Publish
             </Button>
           </div>

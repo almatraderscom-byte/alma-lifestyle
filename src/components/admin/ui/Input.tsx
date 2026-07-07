@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -8,8 +9,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
-export function Input({ label, error, hint, className, id, ...props }: InputProps) {
-  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-');
+export function Input({ label, error, hint, className, id, onWheel, ...props }: InputProps) {
+  // Unique fallback id so repeated fields (e.g. many "Stock" inputs) never
+  // collide — colliding ids make a label click jump focus to the first match.
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const isNumber = props.type === 'number';
   return (
     <div className="space-y-1.5">
       {label && (
@@ -25,6 +30,14 @@ export function Input({ label, error, hint, className, id, ...props }: InputProp
           error ? 'border-red-500' : 'border-neutral-300 bg-white',
           className
         )}
+        onWheel={(e) => {
+          // Windows Chrome changes a focused number input's value on wheel
+          // scroll. Blur so the page scrolls instead of mutating the value.
+          if (isNumber && document.activeElement === e.currentTarget) {
+            e.currentTarget.blur();
+          }
+          onWheel?.(e);
+        }}
         {...props}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
