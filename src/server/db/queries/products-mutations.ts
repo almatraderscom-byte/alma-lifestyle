@@ -193,8 +193,31 @@ export async function updateAdminProduct(
   rates?: { usdRate?: number; aedRate?: number }
 ): Promise<AdminProduct | null> {
   const brandId = await getBrandId();
+
+  // Keep slug/SKU stable, but if either now collides with a DIFFERENT product
+  // (e.g. the design/type changed, or a sibling already claimed it), de-dupe
+  // instead of throwing a misleading "SKU already exists" error. Excluding the
+  // product's own row means an unchanged slug/SKU is left exactly as-is.
+  let productToSave: AdminProduct = { ...product, id };
+  const preferredSku =
+    productToSave.sku ||
+    `SKU-${(productToSave.slug || 'product').replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+  const uniqueSlug = await ensureUniqueProductSlug(brandId, productToSave.slug, id);
+  const uniqueSku = await generateUniqueProductSku(brandId, preferredSku, id);
+  if (uniqueSlug !== productToSave.slug || uniqueSku !== productToSave.sku) {
+    productToSave = {
+      ...productToSave,
+      slug: uniqueSlug,
+      sku: uniqueSku,
+      variants:
+        uniqueSku !== productToSave.sku
+          ? remapVariantSkusForProductSku(productToSave, uniqueSku)
+          : productToSave.variants,
+    };
+  }
+
   const mapped = mapAdminProductToDbInsert({
-    product: { ...product, id },
+    product: productToSave,
     brandId,
     usdRate: rates?.usdRate,
     aedRate: rates?.aedRate,

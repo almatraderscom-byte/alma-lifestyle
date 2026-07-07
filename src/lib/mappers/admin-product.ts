@@ -177,9 +177,29 @@ export function mapAdminProductToDbInsert({
       product.displayOrder ?? DISPLAY_ORDER_BY_TYPE[product.productType ?? 'simple'],
   };
 
+  // Collapse any duplicate (size,color) or SKU rows before insert. Products
+  // saved under the old size bug can carry duplicate variants (e.g. several
+  // "S / Default"), which would violate the (product_id,size,color) /
+  // (product_id,sku) unique constraints and surface as a bogus "SKU exists".
+  const dedupedInputVariants = (() => {
+    if (!(product.hasVariants && product.variants?.length)) return [];
+    const seenSizeColor = new Set<string>();
+    const seenSku = new Set<string>();
+    const rows: NonNullable<AdminProduct['variants']> = [];
+    for (const v of product.variants) {
+      const sizeColor = `${v.size}|||${v.color}`;
+      // Drop rows that would collide on either unique constraint.
+      if (seenSizeColor.has(sizeColor) || (v.sku && seenSku.has(v.sku))) continue;
+      seenSizeColor.add(sizeColor);
+      if (v.sku) seenSku.add(v.sku);
+      rows.push(v);
+    }
+    return rows;
+  })();
+
   const variants =
-    product.hasVariants && product.variants?.length
-      ? product.variants.map((v) => ({
+    dedupedInputVariants.length
+      ? dedupedInputVariants.map((v) => ({
           product_id: product.id,
           sku: v.sku,
           size: v.size,
@@ -205,16 +225,24 @@ export function mapAdminProductToDbInsert({
           },
         ];
 
-  const images = product.images.map((img, i) => ({
-    product_id: product.id,
-    variant_id: null,
-    url: img.url,
-    alt_text:
-      img.imageRole === 'family-group'
-        ? 'family-group'
-        : product.title,
-    sort_order: img.sortOrder ?? i,
-  }));
+  const seenImageUrls = new Set<string>();
+  const images = product.images
+    .filter((img) => {
+      // (product_id, url) is unique — drop duplicate image URLs.
+      if (!img.url || seenImageUrls.has(img.url)) return false;
+      seenImageUrls.add(img.url);
+      return true;
+    })
+    .map((img, i) => ({
+      product_id: product.id,
+      variant_id: null,
+      url: img.url,
+      alt_text:
+        img.imageRole === 'family-group'
+          ? 'family-group'
+          : product.title,
+      sort_order: img.sortOrder ?? i,
+    }));
 
   return { productRow, variants, images };
 }

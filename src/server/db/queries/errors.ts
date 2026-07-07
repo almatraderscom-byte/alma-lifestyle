@@ -6,8 +6,21 @@ export function assertNoError(
 ): void {
   if (error) {
     if (error.code === '23505') {
+      // Unique violation. Could be SKU, URL slug, a duplicate variant
+      // (size/color), or a duplicate image — name what actually conflicted so
+      // the message isn't misleading.
+      const detail = `${error.message} ${error.details ?? ''}`.toLowerCase();
+      const field = detail.includes('slug')
+        ? 'পণ্যের URL (slug)'
+        : detail.includes('sku')
+          ? 'SKU'
+          : detail.includes('size')
+            ? 'সাইজ/কালার ভ্যারিয়েন্ট'
+            : detail.includes('url')
+              ? 'ছবির URL'
+              : 'একটি ফিল্ড';
       throw new Error(
-        'এই SKU আগে থেকে আছে। অন্য SKU ব্যবহার করুন অথবা পুনরায় সেভ করুন।'
+        `এই ${field} আগে থেকে অন্য পণ্যে আছে। মান পরিবর্তন করে আবার সেভ করুন।`
       );
     }
     throw new Error(`${context}: ${error.message} (${error.code})`);

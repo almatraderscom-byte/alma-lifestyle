@@ -39,13 +39,20 @@ export function formatFamilySetSku(
   return `ALM-${categoryCode}-${baseCode}-${typeSuffix}-${seq}`;
 }
 
-export async function skuExistsInDatabase(brandId: string, sku: string): Promise<boolean> {
-  const { data, error } = await getSupabaseAdmin()
+export async function skuExistsInDatabase(
+  brandId: string,
+  sku: string,
+  excludeProductId?: string
+): Promise<boolean> {
+  let query = getSupabaseAdmin()
     .from('products')
     .select('id')
     .eq('brand_id', brandId)
-    .eq('sku', sku)
-    .maybeSingle();
+    .eq('sku', sku);
+  // On update, ignore the product's own row so an unchanged SKU is not
+  // treated as a collision with itself.
+  if (excludeProductId) query = query.neq('id', excludeProductId);
+  const { data, error } = await query.maybeSingle();
 
   assertNoError(error, 'skuExistsInDatabase');
   return !!data;
@@ -53,20 +60,21 @@ export async function skuExistsInDatabase(brandId: string, sku: string): Promise
 
 export async function generateUniqueProductSku(
   brandId: string,
-  preferredSku: string
+  preferredSku: string,
+  excludeProductId?: string
 ): Promise<string> {
   const sanitized =
     preferredSku.replace(/[^A-Za-z0-9-]/g, '').slice(0, 96) ||
     `SKU-${Date.now().toString(36).toUpperCase()}`;
 
-  if (!(await skuExistsInDatabase(brandId, sanitized))) {
+  if (!(await skuExistsInDatabase(brandId, sanitized, excludeProductId))) {
     return sanitized;
   }
 
   for (let seq = 2; seq <= 999; seq++) {
     const suffix = `-${seq}`;
     const candidate = `${sanitized.slice(0, 96 - suffix.length)}${suffix}`;
-    if (!(await skuExistsInDatabase(brandId, candidate))) {
+    if (!(await skuExistsInDatabase(brandId, candidate, excludeProductId))) {
       return candidate;
     }
   }
@@ -74,14 +82,19 @@ export async function generateUniqueProductSku(
   throw new Error('Could not generate unique SKU after many attempts');
 }
 
-export async function slugExistsInDatabase(brandId: string, slug: string): Promise<boolean> {
+export async function slugExistsInDatabase(
+  brandId: string,
+  slug: string,
+  excludeProductId?: string
+): Promise<boolean> {
   const normalized = slug.replace(/^-+|-+$/g, '').trim() || 'product';
-  const { data, error } = await getSupabaseAdmin()
+  let query = getSupabaseAdmin()
     .from('products')
     .select('id')
     .eq('brand_id', brandId)
-    .eq('slug', normalized)
-    .maybeSingle();
+    .eq('slug', normalized);
+  if (excludeProductId) query = query.neq('id', excludeProductId);
+  const { data, error } = await query.maybeSingle();
 
   assertNoError(error, 'slugExistsInDatabase');
   return !!data;
@@ -89,14 +102,16 @@ export async function slugExistsInDatabase(brandId: string, slug: string): Promi
 
 export async function ensureUniqueProductSlug(
   brandId: string,
-  slug: string
+  slug: string,
+  excludeProductId?: string
 ): Promise<string> {
   const base = slug.replace(/^-+|-+$/g, '').trim() || 'product';
-  if (!(await slugExistsInDatabase(brandId, base))) return base;
+  if (!(await slugExistsInDatabase(brandId, base, excludeProductId))) return base;
 
   for (let seq = 2; seq <= 999; seq++) {
     const candidate = `${base}-${seq}`;
-    if (!(await slugExistsInDatabase(brandId, candidate))) return candidate;
+    if (!(await slugExistsInDatabase(brandId, candidate, excludeProductId)))
+      return candidate;
   }
 
   throw new Error('Could not generate unique slug after many attempts');
