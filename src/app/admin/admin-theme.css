@@ -45,8 +45,25 @@
 .admin-app .bg-\[\#FFF9F5\] { background-color: var(--admin-surface); }
 .admin-app .bg-\[\#FAF7F2\] { background-color: var(--admin-surface); }
 .admin-app .bg-neutral-50 { background-color: var(--admin-surface-2); }
+/* Opacity-suffixed neutral-50 wells (form panels, table zebra rows, image-slot
+   drop zones) — Tailwind emits these as separate classes, so remap each or the
+   light text on them stays invisible. */
+.admin-app .bg-neutral-50\/80 { background-color: var(--admin-surface-2); }
+.admin-app .bg-neutral-50\/60 { background-color: var(--admin-surface-2); }
+.admin-app .bg-neutral-50\/50 { background-color: var(--admin-surface-2); }
 .admin-app .bg-neutral-100 { background-color: var(--admin-hover); }
 .admin-app .bg-\[\#FAFAFA\] { background-color: var(--admin-bg); }
+
+/* Family Set cards use pastel per-member backgrounds baked into FAMILY_CARD_BG
+   (Add/Edit product → family matching set). On the dark panel their light text
+   lands on light pastel and is unreadable — remap to dark, subtly-hued
+   surfaces; the coloured borders keep each member visually distinct. */
+.admin-app .bg-neutral-200\/70 { background-color: var(--admin-surface); }   /* men */
+.admin-app .bg-\[\#f5e8e0\] { background-color: #211a14; }                    /* boy — warm  */
+.admin-app .bg-\[\#f0e0e4\] { background-color: #21151a; }                    /* women — maroon */
+.admin-app .bg-\[\#f5f0d8\] { background-color: #1e1c12; }                    /* girl — gold  */
+/* Plain neutral-200 (avatars, progress-bar tracks, chips) — subtle dark fill. */
+.admin-app .bg-neutral-200 { background-color: var(--admin-line-2); }
 /* hover fills */
 .admin-app .hover\:bg-white:hover { background-color: var(--admin-surface); }
 .admin-app .hover\:bg-neutral-50:hover { background-color: var(--admin-hover); }
