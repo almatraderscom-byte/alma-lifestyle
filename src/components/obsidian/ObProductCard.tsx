@@ -24,6 +24,13 @@ interface ObProductCardProps {
   product: CardProduct;
   /** Stagger auto-rotation start across the grid. */
   index?: number;
+  /**
+   * Render already-revealed (no scroll-reveal wait). Needed in the paginated
+   * products grid: the global ObsidianFX reveal observer only scans for
+   * [data-ob-reveal] once on mount, so cards added on a later page would
+   * otherwise stay at opacity:0. Home sections keep the default scroll reveal.
+   */
+  eagerReveal?: boolean;
 }
 
 /**
@@ -33,7 +40,7 @@ interface ObProductCardProps {
  * from the existing `CardProduct` — no data/text/image is altered (requirement:
  * "map them correctly using props").
  */
-export function ObProductCard({ product, index = 0 }: ObProductCardProps) {
+export function ObProductCard({ product, index = 0, eagerReveal = false }: ObProductCardProps) {
   const router = useRouter();
   const { addItem } = useCart();
   const { showToast } = useToast();
@@ -84,7 +91,7 @@ export function ObProductCard({ product, index = 0 }: ObProductCardProps) {
   }
 
   return (
-    <article className="ob-pcard" data-ob-reveal>
+    <article className={`ob-pcard${eagerReveal ? ' in' : ''}`} data-ob-reveal>
       <div className="ob-pcard-media pcard">
         <Link href={product.href} className="ob-pcard-link" aria-label={product.title}>
           <AutoRotateProductImage

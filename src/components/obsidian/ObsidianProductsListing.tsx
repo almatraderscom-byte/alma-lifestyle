@@ -262,7 +262,12 @@ export function ObsidianProductsListing({
             <>
               <div className="ob-shop-grid">
                 {pagination.items.map((product, idx) => (
-                  <ObProductCard key={product.id} product={toCardProduct(product)} index={idx} />
+                  <ObProductCard
+                    key={product.id}
+                    product={toCardProduct(product)}
+                    index={idx}
+                    eagerReveal
+                  />
                 ))}
               </div>
               <ObPagination page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
