@@ -48,9 +48,27 @@ export function buildContentPageMetadata(
     description,
     openGraph: { title, description },
     twitter: { title, description },
+    // Every content page was serving without a canonical (live audit
+    // 2026-07-25), so any query-string or tracking variant looked like a
+    // separate page to Google.
+    alternates: { canonical: `/${slug}` },
   };
   if (keywords && keywords.length > 0) metadata.keywords = keywords;
   return metadata;
+}
+
+/** "ALMA Lifestyle | ALMA Lifestyle" → "ALMA Lifestyle" (case-insensitive). */
+export function collapseRepeatedStoreName(title: string, storeName: string): string {
+  const parts = title.split('|').map((p) => p.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const kept = parts.filter((p) => {
+    const key = p.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const collapsed = kept.join(' | ');
+  return collapsed || storeName;
 }
 
 export function buildRootMetadata(
@@ -58,9 +76,15 @@ export function buildRootMetadata(
   faviconHref: string | null
 ): Metadata {
   const siteUrl = getSiteUrl();
-  const storeTitle = settings.seoSiteTitleTemplate.includes('%s')
+  const storeName = settings.storeName || 'ALMA Lifestyle';
+  const rawStoreTitle = settings.seoSiteTitleTemplate.includes('%s')
     ? settings.seoSiteTitleTemplate.replace('%s', settings.storeName)
     : DEFAULT_TITLE;
+  // A template of "%s | ALMA Lifestyle" filled with the store name yields
+  // "ALMA Lifestyle | ALMA Lifestyle", which is what the homepage actually
+  // served. Collapse the repeat instead of asking the owner to re-type the
+  // setting exactly right.
+  const storeTitle = collapseRepeatedStoreName(rawStoreTitle, storeName);
 
   const description = settings.seoSiteDescription?.trim() || DEFAULT_DESCRIPTION;
   const ogImage =
