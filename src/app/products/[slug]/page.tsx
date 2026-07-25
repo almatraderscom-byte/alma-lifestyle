@@ -10,6 +10,10 @@ import {
   buildProductJsonLd,
   buildProductBreadcrumbJsonLd,
 } from '@/lib/seo/product-jsonld';
+import {
+  buildProductPageMetadata,
+  buildProductNotFoundMetadata,
+} from '@/lib/seo/product-metadata';
 import { getLandingContent } from '@/server/db/queries/landing-content';
 import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
 import {
@@ -31,24 +35,28 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   if (slug === MURDA_SLUG) {
     return {
-      title: 'স্মার্ট মুর্দা মশারী | ইসলামিক পর্দা মশারী | Alma Lifestyle',
+      // The root layout's template appends the store name — naming it here too
+      // is what produced "… | Alma Lifestyle | ALMA Lifestyle" in search results.
+      title: 'স্মার্ট মুর্দা মশারী — ইসলামিক পর্দা মশারী',
       description:
         'মুসলমানের শেষ গোসলের জন্য পর্দা, পরিচ্ছন্নতা ও সম্মানের সম্পূর্ণ সমাধান। ক্যাশ অন ডেলিভারি, সারাদেশে।',
       openGraph: {
         images: ['/products/murda-moshari/hero-black.jpg'],
       },
+      alternates: { canonical: `/products/${MURDA_SLUG}` },
     };
   }
 
   const product = await loadProductBySlugServer(slug);
   if (!product) {
-    return { title: 'পণ্য | Alma Lifestyle' };
+    return buildProductNotFoundMetadata();
   }
 
-  return {
-    title: `${product.title} | Alma Lifestyle`,
-    description: product.description,
-  };
+  // Use the shared builder instead of hand-rolling two fields here. It is the
+  // module that sets alternates.canonical, the OG/Twitter image and the length
+  // limits — bypassing it left EVERY product page without a canonical tag (live
+  // audit 2026-07-25) while this well-tested helper sat unused.
+  return buildProductPageMetadata(product, slug);
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {

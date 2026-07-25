@@ -5,6 +5,10 @@ import { getSiteUrl } from '@/lib/seo/site-url';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
 
+  // NOTE: /collections is deliberately absent. It is a legacy stub that sends
+  // shoppers to /products, and a sitemap that lists a redirect (or, as production
+  // served it on 2026-07-25, a 200 page with no H1 and ~75 words) spends crawl
+  // budget on a page we do not want indexed.
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
     {
@@ -21,7 +25,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/size-guide`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${baseUrl}/terms`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${baseUrl}/collections`, changeFrequency: 'weekly', priority: 0.6 },
   ];
 
   const categories = ['panjabi', 'islamic', 'electronics', 'accessories', 'home-decor'];

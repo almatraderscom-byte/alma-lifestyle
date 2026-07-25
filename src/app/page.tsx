@@ -10,6 +10,12 @@ import {
 
 export const revalidate = 300;
 
+// The homepage served no canonical (live audit 2026-07-25), so every UTM and
+// tracking variant of "/" looked like a separate page to Google.
+export const metadata = {
+  alternates: { canonical: '/' },
+};
+
 export default async function HomePage() {
   try {
     const [cinematicContent, { products: catalog }] = await Promise.all([
