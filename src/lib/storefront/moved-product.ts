@@ -22,15 +22,31 @@ import {
 /** What a healthy slug looks like: lowercase ASCII words joined by hyphens. */
 const CANONICAL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * True when the path carries characters that cannot go in an HTTP header.
+ *
+ * This is not pedantry: Vercel derives the ISR cache tag from the request path
+ * and sends it as `x-next-cache-tags`, so a Bangla product URL ends the request
+ * with `TypeError: Invalid character in header content` — a 500, not a 404
+ * (deployment 8GstNybJ, 2026-07-27). Every non-ASCII product URL on the live
+ * site has been answering 500 that way; only build-time prerendered pages
+ * escaped it, which is why nobody noticed while the 7-b slug still existed.
+ */
+export function hasNonAsciiSlug(slug: string): boolean {
+  // eslint-disable-next-line no-control-regex
+  return /[^\x00-\x7F]/.test(slug);
+}
+
 /** A rename can be renamed again; follow the chain, but never forever. */
 const MAX_HOPS = 5;
 
 function readEnv(): { url: string; key: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Redirects are public-read by policy (migration 017), so the anon key is
-  // enough; the service role is only a fallback for environments that set it.
+  // Server-side only, so the service role is the reliable reader; the anon key
+  // works too (redirects are public-read by migration 017) and covers any
+  // environment where the service role is not exposed to middleware.
   const key =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return { url, key };
 }

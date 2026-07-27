@@ -7,7 +7,8 @@ import {
   parseAdminSessionCookie,
 } from '@/lib/admin-session';
 import { canAccessAdminPath } from '@/lib/admin-roles';
-import { resolveMovedProductSlug } from '@/lib/storefront/moved-product';
+import { hasNonAsciiSlug, resolveMovedProductSlug } from '@/lib/storefront/moved-product';
+import { decodeSlugParam } from '@/lib/storefront/slug-param';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -81,6 +82,13 @@ function applyCacheHeaders(pathname: string, response: NextResponse): NextRespon
   return response;
 }
 
+/**
+ * An ASCII stand-in path for a product URL that cannot be rendered as written.
+ * No product may use this slug; it exists so the not-found page can be served
+ * without the original characters reaching a cache-tag header.
+ */
+const PRODUCT_MISSING_PATH = '/products/__not-found';
+
 /** `/products/<slug>` and nothing deeper. */
 function productSlugFromPath(pathname: string): string | null {
   const rest = pathname.startsWith('/products/')
@@ -102,6 +110,20 @@ export async function middleware(request: NextRequest) {
     if (movedTo) {
       const target = new URL(`/products/${encodeURIComponent(movedTo)}`, request.url);
       return applyFrameOptions(request, NextResponse.redirect(target, 308));
+    }
+
+    // Nothing moved here, and the path cannot be put in a cache-tag header, so
+    // rendering it crashes with a 500 instead of answering "no such product".
+    // Serve the ordinary not-found page under an ASCII path instead — see
+    // hasNonAsciiSlug.
+    if (hasNonAsciiSlug(decodeSlugParam(productSlug))) {
+      return applyCacheHeaders(
+        pathname,
+        applyFrameOptions(
+          request,
+          NextResponse.rewrite(new URL(PRODUCT_MISSING_PATH, request.url))
+        )
+      );
     }
   }
 
