@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { MurdaMoshariLanding } from '@/components/product/MurdaMoshariLanding';
 import { ProductCmsEditProvider } from '@/components/obsidian/ProductCmsEditProvider';
 import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-content';
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
+import { resolveProductRedirect } from '@/server/db/queries/product-redirects';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
   buildProductJsonLd,
@@ -67,6 +68,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ]);
 
   if (!loaded) {
+    // The slug is unknown NOW — but it may be a URL this product used to live at.
+    // Renaming a slug used to mean losing the old page's ranking outright, because
+    // nothing in this app had ever issued a redirect; that is why one product is
+    // still called "ইসলামিক ৭টি বইয়ের কম্বো প্যাকেজ Product Code: 7-b". Look the old
+    // path up before giving Google a 404.
+    const movedTo = await resolveProductRedirect(slug);
+    if (movedTo) permanentRedirect(`/products/${movedTo}`);
     notFound();
   }
 

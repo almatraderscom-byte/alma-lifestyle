@@ -115,6 +115,29 @@ export interface ProductImage {
   created_at: Timestamp;
 }
 
+/**
+ * Where an old product URL now points. Written whenever a slug is renamed, so
+ * the old path can serve a permanent redirect instead of a 404 — the piece this
+ * storefront lacked entirely until 2026-07-27.
+ */
+export interface ProductRedirect {
+  from_slug: string;
+  to_slug: string;
+  reason: string | null;
+  created_at: Timestamp;
+  created_by: string;
+}
+
+export type ProductRedirectInsert = {
+  from_slug: string;
+  to_slug: string;
+  reason?: string | null;
+  created_at?: Timestamp;
+  created_by?: string;
+};
+
+export type ProductRedirectUpdate = Partial<ProductRedirectInsert>;
+
 export interface Collection {
   id: UUID;
   brand_id: UUID;
