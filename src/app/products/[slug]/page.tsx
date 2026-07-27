@@ -6,6 +6,7 @@ import { getDefaultMurdaMoshariContent } from '@/lib/murda-moshari-default-conte
 import { syncMurdaPricingFromProduct } from '@/lib/murda-moshari-pricing';
 import { mergeStaticProductOverrides } from '@/lib/products-data';
 import { resolveProductRedirect } from '@/server/db/queries/product-redirects';
+import { decodeSlugParam } from '@/lib/storefront/slug-param';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
   buildProductJsonLd,
@@ -32,7 +33,8 @@ interface ProductPageProps {
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
 
   if (slug === MURDA_SLUG) {
     return {
@@ -50,6 +52,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   const product = await loadProductBySlugServer(slug);
   if (!product) {
+    // Resolve a moved URL HERE, not in the page body. A redirect thrown while
+    // the page renders arrives after the response has started streaming, so Next
+    // can only finish it as a 200 carrying a client-side hop: a person lands on
+    // the new page, while Google is told the old URL answered fine. Thrown from
+    // metadata — before a byte is sent — it is a real 308.
+    const movedTo = await resolveProductRedirect(slug);
+    if (movedTo) permanentRedirect(`/products/${encodeURIComponent(movedTo)}`);
     return buildProductNotFoundMetadata();
   }
 
@@ -61,7 +70,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  // Anything outside ASCII arrives percent-encoded — decode before it is used as
+  // a database key. See decodeSlugParam.
+  const slug = decodeSlugParam(rawSlug);
   const [loaded, { products: catalogProducts }] = await Promise.all([
     loadProductBySlugServer(slug),
     loadCatalogProductsServer({ limit: 200 }),
@@ -73,8 +85,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
     // nothing in this app had ever issued a redirect; that is why one product is
     // still called "ইসলামিক ৭টি বইয়ের কম্বো প্যাকেজ Product Code: 7-b". Look the old
     // path up before giving Google a 404.
+    // Backstop only — generateMetadata already redirected a moved URL with a real
+    // status code. Keeping it means a moved link still works if this page is ever
+    // reached without metadata running.
     const movedTo = await resolveProductRedirect(slug);
-    if (movedTo) permanentRedirect(`/products/${movedTo}`);
+    if (movedTo) permanentRedirect(`/products/${encodeURIComponent(movedTo)}`);
     notFound();
   }
 

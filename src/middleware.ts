@@ -7,6 +7,7 @@ import {
   parseAdminSessionCookie,
 } from '@/lib/admin-session';
 import { canAccessAdminPath } from '@/lib/admin-roles';
+import { resolveMovedProductSlug } from '@/lib/storefront/moved-product';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -80,8 +81,29 @@ function applyCacheHeaders(pathname: string, response: NextResponse): NextRespon
   return response;
 }
 
-export function middleware(request: NextRequest) {
+/** `/products/<slug>` and nothing deeper. */
+function productSlugFromPath(pathname: string): string | null {
+  const rest = pathname.startsWith('/products/')
+    ? pathname.slice('/products/'.length)
+    : null;
+  if (!rest || rest.includes('/')) return null;
+  return rest;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const productSlug = productSlugFromPath(pathname);
+  if (productSlug) {
+    // A renamed product must answer with a permanent redirect, not a 200 that
+    // says "found nothing". Only middleware can set that status — see
+    // resolveMovedProductSlug.
+    const movedTo = await resolveMovedProductSlug(productSlug);
+    if (movedTo) {
+      const target = new URL(`/products/${encodeURIComponent(movedTo)}`, request.url);
+      return applyFrameOptions(request, NextResponse.redirect(target, 308));
+    }
+  }
 
   if (pathname.startsWith('/api/v1')) {
     const limited = applyApiRateLimit(request);
