@@ -22,6 +22,14 @@ vi.mock('../../client', () => ({
               ? { data: null, error: { message: 'relation does not exist' } }
               : { data: rows.has(value) ? { to_slug: rows.get(value) } : null, error: null },
         }),
+        // The fallback scan: every row, compared on equal terms.
+        limit: async () =>
+          failNext
+            ? { data: null, error: { message: 'relation does not exist' } }
+            : {
+                data: [...rows].map(([from_slug, to_slug]) => ({ from_slug, to_slug })),
+                error: null,
+              },
       }),
     }),
   }),
@@ -64,5 +72,26 @@ describe('resolveProductRedirect', () => {
 
   it('ignores blank input', async () => {
     expect(await resolveProductRedirect('   ')).toBeNull();
+  });
+
+  // The live failure of 2026-07-27: the table was right and the resolver still
+  // 404ed. "boier" is the word; য় has two spellings that look identical — one
+  // codepoint (U+09DF) or য + nukta (U+09AF U+09BC). Written as escapes so no
+  // editor can normalise these tests into passing by accident.
+  const PRECOMPOSED = '\u09AC\u0987\u09DF\u09C7\u09B0';
+  const DECOMPOSED = '\u09AC\u0987\u09AF\u09BC\u09C7\u09B0';
+
+  it('matches a stored slug whose nukta letter is precomposed (U+09DF)', async () => {
+    // U+09DF is on Unicode's composition exclusion list: NFC will never rebuild
+    // it, so normalising the incoming link cannot reach the stored row.
+    expect(PRECOMPOSED).not.toBe(DECOMPOSED);
+    expect(PRECOMPOSED.normalize('NFC')).not.toBe(PRECOMPOSED);
+    rows.set(PRECOMPOSED, 'islamic-7-book-combo-package');
+    expect(await resolveProductRedirect(DECOMPOSED)).toBe('islamic-7-book-combo-package');
+  });
+
+  it('matches when the database holds the decomposed spelling instead', async () => {
+    rows.set(DECOMPOSED, 'islamic-7-book-combo-package');
+    expect(await resolveProductRedirect(PRECOMPOSED)).toBe('islamic-7-book-combo-package');
   });
 });

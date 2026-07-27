@@ -7,6 +7,8 @@ import {
   parseAdminSessionCookie,
 } from '@/lib/admin-session';
 import { canAccessAdminPath } from '@/lib/admin-roles';
+import { hasNonAsciiSlug, resolveMovedProductSlug } from '@/lib/storefront/moved-product';
+import { decodeSlugParam } from '@/lib/storefront/slug-param';
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -80,8 +82,50 @@ function applyCacheHeaders(pathname: string, response: NextResponse): NextRespon
   return response;
 }
 
-export function middleware(request: NextRequest) {
+/**
+ * An ASCII stand-in path for a product URL that cannot be rendered as written.
+ * No product may use this slug; it exists so the not-found page can be served
+ * without the original characters reaching a cache-tag header.
+ */
+const PRODUCT_MISSING_PATH = '/products/__not-found';
+
+/** `/products/<slug>` and nothing deeper. */
+function productSlugFromPath(pathname: string): string | null {
+  const rest = pathname.startsWith('/products/')
+    ? pathname.slice('/products/'.length)
+    : null;
+  if (!rest || rest.includes('/')) return null;
+  return rest;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const productSlug = productSlugFromPath(pathname);
+  if (productSlug) {
+    // A renamed product must answer with a permanent redirect, not a 200 that
+    // says "found nothing". Only middleware can set that status — see
+    // resolveMovedProductSlug.
+    const movedTo = await resolveMovedProductSlug(productSlug);
+    if (movedTo) {
+      const target = new URL(`/products/${encodeURIComponent(movedTo)}`, request.url);
+      return applyFrameOptions(request, NextResponse.redirect(target, 308));
+    }
+
+    // Nothing moved here, and the path cannot be put in a cache-tag header, so
+    // rendering it crashes with a 500 instead of answering "no such product".
+    // Serve the ordinary not-found page under an ASCII path instead — see
+    // hasNonAsciiSlug.
+    if (hasNonAsciiSlug(decodeSlugParam(productSlug))) {
+      return applyCacheHeaders(
+        pathname,
+        applyFrameOptions(
+          request,
+          NextResponse.rewrite(new URL(PRODUCT_MISSING_PATH, request.url))
+        )
+      );
+    }
+  }
 
   if (pathname.startsWith('/api/v1')) {
     const limited = applyApiRateLimit(request);
