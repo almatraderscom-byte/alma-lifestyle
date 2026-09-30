@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
 
   // Staff-document verification is proxied to the ERP (next.config rewrites):
   // no storefront cache headers — a revoked document must show as revoked now.
-  if (pathname.startsWith('/verify/')) return NextResponse.next();
+  if (pathname.startsWith('/verify/')) return applyFrameOptions(request, NextResponse.next());
 
   const productSlug = productSlugFromPath(pathname);
   if (productSlug) {
