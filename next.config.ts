@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
         source: '/favicon.ico',
         destination: '/api/favicon',
       },
+      {
+        // Staff documents (salary statement / ID card) carry a QR that opens
+        // www.almatraders.com/verify/<code>. The records live in the ERP, so the
+        // page is served from there — the visitor stays on our own domain.
+        source: '/verify/:token',
+        destination: 'https://alma-erp-six.vercel.app/verify/:token',
+      },
     ];
   },
   experimental: {

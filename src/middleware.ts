@@ -101,6 +101,10 @@ function productSlugFromPath(pathname: string): string | null {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Staff-document verification is proxied to the ERP (next.config rewrites):
+  // no storefront cache headers — a revoked document must show as revoked now.
+  if (pathname.startsWith('/verify/')) return NextResponse.next();
+
   const productSlug = productSlugFromPath(pathname);
   if (productSlug) {
     // A renamed product must answer with a permanent redirect, not a 200 that
