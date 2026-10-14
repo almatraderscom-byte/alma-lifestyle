@@ -238,6 +238,8 @@ export function ObsidianHero({ hero, products, imageSlots, overlay }: ObsidianHe
 
   return (
     <section className="hero" id="hero">
+      {/* The one keyword H1 of the home page (CDIT SEO audit Fix 2); the animated card titles below are visual, not headings. */}
+      <h1 className="sr-only">বাবা-ছেলে ও পুরো পরিবারের ম্যাচিং পাঞ্জাবি — ALMA Lifestyle</h1>
       {/* WebGL orb scene (three.js) — the cinematic hero backdrop, always visible.
           The CMS hero video now lives inside the 3D coverflow (see below), not
           layered over the orb, so the orb reads clearly behind the cards. */}
@@ -362,13 +364,13 @@ export function ObsidianHero({ hero, products, imageSlots, overlay }: ObsidianHe
                       to the card (the "পণ্য বদলান" button on the 3D card). */}
                   <span className="ob-tag bn">{current.card.categoryLabel}</span>
                 </div>
-                <h1
+                <p
                   key={active}
                   className="ov-title ov-title-anim bn-serif"
                   style={{ fontFamily: 'var(--font-noto-serif-bengali), serif' }}
                 >
                   {current.card.heroTitle}
-                </h1>
+                </p>
                 <div className="ov-sub">
                   {current.card.codeText ||
                     hero?.subheading ||
@@ -407,13 +409,13 @@ export function ObsidianHero({ hero, products, imageSlots, overlay }: ObsidianHe
                   </span>
                   <span className="ob-tag bn">{hero?.eyebrow || 'সিগনেচার'}</span>
                 </div>
-                <h1
+                <p
                   key={active}
                   className="ov-title ov-title-anim bn-serif"
                   style={{ fontFamily: 'var(--font-noto-serif-bengali), serif' }}
                 >
                   {hero?.brandName || 'ALMA LIFESTYLE'}
-                </h1>
+                </p>
                 <div className="ov-sub">
                   {hero?.subheading || 'ALMA LIFESTYLE · SIGNATURE COLLECTION'}
                 </div>
