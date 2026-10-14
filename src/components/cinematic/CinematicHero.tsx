@@ -93,7 +93,7 @@ export function CinematicHero({ content }: CinematicHeroProps) {
       onMouseMove={onMouseMove}
       data-cursor="ring"
     >
-      <h1 className="sr-only">Alma Lifestyle — পরিবারের ঐতিহ্যে বোনা প্রতিটি গল্প</h1>
+      <h1 className="sr-only">বাবা-ছেলে ও পুরো পরিবারের ম্যাচিং পাঞ্জাবি — ALMA Lifestyle</h1>
       <motion.div className="absolute inset-0" style={scrollY ? { y: scrollY } : undefined}>
         {!isReady || !useVideo ? (
           <img
@@ -199,14 +199,14 @@ export function CinematicHero({ content }: CinematicHeroProps) {
           </motion.p>
 
           {instant || isMobile ? (
-            <h1
+            <p
               className={cn(
                 'font-brand tracking-[0.2em] text-cream',
                 isMobile ? 'text-3xl cinematic-hero-brand' : 'text-4xl md:text-5xl'
               )}
             >
               {hero.brandName}
-            </h1>
+            </p>
           ) : (
             <AlmaInkWord instant={false} brandName={hero.brandName} />
           )}
