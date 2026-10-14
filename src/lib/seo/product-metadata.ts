@@ -45,7 +45,9 @@ export function buildProductPageMetadata(
   // again is what produced "… | Alma Lifestyle | ALMA Lifestyle" on every
   // product page.
   return {
-    title: truncateAtWord(`${product.title} — ${priceText}`, TITLE_MAX),
+    // No price in the title: it goes stale the moment the price changes and only
+    // eats characters Google would show (CDIT SEO audit Fix 3, 2026-10-14).
+    title: truncateAtWord(product.title, TITLE_MAX),
     description: shortDesc,
     openGraph: {
       title: product.title,
