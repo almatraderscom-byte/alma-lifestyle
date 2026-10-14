@@ -6,12 +6,18 @@ import { trackLead } from '@/lib/pixel';
 import { useStoreSettings, whatsappE164 } from '@/context/StoreSettingsContext';
 import { cn } from '@/lib/utils';
 
+/** "0130-77777-33" / "8801307777733" → "+880 1307-777733"; anything else is shown as typed. */
+function formatBdPhone(raw: string | null | undefined): string {
+  const digits = String(raw ?? '').replace(/\D/g, '');
+  const local = digits.startsWith('880') ? digits.slice(3) : digits.startsWith('0') ? digits.slice(1) : digits;
+  if (!/^1\d{9}$/.test(local)) return raw ? String(raw) : '';
+  return `+880 ${local.slice(0, 4)}-${local.slice(4)}`;
+}
+
 export function Footer() {
   const settings = useStoreSettings();
   const whatsappHref = `https://wa.me/${whatsappE164(settings)}`;
-  const phoneDisplay = settings.contactPhone
-    ? `+${settings.contactPhone.replace(/\D/g, '')}`
-    : FOOTER.phoneDisplay;
+  const phoneDisplay = formatBdPhone(settings.contactPhone) || FOOTER.phoneDisplay;
 
   return (
     <footer className="bg-primary text-secondary mt-auto">
