@@ -1,14 +1,14 @@
 /**
  * Blog posts and pages written by the CDIT desk and approved by the owner in the ALMA app. They live in the
- * ERP (one row per post); this site reads the published ones from the ERP's public route and re-reads every
- * minute, so an approved post shows here without a new deploy. Every fetch fails soft: an unreachable ERP
- * means "no posts" on the list and the page keeps its last good copy.
+ * ERP (one row per post); this site reads the published ones from the ERP's public route on every
+ * request (the ERP route itself is CDN-cached ~30 s), so an approved post shows here without a new deploy and a
+ * taken-back post disappears just as fast. This site's own data cache is NOT used: it kept a taken-back post
+ * for 10+ minutes. An unreachable ERP means "no posts" on the list and an error page for one post.
  */
 import { getSiteUrl } from '@/lib/seo/site-url';
 
 const ERP = (process.env.CDIT_SITE_API || 'https://alma-erp-six.vercel.app').replace(/\/$/, '');
 const SITE = 'almatraders.com';
-const REVALIDATE = 60;
 
 export type CditPostSummary = {
   kind: 'post' | 'page';
@@ -26,7 +26,7 @@ export type CditPost = Omit<CditPostSummary, 'words'> & { body_md: string };
 
 export async function listCditPosts(kind?: 'post' | 'page'): Promise<CditPostSummary[]> {
   try {
-    const r = await fetch(`${ERP}/api/assistant/public/cdit-site?site=${SITE}${kind ? `&kind=${kind}` : ''}`, { next: { revalidate: REVALIDATE } });
+    const r = await fetch(`${ERP}/api/assistant/public/cdit-site?site=${SITE}${kind ? `&kind=${kind}` : ''}`, { cache: 'no-store' });
     if (!r.ok) return [];
     const d = (await r.json()) as { posts?: CditPostSummary[] };
     return Array.isArray(d.posts) ? d.posts : [];
@@ -35,10 +35,10 @@ export async function listCditPosts(kind?: 'post' | 'page'): Promise<CditPostSum
   }
 }
 
-/** One post / page, or null when it does not exist (404). Throws when the ERP could not be reached, so a cached page is kept. */
+/** One post / page, or null when it does not exist (404). Throws when the ERP could not be reached. */
 export async function getCditPost(kind: 'post' | 'page', slug: string): Promise<CditPost | null> {
   if (!/^[a-z0-9-]{1,90}$/.test(slug)) return null;
-  const r = await fetch(`${ERP}/api/assistant/public/cdit-site?site=${SITE}&kind=${kind}&slug=${encodeURIComponent(slug)}`, { next: { revalidate: REVALIDATE } });
+  const r = await fetch(`${ERP}/api/assistant/public/cdit-site?site=${SITE}&kind=${kind}&slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`cdit-site ${r.status}`);
   const d = (await r.json()) as { post?: CditPost };
