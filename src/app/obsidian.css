@@ -4045,3 +4045,93 @@ html.lenis body {
     display: none;
   }
 }
+
+/* ── Blog (posts approved in the ALMA app, read from the ERP) ─────────────── */
+.obsidian-home .blog-list {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 28px;
+}
+.obsidian-home .blog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: #fbf8f2;
+  border: 1px solid rgba(11, 10, 18, 0.08);
+  color: #23252e;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.obsidian-home .blog-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px -30px rgba(9, 12, 26, 0.55);
+}
+.obsidian-home .blog-card-meta {
+  font-size: 13px;
+  color: #6b6e7a;
+}
+.obsidian-home .blog-card-title {
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 700;
+  color: #14151b;
+  line-height: 1.4;
+}
+.obsidian-home .blog-card-desc {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #3b3e49;
+}
+.obsidian-home .blog-card-more {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ob-violet, #7c5cff);
+}
+.obsidian-home .blog-empty {
+  color: rgba(255, 255, 255, 0.75);
+}
+.obsidian-home .blog-article {
+  margin-bottom: 28px;
+}
+.obsidian-home .ob-prose > .blog-fig {
+  margin: 18px 0 22px;
+}
+.obsidian-home .ob-prose > .blog-fig img {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  border-radius: 14px;
+}
+.obsidian-home .ob-prose > .blog-fig figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b6e7a;
+}
+.obsidian-home .ob-prose > .blog-tbl {
+  overflow-x: auto;
+  margin: 6px 0 20px;
+}
+.obsidian-home .ob-prose > .blog-tbl table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.obsidian-home .ob-prose > .blog-tbl th,
+.obsidian-home .ob-prose > .blog-tbl td {
+  border: 1px solid rgba(11, 10, 18, 0.1);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  color: #3b3e49;
+}
+.obsidian-home .ob-prose > .blog-tbl th {
+  background: rgba(124, 92, 255, 0.08);
+  color: #14151b;
+}
+.obsidian-home .ob-prose > hr {
+  border: 0;
+  border-top: 1px solid rgba(11, 10, 18, 0.1);
+  margin: 24px 0;
+}

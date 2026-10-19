@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { loadCatalogProductsServer } from '@/lib/storefront/server-data';
 import { getSiteUrl } from '@/lib/seo/site-url';
+import { listCditPosts } from '@/lib/blog/cdit-posts';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
@@ -42,5 +43,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  // Blog posts and landing pages approved in the ALMA app (served from the ERP; an unreachable ERP = none listed).
+  const cdit = await listCditPosts();
+  const posts = cdit.filter((p) => p.kind === 'post');
+  const cditRoutes: MetadataRoute.Sitemap = [
+    ...(posts.length ? [{ url: `${baseUrl}/blog`, lastModified: new Date(posts[0].published_at), changeFrequency: 'weekly' as const, priority: 0.6 }] : []),
+    ...cdit.map((p) => ({
+      url: `${baseUrl}${p.kind === 'post' ? '/blog' : ''}/${p.slug}`,
+      lastModified: new Date(p.updated_at),
+      changeFrequency: 'monthly' as const,
+      priority: p.kind === 'page' ? 0.7 : 0.6,
+    })),
+  ];
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...cditRoutes];
 }
