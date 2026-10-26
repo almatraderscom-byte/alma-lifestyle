@@ -8,6 +8,16 @@ import type {
 } from '@/types/shop';
 import { DEFAULT_IMAGES } from '@/lib/default-images';
 
+/**
+ * Legacy mock catalog source.
+ * Remaining importers on main:
+ * - src/components/shared/Header.tsx
+ * - src/components/shared/Footer.tsx
+ * - src/components/shop/ProductFilters.tsx
+ * - src/components/shop/CategoryBar.tsx
+ * - src/app/(shop)/collections/page.tsx
+ * - src/app/(shop)/collections/[slug]/page.tsx
+ */
 export const CATEGORIES: ShopCategory[] = [
   { slug: 'kurtis', name: 'Kurtis', nameBn: 'কুর্তি', productCount: 24 },
   { slug: 'sarees', name: 'Sarees', nameBn: 'শাড়ি', productCount: 18 },
