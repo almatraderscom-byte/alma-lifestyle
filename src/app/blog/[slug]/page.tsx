@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BlogShell } from '@/components/blog/BlogShell';
-import { bnDate, extractFaq, getCditPost, jsonLd, postUrl, renderPostMarkdown } from '@/lib/blog/cdit-posts';
+import { bnDate, extractFaq, getCditPost, jsonLd, postUrl, renderPostMarkdown, SHARE_BASE, shareImage } from '@/lib/blog/cdit-posts';
 import { getSiteUrl } from '@/lib/seo/site-url';
 
 export const revalidate = 60;
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: post.description,
     keywords: post.keyword ? [post.keyword] : undefined,
     alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: { type: 'article', title: post.title, description: post.description, url: postUrl('post', post.slug), publishedTime: post.published_at, modifiedTime: post.updated_at, ...(post.cover_url ? { images: [post.cover_url] } : {}) },
-    twitter: { title: post.title, description: post.description },
+    openGraph: { ...SHARE_BASE, type: 'article', title: post.title, description: post.description, url: postUrl('post', post.slug), publishedTime: post.published_at, modifiedTime: post.updated_at, images: [{ url: shareImage(post), alt: post.title }] },
+    twitter: { card: 'summary_large_image', title: post.title, description: post.description, images: [shareImage(post)] },
   };
 }
 

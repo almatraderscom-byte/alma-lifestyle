@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BlogShell } from '@/components/blog/BlogShell';
-import { getCditPost, jsonLd, postUrl, renderPostMarkdown } from '@/lib/blog/cdit-posts';
+import { getCditPost, jsonLd, postUrl, renderPostMarkdown, SHARE_BASE, shareImage } from '@/lib/blog/cdit-posts';
 
 /**
  * A landing page the CDIT desk wrote and the owner approved (e.g. /family-matching). Only paths no other route of
@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: p.description,
     keywords: p.keyword ? [p.keyword] : undefined,
     alternates: { canonical: `/${p.slug}` },
-    openGraph: { title: p.title, description: p.description, url: postUrl('page', p.slug), ...(p.cover_url ? { images: [p.cover_url] } : {}) },
-    twitter: { title: p.title, description: p.description },
+    openGraph: { ...SHARE_BASE, type: 'website', title: p.title, description: p.description, url: postUrl('page', p.slug), images: [{ url: shareImage(p), alt: p.title }] },
+    twitter: { card: 'summary_large_image', title: p.title, description: p.description, images: [shareImage(p)] },
   };
 }
 

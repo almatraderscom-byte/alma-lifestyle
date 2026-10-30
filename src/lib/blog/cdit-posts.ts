@@ -130,3 +130,15 @@ export function bnDate(iso: string): string {
 
 export const minutesToRead = (words: number) => Math.max(1, Math.round(words / 180));
 export const postUrl = (kind: 'post' | 'page', slug: string) => `${getSiteUrl()}${kind === 'post' ? '/blog' : ''}/${slug}`;
+
+/**
+ * The share card's picture: the post's cover, else its first product photo (`![alt](https://…)` in the text), else
+ * the site's own share image — so a link on Facebook / WhatsApp never comes without a picture.
+ */
+export function shareImage(p: { cover_url?: string; body_md?: string }): string {
+  if (p.cover_url && /^https:\/\//.test(p.cover_url)) return p.cover_url;
+  const first = /!\[[^\]]*\]\((https:\/\/[^)\s]+)\)/.exec(p.body_md ?? '');
+  return first ? first[1] : `${getSiteUrl()}/opengraph-image`;
+}
+
+export const SHARE_BASE = { siteName: 'ALMA Lifestyle', locale: 'bn_BD' } as const;

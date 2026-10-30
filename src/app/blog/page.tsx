@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BlogShell } from '@/components/blog/BlogShell';
 import { bnDate, listCditPosts, minutesToRead } from '@/lib/blog/cdit-posts';
+import { getSiteUrl } from '@/lib/seo/site-url';
 
 export const revalidate = 60;
 
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
   title: { absolute: 'ব্লগ — পাঞ্জাবি, পরিবারের ম্যাচিং সেট ও কেনাকাটার গাইড | ALMA Lifestyle' },
   description: 'পাঞ্জাবি বাছাই, বাবা-ছেলের ও পুরো পরিবারের ম্যাচিং সেট, সাইজ আর উপলক্ষ ধরে ALMA Lifestyle-এর গাইড ও পরামর্শ।',
   alternates: { canonical: '/blog' },
+  openGraph: { siteName: 'ALMA Lifestyle', locale: 'bn_BD', type: 'website', url: `${getSiteUrl()}/blog`, title: 'ব্লগ — পাঞ্জাবি, পরিবারের ম্যাচিং সেট ও কেনাকাটার গাইড | ALMA Lifestyle', description: 'পাঞ্জাবি বাছাই, বাবা-ছেলের ও পুরো পরিবারের ম্যাচিং সেট, সাইজ আর উপলক্ষ ধরে ALMA Lifestyle-এর গাইড ও পরামর্শ।', images: [`${getSiteUrl()}/opengraph-image`] },
 };
 
 export default async function BlogIndexPage() {
